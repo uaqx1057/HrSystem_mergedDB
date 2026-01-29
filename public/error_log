@@ -1,0 +1,115 @@
+[24-Dec-2025 10:46:11 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/public/../vendor/autoload.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/public/index.php on line 46
+[24-Dec-2025 10:46:11 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/public/../vendor/autoload.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/public/index.php:46
+Stack trace:
+#0 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/public/index.php on line 46
+[24-Dec-2025 10:46:32 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/public/../vendor/autoload.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/public/index.php on line 46
+[24-Dec-2025 10:46:32 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/public/../vendor/autoload.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/public/index.php:46
+Stack trace:
+#0 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/public/index.php on line 46
+[12-Jan-2026 13:37:56 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:37:56 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php(45): {closure}()
+#1 /home/dobsykjq/hr.dobs.cloud/vendor/autoload.php(25): ComposerAutoloaderInitfb087e37aba3109a695ab7366387d381::getLoader()
+#2 /home/dobsykjq/hr.dobs.cloud/public/index.php(46): require('/home/dobsykjq/...')
+#3 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:01 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:01 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php(45): {closure}()
+#1 /home/dobsykjq/hr.dobs.cloud/vendor/autoload.php(25): ComposerAutoloaderInitfb087e37aba3109a695ab7366387d381::getLoader()
+#2 /home/dobsykjq/hr.dobs.cloud/public/index.php(46): require('/home/dobsykjq/...')
+#3 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:02 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:02 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php(45): {closure}()
+#1 /home/dobsykjq/hr.dobs.cloud/vendor/autoload.php(25): ComposerAutoloaderInitfb087e37aba3109a695ab7366387d381::getLoader()
+#2 /home/dobsykjq/hr.dobs.cloud/public/index.php(46): require('/home/dobsykjq/...')
+#3 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:02 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:02 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php(45): {closure}()
+#1 /home/dobsykjq/hr.dobs.cloud/vendor/autoload.php(25): ComposerAutoloaderInitfb087e37aba3109a695ab7366387d381::getLoader()
+#2 /home/dobsykjq/hr.dobs.cloud/public/index.php(46): require('/home/dobsykjq/...')
+#3 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:02 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:02 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php(45): {closure}()
+#1 /home/dobsykjq/hr.dobs.cloud/vendor/autoload.php(25): ComposerAutoloaderInitfb087e37aba3109a695ab7366387d381::getLoader()
+#2 /home/dobsykjq/hr.dobs.cloud/public/index.php(46): require('/home/dobsykjq/...')
+#3 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:03 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:03 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php(45): {closure}()
+#1 /home/dobsykjq/hr.dobs.cloud/vendor/autoload.php(25): ComposerAutoloaderInitfb087e37aba3109a695ab7366387d381::getLoader()
+#2 /home/dobsykjq/hr.dobs.cloud/public/index.php(46): require('/home/dobsykjq/...')
+#3 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:03 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:03 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php(45): {closure}()
+#1 /home/dobsykjq/hr.dobs.cloud/vendor/autoload.php(25): ComposerAutoloaderInitfb087e37aba3109a695ab7366387d381::getLoader()
+#2 /home/dobsykjq/hr.dobs.cloud/public/index.php(46): require('/home/dobsykjq/...')
+#3 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:03 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:03 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php(45): {closure}()
+#1 /home/dobsykjq/hr.dobs.cloud/vendor/autoload.php(25): ComposerAutoloaderInitfb087e37aba3109a695ab7366387d381::getLoader()
+#2 /home/dobsykjq/hr.dobs.cloud/public/index.php(46): require('/home/dobsykjq/...')
+#3 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:03 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:03 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php(45): {closure}()
+#1 /home/dobsykjq/hr.dobs.cloud/vendor/autoload.php(25): ComposerAutoloaderInitfb087e37aba3109a695ab7366387d381::getLoader()
+#2 /home/dobsykjq/hr.dobs.cloud/public/index.php(46): require('/home/dobsykjq/...')
+#3 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:03 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:38:03 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php(45): {closure}()
+#1 /home/dobsykjq/hr.dobs.cloud/vendor/autoload.php(25): ComposerAutoloaderInitfb087e37aba3109a695ab7366387d381::getLoader()
+#2 /home/dobsykjq/hr.dobs.cloud/public/index.php(46): require('/home/dobsykjq/...')
+#3 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:40:59 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:40:59 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php(45): {closure}()
+#1 /home/dobsykjq/hr.dobs.cloud/vendor/autoload.php(25): ComposerAutoloaderInitfb087e37aba3109a695ab7366387d381::getLoader()
+#2 /home/dobsykjq/hr.dobs.cloud/public/index.php(46): require('/home/dobsykjq/...')
+#3 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:41:04 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:41:04 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php(45): {closure}()
+#1 /home/dobsykjq/hr.dobs.cloud/vendor/autoload.php(25): ComposerAutoloaderInitfb087e37aba3109a695ab7366387d381::getLoader()
+#2 /home/dobsykjq/hr.dobs.cloud/public/index.php(46): require('/home/dobsykjq/...')
+#3 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:41:55 UTC] PHP Warning:  require(/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php): Failed to open stream: No such file or directory in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[12-Jan-2026 13:41:55 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/dobsykjq/hr.dobs.cloud/vendor/composer/../yajra/laravel-datatables-oracle/src/helper.php' (include_path='.:/opt/alt/php83/usr/share/pear:/opt/alt/php83/usr/share/php:/usr/share/pear:/usr/share/php') in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php(45): {closure}()
+#1 /home/dobsykjq/hr.dobs.cloud/vendor/autoload.php(25): ComposerAutoloaderInitfb087e37aba3109a695ab7366387d381::getLoader()
+#2 /home/dobsykjq/hr.dobs.cloud/public/index.php(46): require('/home/dobsykjq/...')
+#3 {main}
+  thrown in /home/dobsykjq/hr.dobs.cloud/vendor/composer/autoload_real.php on line 41
+[13-Jan-2026 08:09:21 UTC] PHP Fatal error:  Composer detected issues in your platform: Your Composer dependencies require a PHP version ">= 8.3.0". You are running 8.2.29. in /home/dobsykjq/hr.dobs.cloud/vendor/composer/platform_check.php on line 26
