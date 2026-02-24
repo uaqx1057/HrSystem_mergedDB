@@ -11,6 +11,7 @@ class BusinessField extends BaseModel
     use HasFactory;
 
     public $timestamps = false;
+    protected $table='business_field';
 
     protected $guarded = ['id', '_token', '_method'];
 

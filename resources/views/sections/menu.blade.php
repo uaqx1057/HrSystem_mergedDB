@@ -112,8 +112,11 @@
 <!-- NAV ITEM - DMS COLLAPASE MENU -->
 @php
     // dd(user());
+
 @endphp
-@if ((in_array('drivers', user_modules()) || in_array('businesses', user_modules()) || in_array('coordinatorReports', user_modules())) && ($sidebarUserPermissions['view_drivers'] != 5 || $sidebarUserPermissions['view_businesses'] != 5 || $sidebarUserPermissions['view_coordinator_reports'] != 5) && ($sidebarUserPermissions['view_drivers'] != 'none' || $sidebarUserPermissions['view_businesses'] != 'none' || $sidebarUserPermissions['view_coordinator_reports'] != 'none'))
+@if ((in_array('drivers', user_modules()) || in_array('businesses', user_modules()) || in_array('coordinatorReports', user_modules())) && ($sidebarUserPermissions['view_drivers'] == 5 || $sidebarUserPermissions['view_businesses'] == 5 || $sidebarUserPermissions['view_coordinator_reports'] == 5) && ($sidebarUserPermissions['view_drivers'] != 'none' || $sidebarUserPermissions['view_businesses'] != 'none' || $sidebarUserPermissions['view_coordinator_reports'] != 'none'))
+
+
 <x-menu-item icon="people" :text="__('app.menu.dms')">
     <x-slot name="iconPath">
         <path
@@ -121,23 +124,23 @@
     </x-slot>
     <div class="accordionItemContent pb-2">
 
-        @if (in_array('branches', user_modules()) && $sidebarUserPermissions['view_branches'] != 5 && $sidebarUserPermissions['view_branches'] != 'none')
+        @if (in_array('branches', user_modules()) && $sidebarUserPermissions['view_branches'] == 5  && $sidebarUserPermissions['view_branches'] != 'none')
         <x-sub-menu-item :link="route('branches.index')" :text="__('app.menu.branches')" />
         @endif
-
-        @if (in_array('driverTypes', user_modules()) && $sidebarUserPermissions['view_driver_types'] != 5 && $sidebarUserPermissions['view_driver_types'] != 'none')
+        @if (in_array('driverTypes', user_modules()) && $sidebarUserPermissions['view_driver_types'] == 5 && $sidebarUserPermissions['view_driver_types'] != 'none')
         <x-sub-menu-item :link="route('driver-types.index')" :text="__('app.menu.driver_types')" />
         @endif
-        @if (in_array('drivers', user_modules()) && $sidebarUserPermissions['view_drivers'] != 5 && $sidebarUserPermissions['view_drivers'] != 'none')
+        @if (in_array('drivers', user_modules()) && $sidebarUserPermissions['view_drivers'] == 5 && $sidebarUserPermissions['view_drivers'] != 'none')
+            
             <x-sub-menu-item :link="route('drivers.index')" :text="__('app.menu.drivers')" />
         @endif
-        @if (in_array('businesses', user_modules()) && $sidebarUserPermissions['view_businesses'] != 5 && $sidebarUserPermissions['view_businesses'] != 'none')
+      {{--  @if (in_array('businesses', user_modules()) && $sidebarUserPermissions['view_businesses'] == 5 && $sidebarUserPermissions['view_businesses'] != 'none')
             <x-sub-menu-item :link="route('businesses.index')" :text="__('app.menu.businesses')" />
-        @endif
-        @if (in_array('coordinatorReports', user_modules()) && $sidebarUserPermissions['view_coordinator_reports'] != 5 && $sidebarUserPermissions['view_coordinator_reports'] != 'none')
+        @endif--}}
+        @if (in_array('coordinatorReports', user_modules()) && $sidebarUserPermissions['view_coordinator_reports'] == 5 && $sidebarUserPermissions['view_coordinator_reports'] != 'none')
             <x-sub-menu-item :link="route('coordinator-report.index')" :text="__('app.menu.coordinatorReport')" />
         @endif
-        @if (in_array('payroll', user_modules()) && $sidebarUserPermissions['view_payroll'] != 5 && $sidebarUserPermissions['view_payroll'] != 'none')
+        @if (in_array('payroll', user_modules()) && $sidebarUserPermissions['view_payroll'] == 5 && $sidebarUserPermissions['view_payroll'] != 'none')
         <x-sub-menu-item :link="route('dms.payroll.index')" :text="__('app.menu.payroll')" />
         @endif
         <!-- NAV ITEM - CUSTOM MODULES  -->
@@ -155,7 +158,7 @@
         @endif
     </div>
 </x-menu-item>
-@endif
+<!-- @endif -->
 
 <!-- NAV ITEM - WORK COLLAPSE MENU -->
     @if ((in_array('contracts', user_modules()) || in_array('projects', user_modules()) || in_array('tasks', user_modules()) || in_array('timelogs', user_modules())) && ($sidebarUserPermissions['view_contract'] != 5 || $sidebarUserPermissions['view_projects'] != 5 || $sidebarUserPermissions['view_tasks'] != 5 || $sidebarUserPermissions['view_timelogs'] != 5) && ($sidebarUserPermissions['view_contract'] != 'none' || $sidebarUserPermissions['view_projects'] != 'none' || $sidebarUserPermissions['view_tasks'] != 'none' || $sidebarUserPermissions['view_timelogs'] != 'none'))

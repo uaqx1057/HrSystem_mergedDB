@@ -33,7 +33,7 @@ class StoreRequest extends CoreRequest
         $rules = [
             'business_id' => 'required|exists:businesses,id',
             'driver_id' => 'required|exists:drivers,id',
-            'fields.*.field_id' => 'required|exists:business_fields,id',
+            'fields.*.field_id' => 'required|exists:business_field,id',
             'fields.*.value' => 'nullable',
             'report_date' => 'required|date_format:"' . $setting->date_format . '"',
             // 'report_unique' => [

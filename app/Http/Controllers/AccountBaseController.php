@@ -61,12 +61,12 @@ class AccountBaseController extends Controller
             return true;
         }
 
-        abort_403(!user()->admin_approval && request()->ajax());
+        // abort_403(!user()->admin_approval && request()->ajax());
 
-        if (!user()->admin_approval && Route::currentRouteName() != 'account_unverified') {
-            // send() is added to force redirect from here rather return to called function
-            return redirect(route('account_unverified'))->send();
-        }
+        // if (!user()->admin_approval && Route::currentRouteName() != 'account_unverified') {
+        //     // send() is added to force redirect from here rather return to called function
+        //     return redirect(route('account_unverified'))->send();
+        // }
 
         $this->adminTheme = admin_theme();
         $this->invoiceSetting = invoice_setting();

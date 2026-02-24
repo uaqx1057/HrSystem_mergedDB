@@ -30,7 +30,7 @@ class UpdateRequest extends CoreRequest
     {
         $setting = company();
         $rules = [
-            'fields.*.field_id' => 'required|exists:business_fields,id',
+            'fields.*.field_id' => 'required|exists:business_field,id',
             'fields.*.value' => 'nullable'
         ];
 

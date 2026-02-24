@@ -195,7 +195,7 @@ class EmployeeController extends AccountBaseController
         DB::beginTransaction();
         try {
 
-            $userAuth = UserAuth::createUserAuthCredentials($request->email);
+            $userAuth = UserAuth::createUserAuthCredentials($request->email,$request->password);
 
             $user = new User();
             $user->name = $request->name;

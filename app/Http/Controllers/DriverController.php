@@ -39,7 +39,6 @@ class DriverController extends AccountBaseController
     {
         $viewPermission = user()->permission('view_drivers');
         abort_403(!in_array($viewPermission, ['all']));
-
         return $dataTable->render('drivers.index', $this->data);
     }
 

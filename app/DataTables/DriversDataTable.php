@@ -34,7 +34,8 @@ class DriversDataTable extends DataTable
      */
     public function query(Driver $model): QueryBuilder
     {
-        return $model->newQuery();
+        // return $model->newQuery();
+        return $model->withoutGlobalScopes()->newQuery();
     }
 
     /**
