@@ -1006,8 +1006,10 @@ class EmployeeController extends AccountBaseController
     {
         $employee->employee_id = $request->employee_id;
         $employee->address = $request->address;
-        $employee->hourly_rate = $request->hourly_rate;
         $employee->slack_username = $request->slack_username;
+        $employee->iqama_no = $request->iqama_no;
+        $employee->iqama_expiry_date = Carbon::createFromFormat($this->company->date_format,$request->iqama_expiry_date)->format('Y-m-d');
+        $employee->sponsor_kafala = $request->sponsor_kafala;
         $employee->department_id = $request->department;
         $employee->designation_id = $request->designation;
         $employee->reporting_to = $request->reporting_to;

@@ -71,6 +71,27 @@ $addDesignationPermission = user()->permission('add_designation');
                                     </select>
                                 </x-forms.input-group>
                             </div>
+                            
+                            <div class="col-lg-4 col-md-6">
+                                <x-forms.text fieldId="iqama_no" :fieldLabel="__('modules.employees.Iqama No')"
+                                    fieldName="iqama_no" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama')">
+                                </x-forms.text>
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <x-forms.datepicker 
+                                    fieldId="iqama_expiry_date"
+                                    :fieldLabel="__('modules.employees.iqama_expiry_date')"
+                                    fieldName="iqama_expiry_date"
+                                    :fieldPlaceholder="__('placeholders.iqama_expiry_date')"
+                                    minlength="10"
+                                    maxlength="10"
+                                />
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <x-forms.text fieldId="sponsor_kafala." :fieldLabel="__('modules.employees.Sponsor / kafala')"
+                                    fieldName="sponsor_kafala" fieldRequired="true" :fieldPlaceholder="__('placeholders.sponsor_kafala')">
+                                </x-forms.text>
+                            </div>
                         </div>
                     </div>
                     <div class="col-lg-3">
@@ -207,22 +228,8 @@ $addDesignationPermission = user()->permission('add_designation');
                     </div>
 
                     <div class="col-lg-3 col-md-6">
-                        <x-forms.label class="my-3" fieldId="hourly_rate"
-                            :fieldLabel="__('modules.employees.hourlyRate')"></x-forms.label>
-                        <x-forms.input-group>
-                            <x-slot name="prepend">
-                                <span
-                                    class="input-group-text f-14 bg-white-shade">{{ company()->currency->currency_symbol }}</span>
-                            </x-slot>
-
-                            <input type="number" step=".01" min="0" class="form-control height-35 f-14"
-                                name="hourly_rate" id="hourly_rate">
-                        </x-forms.input-group>
-                    </div>
-
-                    <div class="col-lg-3 col-md-6">
                         <x-forms.label class="my-3" fieldId="slack_username"
-                            :fieldLabel="__('modules.employees.slackUsername')"></x-forms.label>
+                            :fieldLabel="__('modules.employees.linkedinUsername')"></x-forms.label>
                         <x-forms.input-group>
                             <x-slot name="prepend">
                                 <span class="input-group-text f-14 bg-white-shade">@</span>
@@ -355,6 +362,10 @@ $addDesignationPermission = user()->permission('add_designation');
             });
         });
 
+        datepicker('#iqama_expiry_date', {
+            position: 'bl',
+            ...datepickerConfig
+        });
         datepicker('#joining_date', {
             position: 'bl',
             ...datepickerConfig

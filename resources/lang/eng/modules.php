@@ -403,6 +403,10 @@ return array(
 
         'memo' => 'Memo',
         'slackUsername' => 'Slack Member ID',
+        'linkedinUsername' => 'linkedIn ID',
+        'Iqama No' => 'Iqama No',
+        'iqama_expiry_date' => 'Iqama Expiry Date',
+        'Sponsor / kafala' => 'Sponsor / kafala',
         'joiningDate' => 'Joining Date',
         'workAnniversary' => 'Work Anniversary',
         'joineeAndWorkAnniversary' => 'Today\'s Joinings & Work Anniversary',
