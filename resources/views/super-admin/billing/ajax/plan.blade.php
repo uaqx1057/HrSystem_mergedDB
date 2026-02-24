@@ -103,11 +103,7 @@
                      </ul>
                 </div>
 
-                <div class="align-self-center">
-                    <a href="{{ route('billing.upgrade_plan') }}" class='btn-primary btn btn-lg rounded'>
-                        <i class="bi bi-stars"></i> @lang('superadmin.packages.upgradePlan')
-                    </a>
-                </div>
+
             </div>
         </div>
     </div>
