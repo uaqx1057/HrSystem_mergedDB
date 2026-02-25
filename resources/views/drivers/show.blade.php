@@ -51,10 +51,6 @@ if ($viewPermission == 'all'
                     </li>
 
                     <li>
-                        <x-tab :href="route('drivers.show', $driver->id) . '?tab=businesses'" :text="__('app.menu.businesses')" ajax="false" class="businesses" />
-                    </li>
-
-                    <li>
                         <x-tab :href="route('drivers.show', $driver->id) . '?tab=employment'" :text="__('app.menu.employment')" ajax="false" class="employment" />
                     </li>
 
