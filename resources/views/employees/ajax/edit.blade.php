@@ -84,6 +84,29 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
                                     </select>
                                 </x-forms.input-group>
                             </div>
+                            
+                            <div class="col-lg-4 col-md-6">
+                                <x-forms.text fieldId="iqama_no" :fieldLabel="__('modules.employees.Iqama No')"
+                                    fieldName="iqama_no" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama')" :fieldValue="$employee->employeeDetail->iqama_no">
+                                </x-forms.text>
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <x-forms.datepicker 
+                                    fieldId="iqama_expiry_date"
+                                    :fieldLabel="__('modules.employees.iqama_expiry_date')"
+                                    fieldName="iqama_expiry_date"
+                                    :fieldPlaceholder="__('placeholders.iqama_expiry_date')"
+                                    minlength="10"
+                                    maxlength="10"
+                                    :fieldValue="optional($employee->employeeDetail->iqama_expiry_date)->format(company()->date_format)" 
+                                />
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <x-forms.text fieldId="sponsor_kafala." :fieldLabel="__('modules.employees.Sponsor / kafala')"
+                                    fieldName="sponsor_kafala" fieldRequired="true" :fieldPlaceholder="__('placeholders.sponsor_kafala')"
+                                     :fieldValue="$employee->employeeDetail->sponsor_kafala">
+                                </x-forms.text>
+                            </div>
 
 
                         </div>
@@ -270,23 +293,8 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
 
 
                     <div class="col-md-4">
-                        <x-forms.label class="my-3" fieldId="hourly_rate"
-                            :fieldLabel="__('modules.employees.hourlyRate')"></x-forms.label>
-                        <x-forms.input-group>
-                            <x-slot name="prepend">
-                                <span
-                                    class="input-group-text f-14 bg-white-shade">{{ company()->currency->currency_symbol }}</span>
-                            </x-slot>
-
-                            <input type="number" step=".01" min="0" class="form-control height-35 f-14"
-                                value="{{ $employee->employeeDetail->hourly_rate ?? '' }}" name="hourly_rate"
-                                id="hourly_rate">
-                        </x-forms.input-group>
-                    </div>
-
-                    <div class="col-md-4">
                         <x-forms.label class="my-3" fieldId="slack_username"
-                            :fieldLabel="__('modules.employees.slackUsername')"></x-forms.label>
+                            :fieldLabel="__('modules.employees.linkedinUsername')"></x-forms.label>
                         <x-forms.input-group>
                             <x-slot name="prepend">
                                 <span class="input-group-text f-14 bg-white-shade">@</span>
@@ -417,7 +425,17 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
             @endif
             ...datepickerConfig
         });
+        @php
+            $iqamaExpiryDate = $employee->employeeDetail?->iqama_expiry_date;
+        @endphp
 
+        datepicker('#iqama_expiry_date', {
+            position: 'bl',
+            @if ($iqamaExpiryDate)
+                dateSelected: new Date("{{ str_replace('-', '/', $iqamaExpiryDate) }}"),
+            @endif
+            ...datepickerConfig
+        });
         datepicker('#date_of_birth', {
             position: 'bl',
             maxDate: new Date(),
