@@ -158,7 +158,7 @@ class EmployeesDataTable extends BaseDataTable
         $datatables->editColumn(
             'status',
             function ($row) {
-                if ($row->status == 'active') {
+                if ($row->status == 'Active') {
                     return ' <i class="fa fa-circle mr-1 text-light-green f-10"></i>' . __('app.active');
                 }
 

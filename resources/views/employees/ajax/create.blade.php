@@ -71,10 +71,26 @@ $addDesignationPermission = user()->permission('add_designation');
                                     </select>
                                 </x-forms.input-group>
                             </div>
-                            
-                            <div class="col-lg-4 col-md-6">
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
+                            :fieldLabel="__('modules.profile.profilePicture')" fieldName="image" fieldId="image"
+                            fieldHeight="119" :popover="__('messages.fileFormat.ImageFile')" />
+                    </div>
+                    <div class="col-lg-4 col-md-6">
                                 <x-forms.text fieldId="iqama_no" :fieldLabel="__('modules.employees.Iqama No')"
                                     fieldName="iqama_no" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama')">
+                                </x-forms.text>
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <x-forms.text fieldId="iqama_designation" :fieldLabel="__('modules.employees.iqama_designation')"
+                                    fieldName="iqama_designation" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama_designation')">
+                                </x-forms.text>
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <x-forms.text fieldId="iqama_profession" :fieldLabel="__('modules.employees.iqama_profession')"
+                                    fieldName="iqama_profession" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama_profession')">
                                 </x-forms.text>
                             </div>
                             <div class="col-lg-4 col-md-6">
@@ -87,18 +103,36 @@ $addDesignationPermission = user()->permission('add_designation');
                                     maxlength="10"
                                 />
                             </div>
+                            
+                            <div class="col-lg-4 col-md-6">
+                                <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
+                                    :fieldLabel="__('modules.employees.iqama_image')" fieldName="iqama_image" fieldId="iqama_image"
+                                    fieldHeight="119" :popover="__('messages.fileFormat.iqama_image')" />
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <x-forms.text fieldId="passport_no" :fieldLabel="__('modules.employees.passport_no')"
+                                    fieldName="passport_no" fieldRequired="true" :fieldPlaceholder="__('placeholders.passport_no')">
+                                </x-forms.text>
+                            </div>
+                            <div class="col-lg-4 col-md-6">
+                                <x-forms.datepicker 
+                                    fieldId="passport_expiry_date"
+                                    :fieldLabel="__('modules.employees.passport_expiry_date')"
+                                    fieldName="passport_expiry_date"
+                                    :fieldPlaceholder="__('placeholders.passport_expiry_date')"
+                                />
+                            </div>
+                            
+                            <div class="col-lg-4 col-md-6">
+                                <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
+                                    :fieldLabel="__('modules.employees.passport_image')" fieldName="passport_image" fieldId="passport_image"
+                                    fieldHeight="119" :popover="__('messages.fileFormat.passport_image')" />
+                            </div>
                             <div class="col-lg-4 col-md-6">
                                 <x-forms.text fieldId="sponsor_kafala." :fieldLabel="__('modules.employees.Sponsor / kafala')"
                                     fieldName="sponsor_kafala" fieldRequired="true" :fieldPlaceholder="__('placeholders.sponsor_kafala')">
                                 </x-forms.text>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3">
-                        <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
-                            :fieldLabel="__('modules.profile.profilePicture')" fieldName="image" fieldId="image"
-                            fieldHeight="119" :popover="__('messages.fileFormat.ImageFile')" />
-                    </div>
                     @php
                         $showButton = true; // or false, depending on your condition
                     @endphp
@@ -231,18 +265,11 @@ $addDesignationPermission = user()->permission('add_designation');
                         <x-forms.label class="my-3" fieldId="slack_username"
                             :fieldLabel="__('modules.employees.linkedinUsername')"></x-forms.label>
                         <x-forms.input-group>
-                            <x-slot name="prepend">
-                                <span class="input-group-text f-14 bg-white-shade">@</span>
-                            </x-slot>
+                            
 
                             <input type="text" class="form-control height-35 f-14" name="slack_username"
                                 id="slack_username">
                         </x-forms.input-group>
-                    </div>
-
-                    <div class="col-md-12">
-                        <x-forms.text fieldId="tags" :fieldLabel="__('app.skills')" fieldName="tags"
-                            :fieldPlaceholder="__('placeholders.skills')" />
                     </div>
 
                     @if (function_exists('sms_setting') && sms_setting()->telegram_status)
@@ -303,16 +330,30 @@ $addDesignationPermission = user()->permission('add_designation');
 
                     <div class="col-lg-3 col-md-6">
                         <x-forms.select fieldId="marital_status" :fieldLabel="__('modules.employees.maritalStatus')"
-                            fieldName="marital_status" :fieldPlaceholder="__('placeholders.date')">
+                            fieldName="marital_status">
                             @foreach (\App\Enums\MaritalStatus::cases() as $status)
                                 <option value="{{ $status->value }}">{{ $status->label() }}</option>
                             @endforeach
                         </x-forms.select>
                     </div>
 
-                    <div class="col-lg-3 col-md-6 d-none marriage_date">
-                        <x-forms.datepicker fieldId="marriage_anniversary_date" :fieldLabel="__('modules.employees.marriageAnniversaryDate')"
-                            fieldName="marriage_anniversary_date" :fieldPlaceholder="__('placeholders.date')"/>
+                    {{-- ▼▼▼ NEW: no_of_dependants (hidden until married) ▼▼▼ --}}
+                    <div class="col-lg-3 col-md-6 d-none dependant">
+                        <x-forms.text fieldId="no_of_dependants"
+                            :fieldLabel="__('modules.employees.no_of_dependants')"
+                            fieldName="no_of_dependants"
+                            :fieldPlaceholder="__('placeholders.no_of_dependants')">
+                        </x-forms.text>
+                    </div>
+
+                    {{-- ▼▼▼ NEW: dynamic dependant rows container ▼▼▼ --}}
+                    <div class="col-md-12 d-none dependant-rows-wrapper">
+                        <hr>
+                        <h6 class="f-15 font-weight-bold mb-3">@lang('modules.employees.dependants')</h6>
+                        <div id="dependant-rows"></div>
+                        <button type="button" id="add-dependant-btn" class="btn btn-outline-primary btn-sm mt-2">
+                            <i class="fa fa-plus mr-1"></i> @lang('modules.employees.addDependant')
+                        </button>
                     </div>
 
                     <input type ="hidden" name="add_more" value="false" id="add_more" />
@@ -336,7 +377,7 @@ $addDesignationPermission = user()->permission('add_designation');
     </div>
 </div>
 
-<script src="{{ asset('vendor/jquery/tagify.min.js') }}"></script>
+<!-- <script src="{{ asset('vendor/jquery/tagify.min.js') }}"></script> -->
 @if (function_exists('sms_setting') && sms_setting()->telegram_status)
     <script src="{{ asset('vendor/jquery/clipboard.min.js') }}"></script>
 @endif
@@ -366,6 +407,10 @@ $addDesignationPermission = user()->permission('add_designation');
             position: 'bl',
             ...datepickerConfig
         });
+        datepicker('#passport_expiry_date', {
+            position: 'bl',
+            ...datepickerConfig
+        });
         datepicker('#joining_date', {
             position: 'bl',
             ...datepickerConfig
@@ -386,11 +431,7 @@ $addDesignationPermission = user()->permission('add_designation');
             ...datepickerConfig
         });
 
-        datepicker('#marriage_anniversary_date', {
-            position: 'bl',
-            ...datepickerConfig
-        });
-
+       
         datepicker('#date_of_birth', {
             position: 'bl',
             maxDate: new Date(),
@@ -407,15 +448,96 @@ $addDesignationPermission = user()->permission('add_designation');
             ...datepickerConfig
         });
 
-        $('#marital_status').change(function(){
+           $('#marital_status').change(function(){
             var value = $(this).val();
             if(value == '{{ \App\Enums\MaritalStatus::Married->value }}') {
-                $('.marriage_date').removeClass('d-none');
+                $('.dependant').removeClass('d-none');
+                $('.dependant-rows-wrapper').removeClass('d-none');
+            } else {
+                $('.dependant').addClass('d-none');
+                $('.dependant-rows-wrapper').addClass('d-none');
+                $('#dependant-rows').empty();
             }
-            else {
-                $('.marriage_date').addClass('d-none');
+        });
+
+        // ── DEPENDANT ROWS LOGIC ──────────────────────────────
+        var maxDependants  = 0;
+        var addedDependants = 0;
+
+        $('#no_of_dependants').on('input', function(){
+            maxDependants   = parseInt($(this).val()) || 0;
+            addedDependants = $('#dependant-rows .dependant-row').length;
+            updateAddButton();
+        });
+
+        function updateAddButton() {
+            if (addedDependants < maxDependants) {
+                $('#add-dependant-btn').removeClass('d-none');
+            } else {
+                $('#add-dependant-btn').addClass('d-none');
             }
-        })
+        }
+
+        function addDependantRow() {
+            var idx = addedDependants;
+            var row = `
+                <div class="row dependant-row border rounded p-2 mb-2" data-index="${idx}">
+                    <div class="col-lg-3 col-md-6 mb-2">
+                        <label class="f-14 text-dark-grey">Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control height-35 f-14"
+                               name="dependants[${idx}][name]" placeholder="Name" required>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-2">
+                        <label class="f-14 text-dark-grey">Iqama No</label>
+                        <input type="text" class="form-control height-35 f-14"
+                               name="dependants[${idx}][iqama_no]" placeholder="Iqama No">
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-2">
+                        <label class="f-14 text-dark-grey">Relation <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control height-35 f-14"
+                               name="dependants[${idx}][relation]" placeholder="e.g. Spouse, Child" required>
+                    </div>
+                    <div class="col-lg-2 col-md-5 mb-2">
+                        <label class="f-14 text-dark-grey">Date of Birth</label>
+                        <input type="text" id="dep_dob_${idx}"
+                               class="form-control height-35 f-14 dependant-dob"
+                               name="dependants[${idx}][date_of_birth]" placeholder="Date of Birth" autocomplete="off">
+                    </div>
+                    <div class="col-lg-1 col-md-1 mb-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-dependant-btn">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>`;
+            $('#dependant-rows').append(row);
+
+            // init datepicker on the new dob field
+            datepicker('#dep_dob_' + idx, {
+                position: 'bl',
+                maxDate: new Date(),
+                ...datepickerConfig
+            });
+
+            addedDependants++;
+            updateAddButton();
+        }
+
+        $('#add-dependant-btn').on('click', function(){
+            addDependantRow();
+        });
+
+        $(document).on('click', '.remove-dependant-btn', function(){
+            $(this).closest('.dependant-row').remove();
+            addedDependants = $('#dependant-rows .dependant-row').length;
+            // re-index names
+            $('#dependant-rows .dependant-row').each(function(i){
+                $(this).find('[name]').each(function(){
+                    var n = $(this).attr('name').replace(/\[\d+\]/, '[' + i + ']');
+                    $(this).attr('name', n);
+                });
+            });
+            updateAddButton();
+        });
 
         $('#employment_type').change(function(){
             var value = $(this).val();
@@ -433,9 +555,9 @@ $addDesignationPermission = user()->permission('add_designation');
                 $('.internship-date').addClass('d-none');
             }
         })
-        var input = document.querySelector('input[name=tags]'),
-            // init Tagify script on the above inputs
-            tagify = new Tagify(input);
+        // var input = document.querySelector('input[name=tags]'),
+        //     // init Tagify script on the above inputs
+        //     tagify = new Tagify(input);
 
         $('#save-more-employee-form').click(function() {
 

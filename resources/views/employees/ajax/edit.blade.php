@@ -1,6 +1,14 @@
 @php
 $addDesignationPermission = user()->permission('add_designation');
 $changeEmployeeRolePermission = user()->permission('change_employee_role');
+$existingDependants = \App\Models\EmployeeDependant::where('employee_id', $employee->id)->get();
+
+// Safely resolve marital_status whether stored as enum object or plain string
+$rawMaritalStatus = $employee->employeeDetail->marital_status;
+$storedMaritalStatus = ($rawMaritalStatus instanceof \App\Enums\MaritalStatus)
+    ? $rawMaritalStatus->value
+    : (string) $rawMaritalStatus;
+$isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
 @endphp
 
 <link rel="stylesheet" href="{{ asset('vendor/css/tagify.css') }}">
@@ -8,7 +16,6 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
     .tagify_tags .height-35 {
         height: auto !important;
     }
-
 </style>
 
 <div class="row">
@@ -60,13 +67,6 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
                                                 {{ $designation->name }}</option>
                                         @endforeach
                                     </select>
-
-                                    {{-- @if ($addDesignationPermission == 'all' || $addDesignationPermission == 'added')
-                                        <x-slot name="append">
-                                            <button id="designation-setting-edit" type="button"
-                                                class="btn btn-outline-secondary border-grey">@lang('app.add')</button>
-                                        </x-slot>
-                                    @endif --}}
                                 </x-forms.input-group>
                             </div>
                             <div class="col-md-4">
@@ -84,61 +84,117 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
                                     </select>
                                 </x-forms.input-group>
                             </div>
-                            
-                            <div class="col-lg-4 col-md-6">
-                                <x-forms.text fieldId="iqama_no" :fieldLabel="__('modules.employees.Iqama No')"
-                                    fieldName="iqama_no" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama')" :fieldValue="$employee->employeeDetail->iqama_no">
-                                </x-forms.text>
-                            </div>
-                            <div class="col-lg-4 col-md-6">
-                                <x-forms.datepicker 
-                                    fieldId="iqama_expiry_date"
-                                    :fieldLabel="__('modules.employees.iqama_expiry_date')"
-                                    fieldName="iqama_expiry_date"
-                                    :fieldPlaceholder="__('placeholders.iqama_expiry_date')"
-                                    minlength="10"
-                                    maxlength="10"
-                                    :fieldValue="optional($employee->employeeDetail->iqama_expiry_date)->format(company()->date_format)" 
-                                />
-                            </div>
-                            <div class="col-lg-4 col-md-6">
-                                <x-forms.text fieldId="sponsor_kafala." :fieldLabel="__('modules.employees.Sponsor / kafala')"
-                                    fieldName="sponsor_kafala" fieldRequired="true" :fieldPlaceholder="__('placeholders.sponsor_kafala')"
-                                     :fieldValue="$employee->employeeDetail->sponsor_kafala">
-                                </x-forms.text>
-                            </div>
-
-
                         </div>
                     </div>
                     <div class="col-lg-3">
-        
                         <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
                             :fieldLabel="__('modules.profile.profilePicture')"
                             :fieldValue="($employee->image ? $employee->masked_image_url : $employee->image_url)" fieldName="image"
                             fieldId="image" fieldHeight="119" :popover="__('messages.fileFormat.ImageFile')" />
                     </div>
+
+                    {{-- IQAMA --}}
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.text fieldId="iqama_no" :fieldLabel="__('modules.employees.Iqama No')"
+                            fieldName="iqama_no" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama')" :fieldValue="$employee->employeeDetail->iqama_no">
+                        </x-forms.text>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.text fieldId="iqama_designation" :fieldLabel="__('modules.employees.iqama_designation')"
+                            fieldName="iqama_designation" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama_designation')" :fieldValue="$employee->employeeDetail->iqama_designation">
+                        </x-forms.text>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.text fieldId="iqama_profession" :fieldLabel="__('modules.employees.iqama_profession')"
+                            fieldName="iqama_profession" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama_profession')" :fieldValue="$employee->employeeDetail->iqama_profession">
+                        </x-forms.text>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.datepicker
+                            fieldId="iqama_expiry_date"
+                            :fieldLabel="__('modules.employees.iqama_expiry_date')"
+                            fieldName="iqama_expiry_date"
+                            :fieldPlaceholder="__('placeholders.iqama_expiry_date')"
+                            :fieldValue="optional($employee->employeeDetail->iqama_expiry_date)->format(company()->date_format)"
+                        />
+                    </div>
+                    {{-- FIX: iqama_image with :fieldValue to load saved image --}}
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp"
+                            class="mr-0 mr-lg-2 mr-md-2 cropper"
+                            :fieldLabel="__('modules.employees.iqama_image')"
+                            fieldName="iqama_image"
+                            fieldId="iqama_image"
+                            fieldHeight="119"
+                            :fieldValue="($employee->employeeDetail->iqama_image ? asset('user-uploads/iqama/' . $employee->employeeDetail->iqama_image) : null)"
+                            :popover="__('messages.fileFormat.iqama_image')" />
+                    </div>
+
+                    {{-- PASSPORT --}}
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.text fieldId="passport_no" :fieldLabel="__('modules.employees.passport_no')"
+                            fieldName="passport_no" fieldRequired="true" :fieldPlaceholder="__('placeholders.passport_no')" :fieldValue="$employee->employeeDetail->passport_no">
+                        </x-forms.text>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.datepicker
+                            fieldId="passport_expiry_date"
+                            :fieldLabel="__('modules.employees.passport_expiry_date')"
+                            fieldName="passport_expiry_date"
+                            :fieldPlaceholder="__('placeholders.passport_expiry_date')"
+                            :fieldValue="optional($employee->employeeDetail->passport_expiry_date)->format(company()->date_format)"
+                        />
+                    </div>
+                    {{-- FIX: passport_image with :fieldValue to load saved image --}}
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp"
+                            class="mr-0 mr-lg-2 mr-md-2 cropper"
+                            :fieldLabel="__('modules.employees.passport_image')"
+                            fieldName="passport_image"
+                            fieldId="passport_image"
+                            fieldHeight="119"
+                            :fieldValue="($employee->employeeDetail->passport_image ? asset('user-uploads/passport/' . $employee->employeeDetail->passport_image) : null)"
+                            :popover="__('messages.fileFormat.passport_image')" />
+                    </div>
+
+                    {{-- SPONSOR --}}
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.text fieldId="sponsor_kafala" :fieldLabel="__('modules.employees.Sponsor / kafala')"
+                            fieldName="sponsor_kafala" fieldRequired="true" :fieldPlaceholder="__('placeholders.sponsor_kafala')"
+                            :fieldValue="$employee->employeeDetail->sponsor_kafala">
+                        </x-forms.text>
+                    </div>
+                    {{-- sponsorship_transfer_date as datepicker (was wrongly a plain text input) --}}
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.datepicker
+                            fieldId="sponsorship_transfer_date"
+                            :fieldLabel="__('modules.employees.sponsorship_transfer_date')"
+                            fieldName="sponsorship_transfer_date"
+                            :fieldPlaceholder="__('placeholders.sponsorship_transfer_date')"
+                            :fieldValue="optional($employee->employeeDetail->sponsorship_transfer_date)->format(company()->date_format)"
+                        />
+                    </div>
+
                     <div class="col-md-4 col-lg-3">
-                        <x-forms.select fieldId="country" :fieldLabel="__('app.country')" fieldName="country"
-                            search="true">
+                        <x-forms.select fieldId="country" :fieldLabel="__('app.country')" fieldName="country" search="true">
                             <option value="">--</option>
                             @foreach ($countries as $item)
-                                <option @if ($employee->country_id == $item->id) selected @endif data-mobile="{{ $employee->mobile }}" data-tokens="{{ $item->iso3 }}" data-phonecode="{{ $item->phonecode }}" data-content="<span
-                                class='flag-icon flag-icon-{{ strtolower($item->iso) }} flag-icon-squared'></span>
-                            {{ $item->nicename }}" value="{{ $item->id }}">{{ $item->nicename }}</option>
+                                <option @if ($employee->country_id == $item->id) selected @endif
+                                    data-mobile="{{ $employee->mobile }}" data-tokens="{{ $item->iso3 }}"
+                                    data-phonecode="{{ $item->phonecode }}"
+                                    data-content="<span class='flag-icon flag-icon-{{ strtolower($item->iso) }} flag-icon-squared'></span> {{ $item->nicename }}"
+                                    value="{{ $item->id }}">{{ $item->nicename }}</option>
                             @endforeach
                         </x-forms.select>
                     </div>
                     <div class="col-md-4">
-                        <x-forms.label class="my-3" fieldId="mobile"
-                            :fieldLabel="__('app.mobile')"></x-forms.label>
+                        <x-forms.label class="my-3" fieldId="mobile" :fieldLabel="__('app.mobile')"></x-forms.label>
                         <x-forms.input-group style="margin-top:-4px">
-                            <x-forms.select fieldId="country_phonecode" fieldName="country_phonecode"
-                                search="true">
+                            <x-forms.select fieldId="country_phonecode" fieldName="country_phonecode" search="true">
                                 @foreach ($countries as $item)
                                     <option @selected($employee->country_phonecode == $item->phonecode)
                                             data-tokens="{{ $item->name }}"
-                                            data-content="{{$item->flagSpanCountryCode()}}"
+                                            data-content="{{ $item->flagSpanCountryCode() }}"
                                             value="{{ $item->phonecode }}">{{ $item->phonecode }}
                                     </option>
                                 @endforeach
@@ -148,8 +204,7 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
                         </x-forms.input-group>
                     </div>
                     <div class="col-md-4 col-lg-3">
-                        <x-forms.select fieldId="gender" :fieldLabel="__('modules.employees.gender')"
-                            fieldName="gender">
+                        <x-forms.select fieldId="gender" :fieldLabel="__('modules.employees.gender')" fieldName="gender">
                             <option @if ($employee->gender == 'male') selected @endif value="male">@lang('app.male')</option>
                             <option @if ($employee->gender == 'female') selected @endif value="female">@lang('app.female')</option>
                             <option @if ($employee->gender == 'others') selected @endif value="others">@lang('app.others')</option>
@@ -165,10 +220,9 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
                             fieldName="date_of_birth" :fieldPlaceholder="__('placeholders.date')"
                             :fieldValue="($employee->employeeDetail->date_of_birth ? $employee->employeeDetail->date_of_birth->format(company()->date_format) : '')" />
                     </div>
-
                     <div class="col-md-4 col-lg-3">
                         <x-forms.select fieldId="reporting_to" :fieldLabel="__('modules.employees.reportingTo')"
-                            fieldName="reporting_to" :fieldPlaceholder="__('placeholders.date')" search="true">
+                            fieldName="reporting_to" search="true">
                             <option value="">--</option>
                             @foreach ($employees as $item)
                                 <x-user-option :user="$item" :selected="$employee->employeeDetail->reporting_to == $item->id"/>
@@ -176,38 +230,34 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
                         </x-forms.select>
                     </div>
                     <div class="col-md-4 col-lg-3">
-                        <x-forms.select fieldId="locale" :fieldLabel="__('app.language')"
-                            fieldName="locale" search="true">
+                        <x-forms.select fieldId="locale" :fieldLabel="__('app.language')" fieldName="locale" search="true">
                             @foreach ($languages as $language)
                                 <option @if ($employee->locale == $language->language_code) selected @endif
-                                data-content="<span class='flag-icon flag-icon-{{ ($language->flag_code == 'en') ? 'gb' : $language->flag_code }} flag-icon-squared'></span> {{ $language->language_name }}"
-                                value="{{ $language->language_code }}">{{ $language->language_name }}</option>
+                                    data-content="<span class='flag-icon flag-icon-{{ ($language->flag_code == 'en') ? 'gb' : $language->flag_code }} flag-icon-squared'></span> {{ $language->language_name }}"
+                                    value="{{ $language->language_code }}">{{ $language->language_name }}</option>
                             @endforeach
                         </x-forms.select>
                     </div>
 
                     @if (
-                    ((in_array('admin', $userRoles) && in_array('admin', user_roles()))
-                    || (!in_array('admin', $userRoles)))
-                    && $employee->id != user()->id
-                    && $changeEmployeeRolePermission == 'all'
+                        ((in_array('admin', $userRoles) && in_array('admin', user_roles()))
+                        || (!in_array('admin', $userRoles)))
+                        && $employee->id != user()->id
+                        && $changeEmployeeRolePermission == 'all'
                     )
                         <div class="col-md-4 col-lg-3">
                             <x-forms.select fieldId="role" :fieldLabel="__('app.role')" fieldName="role">
                                 @foreach ($roles as $role)
                                     <option
-                                    @if (
-                                        (in_array($role->name, $userRoles) && $role->name == 'admin')
-                                        || (in_array($role->name, $userRoles) && !in_array('admin', $userRoles))
-                                    )
-                                     selected
-                                    @endif
-                                    value="{{ $role->id }}">{{ $role->display_name }}</option>
+                                        @if (
+                                            (in_array($role->name, $userRoles) && $role->name == 'admin')
+                                            || (in_array($role->name, $userRoles) && !in_array('admin', $userRoles))
+                                        ) selected @endif
+                                        value="{{ $role->id }}">{{ $role->display_name }}</option>
                                 @endforeach
                             </x-forms.select>
                         </div>
                     @endif
-
 
                     @if ($employee->id != user()->id)
                         <div class="col-md-4 col-lg-3">
@@ -216,6 +266,7 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
                                 :fieldValue="($employee->employeeDetail->last_date ? $employee->employeeDetail->last_date->format(company()->date_format) : '')" />
                         </div>
                     @endif
+
                     <div class="col-md-12">
                         <div class="form-group my-3">
                             <x-forms.textarea class="mr-0 mr-lg-2 mr-md-2" :fieldLabel="__('app.address')"
@@ -231,7 +282,6 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
                             </x-forms.textarea>
                         </div>
                     </div>
-
                 </div>
 
                 <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-top-grey">
@@ -241,8 +291,7 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
                     @if ($employee->id != user()->id)
                         <div class="col-md-4">
                             <div class="form-group my-3">
-                                <label class="f-14 text-dark-grey mb-12 w-100"
-                                    for="usr">@lang('modules.client.clientCanLogin')</label>
+                                <label class="f-14 text-dark-grey mb-12 w-100" for="usr">@lang('modules.client.clientCanLogin')</label>
                                 <div class="d-flex">
                                     <x-forms.radio fieldId="login-yes" :fieldLabel="__('app.yes')" fieldName="login"
                                         fieldValue="enable" :checked="($employee->login == 'enable') ? 'checked' : ''">
@@ -257,22 +306,18 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
 
                     <div class="col-md-4">
                         <div class="form-group my-3">
-                            <label class="f-14 text-dark-grey mb-12 w-100"
-                                for="usr">@lang('modules.emailSettings.emailNotifications')</label>
+                            <label class="f-14 text-dark-grey mb-12 w-100" for="usr">@lang('modules.emailSettings.emailNotifications')</label>
                             <div class="d-flex">
                                 <x-forms.radio fieldId="notification-yes" :fieldLabel="__('app.yes')" fieldValue="1"
-                                    fieldName="email_notifications"
-                                    :checked="($employee->email_notifications) ? 'checked' : ''">
+                                    fieldName="email_notifications" :checked="($employee->email_notifications) ? 'checked' : ''">
                                 </x-forms.radio>
                                 <x-forms.radio fieldId="notification-no" :fieldLabel="__('app.no')" fieldValue="0"
-                                    fieldName="email_notifications"
-                                    :checked="(!$employee->email_notifications) ? 'checked' : ''">
+                                    fieldName="email_notifications" :checked="(!$employee->email_notifications) ? 'checked' : ''">
                                 </x-forms.radio>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Users cannot change their own status --}}
                     @if ($employee->id != user()->id && $employee->id != 1)
                         <div class="col-md-4">
                             <div class="form-group my-3">
@@ -291,25 +336,14 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
                         </div>
                     @endif
 
-
                     <div class="col-md-4">
                         <x-forms.label class="my-3" fieldId="slack_username"
                             :fieldLabel="__('modules.employees.linkedinUsername')"></x-forms.label>
                         <x-forms.input-group>
-                            <x-slot name="prepend">
-                                <span class="input-group-text f-14 bg-white-shade">@</span>
-                            </x-slot>
-
                             <input type="text" class="form-control height-35 f-14" autocomplete="off"
                                 value="{{ $employee->employeeDetail->slack_username ?? '' }}" name="slack_username"
                                 id="slack_username">
                         </x-forms.input-group>
-                    </div>
-
-                    <div class="col-md-12">
-                        <x-forms.text class="tagify_tags" fieldId="tags" :fieldLabel="__('app.skills')"
-                            fieldName="tags" :fieldPlaceholder="__('placeholders.skills')"
-                            :fieldValue="implode(',', $employee->skills())" />
                     </div>
 
                     @if (function_exists('sms_setting') && sms_setting()->telegram_status)
@@ -317,41 +351,40 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
                             <x-forms.number fieldName="telegram_user_id" fieldId="telegram_user_id"
                                 fieldLabel="<i class='fab fa-telegram'></i> {{ __('sms::modules.telegramUserId') }}"
                                 :fieldValue="$employee->telegram_user_id" :popover="__('sms::modules.userIdInfo')" />
-                            <p class="text-bold text-danger">
-                                @lang('sms::modules.telegramBotNameInfo')
-                            </p>
-                            <p class="text-bold"><span id="telegram-link-text">https://t.me/{{ sms_setting()->telegram_bot_name }}</span>
+                            <p class="text-bold text-danger">@lang('sms::modules.telegramBotNameInfo')</p>
+                            <p class="text-bold">
+                                <span id="telegram-link-text">https://t.me/{{ sms_setting()->telegram_bot_name }}</span>
                                 <a href="javascript:;" class="btn-copy btn-secondary f-12 rounded p-1 py-2 ml-1"
                                     data-clipboard-target="#telegram-link-text">
                                     <i class="fa fa-copy mx-1"></i>@lang('app.copy')</a>
-                                <a href="https://t.me/{{ sms_setting()->telegram_bot_name }}" target="_blank" class="btn-secondary f-12 rounded p-1 py-2 ml-1">
+                                <a href="https://t.me/{{ sms_setting()->telegram_bot_name }}" target="_blank"
+                                    class="btn-secondary f-12 rounded p-1 py-2 ml-1">
                                     <i class="fa fa-copy mx-1"></i>@lang('app.openInNewTab')</a>
                             </p>
                         </div>
                     @endif
+
                     <div class="col-lg-3 col-md-6">
                         <x-forms.datepicker fieldId="probation_end_date" :fieldLabel="__('modules.employees.probationEndDate')"
                             fieldName="probation_end_date" :fieldPlaceholder="__('placeholders.date')"
-                            :fieldValue="$employee->employeeDetail->probation_end_date ? Carbon\Carbon::parse($employee->employeeDetail->probation_end_date)->format(company()->date_format) : '' "
+                            :fieldValue="$employee->employeeDetail->probation_end_date ? Carbon\Carbon::parse($employee->employeeDetail->probation_end_date)->format(company()->date_format) : ''"
                             :popover="__('messages.probationEndDate')"/>
                     </div>
-
                     <div class="col-lg-3 col-md-6">
                         <x-forms.datepicker fieldId="notice_period_start_date" :fieldLabel="__('modules.employees.noticePeriodStartDate')"
                             fieldName="notice_period_start_date" :fieldPlaceholder="__('placeholders.date')"
-                            :fieldValue="$employee->employeeDetail->notice_period_start_date ? Carbon\Carbon::parse($employee->employeeDetail->notice_period_start_date)->format(company()->date_format) : '' "
+                            :fieldValue="$employee->employeeDetail->notice_period_start_date ? Carbon\Carbon::parse($employee->employeeDetail->notice_period_start_date)->format(company()->date_format) : ''"
                             :popover="__('messages.noticePeriodStartDate')"/>
                     </div>
-
                     <div class="col-lg-3 col-md-6">
                         <x-forms.datepicker fieldId="notice_period_end_date" :fieldLabel="__('modules.employees.noticePeriodEndDate')"
                             fieldName="notice_period_end_date" :fieldPlaceholder="__('placeholders.date')"
-                            :fieldValue="$employee->employeeDetail->notice_period_end_date ? Carbon\Carbon::parse($employee->employeeDetail->notice_period_end_date)->format(company()->date_format) : '' "
+                            :fieldValue="$employee->employeeDetail->notice_period_end_date ? Carbon\Carbon::parse($employee->employeeDetail->notice_period_end_date)->format(company()->date_format) : ''"
                             :popover="__('messages.noticePeriodEndDate')"/>
                     </div>
                     <div class="col-lg-3 col-md-6">
                         <x-forms.select fieldId="employment_type" :fieldLabel="__('modules.employees.employmentType')"
-                            fieldName="employment_type" :fieldPlaceholder="__('placeholders.date')">
+                            fieldName="employment_type">
                             <option value="">--</option>
                             <option value="full_time" @if($employee->employeeDetail->employment_type == 'full_time') selected @endif>@lang('app.fullTime')</option>
                             <option value="part_time" @if($employee->employeeDetail->employment_type == 'part_time') selected @endif>@lang('app.partTime')</option>
@@ -360,34 +393,93 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
                             <option value="trainee" @if($employee->employeeDetail->employment_type == 'trainee') selected @endif>@lang('app.trainee')</option>
                         </x-forms.select>
                     </div>
-
                     <div class="col-lg-3 col-md-6 d-none internship-date">
                         <x-forms.datepicker fieldId="internship_end_date" :fieldLabel="__('modules.employees.internshipEndDate')"
                             fieldName="internship_end_date" :fieldPlaceholder="__('placeholders.date')"
-                            :fieldValue="$employee->employeeDetail->internship_end_date ? Carbon\Carbon::parse($employee->employeeDetail->internship_end_date)->format(company()->date_format) : '' "/>
+                            :fieldValue="$employee->employeeDetail->internship_end_date ? Carbon\Carbon::parse($employee->employeeDetail->internship_end_date)->format(company()->date_format) : ''"/>
                     </div>
-
                     <div class="col-lg-3 col-md-6 d-none contract-date">
                         <x-forms.datepicker fieldId="contract_end_date" :fieldLabel="__('modules.employees.contractEndDate')"
                             fieldName="contract_end_date" :fieldPlaceholder="__('placeholders.date')"
-                            :fieldValue="$employee->employeeDetail->contract_end_date ? Carbon\Carbon::parse($employee->employeeDetail->contract_end_date)->format(company()->date_format) : '' "/>
+                            :fieldValue="$employee->employeeDetail->contract_end_date ? Carbon\Carbon::parse($employee->employeeDetail->contract_end_date)->format(company()->date_format) : ''"/>
                     </div>
 
+                    {{-- ── MARITAL STATUS ─────────────────────────────────────── --}}
                     <div class="col-lg-3 col-md-6">
                         <x-forms.select fieldId="marital_status" :fieldLabel="__('modules.employees.maritalStatus')"
-                            fieldName="marital_status" :fieldPlaceholder="__('placeholders.date')">
+                            fieldName="marital_status">
                             @foreach (\App\Enums\MaritalStatus::cases() as $status)
-                                <option @selected($employee->employeeDetail->marital_status == $status)
-                                    value="{{ $status->value }}">{{ $status->label() }}</option>
+                                {{-- Use $storedMaritalStatus (always a plain string) for reliable comparison --}}
+                                <option value="{{ $status->value }}"
+                                    {{ $storedMaritalStatus === $status->value ? 'selected' : '' }}>
+                                    {{ $status->label() }}
+                                </option>
                             @endforeach
                         </x-forms.select>
                     </div>
 
-                    <div class="col-lg-3 col-md-6 d-none marriage_date">
-                        <x-forms.datepicker fieldId="marriage_anniversary_date" :fieldLabel="__('modules.employees.marriageAnniversaryDate')"
-                            fieldName="marriage_anniversary_date" :fieldPlaceholder="__('placeholders.date')"
-                            :fieldValue="$employee->employeeDetail->marriage_anniversary_date ? Carbon\Carbon::parse($employee->employeeDetail->marriage_anniversary_date)->format(company()->date_format) : '' " />
+                    <div class="col-lg-3 col-md-6 {{ $isMarried ? '' : 'd-none' }} dependant">
+                        <x-forms.text fieldId="no_of_dependants"
+                            :fieldLabel="__('modules.employees.no_of_dependants')"
+                            fieldName="no_of_dependants"
+                            :fieldValue="$employee->employeeDetail->no_of_dependants"
+                            :fieldPlaceholder="__('placeholders.no_of_dependants')">
+                        </x-forms.text>
                     </div>
+
+                    {{-- ── DEPENDANTS TABLE ───────────────────────────────────── --}}
+                    <div class="col-md-12 {{ $isMarried ? '' : 'd-none' }} dependant-rows-wrapper">
+                        <hr>
+                        <h6 class="f-15 font-weight-bold mb-3">@lang('modules.employees.dependants')</h6>
+                        <div id="dependant-rows">
+                            @foreach($existingDependants as $depIdx => $dep)
+                                <div class="row dependant-row border rounded p-2 mb-2" data-index="{{ $depIdx }}">
+                                    <input type="hidden" name="dependants[{{ $depIdx }}][id]" value="{{ $dep->id }}">
+                                    <div class="col-lg-3 col-md-6 mb-2">
+                                        <label class="f-14 text-dark-grey">Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control height-35 f-14"
+                                               name="dependants[{{ $depIdx }}][name]"
+                                               value="{{ $dep->name }}" placeholder="Name" required>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6 mb-2">
+                                        <label class="f-14 text-dark-grey">Iqama No</label>
+                                        <input type="text" class="form-control height-35 f-14"
+                                               name="dependants[{{ $depIdx }}][iqama_no]"
+                                               value="{{ $dep->iqama_no }}" placeholder="Iqama No">
+                                    </div>
+                                    <div class="col-lg-3 col-md-6 mb-2">
+                                        <label class="f-14 text-dark-grey">Spouse / Relation <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control height-35 f-14"
+                                               name="dependants[{{ $depIdx }}][relation]"
+                                               value="{{ $dep->relation }}" placeholder="e.g. Spouse, Child" required>
+                                    </div>
+                                    <div class="col-lg-2 col-md-5 mb-2">
+                                        <label class="f-14 text-dark-grey">Date of Birth</label>
+                                        <input type="text" id="dep_dob_{{ $depIdx }}"
+                                               class="form-control height-35 f-14 dependant-dob"
+                                               name="dependants[{{ $depIdx }}][date_of_birth]"
+                                               value="{{ $dep->date_of_birth ? $dep->date_of_birth->format(company()->date_format) : '' }}"
+                                               placeholder="Date of Birth" autocomplete="off">
+                                    </div>
+                                    <div class="col-lg-1 col-md-1 mb-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-danger btn-sm remove-dependant-btn">
+                                            <i class="fa fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        {{-- Show add button only if current count < max allowed --}}
+                        @php
+                            $maxDep = (int) $employee->employeeDetail->no_of_dependants;
+                            $currentDep = $existingDependants->count();
+                        @endphp
+                        <button type="button" id="add-dependant-btn"
+                            class="btn btn-outline-primary btn-sm mt-2 {{ ($maxDep > 0 && $currentDep < $maxDep) ? '' : 'd-none' }}">
+                            <i class="fa fa-plus mr-1"></i> @lang('modules.employees.addDependant')
+                        </button>
+                    </div>
+
                 </div>
 
                 <x-forms.custom-field :fields="$fields" :model="$employeeDetail"></x-forms.custom-field>
@@ -400,7 +492,6 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
                 </x-form-actions>
             </div>
         </x-form>
-
     </div>
 </div>
 
@@ -408,210 +499,253 @@ $changeEmployeeRolePermission = user()->permission('change_employee_role');
 @if (function_exists('sms_setting') && sms_setting()->telegram_status)
     <script src="{{ asset('vendor/jquery/clipboard.min.js') }}"></script>
 @endif
+
 <script>
-    $(document).ready(function() {
+$(document).ready(function () {
 
-        $('.custom-date-picker').each(function(ind, el) {
-            datepicker(el, {
-                position: 'bl',
-                ...datepickerConfig
-            });
-        });
-
-        datepicker('#joining_date', {
-            position: 'bl',
-            @if (!is_null($employee->employeeDetail->joining_date))
-            dateSelected: new Date("{{ str_replace('-', '/', $employee->employeeDetail->joining_date) }}"),
-            @endif
-            ...datepickerConfig
-        });
-        @php
-            $iqamaExpiryDate = $employee->employeeDetail?->iqama_expiry_date;
-        @endphp
-
-        datepicker('#iqama_expiry_date', {
-            position: 'bl',
-            @if ($iqamaExpiryDate)
-                dateSelected: new Date("{{ str_replace('-', '/', $iqamaExpiryDate) }}"),
-            @endif
-            ...datepickerConfig
-        });
-        datepicker('#date_of_birth', {
-            position: 'bl',
-            maxDate: new Date(),
-            @if (!is_null($employee->employeeDetail->date_of_birth))
-            dateSelected: new Date("{{ str_replace('-', '/', $employee->employeeDetail->date_of_birth) }}"),
-            @endif
-            ...datepickerConfig
-        });
-
-        datepicker('#probation_end_date', {
-            position: 'bl',
-            ...datepickerConfig
-        });
-
-        datepicker('#notice_period_start_date', {
-            position: 'bl',
-            ...datepickerConfig
-        });
-
-        datepicker('#notice_period_end_date', {
-            position: 'bl',
-            ...datepickerConfig
-        });
-
-        datepicker('#marriage_anniversary_date', {
-            position: 'bl',
-            ...datepickerConfig
-        });
-
-        datepicker('#internship_end_date', {
-            position: 'bl',
-            ...datepickerConfig
-        });
-
-        datepicker('#contract_end_date', {
-            position: 'bl',
-            ...datepickerConfig
-        });
-
-        var employment_type = $('#employment_type').val();
-        if(employment_type == 'internship') {
-            $('.internship-date').removeClass('d-none');
-        }
-        else if(employment_type == 'on_contract') {
-            $('.contract-date').removeClass('d-none');
-        }
-
-        $('#employment_type').change(function(){
-            var value = $(this).val();
-
-            if(value == 'on_contract') {
-                $('.contract-date').removeClass('d-none');
-                $('#internship_end_date').val('');
-            }
-            else {
-                $('.contract-date').addClass('d-none');
-            }
-
-            if(value == 'internship') {
-                $('.internship-date').removeClass('d-none');
-                $('#contract_end_date').val('');
-            }
-            else {
-                $('.internship-date').addClass('d-none');
-            }
-        });
-
-        var input = document.querySelector('input[name=tags]'),
-            // init Tagify script on the above inputs
-            tagify = new Tagify(input, {
-                whitelist: {!! json_encode($skills) !!},
-            });
-
-        var marital_status = $('#marital_status').val();
-        if(marital_status == '{{ \App\Enums\MaritalStatus::Married->value }}') {
-            $('.marriage_date').removeClass('d-none');
-        }
-
-        $('#marital_status').change(function(){
-            var value = $(this).val();
-            if(value == '{{ \App\Enums\MaritalStatus::Married->value }}') {
-                $('.marriage_date').removeClass('d-none');
-            }
-            else {
-                $('.marriage_date').addClass('d-none');
-            }
-        })
-
-        $('#save-form').click(function() {
-            const url = "{{ route('employees.update', $employee->id) }}";
-
-            $.easyAjax({
-                url: url,
-                container: '#save-data-form',
-                type: "POST",
-                disableButton: true,
-                blockUI: true,
-                buttonSelector: "#save-form",
-                file: true,
-                data: $('#save-data-form').serialize(),
-                success: function(response) {
-                    if (response.status == 'success') {
-                        window.location.href = response.redirectUrl;
-                    }
-                }
-            });
-        });
-
-
-        $('#random_password').click(function() {
-            const randPassword = Math.random().toString(36).substr(2, 8);
-
-            $('#password').val(randPassword);
-        });
-
-        $('#designation-setting-edit').click(function() {
-            const url = "{{ route('designations.create') }}";
-            $(MODAL_LG + ' ' + MODAL_HEADING).html('...');
-            $.ajaxModal(MODAL_LG, url);
-        })
-
-        $('#department-setting').click(function() {
-            const url = "{{ route('departments.create') }}";
-            $(MODAL_LG + ' ' + MODAL_HEADING).html('...');
-            $.ajaxModal(MODAL_LG, url);
-        });
-
-        if ($('#last_date').length > 0) {
-            datepicker('#last_date', {
-                position: 'bl',
-                @if ($employee->employeeDetail->last_date)
-                    dateSelected: new Date("{{ str_replace('-', '/', $employee->employeeDetail->last_date) }}"),
-                @endif
-                ...datepickerConfig
-            });
-        }
-
-        $('#country').on('change', function(){
-            $('#country_phonecode').val();
-            var phonecode = $(this).find(':selected').data('phonecode');
-            $('#country_phonecode').val(phonecode);
-            $('.select-picker').selectpicker('refresh');
-        });
-        <x-forms.custom-field-filejs/>
-
-        init(RIGHT_MODAL);
+    // ── Standard datepickers ──────────────────────────────────
+    $('.custom-date-picker').each(function (ind, el) {
+        datepicker(el, { position: 'bl', ...datepickerConfig });
     });
 
-    $('.cropper').on('dropify.fileReady', function(e) {
-            var inputId = $(this).find('input').attr('id');
-            var url = "{{ route('cropper', ':element') }}";
-            url = url.replace(':element', inputId);
-            $(MODAL_LG + ' ' + MODAL_HEADING).html('...');
-            $.ajaxModal(MODAL_LG, url);
-        });
+    datepicker('#joining_date', {
+        position: 'bl',
+        @if (!is_null($employee->employeeDetail->joining_date))
+            dateSelected: new Date("{{ str_replace('-', '/', $employee->employeeDetail->joining_date) }}"),
+        @endif
+        ...datepickerConfig
+    });
 
-        @if (function_exists('sms_setting') && sms_setting()->telegram_status)
-        var clipboard = new ClipboardJS('.btn-copy');
+    @php $iqamaExpiryDate = $employee->employeeDetail?->iqama_expiry_date; @endphp
+    datepicker('#iqama_expiry_date', {
+        position: 'bl',
+        @if ($iqamaExpiryDate)
+            dateSelected: new Date("{{ str_replace('-', '/', $iqamaExpiryDate) }}"),
+        @endif
+        ...datepickerConfig
+    });
 
-        clipboard.on('success', function(e) {
-            Swal.fire({
-                icon: 'success',
-                text: '@lang("app.urlCopied")',
-                toast: true,
-                position: 'top-end',
-                timer: 3000,
-                timerProgressBar: true,
-                showConfirmButton: false,
-                customClass: {
-                    confirmButton: 'btn btn-primary',
-                },
-                showClass: {
-                    popup: 'swal2-noanimation',
-                    backdrop: 'swal2-noanimation'
-                },
-            })
+    datepicker('#passport_expiry_date', {
+        position: 'bl',
+        @if ($employee->employeeDetail->passport_expiry_date)
+            dateSelected: new Date("{{ str_replace('-', '/', $employee->employeeDetail->passport_expiry_date) }}"),
+        @endif
+        ...datepickerConfig
+    });
+
+    datepicker('#sponsorship_transfer_date', {
+        position: 'bl',
+        @if ($employee->employeeDetail->sponsorship_transfer_date)
+            dateSelected: new Date("{{ str_replace('-', '/', $employee->employeeDetail->sponsorship_transfer_date) }}"),
+        @endif
+        ...datepickerConfig
+    });
+
+    datepicker('#date_of_birth', {
+        position: 'bl',
+        maxDate: new Date(),
+        @if (!is_null($employee->employeeDetail->date_of_birth))
+            dateSelected: new Date("{{ str_replace('-', '/', $employee->employeeDetail->date_of_birth) }}"),
+        @endif
+        ...datepickerConfig
+    });
+
+    datepicker('#probation_end_date',        { position: 'bl', ...datepickerConfig });
+    datepicker('#notice_period_start_date',  { position: 'bl', ...datepickerConfig });
+    datepicker('#notice_period_end_date',    { position: 'bl', ...datepickerConfig });
+    datepicker('#internship_end_date',       { position: 'bl', ...datepickerConfig });
+    datepicker('#contract_end_date',         { position: 'bl', ...datepickerConfig });
+
+    if ($('#last_date').length > 0) {
+        datepicker('#last_date', {
+            position: 'bl',
+            @if ($employee->employeeDetail->last_date)
+                dateSelected: new Date("{{ str_replace('-', '/', $employee->employeeDetail->last_date) }}"),
+            @endif
+            ...datepickerConfig
         });
-    @endif
+    }
+
+    // ── Init datepickers on existing dependant DOB fields ─────
+    // FIX: use ->format('Y-m-d') so JS receives a clean date string
+    @foreach($existingDependants as $depIdx => $dep)
+        datepicker('#dep_dob_{{ $depIdx }}', {
+            position: 'bl',
+            maxDate: new Date(),
+            @if($dep->date_of_birth)
+                dateSelected: new Date("{{ str_replace('-', '/', $dep->date_of_birth->format('Y-m-d')) }}"),
+            @endif
+            ...datepickerConfig
+        });
+    @endforeach
+
+    // ── Employment type show/hide ─────────────────────────────
+    var employment_type = $('#employment_type').val();
+    if (employment_type == 'internship')  { $('.internship-date').removeClass('d-none'); }
+    else if (employment_type == 'on_contract') { $('.contract-date').removeClass('d-none'); }
+
+    $('#employment_type').change(function () {
+        var value = $(this).val();
+        if (value == 'on_contract') {
+            $('.contract-date').removeClass('d-none');
+            $('#internship_end_date').val('');
+        } else {
+            $('.contract-date').addClass('d-none');
+        }
+        if (value == 'internship') {
+            $('.internship-date').removeClass('d-none');
+            $('#contract_end_date').val('');
+        } else {
+            $('.internship-date').addClass('d-none');
+        }
+    });
+
+    // ── Dependant rows logic ──────────────────────────────────
+    var maxDependants   = parseInt($('#no_of_dependants').val()) || 0;
+    var addedDependants = $('#dependant-rows .dependant-row').length;
+
+    $('#no_of_dependants').on('input', function () {
+        maxDependants   = parseInt($(this).val()) || 0;
+        addedDependants = $('#dependant-rows .dependant-row').length;
+        updateAddButton();
+    });
+
+    function updateAddButton() {
+        if (addedDependants < maxDependants) {
+            $('#add-dependant-btn').removeClass('d-none');
+        } else {
+            $('#add-dependant-btn').addClass('d-none');
+        }
+    }
+
+    function addDependantRow() {
+        var idx = Date.now();
+        var row = `
+            <div class="row dependant-row border rounded p-2 mb-2" data-index="${idx}">
+                <div class="col-lg-3 col-md-6 mb-2">
+                    <label class="f-14 text-dark-grey">Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control height-35 f-14"
+                           name="dependants[${idx}][name]" placeholder="Name" required>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-2">
+                    <label class="f-14 text-dark-grey">Iqama No</label>
+                    <input type="text" class="form-control height-35 f-14"
+                           name="dependants[${idx}][iqama_no]" placeholder="Iqama No">
+                </div>
+                <div class="col-lg-3 col-md-6 mb-2">
+                    <label class="f-14 text-dark-grey">Spouse / Relation <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control height-35 f-14"
+                           name="dependants[${idx}][relation]" placeholder="e.g. Spouse, Child" required>
+                </div>
+                <div class="col-lg-2 col-md-5 mb-2">
+                    <label class="f-14 text-dark-grey">Date of Birth</label>
+                    <input type="text" id="dep_dob_${idx}"
+                           class="form-control height-35 f-14 dependant-dob"
+                           name="dependants[${idx}][date_of_birth]"
+                           placeholder="Date of Birth" autocomplete="off">
+                </div>
+                <div class="col-lg-1 col-md-1 mb-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger btn-sm remove-dependant-btn">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>`;
+
+        $('#dependant-rows').append(row);
+        datepicker('#dep_dob_' + idx, { position: 'bl', maxDate: new Date(), ...datepickerConfig });
+        addedDependants++;
+        updateAddButton();
+    }
+
+    $('#add-dependant-btn').on('click', function () { addDependantRow(); });
+
+    $(document).on('click', '.remove-dependant-btn', function () {
+        $(this).closest('.dependant-row').remove();
+        addedDependants = $('#dependant-rows .dependant-row').length;
+        updateAddButton();
+    });
+
+    // ── Marital status change handler ─────────────────────────
+    // storedMaritalStatus is a PHP string passed to JS for initial check
+    var marriedValue = '{{ \App\Enums\MaritalStatus::Married->value }}';
+    $('#marital_status').on('change', function () {
+        var value = $(this).val();
+        if (value === marriedValue) {
+            $('.dependant').removeClass('d-none');
+            $('.dependant-rows-wrapper').removeClass('d-none');
+        } else {
+            $('.dependant').addClass('d-none');
+            $('.dependant-rows-wrapper').addClass('d-none');
+            $('#dependant-rows').empty();
+            addedDependants = 0;
+            updateAddButton();
+        }
+    });
+
+    // ── Save form ─────────────────────────────────────────────
+    $('#save-form').click(function () {
+        const url = "{{ route('employees.update', $employee->id) }}";
+        $.easyAjax({
+            url: url,
+            container: '#save-data-form',
+            type: "POST",
+            disableButton: true,
+            blockUI: true,
+            buttonSelector: "#save-form",
+            file: true,
+            data: $('#save-data-form').serialize(),
+            success: function (response) {
+                if (response.status == 'success') {
+                    window.location.href = response.redirectUrl;
+                }
+            }
+        });
+    });
+
+    $('#designation-setting-edit').click(function () {
+        const url = "{{ route('designations.create') }}";
+        $(MODAL_LG + ' ' + MODAL_HEADING).html('...');
+        $.ajaxModal(MODAL_LG, url);
+    });
+
+    $('#department-setting').click(function () {
+        const url = "{{ route('departments.create') }}";
+        $(MODAL_LG + ' ' + MODAL_HEADING).html('...');
+        $.ajaxModal(MODAL_LG, url);
+    });
+
+    $('#country').on('change', function () {
+        var phonecode = $(this).find(':selected').data('phonecode');
+        $('#country_phonecode').val(phonecode);
+        $('.select-picker').selectpicker('refresh');
+    });
+
+    <x-forms.custom-field-filejs/>
+    init(RIGHT_MODAL);
+});
+
+$('.cropper').on('dropify.fileReady', function (e) {
+    var inputId = $(this).find('input').attr('id');
+    var url = "{{ route('cropper', ':element') }}";
+    url = url.replace(':element', inputId);
+    $(MODAL_LG + ' ' + MODAL_HEADING).html('...');
+    $.ajaxModal(MODAL_LG, url);
+});
+
+@if (function_exists('sms_setting') && sms_setting()->telegram_status)
+    var clipboard = new ClipboardJS('.btn-copy');
+    clipboard.on('success', function (e) {
+        Swal.fire({
+            icon: 'success',
+            text: '@lang("app.urlCopied")',
+            toast: true,
+            position: 'top-end',
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            customClass: { confirmButton: 'btn btn-primary' },
+            showClass: { popup: 'swal2-noanimation', backdrop: 'swal2-noanimation' },
+        });
+    });
+@endif
 </script>

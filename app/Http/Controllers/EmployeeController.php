@@ -50,6 +50,8 @@ use App\Models\UniversalSearch;
 use App\Models\UserActivity;
 use App\Models\UserInvitation;
 use App\Models\VisaDetail;
+use App\Models\EmployeeDependant;
+
 use App\Traits\ImportExcel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -227,26 +229,27 @@ class EmployeeController extends AccountBaseController
 
             $user->save();
 
-            $tags = json_decode($request->tags);
+            // $tags = json_decode($request->tags);
 
-            if (!empty($tags)) {
-                foreach ($tags as $tag) {
-                    // check or store skills
-                    $skillData = Skill::firstOrCreate(['name' => $tag->value]);
+            // if (!empty($tags)) {
+            //     foreach ($tags as $tag) {
+            //         // check or store skills
+            //         $skillData = Skill::firstOrCreate(['name' => $tag->value]);
 
-                    // Store user skills
-                    $skill = new EmployeeSkill();
-                    $skill->user_id = $user->id;
-                    $skill->skill_id = $skillData->id;
-                    $skill->save();
-                }
-            }
+            //         // Store user skills
+            //         $skill = new EmployeeSkill();
+            //         $skill->user_id = $user->id;
+            //         $skill->skill_id = $skillData->id;
+            //         $skill->save();
+            //     }
+            // }
 
             if ($user->id) {
                 $employee = new EmployeeDetails();
                 $employee->user_id = $user->id;
                 $this->employeeData($request, $employee);
                 $employee->save();
+                $this->saveDependants($request, $employee);
 
                 // To add custom fields data
                 if ($request->custom_fields_data) {
@@ -514,22 +517,22 @@ class EmployeeController extends AccountBaseController
             $userSession->deleteSessions([$user->id]);
         }
 
-        $tags = json_decode($request->tags);
+        // $tags = json_decode($request->tags);
 
-        if (!empty($tags)) {
-            EmployeeSkill::where('user_id', $user->id)->delete();
+        // if (!empty($tags)) {
+        //     EmployeeSkill::where('user_id', $user->id)->delete();
 
-            foreach ($tags as $tag) {
-                // Check or store skills
-                $skillData = Skill::firstOrCreate(['name' => $tag->value]);
+        //     foreach ($tags as $tag) {
+        //         // Check or store skills
+        //         $skillData = Skill::firstOrCreate(['name' => $tag->value]);
 
-                // Store user skills
-                $skill = new EmployeeSkill();
-                $skill->user_id = $user->id;
-                $skill->skill_id = $skillData->id;
-                $skill->save();
-            }
-        }
+        //         // Store user skills
+        //         $skill = new EmployeeSkill();
+        //         $skill->user_id = $user->id;
+        //         $skill->skill_id = $skillData->id;
+        //         $skill->save();
+        //     }
+        // }
 
         $employee = EmployeeDetails::where('user_id', '=', $user->id)->first();
 
@@ -547,6 +550,7 @@ class EmployeeController extends AccountBaseController
         }
 
         $employee->save();
+        $this->saveDependants($request, $employee);
 
         // To add custom fields data
         if ($request->custom_fields_data) {
@@ -1002,29 +1006,82 @@ class EmployeeController extends AccountBaseController
      * @param mixed $request
      * @param mixed $employee
      */
-    public function employeeData($request, $employee): void
+        public function employeeData($request, $employee): void
     {
-        $employee->employee_id = $request->employee_id;
-        $employee->address = $request->address;
-        $employee->slack_username = $request->slack_username;
-        $employee->iqama_no = $request->iqama_no;
-        $employee->iqama_expiry_date = Carbon::createFromFormat($this->company->date_format,$request->iqama_expiry_date)->format('Y-m-d');
-        $employee->sponsor_kafala = $request->sponsor_kafala;
-        $employee->department_id = $request->department;
-        $employee->designation_id = $request->designation;
-        $employee->reporting_to = $request->reporting_to;
-        $employee->about_me = $request->about_me;
-        $employee->joining_date = Carbon::createFromFormat($this->company->date_format, $request->joining_date)->format('Y-m-d');
-        $employee->date_of_birth = $request->date_of_birth ? Carbon::createFromFormat($this->company->date_format, $request->date_of_birth)->format('Y-m-d') : null;
-        $employee->calendar_view = 'task,events,holiday,tickets,leaves';
-        $employee->probation_end_date = $request->probation_end_date ? Carbon::createFromFormat($this->company->date_format, $request->probation_end_date)->format('Y-m-d') : null;
-        $employee->notice_period_start_date = $request->notice_period_start_date ? Carbon::createFromFormat($this->company->date_format, $request->notice_period_start_date)->format('Y-m-d') : null;
-        $employee->notice_period_end_date = $request->notice_period_end_date ? Carbon::createFromFormat($this->company->date_format, $request->notice_period_end_date)->format('Y-m-d') : null;
-        $employee->marital_status = $request->marital_status;
-        $employee->marriage_anniversary_date = $request->marriage_anniversary_date ? Carbon::createFromFormat($this->company->date_format, $request->marriage_anniversary_date)->format('Y-m-d') : null;
-        $employee->employment_type = $request->employment_type;
-        $employee->internship_end_date = $request->internship_end_date ? Carbon::createFromFormat($this->company->date_format, $request->internship_end_date)->format('Y-m-d') : null;
-        $employee->contract_end_date = $request->contract_end_date ? Carbon::createFromFormat($this->company->date_format, $request->contract_end_date)->format('Y-m-d') : null;
+        $employee->employee_id            = $request->employee_id;
+        $employee->address                = $request->address;
+        $employee->slack_username         = $request->slack_username;
+        $employee->iqama_no               = $request->iqama_no;
+        $employee->iqama_designation      = $request->iqama_designation;
+        $employee->iqama_profession       = $request->iqama_profession;
+        if ($request->hasFile('iqama_image')) {
+            $employee->iqama_image = \App\Helper\Files::uploadLocalOrS3($request->iqama_image, 'iqama');
+        }
+        $employee->iqama_expiry_date      = $request->iqama_expiry_date
+            ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->iqama_expiry_date)->format('Y-m-d')
+            : null;
+        $employee->passport_no            = $request->passport_no;
+        if ($request->hasFile('passport_image')) {
+            $employee->passport_image = \App\Helper\Files::uploadLocalOrS3($request->passport_image, 'passport');
+        }
+        $employee->passport_expiry_date   = $request->passport_expiry_date
+            ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->passport_expiry_date)->format('Y-m-d')
+            : null;
+        $employee->sponsor_kafala         = $request->sponsor_kafala;
+        $employee->sponsorship_transfer_date = $request->sponsorship_transfer_date
+            ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->sponsorship_transfer_date)->format('Y-m-d')
+            : null;
+        $employee->department_id          = $request->department;
+        $employee->designation_id         = $request->designation;
+        $employee->reporting_to           = $request->reporting_to;
+        $employee->about_me               = $request->about_me;
+        $employee->joining_date           = \Carbon\Carbon::createFromFormat($this->company->date_format, $request->joining_date)->format('Y-m-d');
+        $employee->date_of_birth          = $request->date_of_birth
+            ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->date_of_birth)->format('Y-m-d')
+            : null;
+        $employee->calendar_view          = 'task,events,holiday,tickets,leaves';
+        $employee->probation_end_date     = $request->probation_end_date
+            ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->probation_end_date)->format('Y-m-d')
+            : null;
+        $employee->notice_period_start_date = $request->notice_period_start_date
+            ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->notice_period_start_date)->format('Y-m-d')
+            : null;
+        $employee->notice_period_end_date = $request->notice_period_end_date
+            ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->notice_period_end_date)->format('Y-m-d')
+            : null;
+        $employee->marital_status         = $request->marital_status;
+        $employee->no_of_dependants       = $request->no_of_dependants;
+        $employee->employment_type        = $request->employment_type;
+        $employee->internship_end_date    = $request->internship_end_date
+            ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->internship_end_date)->format('Y-m-d')
+            : null;
+        $employee->contract_end_date      = $request->contract_end_date
+            ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->contract_end_date)->format('Y-m-d')
+            : null;
+    }
+    private function saveDependants($request, EmployeeDetails $employee): void
+    {
+        $submitted = $request->input('dependants', []);
+        $submittedIds = [];
+        foreach ($submitted as $data) {
+            $id = $data['id'] ?? null;
+            $dep = $id
+                ? EmployeeDependant::find($id) ?? new EmployeeDependant()
+                : new EmployeeDependant();
+            $dep->employee_id    = $employee->user_id;
+            $dep->name           = $data['name'];
+            $dep->iqama_no       = $data['iqama_no'] ?? null;
+            $dep->relation       = $data['relation'];
+            $dep->date_of_birth  = !empty($data['date_of_birth'])
+                ? \Carbon\Carbon::createFromFormat($this->company->date_format, $data['date_of_birth'])->format('Y-m-d')
+                : null;
+            $dep->save();
+
+            $submittedIds[] = $dep->id;
+        }
+        EmployeeDependant::where('employee_id', $employee->user_id)
+            ->whereNotIn('id', $submittedIds)
+            ->delete();
     }
 
     public function importMember()
