@@ -112,6 +112,7 @@ use App\Http\Controllers\BranchController;
 use App\Http\Controllers\DriverController;
 use App\Http\Controllers\DriverPayrollController;
 use App\Http\Controllers\DriverRevenueReportingController;
+use App\Http\Controllers\PayrollController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\BranchEmployeeController;
 use App\Http\Controllers\DriverTypeController;
@@ -685,6 +686,36 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     });
     Route::resource('expenses', ExpenseController::class);
     Route::resource('expenseCategory', ExpenseCategoryController::class);
+
+    // Payroll
+    Route::group(['prefix' => 'payroll', 'as' => 'payroll.'], function () {
+        Route::get('/', [PayrollController::class, 'index'])->name('index');
+        Route::get('salary-slips/export', [PayrollController::class, 'exportSalarySlipsCsv'])->name('salary-slips.export');
+        Route::get('salary-slips/{salarySlip}/print', [PayrollController::class, 'printSalarySlip'])->name('salary-slips.print');
+        Route::get('salary-slips/{salarySlip}/pdf', [PayrollController::class, 'downloadSalarySlipPdf'])->name('salary-slips.pdf');
+
+        Route::post('salary-slips', [PayrollController::class, 'storeSalarySlip'])->name('salary-slips.store');
+        Route::put('salary-slips/{salarySlip}', [PayrollController::class, 'updateSalarySlip'])->name('salary-slips.update');
+        Route::delete('salary-slips/{salarySlip}', [PayrollController::class, 'destroySalarySlip'])->name('salary-slips.destroy');
+
+        Route::post('salary-groups', [PayrollController::class, 'storeSalaryGroup'])->name('salary-groups.store');
+        Route::put('salary-groups/{salaryGroup}', [PayrollController::class, 'updateSalaryGroup'])->name('salary-groups.update');
+        Route::delete('salary-groups/{salaryGroup}', [PayrollController::class, 'destroySalaryGroup'])->name('salary-groups.destroy');
+
+        Route::post('salary-components', [PayrollController::class, 'storeSalaryComponent'])->name('salary-components.store');
+        Route::put('salary-components/{salaryComponent}', [PayrollController::class, 'updateSalaryComponent'])->name('salary-components.update');
+        Route::delete('salary-components/{salaryComponent}', [PayrollController::class, 'destroySalaryComponent'])->name('salary-components.destroy');
+
+        Route::post('payroll-cycles', [PayrollController::class, 'storePayrollCycle'])->name('payroll-cycles.store');
+        Route::put('payroll-cycles/{payrollCycle}', [PayrollController::class, 'updatePayrollCycle'])->name('payroll-cycles.update');
+        Route::delete('payroll-cycles/{payrollCycle}', [PayrollController::class, 'destroyPayrollCycle'])->name('payroll-cycles.destroy');
+
+        Route::post('payment-methods', [PayrollController::class, 'storePaymentMethod'])->name('payment-methods.store');
+        Route::put('payment-methods/{salaryPaymentMethod}', [PayrollController::class, 'updatePaymentMethod'])->name('payment-methods.update');
+        Route::delete('payment-methods/{salaryPaymentMethod}', [PayrollController::class, 'destroyPaymentMethod'])->name('payment-methods.destroy');
+
+        Route::post('settings', [PayrollController::class, 'updateSettings'])->name('settings.update');
+    });
 
     // Timelogs
     Route::group(['prefix' => 'timelogs'], function () {
