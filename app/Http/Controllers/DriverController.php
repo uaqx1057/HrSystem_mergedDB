@@ -196,7 +196,7 @@ class DriverController extends AccountBaseController
         $this->viewPermission = user()->permission('view_drivers');
         abort_403(!($this->viewPermission == 'all'));
 
-        $this->driver = Driver::findOrFail($id);
+        $this->driver = Driver::withoutGlobalScopes()->findOrFail($id);
 
         $tab = request('tab');
 
@@ -240,14 +240,14 @@ class DriverController extends AccountBaseController
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Driver $driver)
+    public function edit(string $id)
     {
         $this->editPermission = user()->permission('edit_drivers');
         abort_403(!($this->editPermission == 'all'));
 
         $this->pageTitle = __('app.update');
 
-        $this->driver = $driver;
+        $this->driver = Driver::withoutGlobalScopes()->findOrFail($id);
         $this->driver_types = DriverType::all();
 
         $tab = request('tab');
@@ -291,10 +291,12 @@ class DriverController extends AccountBaseController
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateRequest $request, Driver $driver)
+    public function update(UpdateRequest $request, string $id)
     {
         $this->editPermission = user()->permission('edit_drivers');
         abort_403(!($this->editPermission == 'all'));
+
+        $driver = Driver::withoutGlobalScopes()->findOrFail($id);
 
         $validated = $request->validated();
 
@@ -369,7 +371,7 @@ class DriverController extends AccountBaseController
         $deletePermission = user()->permission('delete_drivers');
         abort_403(!($deletePermission == 'all'));
 
-        $this->driver = Driver::findOrFail($id);
+        $this->driver = Driver::withoutGlobalScopes()->findOrFail($id);
 
         Driver::destroy($id);
 

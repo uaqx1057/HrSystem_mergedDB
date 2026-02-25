@@ -109,6 +109,25 @@
         <div class="d-flex justify-content-between action-bar">
 
             <div id="table-actions" class="d-block d-lg-flex align-items-center">
+                <div class="mr-3 mb-2 mb-lg-0">
+                    <select class="form-control select-picker" id="driver-status-filter" data-container="body" data-live-search="false">
+                        <option value="all">@lang('app.all')</option>
+                        <option value="active">@lang('app.active')</option>
+                        <option value="inactive">@lang('app.inactive')</option>
+                        <option value="busy">Busy</option>
+                        <option value="blocked">Blocked</option>
+                    </select>
+                </div>
+
+                <div class="mr-3 mb-2 mb-lg-0">
+                    <select class="form-control select-picker" id="onboarding-status-filter" data-container="body" data-live-search="false">
+                        <option value="all">All Onboarding</option>
+                        <option value="pending_onboarding">Pending Onboarding</option>
+                        <option value="onboarding_completed">Onboarding Completed</option>
+                        <option value="offboarding">Offboarding</option>
+                    </select>
+                </div>
+
                 @if (checkCompanyCanAddMoreEmployees(user()->company_id))
                 @if ($addDriverPermission == 'all')
                     <x-forms.link-primary :link="route('drivers.create')" class="mr-3 openRightModal" icon="plus">
@@ -173,51 +192,23 @@
         lastEndDate = '{{ request("lastEndDate") }}';
         @endif
 
-        $('#employees-table').on('preXhr.dt', function (e, settings, data) {
-            const status = $('#status').val();
-            const employee = $('#employee').val();
-            const role = $('#role').val();
-            const gender = $('#gender').val();
-            const skill = $('#skill').val();
-            const designation = $('#designation').val();
-            const department = $('#department').val();
+        $('#drivers-table').on('preXhr.dt', function (e, settings, data) {
+            const status = $('#driver-status-filter').val();
+            const onboardingStatus = $('#onboarding-status-filter').val();
             const searchText = $('#search-text-field').val();
+
             data['status'] = status;
-            data['employee'] = employee;
-            data['role'] = role;
-            data['gender'] = gender;
-            data['skill'] = skill;
-            data['designation'] = designation;
-            data['department'] = department;
+            data['onboarding_status'] = onboardingStatus;
             data['searchText'] = searchText;
-
-            /* If any of these following filters are applied, then dashboard conditions will not work  */
-            if (status == "all" || employee == "all" || role == "all" || designation == "all" || searchText == "") {
-                data['startDate'] = startDate;
-                data['endDate'] = endDate;
-                data['lastStartDate'] = lastStartDate;
-                data['lastEndDate'] = lastEndDate;
-            }
-
         });
 
         const showTable = () => {
             window.LaravelDataTables["drivers-table"].draw(false);
         }
 
-        $('#employee, #status, #role, #gender, #skill, #designation, #department').on('change keyup',
+        $('#driver-status-filter, #onboarding-status-filter').on('change',
             function () {
-                if ($('#status').val() != "all") {
-                    $('#reset-filters').removeClass('d-none');
-                } else if ($('#employee').val() != "all") {
-                    $('#reset-filters').removeClass('d-none');
-                } else if ($('#role').val() != "all") {
-                    $('#reset-filters').removeClass('d-none');
-                } else if ($('#gender').val() != "all") {
-                    $('#reset-filters').removeClass('d-none');
-                } else if ($('#designation').val() != "all") {
-                    $('#reset-filters').removeClass('d-none');
-                } else if ($('#department').val() != "all") {
+                if ($('#driver-status-filter').val() != "all" || $('#onboarding-status-filter').val() != "all") {
                     $('#reset-filters').removeClass('d-none');
                 } else {
                     $('#reset-filters').addClass('d-none');
@@ -235,6 +226,8 @@
         $('#reset-filters, #reset-filters-2').click(function () {
             $('#filter-form')[0].reset();
             $('.filter-box .select-picker').selectpicker("refresh");
+            $('#driver-status-filter').val('all').selectpicker('refresh');
+            $('#onboarding-status-filter').val('all').selectpicker('refresh');
             $('#reset-filters').addClass('d-none');
             showTable();
         });

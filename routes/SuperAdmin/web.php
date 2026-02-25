@@ -181,7 +181,9 @@ Route::group(['middleware' => ['auth', 'super-admin'], 'prefix' => 'account', 'a
 });
 
 Route::group(['middleware' => ['auth', 'multi-company-select'], 'prefix' => 'account/settings'], function () {
-    Route::get('billing/upgrade-plan', [BillingController::class, 'upgradePlan'])->name('billing.upgrade_plan');
+    Route::get('billing/upgrade-plan', function () {
+        abort(404);
+    })->name('billing.upgrade_plan');
 
     Route::post('billing/unsubscribe', [BillingController::class, 'cancelSubscription'])->name('billing.unsubscribe');
     Route::post('billing/razorpay-payment', [BillingController::class, 'razorpayPayment'])->name('billing.razorpay-payment');
