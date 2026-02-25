@@ -21,6 +21,9 @@ class BusinessesDriverDataTable extends DataTable
     public function dataTable(QueryBuilder $query): EloquentDataTable
     {
         return (new EloquentDataTable($query))
+            ->addColumn('name', function ($row) {
+                return optional($row->business)->name;
+            })
             ->addColumn('action', 'drivers.business.datatable.action')
             ->setRowId('id')
             ->rawColumns([ 'action' ]);
@@ -67,8 +70,9 @@ class BusinessesDriverDataTable extends DataTable
         return [
             Column::make('id'),
             Column::make('name')
-                ->name('business.name')
-                ->data('business.name'),
+                ->name('businesses.name')
+                ->data('name')
+                ->defaultContent('-'),
             Column::make('platform_id'),
             Column::computed('action')
                   ->exportable(false)

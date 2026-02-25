@@ -43,14 +43,27 @@ class DriversDataTable extends DataTable
     {
         $request = $this->request();
 
-        $query = $model->withoutGlobalScopes()->newQuery();
+        $query = $model->withoutGlobalScopes()
+            ->newQuery()
+            ->select([
+                'id',
+                'driver_id',
+                'name',
+                'iqaama_number',
+                'work_mobile_no',
+                'status',
+                'onboarding_stage',
+                'offboard_request',
+                'offboarding_stage',
+                'image',
+                'email',
+            ]);
 
-        $query->when($request->searchText, function ($query, $searchText) {
+        $query->when($request->searchText && strlen(trim((string) $request->searchText)) >= 2, function ($query, $searchText) {
             $query->where(function ($subQuery) use ($searchText) {
                 $subQuery->where('name', 'like', '%' . $searchText . '%')
                     ->orWhere('driver_id', 'like', '%' . $searchText . '%')
-                    ->orWhere('iqaama_number', 'like', '%' . $searchText . '%')
-                    ->orWhere('work_mobile_no', 'like', '%' . $searchText . '%');
+                    ->orWhere('iqaama_number', 'like', '%' . $searchText . '%');
             });
         });
 
