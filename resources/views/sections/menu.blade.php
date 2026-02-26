@@ -76,6 +76,9 @@
                 @if (in_array('employees', user_modules()) && $sidebarUserPermissions['view_employees'] != 4 && $sidebarUserPermissions['view_employees'] != 'none')
                     <x-sub-menu-item :link="route('employees.index')" :text="__('app.menu.employees')" />
                 @endif
+                @if (in_array('employees', user_modules()) && $sidebarUserPermissions['view_employees'] != 4 && $sidebarUserPermissions['view_employees'] != 'none')
+                    <x-sub-menu-item :link="route('insurance.index')" :text="__('app.menu.insurance')" />
+                @endif
                 @if (in_array('drivers', user_modules()) && $sidebarUserPermissions['view_drivers'] == 5 && $sidebarUserPermissions['view_drivers'] != 'none')
                     <x-sub-menu-item :link="route('drivers.index')" :text="__('app.menu.drivers')" />
                 @endif

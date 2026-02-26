@@ -99,11 +99,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             fieldName="iqama_no" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama')" :fieldValue="$employee->employeeDetail->iqama_no">
                         </x-forms.text>
                     </div>
-                    <div class="col-lg-4 col-md-6">
-                        <x-forms.text fieldId="iqama_designation" :fieldLabel="__('modules.employees.iqama_designation')"
-                            fieldName="iqama_designation" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama_designation')" :fieldValue="$employee->employeeDetail->iqama_designation">
-                        </x-forms.text>
-                    </div>
+
                     <div class="col-lg-4 col-md-6">
                         <x-forms.text fieldId="iqama_profession" :fieldLabel="__('modules.employees.iqama_profession')"
                             fieldName="iqama_profession" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama_profession')" :fieldValue="$employee->employeeDetail->iqama_profession">
@@ -618,6 +614,50 @@ $(document).ready(function () {
         }
     }
 
+    function validateDependants() {
+    var maritalStatus = $('#marital_status').val();
+    var isMarried = maritalStatus == '{{ \App\Enums\MaritalStatus::Married->value }}';
+
+    if (!isMarried) return true; // No validation needed
+
+    var rows = $('#dependant-rows .dependant-row');
+
+    if (rows.length === 0) return true; // No rows added, skip
+
+    var allValid = true;
+
+    rows.each(function () {
+        var nameInput = $(this).find('input[name$="[name]"]');
+        var nameVal = nameInput.val().trim();
+
+        if (nameVal === '') {
+            nameInput.addClass('is-invalid'); // highlight empty field
+            allValid = false;
+        } else {
+            nameInput.removeClass('is-invalid');
+        }
+    });
+
+    if (!allValid) {
+        alert('All dependants name are required.');
+    }
+
+    return allValid;
+}
+
+
+$('#save-employee-form').click(function () {
+
+    if (!validateDependants()) {
+        return; // Stop form submission
+    }
+
+    const url = "{{ route('employees.store') }}";
+    var data = $('#save-employee-data-form').serialize();
+    saveEmployee(data, url, "#save-employee-form");
+
+});
+
     function addDependantRow() {
         var idx = Date.now();
         var row = `
@@ -684,6 +724,9 @@ $(document).ready(function () {
 
     // ── Save form ─────────────────────────────────────────────
     $('#save-form').click(function () {
+        if (!validateDependants()) {
+            return; // Stop form submission
+        }
         const url = "{{ route('employees.update', $employee->id) }}";
         $.easyAjax({
             url: url,
