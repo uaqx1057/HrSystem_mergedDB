@@ -23,6 +23,11 @@ class SalarySlip extends BaseModel
         return $this->belongsTo(User::class, 'user_id')->withoutGlobalScope(ActiveScope::class);
     }
 
+    public function driver(): BelongsTo
+    {
+        return $this->belongsTo(Driver::class, 'user_id');
+    }
+
     public function salaryGroup(): BelongsTo
     {
         return $this->belongsTo(SalaryGroup::class, 'salary_group_id');
@@ -36,5 +41,31 @@ class SalarySlip extends BaseModel
     public function cycle(): BelongsTo
     {
         return $this->belongsTo(PayrollCycle::class, 'payroll_cycle_id');
+    }
+
+    public function getPayeeTypeAttribute(): string
+    {
+        $payeeType = $this->attributes['payee_type'] ?? null;
+
+        if (in_array($payeeType, ['employee', 'driver'])) {
+            return $payeeType;
+        }
+
+        $salaryJson = is_string($this->salary_json) ? json_decode($this->salary_json, true) : $this->salary_json;
+
+        if (is_array($salaryJson) && isset($salaryJson['payee_type']) && in_array($salaryJson['payee_type'], ['employee', 'driver'])) {
+            return $salaryJson['payee_type'];
+        }
+
+        return 'employee';
+    }
+
+    public function getPayeeNameAttribute(): ?string
+    {
+        if ($this->payee_type === 'driver') {
+            return optional($this->driver)->name ?: ('Driver #' . $this->user_id);
+        }
+
+        return optional($this->user)->name ?: ('Employee #' . $this->user_id);
     }
 }

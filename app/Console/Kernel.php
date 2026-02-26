@@ -12,6 +12,7 @@ use App\Console\Commands\CacheTest;
 use App\Console\Commands\ClearNullSessions;
 use App\Console\Commands\CreateTranslations;
 use App\Console\Commands\FetchTicketEmails;
+use App\Console\Commands\GenerateMonthlyPayrollSlips;
 use App\Console\Commands\HideCronJobMessage;
 use App\Console\Commands\RemoveSeenNotification;
 use App\Console\Commands\SendAttendanceReminder;
@@ -64,6 +65,7 @@ class Kernel extends ConsoleKernel
         SendDailyTimelogReport::class,
         CacheTest::class,
         SendDailyTimelogReport::class,
+        GenerateMonthlyPayrollSlips::class,
         // WORKSUITE SAAS
         FreeLicenceRenew::class,
         TrialExpire::class,
@@ -110,6 +112,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('recurring-invoice-create')->daily();
         $schedule->command('recurring-expenses-create')->daily();
         $schedule->command('send-invoice-reminder')->daily();
+        $schedule->command('payroll:generate-monthly-slips')->dailyAt('00:10');
         $schedule->command('delete-seen-notification')->daily();
         $schedule->command('update-exchange-rate')->daily();
         $schedule->command('send-daily-timelog-report')->daily();
