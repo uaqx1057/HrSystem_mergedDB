@@ -92,15 +92,27 @@
     <table>
         <tr>
             <th style="width: 25%">Name</th>
-            <td>{{ optional($salarySlip->user)->name ?? '-' }}</td>
+            <td>{{ $salarySlip->payee_name ?? '-' }}</td>
             <th style="width: 25%">Status</th>
             <td>{{ ucfirst($salarySlip->status) }}</td>
         </tr>
         <tr>
             <th>Email</th>
-            <td>{{ optional($salarySlip->user)->email ?? '-' }}</td>
+            <td>
+                @if ($salarySlip->payee_type === 'driver')
+                    {{ optional($salarySlip->driver)->email ?? '-' }}
+                @else
+                    {{ optional($salarySlip->user)->email ?? '-' }}
+                @endif
+            </td>
             <th>Mobile</th>
-            <td>{{ optional($salarySlip->user)->mobile ?? '-' }}</td>
+            <td>
+                @if ($salarySlip->payee_type === 'driver')
+                    {{ optional($salarySlip->driver)->mobile ?? '-' }}
+                @else
+                    {{ optional($salarySlip->user)->mobile ?? '-' }}
+                @endif
+            </td>
         </tr>
         <tr>
             <th>Salary Group</th>

@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Currency;
+use App\Models\Driver;
 use App\Models\EmployeeSalaryGroup;
+use App\Models\PayrollDriverSetup;
+use App\Models\PayrollEmployeeSetup;
 use App\Models\PayrollCycle;
 use App\Models\PayrollSetting;
 use App\Models\SalaryComponent;
@@ -14,6 +17,7 @@ use App\Models\SalarySlip;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
 class PayrollController extends AccountBaseController
@@ -44,6 +48,8 @@ class PayrollController extends AccountBaseController
             ->paginate(15, ['*'], 'salary_slips_page')
             ->withQueryString();
 
+        $this->salarySlips->getCollection()->load('driver:id,name,email,mobile');
+
         $this->salaryGroups = SalaryGroup::withCount(['employees', 'components'])
             ->latest('id')
             ->paginate(15, ['*'], 'salary_groups_page')
@@ -61,6 +67,16 @@ class PayrollController extends AccountBaseController
             ->paginate(15, ['*'], 'payment_methods_page')
             ->withQueryString();
 
+        $this->employeeSetups = PayrollEmployeeSetup::with(['employee:id,name'])
+            ->latest('id')
+            ->paginate(15, ['*'], 'employee_setups_page')
+            ->withQueryString();
+
+        $this->driverSetups = PayrollDriverSetup::with(['driver:id,name,driver_id,iqaama_number'])
+            ->latest('id')
+            ->paginate(15, ['*'], 'driver_setups_page')
+            ->withQueryString();
+
         $this->payrollSetting = PayrollSetting::firstOrCreate(
             ['company_id' => company()->id],
             [
@@ -74,6 +90,21 @@ class PayrollController extends AccountBaseController
         );
 
         $this->employees = User::allEmployees(null, false, 'all');
+        $this->drivers = Driver::withoutGlobalScopes()
+            ->newQuery()
+            ->select('id', 'name', 'driver_id', 'iqaama_number', 'email', 'mobile', 'onboarding_stage', 'offboard_request', 'offboarding_stage')
+            ->orderBy('name')
+            ->get()
+            ->map(function (Driver $driver) {
+                $driver->payroll_display_name = $driver->name
+                    ?: ($driver->driver_id
+                        ?: ($driver->iqaama_number
+                            ? 'Driver ' . $driver->iqaama_number
+                            : 'Driver #' . $driver->id));
+                $driver->payroll_status_label = $this->resolveDriverPayrollStatusLabel($driver);
+
+                return $driver;
+            });
         $this->currencies = Currency::all(['id', 'currency_name', 'currency_symbol']);
         $this->allGroups = SalaryGroup::orderBy('group_name')->get(['id', 'group_name']);
         $this->allComponents = SalaryComponent::orderBy('component_name')->get(['id', 'component_name']);
@@ -92,7 +123,7 @@ class PayrollController extends AccountBaseController
         $month = $request->get('month');
         $year = $request->get('year');
 
-        $query = SalarySlip::with(['user:id,name', 'salaryGroup:id,group_name', 'paymentMethod:id,payment_method', 'cycle:id,cycle'])
+        $query = SalarySlip::with(['user:id,name', 'driver:id,name', 'salaryGroup:id,group_name', 'paymentMethod:id,payment_method', 'cycle:id,cycle'])
             ->orderByDesc('id');
 
         if (!empty($status) && in_array($status, ['generated', 'review', 'locked', 'paid'])) {
@@ -136,7 +167,7 @@ class PayrollController extends AccountBaseController
                 foreach ($slips as $slip) {
                     fputcsv($output, [
                         $slip->id,
-                        optional($slip->user)->name,
+                        $slip->payee_name,
                         $slip->month,
                         $slip->year,
                         $slip->status,
@@ -169,6 +200,7 @@ class PayrollController extends AccountBaseController
 
         $salarySlip->load([
             'user:id,name,email,mobile',
+            'driver:id,name,email,mobile',
             'salaryGroup:id,group_name',
             'paymentMethod:id,payment_method',
             'cycle:id,cycle',
@@ -186,6 +218,7 @@ class PayrollController extends AccountBaseController
 
         $salarySlip->load([
             'user:id,name,email,mobile',
+            'driver:id,name,email,mobile',
             'salaryGroup:id,group_name',
             'paymentMethod:id,payment_method',
             'cycle:id,cycle',
@@ -209,7 +242,10 @@ class PayrollController extends AccountBaseController
         abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'payee_type' => 'required|in:employee,driver',
+            'employee_id' => 'nullable|exists:users,id',
+            'driver_id' => 'nullable|exists:drivers,id',
+            'user_id' => 'nullable',
             'salary_group_id' => 'nullable|exists:salary_groups,id',
             'basic_salary' => 'required|numeric|min:0',
             'net_salary' => 'required|numeric|min:0',
@@ -227,11 +263,39 @@ class PayrollController extends AccountBaseController
             'salary_to' => 'nullable|date|after_or_equal:salary_from',
             'payroll_cycle_id' => 'nullable|exists:payroll_cycles,id',
             'expense_claims' => 'nullable|numeric|min:0',
+            'paid_amount' => 'nullable|numeric|min:0',
         ]);
+
+        $payeeType = $request->payee_type;
+        $payeeId = $payeeType === 'driver' ? $request->driver_id : $request->employee_id;
+
+        abort_403(empty($payeeId));
+
+        $validated['user_id'] = $payeeId;
+        unset($validated['employee_id'], $validated['driver_id'], $validated['payee_type']);
 
         $validated['company_id'] = company()->id;
         $validated['added_by'] = user()->id;
         $validated['last_updated_by'] = user()->id;
+
+        $netSalary = (float) ($validated['net_salary'] ?? 0);
+        $paidAmount = min((float) ($validated['paid_amount'] ?? 0), $netSalary);
+        $validated['paid_amount'] = $paidAmount;
+        $validated['balance_amount'] = max($netSalary - $paidAmount, 0);
+        $validated['payee_type'] = $payeeType;
+
+        if ($validated['balance_amount'] <= 0 && ($validated['status'] ?? '') !== 'paid') {
+            $validated['status'] = 'paid';
+            $validated['paid_on'] = $validated['paid_on'] ?? now()->toDateString();
+        }
+
+        if (($validated['status'] ?? '') === 'paid' && empty($validated['paid_on'])) {
+            $validated['paid_on'] = now()->toDateString();
+        }
+
+        $validated['salary_json'] = json_encode(array_filter([
+            'payee_type' => $payeeType,
+        ]));
 
         SalarySlip::create($validated);
 
@@ -244,7 +308,10 @@ class PayrollController extends AccountBaseController
         abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'payee_type' => 'nullable|in:employee,driver',
+            'employee_id' => 'nullable|exists:users,id',
+            'driver_id' => 'nullable|exists:drivers,id',
+            'user_id' => 'nullable',
             'salary_group_id' => 'nullable|exists:salary_groups,id',
             'basic_salary' => 'required|numeric|min:0',
             'net_salary' => 'required|numeric|min:0',
@@ -262,9 +329,42 @@ class PayrollController extends AccountBaseController
             'salary_to' => 'nullable|date|after_or_equal:salary_from',
             'payroll_cycle_id' => 'nullable|exists:payroll_cycles,id',
             'expense_claims' => 'nullable|numeric|min:0',
+            'paid_amount' => 'nullable|numeric|min:0',
         ]);
 
+        $payeeType = $request->payee_type ?: $salarySlip->payee_type;
+        $payeeId = $salarySlip->user_id;
+
+        if ($request->filled('employee_id') || $request->filled('driver_id')) {
+            $payeeId = $payeeType === 'driver' ? $request->driver_id : $request->employee_id;
+            abort_403(empty($payeeId));
+        }
+
+        $validated['user_id'] = $payeeId;
+        unset($validated['employee_id'], $validated['driver_id'], $validated['payee_type']);
+
         $validated['last_updated_by'] = user()->id;
+        $salaryJson = is_string($salarySlip->salary_json) ? json_decode($salarySlip->salary_json, true) : (array) $salarySlip->salary_json;
+        $salaryJson['payee_type'] = $payeeType;
+
+        $netSalary = (float) ($validated['net_salary'] ?? $salarySlip->net_salary ?? 0);
+        $paidAmount = (float) ($validated['paid_amount'] ?? $salarySlip->paid_amount ?? 0);
+        $paidAmount = min($paidAmount, $netSalary);
+
+        $validated['paid_amount'] = $paidAmount;
+        $validated['balance_amount'] = max($netSalary - $paidAmount, 0);
+        $validated['payee_type'] = $payeeType;
+
+        if ($validated['balance_amount'] <= 0 && ($validated['status'] ?? '') !== 'paid') {
+            $validated['status'] = 'paid';
+            $validated['paid_on'] = $validated['paid_on'] ?? now()->toDateString();
+        }
+
+        if (($validated['status'] ?? '') === 'paid' && empty($validated['paid_on'])) {
+            $validated['paid_on'] = now()->toDateString();
+        }
+
+        $validated['salary_json'] = json_encode($salaryJson);
         $salarySlip->update($validated);
 
         return redirect()->route('payroll.index', ['tab' => 'salary-slips'])->with('success', __('messages.updateSuccess'));
@@ -542,5 +642,166 @@ class PayrollController extends AccountBaseController
         );
 
         return redirect()->route('payroll.index', ['tab' => 'settings'])->with('success', __('messages.updateSuccess'));
+    }
+
+    public function generateMonthlySlips(): RedirectResponse
+    {
+        $isImpersonatingCompany = session()->has('impersonate');
+        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
+
+        Artisan::call('payroll:generate-monthly-slips');
+
+        return redirect()->route('payroll.index', ['tab' => 'salary-slips'])->with('success', 'Monthly salary slips generated successfully.');
+    }
+
+    public function storeEmployeeSetup(Request $request): RedirectResponse
+    {
+        $isImpersonatingCompany = session()->has('impersonate');
+        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
+
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'basic_salary' => 'required|numeric|min:0',
+            'housing_allowance' => 'nullable|numeric|min:0',
+            'travel_allowance' => 'nullable|numeric|min:0',
+            'opening_balance' => 'nullable|numeric|min:0',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        PayrollEmployeeSetup::updateOrCreate(
+            [
+                'company_id' => company()->id,
+                'user_id' => $validated['user_id'],
+            ],
+            [
+                'basic_salary' => $validated['basic_salary'],
+                'housing_allowance' => $validated['housing_allowance'] ?? 0,
+                'travel_allowance' => $validated['travel_allowance'] ?? 0,
+                'opening_balance' => $validated['opening_balance'] ?? 0,
+                'status' => $validated['status'],
+            ]
+        );
+
+        return redirect()->route('payroll.index', ['tab' => 'salary-setups'])->with('success', __('messages.recordSaved'));
+    }
+
+    public function updateEmployeeSetup(Request $request, PayrollEmployeeSetup $payrollEmployeeSetup): RedirectResponse
+    {
+        $isImpersonatingCompany = session()->has('impersonate');
+        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
+
+        $validated = $request->validate([
+            'basic_salary' => 'required|numeric|min:0',
+            'housing_allowance' => 'nullable|numeric|min:0',
+            'travel_allowance' => 'nullable|numeric|min:0',
+            'opening_balance' => 'nullable|numeric|min:0',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        $payrollEmployeeSetup->update([
+            'basic_salary' => $validated['basic_salary'],
+            'housing_allowance' => $validated['housing_allowance'] ?? 0,
+            'travel_allowance' => $validated['travel_allowance'] ?? 0,
+            'opening_balance' => $validated['opening_balance'] ?? 0,
+            'status' => $validated['status'],
+        ]);
+
+        return redirect()->route('payroll.index', ['tab' => 'salary-setups'])->with('success', __('messages.updateSuccess'));
+    }
+
+    public function destroyEmployeeSetup(PayrollEmployeeSetup $payrollEmployeeSetup): RedirectResponse
+    {
+        $isImpersonatingCompany = session()->has('impersonate');
+        abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
+
+        $payrollEmployeeSetup->delete();
+
+        return redirect()->route('payroll.index', ['tab' => 'salary-setups'])->with('success', __('messages.deleteSuccess'));
+    }
+
+    public function storeDriverSetup(Request $request): RedirectResponse
+    {
+        $isImpersonatingCompany = session()->has('impersonate');
+        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
+
+        $validated = $request->validate([
+            'driver_id' => 'required|exists:drivers,id',
+            'basic_salary' => 'required|numeric|min:0',
+            'accommodation_allowance' => 'nullable|numeric|min:0',
+            'car_allowance' => 'nullable|numeric|min:0',
+            'opening_balance' => 'nullable|numeric|min:0',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        PayrollDriverSetup::updateOrCreate(
+            [
+                'company_id' => company()->id,
+                'driver_id' => $validated['driver_id'],
+            ],
+            [
+                'basic_salary' => $validated['basic_salary'],
+                'accommodation_allowance' => $validated['accommodation_allowance'] ?? 0,
+                'car_allowance' => $validated['car_allowance'] ?? 0,
+                'opening_balance' => $validated['opening_balance'] ?? 0,
+                'status' => $validated['status'],
+            ]
+        );
+
+        return redirect()->route('payroll.index', ['tab' => 'salary-setups'])->with('success', __('messages.recordSaved'));
+    }
+
+    public function updateDriverSetup(Request $request, PayrollDriverSetup $payrollDriverSetup): RedirectResponse
+    {
+        $isImpersonatingCompany = session()->has('impersonate');
+        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
+
+        $validated = $request->validate([
+            'basic_salary' => 'required|numeric|min:0',
+            'accommodation_allowance' => 'nullable|numeric|min:0',
+            'car_allowance' => 'nullable|numeric|min:0',
+            'opening_balance' => 'nullable|numeric|min:0',
+            'status' => 'required|in:active,inactive',
+        ]);
+
+        $payrollDriverSetup->update([
+            'basic_salary' => $validated['basic_salary'],
+            'accommodation_allowance' => $validated['accommodation_allowance'] ?? 0,
+            'car_allowance' => $validated['car_allowance'] ?? 0,
+            'opening_balance' => $validated['opening_balance'] ?? 0,
+            'status' => $validated['status'],
+        ]);
+
+        return redirect()->route('payroll.index', ['tab' => 'salary-setups'])->with('success', __('messages.updateSuccess'));
+    }
+
+    public function destroyDriverSetup(PayrollDriverSetup $payrollDriverSetup): RedirectResponse
+    {
+        $isImpersonatingCompany = session()->has('impersonate');
+        abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
+
+        $payrollDriverSetup->delete();
+
+        return redirect()->route('payroll.index', ['tab' => 'salary-setups'])->with('success', __('messages.deleteSuccess'));
+    }
+
+    private function resolveDriverPayrollStatusLabel(Driver $driver): string
+    {
+        $offboardingStage = strtolower((string) ($driver->offboarding_stage ?? ''));
+
+        if ($offboardingStage === 'completed') {
+            return 'Offboarding Completed';
+        }
+
+        $hasOffboarding = ((int) ($driver->offboard_request ?? 0) === 1) || !empty($offboardingStage);
+
+        if ($hasOffboarding) {
+            return 'Pending Offboarding';
+        }
+
+        if (strtolower((string) ($driver->onboarding_stage ?? '')) === 'completed') {
+            return 'Onboarding Completed';
+        }
+
+        return 'Pending Onboarding';
     }
 }

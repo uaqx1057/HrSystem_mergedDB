@@ -693,6 +693,7 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     // Payroll
     Route::group(['prefix' => 'payroll', 'as' => 'payroll.'], function () {
         Route::get('/', [PayrollController::class, 'index'])->name('index');
+        Route::post('salary-slips/generate-monthly', [PayrollController::class, 'generateMonthlySlips'])->name('salary-slips.generate-monthly');
         Route::get('salary-slips/export', [PayrollController::class, 'exportSalarySlipsCsv'])->name('salary-slips.export');
         Route::get('salary-slips/{salarySlip}/print', [PayrollController::class, 'printSalarySlip'])->name('salary-slips.print');
         Route::get('salary-slips/{salarySlip}/pdf', [PayrollController::class, 'downloadSalarySlipPdf'])->name('salary-slips.pdf');
@@ -700,6 +701,14 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
         Route::post('salary-slips', [PayrollController::class, 'storeSalarySlip'])->name('salary-slips.store');
         Route::put('salary-slips/{salarySlip}', [PayrollController::class, 'updateSalarySlip'])->name('salary-slips.update');
         Route::delete('salary-slips/{salarySlip}', [PayrollController::class, 'destroySalarySlip'])->name('salary-slips.destroy');
+
+        Route::post('salary-setups/employees', [PayrollController::class, 'storeEmployeeSetup'])->name('salary-setups.employees.store');
+        Route::put('salary-setups/employees/{payrollEmployeeSetup}', [PayrollController::class, 'updateEmployeeSetup'])->name('salary-setups.employees.update');
+        Route::delete('salary-setups/employees/{payrollEmployeeSetup}', [PayrollController::class, 'destroyEmployeeSetup'])->name('salary-setups.employees.destroy');
+
+        Route::post('salary-setups/drivers', [PayrollController::class, 'storeDriverSetup'])->name('salary-setups.drivers.store');
+        Route::put('salary-setups/drivers/{payrollDriverSetup}', [PayrollController::class, 'updateDriverSetup'])->name('salary-setups.drivers.update');
+        Route::delete('salary-setups/drivers/{payrollDriverSetup}', [PayrollController::class, 'destroyDriverSetup'])->name('salary-setups.drivers.destroy');
 
         Route::post('salary-groups', [PayrollController::class, 'storeSalaryGroup'])->name('salary-groups.store');
         Route::put('salary-groups/{salaryGroup}', [PayrollController::class, 'updateSalaryGroup'])->name('salary-groups.update');
