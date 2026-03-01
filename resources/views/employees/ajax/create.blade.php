@@ -83,18 +83,14 @@ $addDesignationPermission = user()->permission('add_designation');
                                     fieldName="iqama_no" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama')">
                                 </x-forms.text>
                             </div>
-                            <div class="col-lg-4 col-md-6">
-                                <x-forms.text fieldId="iqama_designation" :fieldLabel="__('modules.employees.iqama_designation')"
-                                    fieldName="iqama_designation" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama_designation')">
-                                </x-forms.text>
-                            </div>
+
                             <div class="col-lg-4 col-md-6">
                                 <x-forms.text fieldId="iqama_profession" :fieldLabel="__('modules.employees.iqama_profession')"
                                     fieldName="iqama_profession" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama_profession')">
                                 </x-forms.text>
                             </div>
                             <div class="col-lg-4 col-md-6">
-                                <x-forms.datepicker 
+                                <x-forms.datepicker
                                     fieldId="iqama_expiry_date"
                                     :fieldLabel="__('modules.employees.iqama_expiry_date')"
                                     fieldName="iqama_expiry_date"
@@ -103,7 +99,7 @@ $addDesignationPermission = user()->permission('add_designation');
                                     maxlength="10"
                                 />
                             </div>
-                            
+
                             <div class="col-lg-4 col-md-6">
                                 <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
                                     :fieldLabel="__('modules.employees.iqama_image')" fieldName="iqama_image" fieldId="iqama_image"
@@ -115,14 +111,14 @@ $addDesignationPermission = user()->permission('add_designation');
                                 </x-forms.text>
                             </div>
                             <div class="col-lg-4 col-md-6">
-                                <x-forms.datepicker 
+                                <x-forms.datepicker
                                     fieldId="passport_expiry_date"
                                     :fieldLabel="__('modules.employees.passport_expiry_date')"
                                     fieldName="passport_expiry_date"
                                     :fieldPlaceholder="__('placeholders.passport_expiry_date')"
                                 />
                             </div>
-                            
+
                             <div class="col-lg-4 col-md-6">
                                 <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
                                     :fieldLabel="__('modules.employees.passport_image')" fieldName="passport_image" fieldId="passport_image"
@@ -265,7 +261,7 @@ $addDesignationPermission = user()->permission('add_designation');
                         <x-forms.label class="my-3" fieldId="slack_username"
                             :fieldLabel="__('modules.employees.linkedinUsername')"></x-forms.label>
                         <x-forms.input-group>
-                            
+
 
                             <input type="text" class="form-control height-35 f-14" name="slack_username"
                                 id="slack_username">
@@ -431,7 +427,7 @@ $addDesignationPermission = user()->permission('add_designation');
             ...datepickerConfig
         });
 
-       
+
         datepicker('#date_of_birth', {
             position: 'bl',
             maxDate: new Date(),
@@ -476,6 +472,37 @@ $addDesignationPermission = user()->permission('add_designation');
             } else {
                 $('#add-dependant-btn').addClass('d-none');
             }
+        }
+
+        function validateDependants() {
+            var maritalStatus = $('#marital_status').val();
+            var isMarried = maritalStatus == '{{ \App\Enums\MaritalStatus::Married->value }}';
+
+            if (!isMarried) return true; // No validation needed
+
+            var rows = $('#dependant-rows .dependant-row');
+
+            if (rows.length === 0) return true; // No rows added, skip
+
+            var allValid = true;
+
+            rows.each(function () {
+                var nameInput = $(this).find('input[name$="[name]"]');
+                var nameVal = nameInput.val().trim();
+
+                if (nameVal === '') {
+                    nameInput.addClass('is-invalid'); // highlight empty field
+                    allValid = false;
+                } else {
+                    nameInput.removeClass('is-invalid');
+                }
+            });
+
+            if (!allValid) {
+                alert('All dependants name are required.');
+            }
+
+            return allValid;
         }
 
         function addDependantRow() {
@@ -560,6 +587,9 @@ $addDesignationPermission = user()->permission('add_designation');
         //     tagify = new Tagify(input);
 
         $('#save-more-employee-form').click(function() {
+            if (!validateDependants()) {
+                return; // Stop form submission
+            }
 
             $('#add_more').val(true);
 
@@ -572,6 +602,9 @@ $addDesignationPermission = user()->permission('add_designation');
 
         $('#save-employee-form').click(function() {
 
+            if (!validateDependants()) {
+                return; // Stop form submission
+            }
             const url = "{{ route('employees.store') }}";
             var data = $('#save-employee-data-form').serialize();
             saveEmployee(data, url, "#save-employee-form");

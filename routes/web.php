@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\InsuranceController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GdprController;
 use App\Http\Controllers\DealController;
@@ -245,6 +246,8 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('employees/create-link', [EmployeeController::class, 'createLink'])->name('employees.create_link');
     Route::post('employees/change-password', [EmployeeController::class, 'changePassword'])->name('employees.change-password');
     Route::resource('employees', EmployeeController::class);
+    Route::post('insurance/apply_quick_action', [InsuranceController::class, 'applyQuickAction'])->name('insurance.apply_quick_action');
+    Route::resource('insurance', InsuranceController::class);
     Route::resource('employees.branches', BranchEmployeeController::class);
     Route::resource('passport', PassportController::class);
     Route::resource('employee-visa', EmployeeVisaController::class);

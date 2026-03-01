@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Http\Requests\Insurance;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreInsurance extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules()
+    {
+        return [
+            'employee' => 'required',
+            'issue_date' => 'required',
+            'expiry_date' => 'required',
+            'company_name' => 'required',
+            'policy_no' => 'required',
+            'class' => 'required',
+        ];
+    }
+
+    // public function messages()
+    // {
+    //     return [
+    //         'team_name.required' => __('messages.departmentName'),
+    //         'team_name.unique' => __('messages.departmentUniq'),
+    //     ];
+    // }
+}

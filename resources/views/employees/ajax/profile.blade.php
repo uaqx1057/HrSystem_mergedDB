@@ -246,8 +246,6 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 <x-cards.data-row :label="__('modules.employees.Iqama No')"
                                     :value="$employee->employeeDetail->iqama_no ?? '--'" />
 
-                                <x-cards.data-row :label="__('modules.employees.iqama_designation')"
-                                    :value="$employee->employeeDetail->iqama_designation ?? '--'" />
 
                                 <x-cards.data-row :label="__('modules.employees.iqama_profession')"
                                     :value="$employee->employeeDetail->iqama_profession ?? '--'" />
