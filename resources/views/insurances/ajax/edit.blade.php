@@ -12,6 +12,19 @@
                     @lang('modules.insurance.editTitle')</h4>
                 <div class="row p-20">
                     <div class="col-lg-4 col-md-6">
+                        <x-forms.label class="my-3" fieldId="type"
+                            :fieldLabel="__('app.type')" fieldRequired="true">
+                        </x-forms.label>
+                        <x-forms.input-group>
+                            <select class="form-control select-picker" name="type"
+                                id="type" data-live-search="true">
+                                <option value="">--</option>
+                                <option @if ($insurance->employee_id) selected @endif value="employee">Employee</option>
+                                <option @if ($insurance->driver_id) selected @endif value="driver">Driver</option>
+                            </select>
+                        </x-forms.input-group>
+                    </div>
+                    <div class="col-lg-4 col-md-6 employee-select {{ !empty($insurance?->employee_id) ? '' : 'd-none' }}">
                         <x-forms.label class="my-3" fieldId="employee" :fieldLabel="__('app.employee')" fieldRequired="true">
                         </x-forms.label>
                         <x-forms.input-group>
@@ -21,6 +34,21 @@
                                 @foreach ($employees as $employee)
                                     <option value="{{ $employee->id }}"
                                         @if ($insurance->employee_id == $employee->id) selected @endif>{{ $employee->name }}</option>
+                                @endforeach
+                            </select>
+                        </x-forms.input-group>
+                    </div>
+                    <div class="col-lg-4 col-md-6 driver-select {{ !empty($insurance?->driver_id) ? '' : 'd-none' }}">
+                        <x-forms.label class="my-3" fieldId="driver"
+                            :fieldLabel="__('app.driver')" fieldRequired="true">
+                        </x-forms.label>
+                        <x-forms.input-group>
+                            <select class="form-control select-picker" name="driver"
+                                id="driver" data-live-search="true">
+                                <option value="">--</option>
+                                @foreach ($drivers as $driver)
+                                    <option value="{{ $driver->id }}"
+                                        @if ($insurance->driver_id == $driver->id) selected @endif>{{ $driver->name }}</option>
                                 @endforeach
                             </select>
                         </x-forms.input-group>
@@ -47,6 +75,18 @@
                         <x-forms.text fieldId="designation_name" fieldRequired="true" :fieldLabel="__('app.class')" fieldName="class" :fieldPlaceholder="__('placeholders.class')"
                             :fieldValue="$insurance->class">
                         </x-forms.text>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.label class="my-3" fieldId="status"
+                            :fieldLabel="__('app.status')" >
+                        </x-forms.label>
+                        <x-forms.input-group>
+                            <select class="form-control select-picker" name="status"
+                                id="status" data-live-search="true">
+                                <option @if ($insurance->status == 'active') selected @endif value="active">Active</option>
+                                <option @if ($insurance->status == 'cancelled') selected @endif value="cancelled">Cancelled</option>
+                            </select>
+                        </x-forms.input-group>
                     </div>
 
                 </div>
@@ -85,6 +125,19 @@
             ...datepickerConfig
         });
 
+        $('#type').change(function(){
+            var value = $(this).val();
+            if(value == 'employee') {
+                $('.employee-select').removeClass('d-none');
+                $('.driver-select').addClass('d-none');
+            } else if(value == 'driver') {
+                $('.driver-select').removeClass('d-none');
+                $('.employee-select').addClass('d-none');
+            } else {
+                $('.driver-select').addClass('d-none');
+                $('.employee-select').addClass('d-none');
+            }
+        });
     });
 
     $('#save-insurance-form').click(function() {

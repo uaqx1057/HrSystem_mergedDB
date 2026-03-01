@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\DataTables\BranchEmployeeDataTable;
 use App\DataTables\EmployeesDataTable;
+use App\DataTables\InsuranceDataTable;
 use App\DataTables\LeaveDataTable;
 use App\DataTables\ProjectsDataTable;
 use App\DataTables\TasksDataTable;
@@ -602,7 +603,7 @@ class EmployeeController extends AccountBaseController
     {
         $this->viewPermission = user()->permission('view_employees');
 
-        $this->employee = User::with(['employeeDetail.designation', 'employeeDetail.department','appreciations', 'appreciations.award', 'appreciations.award.awardIcon', 'employeeDetail.reportingTo', 'country', 'emergencyContacts', 'reportingTeam' => function ($query) {
+        $this->employee = User::with(['employeeDetail','employeeDetail.designation', 'employeeDetail.department','appreciations', 'appreciations.award', 'appreciations.award.awardIcon', 'employeeDetail.reportingTo', 'country', 'emergencyContacts', 'reportingTeam' => function ($query) {
             $query->join('users', 'users.id', '=', 'employee_details.user_id');
             $query->where('users.status', '=', 'active');
         }, 'reportingTeam.user', 'leaveTypes', 'leaveTypes.leaveType', 'appreciationsGrouped', 'appreciationsGrouped.award', 'appreciationsGrouped.award.awardIcon'])
@@ -612,7 +613,56 @@ class EmployeeController extends AccountBaseController
         ->findOrFail($id);
 
         $this->employeeLanguage = LanguageSetting::where('language_code', $this->employee->locale)->first();
+        $this->employeeInsurances = \App\Models\Insurance::where('employee_id', $id)
+            ->orderBy('expiry_date', 'desc')
+            ->get();
+            // Leave balance history
+        $joiningDate = $this->employee->employeeDetail->joining_date
+            ? \Carbon\Carbon::parse($this->employee->employeeDetail->joining_date)
+            : null;
 
+        $leaveHistory = [];
+
+        if ($joiningDate) {
+            $now = now($this->company->timezone);
+            $cursor = $joiningDate->copy()->startOfMonth();
+
+            while ($cursor->lte($now)) {
+                $monthLabel = $cursor->translatedFormat('M Y');
+
+                $fullTaken = \App\Models\Leave::where('user_id', $id)
+                    ->where('status', 'approved')
+                    ->whereNull('half_day_type')
+                    ->whereMonth('leave_date', $cursor->month)
+                    ->whereYear('leave_date', $cursor->year)
+                    ->count();
+
+                $halfTaken = \App\Models\Leave::where('user_id', $id)
+                    ->where('status', 'approved')
+                    ->whereNotNull('half_day_type')
+                    ->whereMonth('leave_date', $cursor->month)
+                    ->whereYear('leave_date', $cursor->year)
+                    ->count();
+
+                $taken = $fullTaken + ($halfTaken / 2);
+
+                $leaveHistory[] = [
+                    'month'   => $monthLabel,
+                    'earned'  => 2.5,
+                    'taken'   => $taken,
+                    'balance' => 2.5 - $taken,
+                ];
+
+                $cursor->addMonth();
+            }
+
+            // Homeland badge: 1 ticket per completed year
+            $yearsCompleted = (int) $joiningDate->diffInYears(now($this->company->timezone));
+            $this->homelandTickets = $yearsCompleted;
+        }
+        $leaveHistory = array_reverse($leaveHistory);
+        $this->leaveHistory  = $leaveHistory;
+        $this->joiningDate   = $joiningDate;
         if (!$this->employee->hasRole('employee')) {
             abort(404);
         }
@@ -687,6 +737,8 @@ class EmployeeController extends AccountBaseController
             return $this->tickets();
         case 'projects':
             return $this->projects();
+        case 'insurance':
+            return $this->insurance($id);
 
         case 'tasks':
             return $this->tasks();
@@ -874,6 +926,22 @@ class EmployeeController extends AccountBaseController
         $this->view = 'employees.ajax.projects';
 
         $dataTable = new ProjectsDataTable();
+
+        return $dataTable->render('employees.show', $this->data);
+
+    }
+
+    public function insurance($employeeId)
+    {
+
+        $viewPermission = user()->permission('view_employees');
+        abort_403(!in_array($viewPermission, ['all']));
+
+        $tab = request('tab');
+        $this->activeTab = $tab ?: 'profile';
+        $this->view = 'employees.ajax.insurance';
+
+        $dataTable = new InsuranceDataTable($employeeId,0);
 
         return $dataTable->render('employees.show', $this->data);
 

@@ -14,6 +14,10 @@ class Insurance extends Model
     {
         return $this->belongsTo(User::class, 'employee_id');
     }
+    public function driver(): BelongsTo
+    {
+        return $this->belongsTo(Driver::class, 'driver_id')->withoutGlobalScopes();
+    }
 
     protected $casts = [
         'issue_date' => 'date',

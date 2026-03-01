@@ -187,13 +187,12 @@ $viewAppreciationPermission = true; // user()->permission('view_appreciation');
 
                                 <x-cards.data-row :label="__('modules.drivers.sponsorshipID')"
                                     :value="$driver->sponsorship_id ?? '--'" />
-
+{{--
                                 <x-cards.data-row :label="__('modules.drivers.insurancePolicyNumber')"
-                                    :value="$driver->insurance_policy_number ?? '--'" />
+                                    :value="$driver->insurance_policy_number ?? '--'" />--}}
 
                                 <x-cards.data-row :label="__('modules.drivers.joiningDate')"
-                                    :value="$driver->created_at->translatedFormat(company()->date_format) />
-
+                                                :value="isset($driver->created_at) ? $driver->created_at->translatedFormat(company()->date_format) : '--'" />  
 
                                 {{-- Custom fields data --}}
                                 <x-forms.custom-field-show :fields="$fields" :model="$driver"></x-forms.custom-field-show>
@@ -206,7 +205,32 @@ $viewAppreciationPermission = true; // user()->permission('view_appreciation');
                     </div>
 
                     <div class="col-xl-5 col-lg-6 col-md-6">
+                                    @php
+                                        $driverInsurances = \App\Models\Insurance::where('driver_id', $driver->id)
+                                            ->orderBy('expiry_date', 'desc')
+                                            ->get();
+                                    @endphp
 
+                                    @if ($driverInsurances->count() > 0)
+                                        <div class="col-md-12 mb-4">
+                                            <x-cards.data :title="__('app.menu.insurance')">
+                                                @foreach ($driverInsurances as $ins)
+                                                    <x-cards.data-row label="Policy No" :value="$ins->policy_no ?? '--'" />
+                                                    <x-cards.data-row :label="__('app.company')" :value="$ins->company ?? '--'" />
+                                                    <x-cards.data-row label="Class" :value="$ins->class ?? '--'" />
+                                                    <x-cards.data-row label="Issue Date"
+                                                        :value="$ins->issue_date ? $ins->issue_date->translatedFormat(company()->date_format) : '--'" />
+                                                    <x-cards.data-row label="Expiry Date"
+                                                        :value="$ins->expiry_date ? $ins->expiry_date->translatedFormat(company()->date_format) : '--'" />
+                                                    <x-cards.data-row label="Status" :value="ucfirst($ins->status ?? '--')" />
+
+                                                    @if (!$loop->last)
+                                                        <hr class="my-2">
+                                                    @endif
+                                                @endforeach
+                                            </x-cards.data>
+                                        </div>
+                                    @endif
                         {{-- @if ($showFullProfile)
                              <x-cards.data class="mb-4" :title="__('modules.appreciations.appreciation')">
                                 @forelse ($driver->appreciationsGrouped as $item)

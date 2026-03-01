@@ -25,20 +25,28 @@
                                             data-redirect-url="{{ url()->previous() }}"
                                             href="{{ route('insurance.edit', $insurance->id) }}">@lang('app.edit')</a>
                                         <a class="dropdown-item delete-insurance" data-insurance-id="{{ $insurance->id }}">@lang('app.delete')</a>
-                                    
+
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
+                    @if ($insurance->employee_id)
                     <x-cards.data-row :label="__('app.employee')" :value="$insurance->employee?->name" />
+                    @else
+                    <x-cards.data-row :label="__('app.driver')" :value="$insurance->driver?->name" />
+                    @endif
                     <x-cards.data-row :label="__('modules.insurance.issue_date')" :value="$insurance->issue_date->format(company()->date_format)" />
                     <x-cards.data-row :label="__('modules.insurance.expiry_date')" :value="$insurance->expiry_date->format(company()->date_format)" />
                     <x-cards.data-row :label="__('app.company_name')" :value="$insurance->company" />
                     <x-cards.data-row :label="__('app.policy_no')" :value="$insurance->policy_no" />
                     <x-cards.data-row :label="__('app.class')" :value="$insurance->class" />
-
+                    @if($insurance->status == 'active' && $insurance->expiry_date <= today())
+                    <x-cards.data-row :label="__('app.status')" :value="__('app.expired')" />
+                    @else
+                    <x-cards.data-row :label="__('app.status')" :value="ucfirst($insurance->status)" />
+                    @endif
                 </div>
             </div>
         </div>

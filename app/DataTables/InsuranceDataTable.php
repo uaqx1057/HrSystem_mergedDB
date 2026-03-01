@@ -12,12 +12,16 @@ class InsuranceDataTable extends BaseDataTable
 
     private $editInsurancePermission;
     private $deleteInsurancePermission;
+    private $employeeId; // ✅ Add this
+    private $driverId; // ✅ Add this
 
-    public function __construct()
+    public function __construct($employeeId = null, $driverId = null)
     {
         parent::__construct();
         $this->editInsurancePermission = user()->permission('edit_employees');
         $this->deleteInsurancePermission = user()->permission('delete_employees');
+        $this->employeeId = $employeeId; // ✅ Store it
+        $this->driverId = $driverId; // ✅ Store it
     }
 
     /**
@@ -65,7 +69,8 @@ class InsuranceDataTable extends BaseDataTable
                 return $action;
             })
             ->editColumn('employee_name', function ($row) {
-                return '<h5 class="mb-0 f-13 text-darkest-grey">' . ($row->employee_name ?? '-') . '</h5>';
+                $name = $row->employee_name ?? $row->driver_name ?? '-';
+                return '<h5 class="mb-0 f-13 text-darkest-grey">' . $name . '</h5>';
             })
             ->editColumn('issue_date', function ($row) {
                 return $row->issue_date ? $row->issue_date->format(company()->date_format) : '-';
@@ -82,12 +87,23 @@ class InsuranceDataTable extends BaseDataTable
             ->editColumn('class', function ($row) {
                 return $row->class ?? '-';
             })
+            // ✅ New: Status column with colored badges
+            ->editColumn('status', function ($row) {
+                if ($row->status == 'active') {
+                    if ($row->expiry_date <= today()) {
+                        return ' <i class="fa fa-circle mr-1 text-yellow f-10"></i>' . __('app.expired');
+                    } else {
+                        return ' <i class="fa fa-circle mr-1 text-light-green f-10"></i>' . __('app.active');
+                    }
+                }
+                return '<i class="fa fa-circle mr-1 text-red f-10"></i>' . __('app.cancelled');
+            })
             ->addIndexColumn()
             ->smart(false)
             ->setRowId(function ($row) {
                 return 'row-' . $row->id;
             })
-            ->rawColumns(['action', 'employee_name', 'check']);
+            ->rawColumns(['action', 'employee_name', 'check', 'status']);
     }
 
     /**
@@ -99,16 +115,24 @@ class InsuranceDataTable extends BaseDataTable
     public function query(Insurance $model)
     {
         $request = $this->request();
+        // dd($this->employeeId);
+        $model = $model->leftJoin('users', 'users.id', '=', 'insurances.employee_id')->leftJoin('drivers', 'drivers.id', '=', 'insurances.driver_id')
+            ->select('insurances.*', 'users.name as employee_name', 'drivers.name as driver_name');
+        if ($this->driverId == null && $this->employeeId == null) {
 
-        $model = $model->leftJoin('users', 'users.id', '=', 'insurances.employee_id')
-            ->select('insurances.*', 'users.name as employee_name');
-
+        } else {
+            if ($this->driverId == 0) {
+                $model->where('insurances.employee_id', $this->employeeId);
+            } else{
+                $model->where('insurances.driver_id', $this->driverId);
+            }
+        }
         if ($request->searchText != '') {
             $model->where(function ($query) use ($request) {
                 $query->where('insurances.company', 'like', '%' . $request->searchText . '%')
                     ->orWhere('insurances.policy_no', 'like', '%' . $request->searchText . '%')
                     ->orWhere('insurances.class', 'like', '%' . $request->searchText . '%')
-                    ->orWhere('users.name', 'like', '%' . $request->searchText . '%');
+                    ->orWhere('users.name', 'like', '%' . $request->searchText . '%')->orWhere('drivers.name', 'like', '%' . $request->searchText . '%');
             });
         }
 
@@ -159,21 +183,33 @@ class InsuranceDataTable extends BaseDataTable
                 'exportable' => false,
                 'orderable' => false,
                 'searchable' => false,
-                'visible' => !in_array('client', user_roles())
+                'visible' => !in_array('client', user_roles()) && ($this->driverId == null && $this->employeeId == null) // ✅ Added condition
             ],
             '#' => ['data' => 'DT_RowIndex', 'orderable' => false, 'searchable' => false, 'visible' => false, 'title' => '#'],
-            __('app.employee') => ['data' => 'employee_name', 'name' => 'employee_name', 'title' => __('app.employee')],
+            __('app.employee') . ' / ' . __('app.driver') => [
+                'data' => 'employee_name',
+                'name' => 'employee_name',
+                'title' => __('app.employee') . ' / ' . __('app.driver'),
+                'visible' => ($this->driverId == null && $this->employeeId == null) // ✅ Added condition
+            ],
             __('modules.insurance.issue_date') => ['data' => 'issue_date', 'name' => 'issue_date', 'title' => __('modules.insurance.issue_date')],
             __('modules.insurance.expiry_date') => ['data' => 'expiry_date', 'name' => 'expiry_date', 'title' => __('modules.insurance.expiry_date')],
             __('app.company_name') => ['data' => 'company', 'name' => 'company', 'title' => __('app.company_name')],
             __('app.policy_no') => ['data' => 'policy_no', 'name' => 'policy_no', 'title' => __('app.policy_no')],
             __('app.class') => ['data' => 'class', 'name' => 'class', 'title' => __('app.class')],
+            // ✅ New: Status column
+            __('app.status') => [
+                'data' => 'status',
+                'name' => 'status',
+                'title' => __('app.status'),
+            ],
             Column::computed('action', __('app.action'))
                 ->exportable(false)
                 ->printable(false)
                 ->orderable(false)
                 ->searchable(false)
                 ->addClass('text-right pr-20')
+                ->visible($this->driverId == null && $this->employeeId == null) // ✅ Add this
         ];
     }
 

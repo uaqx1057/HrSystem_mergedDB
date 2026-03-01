@@ -12,6 +12,19 @@
                     @lang('modules.insurance.addTitle')</h4>
                 <div class="row p-20">
                     <div class="col-lg-4 col-md-6">
+                        <x-forms.label class="my-3" fieldId="type"
+                            :fieldLabel="__('app.type')" fieldRequired="true">
+                        </x-forms.label>
+                        <x-forms.input-group>
+                            <select class="form-control select-picker" name="type"
+                                id="type" data-live-search="true">
+                                <option value="">--</option>
+                                <option value="employee">Employee</option>
+                                <option value="driver">Driver</option>
+                            </select>
+                        </x-forms.input-group>
+                    </div>
+                    <div class="col-lg-4 col-md-6 employee-select d-none">
                         <x-forms.label class="my-3" fieldId="employee"
                             :fieldLabel="__('app.employee')" fieldRequired="true">
                         </x-forms.label>
@@ -21,6 +34,20 @@
                                 <option value="">--</option>
                                 @foreach ($employees as $employee)
                                     <option value="{{ $employee->id }}">{{ $employee->name }}</option>
+                                @endforeach
+                            </select>
+                        </x-forms.input-group>
+                    </div>
+                    <div class="col-lg-4 col-md-6 driver-select d-none">
+                        <x-forms.label class="my-3" fieldId="driver"
+                            :fieldLabel="__('app.driver')" fieldRequired="true">
+                        </x-forms.label>
+                        <x-forms.input-group>
+                            <select class="form-control select-picker" name="driver"
+                                id="driver" data-live-search="true">
+                                <option value="">--</option>
+                                @foreach ($drivers as $driver)
+                                    <option value="{{ $driver->id }}">{{ $driver->name }}</option>
                                 @endforeach
                             </select>
                         </x-forms.input-group>
@@ -60,7 +87,18 @@
                              :fieldPlaceholder="__('placeholders.class')">
                         </x-forms.text>
                     </div>
-
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.label class="my-3" fieldId="status"
+                            :fieldLabel="__('app.status')" >
+                        </x-forms.label>
+                        <x-forms.input-group>
+                            <select class="form-control select-picker" name="status"
+                                id="status" data-live-search="true">
+                                <option value="active">Active</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </x-forms.input-group>
+                    </div>
                 </div>
 
                 <x-form-actions>
@@ -88,6 +126,20 @@
         datepicker('#expiry_date', {
             position: 'bl',
             ...datepickerConfig
+        });
+
+        $('#type').change(function(){
+            var value = $(this).val();
+            if(value == 'employee') {
+                $('.employee-select').removeClass('d-none');
+                $('.driver-select').addClass('d-none');
+            } else if(value == 'driver') {
+                $('.driver-select').removeClass('d-none');
+                $('.employee-select').addClass('d-none');
+            } else {
+                $('.driver-select').addClass('d-none');
+                $('.employee-select').addClass('d-none');
+            }
         });
 
     });

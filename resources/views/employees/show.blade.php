@@ -126,12 +126,15 @@ if ($viewPermission == 'all'
                             <x-tab :href="route('employees.show', $employee->id) . '?tab=immigration'" :text="__('modules.employees.immigration')" class="immigration" />
                         </li>
                     @endif
-                    
+
                     @if (in_array($linkToBranchPermission, ['all', 'owned', 'both']))
                     <li>
                         <x-tab :href="route('employees.show', $employee->id) . '?tab=link-branch'" :text="__('modules.employees.linkBranch')" ajax="false" class="link-branch" />
                     </li>
                     @endif
+                 {{--   <li>
+                        <x-tab :href="route('employees.show', $employee->id) . '?tab=insurance'" :text="__('app.menu.insurance')" ajax="false" class="insurance" />
+                    </li>--}}
                 </ul>
             </nav>
         </div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\DataTables\BusinessesDriverDataTable;
 use App\DataTables\DriversDataTable;
+use App\DataTables\InsuranceDataTable;
 use App\Helper\Reply;
 use App\Http\Requests\Admin\Driver\StoreRequest;
 use App\Models\{Driver, DriverType, User};
@@ -187,6 +188,16 @@ class DriverController extends AccountBaseController
 
         return $this->businessDataTable->with('driver_id', $this->driver->id)->render('drivers.show', $this->data);
     }
+    public function insurance($driverId)
+    {
+        $tab = request('tab');
+        $this->activeTab = $tab ?: 'businesses';
+        $this->view = 'drivers.ajax.insurance';
+
+        $dataTable = new InsuranceDataTable(0,$driverId);
+
+        return $dataTable->with('driver_id', $this->driver->id)->render('drivers.show', $this->data);
+    }
 
     /**
      * Display the specified resource.
@@ -220,6 +231,8 @@ class DriverController extends AccountBaseController
                 break;
             case 'businesses':
                 return $this->businesses();
+            case 'insurance':
+                return $this->insurance($id);
 
             default:
                 $this->view = 'drivers.ajax.profile';

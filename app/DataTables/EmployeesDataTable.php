@@ -168,7 +168,8 @@ class EmployeesDataTable extends BaseDataTable
         );
         $datatables->editColumn('name', function ($row) {
             return view('components.employee', [
-                'user' => $row
+                'user' => $row,
+                'leave' => true
             ]);
         });
         $datatables->editColumn('employee_id', function ($row) {

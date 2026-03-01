@@ -609,7 +609,7 @@ class User extends BaseModel
             ->get();
     }
 
-    public static function allEmployees($exceptId = null, $active = false, $overRidePermission = null, $companyId = null)
+    public static function allEmployees($exceptId = null, $active = false, $overRidePermission = null, $companyId = null, $existEmployeeInsurance = null)
     {
         if (!isRunningInConsoleOrSeeding() && !is_null($overRidePermission)) {
             $viewEmployeePermission = $overRidePermission;

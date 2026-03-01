@@ -61,11 +61,15 @@ if ($viewPermission == 'all'
                     <li>
                         <x-tab :href="route('drivers.show', $driver->id) . '?tab=banking'" :text="__('app.menu.banking')" ajax="false" class="banking" />
                     </li>
-                
+
                     <li>
                         <x-tab :href="route('drivers.show', $driver->id) . '?tab=documents'" :text="__('modules.drivers.documents')" class="documents" />
                     </li>
-                    
+
+            {{--      <li>
+                        <x-tab :href="route('drivers.show', $driver->id) . '?tab=insurance'" :text="__('app.menu.insurance')" ajax="false" class="insurance" />
+                    </li>--}}
+
                 </ul>
             </nav>
         </div>

@@ -6,6 +6,7 @@ use App\DataTables\InsuranceDataTable;
 use App\Helper\Reply;
 use App\Http\Requests\Insurance\StoreInsurance;
 use App\Http\Requests\Insurance\UpdateInsurance;
+use App\Models\Driver;
 use App\Models\Insurance;
 use App\Models\Team;
 use App\Models\User;
@@ -44,7 +45,23 @@ class InsuranceController extends AccountBaseController
      */
     public function create()
     {
-        $this->employees = User::allEmployees();
+        $existEmployeeInsurance = Insurance::whereNotNull('employee_id')
+            ->where('status', 'active')
+            ->whereDate('expiry_date', '>', today())
+            ->pluck('employee_id')
+            ->unique()
+            ->toArray();
+
+        $existDriverInsurance = Insurance::whereNotNull('driver_id')
+            ->where('status', 'active')
+            ->whereDate('expiry_date', '>', today())
+            ->pluck('driver_id')
+            ->unique()
+            ->toArray();
+
+        $this->employees = User::allEmployees($existEmployeeInsurance);
+
+        $this->drivers = Driver::withoutGlobalScopes()->select(['id', 'name'])->whereNotIn('id', $existDriverInsurance)->orderBy('id', 'desc')->get();
 
         if (request()->ajax()) {
             $html = view('insurances.ajax.create', $this->data)->render();
@@ -64,13 +81,21 @@ class InsuranceController extends AccountBaseController
      */
     public function store(StoreInsurance $request)
     {
+        // dd($request);
         $insurance = new Insurance();
-        $insurance->employee_id = $request->employee;
+        if ($request->type == 'employee') {
+            $insurance->employee_id = $request->employee;
+            $insurance->driver_id = null;
+        } else {
+            $insurance->employee_id = null;
+            $insurance->driver_id = $request->driver;
+        }
         $insurance->issue_date = $request->issue_date;
         $insurance->expiry_date = $request->expiry_date;
         $insurance->company = $request->company_name;
         $insurance->policy_no = $request->policy_no;
         $insurance->class = $request->class;
+        $insurance->status = $request->status;
         $insurance->save();
 
         $redirectUrl = urldecode($request->redirect_url);
@@ -87,8 +112,7 @@ class InsuranceController extends AccountBaseController
      */
     public function show($id)
     {
-        $this->insurance = Insurance::findOrFail($id);
-
+        $this->insurance = Insurance::with(['driver', 'employee'])->findOrFail($id);
         if (request()->ajax()) {
             $html = view('insurances.ajax.show', $this->data)->render();
 
@@ -105,8 +129,24 @@ class InsuranceController extends AccountBaseController
      */
     public function edit(string $id)
     {
+        $existEmployeeInsurance = Insurance::whereNotNull('employee_id')
+            ->where('status', 'active')->where('employee_id', '!==', $id)
+            ->whereDate('expiry_date', '>', today())
+            ->pluck('employee_id')
+            ->unique()
+            ->toArray();
+
+        $existDriverInsurance = Insurance::whereNotNull('driver_id')
+            ->where('status', 'active')->where('driver_id', '!==', $id)
+            ->whereDate('expiry_date', '>', today())
+            ->pluck('driver_id')
+            ->unique()
+            ->toArray();
+
         $this->insurance = Insurance::findOrFail($id);
-        $this->employees = User::allEmployees();
+        $this->employees = User::allEmployees($existEmployeeInsurance);
+
+        $this->drivers = Driver::withoutGlobalScopes()->select(['id', 'name'])->whereNotIn('id', $existDriverInsurance)->orderBy('id', 'desc')->get();
 
         if (request()->ajax()) {
             $html = view('insurances.ajax.edit', $this->data)->render();
@@ -131,12 +171,19 @@ class InsuranceController extends AccountBaseController
         abort_403($editDepartment != 'all');
 
         $insurance = Insurance::findOrFail($id);
-        $insurance->employee_id = $request->employee;
+        if ($request->type == 'employee') {
+            $insurance->employee_id = $request->employee;
+            $insurance->driver_id = null;
+        } else {
+            $insurance->employee_id = null;
+            $insurance->driver_id = $request->driver;
+        }
         $insurance->issue_date = $request->issue_date;
         $insurance->expiry_date = $request->expiry_date;
         $insurance->company = $request->company_name;
         $insurance->policy_no = $request->policy_no;
         $insurance->class = $request->class;
+        $insurance->status = $request->status;
         $insurance->save();
 
         $redirectUrl = route('insurance.index');
@@ -159,7 +206,7 @@ class InsuranceController extends AccountBaseController
         return Reply::successWithData(__('messages.deleteSuccess'), ['redirectUrl' => $redirectUrl]);
     }
 
-        public function applyQuickAction(Request $request)
+    public function applyQuickAction(Request $request)
     {
         $ids = explode(',', $request->row_ids);
 

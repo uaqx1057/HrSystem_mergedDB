@@ -130,7 +130,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 <div>{{ $employee->employeeDetail->about_me }}</div>
                             </x-cards.data>
                         @endif
-
+                        
                         {{-- ── PROFILE INFO ──────────────────────────────────────── --}}
                         <x-cards.data :title="__('modules.client.profileInfo')" class="mt-4">
                             <x-cards.data-row :label="__('modules.employees.employeeId')"
@@ -406,6 +406,87 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                         <x-cards.widget :title="__('modules.dashboard.leavesTaken')"
                                             :value="$leavesTaken" :info="__('modules.dashboard.thisMonth')"
                                             icon="sign-out-alt" />
+                                    </div>
+
+                                @endif
+                                @if ($showFullProfile)
+                                    @php
+                                        $totalEarned  = collect($leaveHistory)->sum('earned');
+                                        $totalTaken   = collect($leaveHistory)->sum('taken');
+                                        $totalBalance = $totalEarned - $totalTaken;
+                                    @endphp
+                                    <div class="col-md-12 mb-4">
+                                        <x-cards.data title="Leaves" class="mt-4">
+
+                                            {{-- Summary row --}}
+                                            <div class="d-flex justify-content-between f-13 mb-3 px-2">
+                                                <span class="text-dark-grey">
+                                                    <strong>Total Earned:</strong> {{ number_format($totalEarned, 1) }} days
+                                                </span>
+                                                <span class="text-dark-grey">
+                                                    <strong>Total Taken:</strong> {{ number_format($totalTaken, 1) }} days
+                                                </span>
+                                                <span class="{{ $totalBalance >= 0 ? 'text-success' : 'text-danger' }}">
+                                                    <strong>Balance:</strong> {{ number_format($totalBalance, 1) }} days
+                                                </span>
+                                            </div>
+
+                                            {{-- Per month breakdown --}}
+                                            @foreach ($leaveHistory as $row)
+                                                <div class="col-12 px-0 pb-2 d-block d-lg-flex d-md-flex">
+                                                    <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                                                        {{ $row['month'] }}
+                                                    </p>
+                                                    <p class="mb-0 text-dark-grey f-14 w-70">
+                                                        Earned: <strong>{{ number_format($row['earned'], 1) }}</strong> &nbsp;|&nbsp;
+                                                        Taken: <strong>{{ number_format($row['taken'], 1) }}</strong> &nbsp;|&nbsp;
+                                                        Balance:
+                                                        <strong class="{{ $row['balance'] >= 0 ? 'text-success' : 'text-danger' }}">
+                                                            {{ number_format($row['balance'], 1) }}
+                                                        </strong>
+                                                    </p>
+                                                </div>
+                                            @endforeach
+
+                                        </x-cards.data>
+                                    </div>
+                                    
+                                    {{-- Homeland ticket --}}
+                                    @if (!empty($homelandTickets) && $homelandTickets > 0)
+                                        <div class="col-md-12 mb-4">
+                                            <x-cards.data title="Homeland Ticket" class="mt-4">
+                                                    <div class="col-12 px-0 pt-3 border-top-grey">
+                                                        <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">Homeland Ticket</p>
+                                                        <p class="mb-0 text-dark-grey f-14 w-70 d-inline-block">
+                                                            <span class="badge badge-primary">
+                                                                {{ $homelandTickets }} ticket{{ $homelandTickets > 1 ? 's' : '' }} earned
+                                                            </span>
+                                                        </p>
+                                                    </div>
+
+                                            </x-cards.data>
+                                        </div>
+                                    @endif
+                                @endif
+
+                                @if (!empty($employeeInsurances) && $employeeInsurances->count() > 0)
+                                    <div class="col-md-12 mb-4">
+                                        <x-cards.data :title="__('app.menu.insurance')">
+                                            @foreach ($employeeInsurances as $ins)
+                                                <x-cards.data-row label="Policy No" :value="$ins->policy_no ?? '--'" />
+                                                <x-cards.data-row label="Company" :value="$ins->company ?? '--'" />
+                                                <x-cards.data-row label="Class" :value="$ins->class ?? '--'" />
+                                                <x-cards.data-row label="Issue Date"
+                                                    :value="$ins->issue_date ? $ins->issue_date->translatedFormat(company()->date_format) : '--'" />
+                                                <x-cards.data-row label="Expiry Date"
+                                                    :value="$ins->expiry_date ? $ins->expiry_date->translatedFormat(company()->date_format) : '--'" />
+                                                <x-cards.data-row label="Status" :value="ucfirst($ins->status ?? '--')" />
+
+                                                @if (!$loop->last)
+                                                    <hr class="my-2">
+                                                @endif
+                                            @endforeach
+                                        </x-cards.data>
                                     </div>
                                 @endif
                             </div>

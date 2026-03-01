@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CronJobsController;
 use App\Http\Controllers\InsuranceController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GdprController;
@@ -135,7 +136,7 @@ use App\Models\Permission;
 use App\Models\PermissionRole;
 use App\Http\Controllers\RolePermissionController;
 
-
+Route::get('iqama-expiry-mail', [CronJobsController::class, 'iqamaExpiryMail'])->name('iqama-expiry-mail');
 
 
 Route::get('/temp-reset-admin-permissions', function() {

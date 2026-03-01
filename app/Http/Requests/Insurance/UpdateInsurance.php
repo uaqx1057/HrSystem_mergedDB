@@ -22,7 +22,14 @@ class UpdateInsurance extends FormRequest
     public function rules(): array
     {
         return [
-            'employee' => 'required',
+            'type' => 'required',
+            'employee' => 'required_if:type,employee',
+            'driver'   => 'required_if:type,driver',
+            'issue_date' => 'required',
+            'expiry_date' => 'required',
+            'company_name' => 'required',
+            'policy_no' => 'required',
+            'class' => 'required',
         ];
     }
 }
