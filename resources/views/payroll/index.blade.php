@@ -4,6 +4,24 @@
     $addPayrollPermission = user()->permission('add_payroll');
     $editPayrollPermission = user()->permission('edit_payroll');
     $deletePayrollPermission = user()->permission('delete_payroll');
+    $currentDate = \Carbon\Carbon::now();
+    $currentYear = (int) $currentDate->year;
+    $currentMonth = (int) $currentDate->month;
+    $monthOptions = [
+        1 => 'January',
+        2 => 'February',
+        3 => 'March',
+        4 => 'April',
+        5 => 'May',
+        6 => 'June',
+        7 => 'July',
+        8 => 'August',
+        9 => 'September',
+        10 => 'October',
+        11 => 'November',
+        12 => 'December',
+    ];
+    $yearOptions = range($currentYear, max($currentYear - 10, 2000), -1);
 @endphp
 
 @section('content')
@@ -81,11 +99,21 @@
                                 </div>
                                 <div class="col-md-2 mb-2">
                                     <label>Month</label>
-                                    <input type="text" name="month" class="form-control" required>
+                                    <select name="month" id="salary_month" class="form-control" required>
+                                        @foreach ($monthOptions as $monthNumber => $monthLabel)
+                                            <option value="{{ str_pad((string) $monthNumber, 2, '0', STR_PAD_LEFT) }}" {{ $monthNumber === $currentMonth ? 'selected' : '' }}>
+                                                {{ $monthLabel }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-2 mb-2">
                                     <label>Year</label>
-                                    <input type="number" name="year" class="form-control" required>
+                                    <select name="year" id="salary_year" class="form-control" required>
+                                        @foreach ($yearOptions as $yearOption)
+                                            <option value="{{ $yearOption }}" {{ (int) $yearOption === $currentYear ? 'selected' : '' }}>{{ $yearOption }}</option>
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="col-md-2 mb-2">
                                     <label>Status</label>
@@ -138,11 +166,11 @@
                                 </div>
                                 <div class="col-md-2 mb-2">
                                     <label>Salary From</label>
-                                    <input type="date" name="salary_from" class="form-control">
+                                    <input type="date" id="salary_from" name="salary_from" class="form-control" value="{{ $currentDate->copy()->startOfMonth()->format('Y-m-d') }}" readonly>
                                 </div>
                                 <div class="col-md-2 mb-2">
                                     <label>Salary To</label>
-                                    <input type="date" name="salary_to" class="form-control">
+                                    <input type="date" id="salary_to" name="salary_to" class="form-control" value="{{ $currentDate->copy()->endOfMonth()->format('Y-m-d') }}">
                                 </div>
                                 <div class="col-md-2 mb-2">
                                     <label>Payroll Cycle</label>
@@ -218,7 +246,7 @@
                                         <a href="{{ route('payroll.salary-slips.print', $slip->id) }}" target="_blank" class="btn btn-sm btn-info mr-1">Print</a>
                                         <a href="{{ route('payroll.salary-slips.pdf', $slip->id) }}" class="btn btn-sm btn-dark mr-1">Download PDF</a>
                                         @if (in_array($editPayrollPermission, ['all', 'added']))
-                                            <form method="POST" action="{{ route('payroll.salary-slips.update', $slip->id) }}" class="mr-1 d-flex align-items-center">
+                                            <form method="POST" action="{{ route('payroll.salary-slips.update', $slip->id) }}" class="mr-1 d-flex align-items-center salary-slip-update-form">
                                                 @csrf
                                                 @method('PUT')
                                                 <input type="hidden" name="user_id" value="{{ $slip->user_id }}">
@@ -233,10 +261,20 @@
                                                 <input type="hidden" name="pay_days" value="{{ $slip->pay_days }}">
                                                 <input type="hidden" name="payroll_cycle_id" value="{{ $slip->payroll_cycle_id }}">
                                                 <input type="hidden" name="salary_payment_method_id" value="{{ $slip->salary_payment_method_id }}">
-                                                <input type="hidden" name="salary_from" value="{{ optional($slip->salary_from)->format('Y-m-d') }}">
-                                                <input type="hidden" name="salary_to" value="{{ optional($slip->salary_to)->format('Y-m-d') }}">
-                                                <input type="hidden" name="month" value="{{ $slip->month }}">
-                                                <input type="hidden" name="year" value="{{ $slip->year }}">
+                                                <input type="hidden" name="salary_from" class="update-salary-from" value="{{ optional($slip->salary_from)->format('Y-m-d') }}">
+                                                <select name="month" class="form-control form-control-sm mr-1 update-salary-month" style="width: 115px">
+                                                    @foreach ($monthOptions as $monthNumber => $monthLabel)
+                                                        <option value="{{ str_pad((string) $monthNumber, 2, '0', STR_PAD_LEFT) }}" {{ (int) $monthNumber === (int) $slip->month ? 'selected' : '' }}>
+                                                            {{ $monthLabel }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <select name="year" class="form-control form-control-sm mr-1 update-salary-year" style="width: 90px">
+                                                    @foreach ($yearOptions as $yearOption)
+                                                        <option value="{{ $yearOption }}" {{ (int) $yearOption === (int) $slip->year ? 'selected' : '' }}>{{ $yearOption }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <input type="date" name="salary_to" class="form-control form-control-sm mr-1 update-salary-to" value="{{ optional($slip->salary_to)->format('Y-m-d') }}" style="width: 135px">
                                                 <input type="number" name="paid_amount" value="{{ $slip->paid_amount ?? 0 }}" step="0.01" min="0" class="form-control form-control-sm mr-1" style="width: 90px">
                                                 <select name="status" class="form-control form-control-sm mr-1" style="width: 110px">
                                                     <option value="generated" {{ $slip->status === 'generated' ? 'selected' : '' }}>Generated</option>
@@ -915,6 +953,10 @@
             const employeeId = document.getElementById('employee_id');
             const driverId = document.getElementById('driver_id');
             const payeeUserId = document.getElementById('payee_user_id');
+            const salaryMonth = document.getElementById('salary_month');
+            const salaryYear = document.getElementById('salary_year');
+            const salaryFrom = document.getElementById('salary_from');
+            const salaryTo = document.getElementById('salary_to');
 
             if (!payeeType || !employeeWrap || !driverWrap || !payeeUserId) {
                 return;
@@ -953,7 +995,85 @@
                 driverId.addEventListener('change', syncPayee);
             }
 
+            const syncSalaryPeriod = function () {
+                if (!salaryMonth || !salaryYear || !salaryFrom || !salaryTo) {
+                    return;
+                }
+
+                const month = parseInt(salaryMonth.value, 10);
+                const year = parseInt(salaryYear.value, 10);
+
+                if (isNaN(month) || isNaN(year)) {
+                    return;
+                }
+
+                const startDate = new Date(year, month - 1, 1);
+                const endDate = new Date(year, month, 0);
+                const formatDate = function (date) {
+                    const yyyy = date.getFullYear();
+                    const mm = String(date.getMonth() + 1).padStart(2, '0');
+                    const dd = String(date.getDate()).padStart(2, '0');
+
+                    return `${yyyy}-${mm}-${dd}`;
+                };
+
+                salaryFrom.value = formatDate(startDate);
+                salaryTo.value = formatDate(endDate);
+                salaryTo.min = salaryFrom.value;
+            };
+
+            if (salaryMonth) {
+                salaryMonth.addEventListener('change', syncSalaryPeriod);
+            }
+
+            if (salaryYear) {
+                salaryYear.addEventListener('change', syncSalaryPeriod);
+            }
+
+            const updateForms = document.querySelectorAll('.salary-slip-update-form');
+            updateForms.forEach(function (form) {
+                const monthField = form.querySelector('.update-salary-month');
+                const yearField = form.querySelector('.update-salary-year');
+                const fromField = form.querySelector('.update-salary-from');
+                const toField = form.querySelector('.update-salary-to');
+
+                if (!monthField || !yearField || !fromField || !toField) {
+                    return;
+                }
+
+                const syncUpdatePeriod = function () {
+                    const month = parseInt(monthField.value, 10);
+                    const year = parseInt(yearField.value, 10);
+
+                    if (isNaN(month) || isNaN(year)) {
+                        return;
+                    }
+
+                    const startDate = new Date(year, month - 1, 1);
+                    const endDate = new Date(year, month, 0);
+                    const formatDate = function (date) {
+                        const yyyy = date.getFullYear();
+                        const mm = String(date.getMonth() + 1).padStart(2, '0');
+                        const dd = String(date.getDate()).padStart(2, '0');
+
+                        return `${yyyy}-${mm}-${dd}`;
+                    };
+
+                    fromField.value = formatDate(startDate);
+                    if (!toField.value || toField.value < fromField.value) {
+                        toField.value = formatDate(endDate);
+                    }
+
+                    toField.min = fromField.value;
+                };
+
+                monthField.addEventListener('change', syncUpdatePeriod);
+                yearField.addEventListener('change', syncUpdatePeriod);
+                syncUpdatePeriod();
+            });
+
             syncPayee();
+            syncSalaryPeriod();
         })();
     </script>
 @endpush

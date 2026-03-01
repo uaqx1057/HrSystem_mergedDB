@@ -15,6 +15,7 @@ use App\Models\SalaryGroupComponent;
 use App\Models\SalaryPaymentMethod;
 use App\Models\SalarySlip;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -249,8 +250,8 @@ class PayrollController extends AccountBaseController
             'salary_group_id' => 'nullable|exists:salary_groups,id',
             'basic_salary' => 'required|numeric|min:0',
             'net_salary' => 'required|numeric|min:0',
-            'month' => 'required|string|max:20',
-            'year' => 'required|digits:4',
+            'month' => 'required|in:01,02,03,04,05,06,07,08,09,10,11,12',
+            'year' => 'required|integer|min:2000|max:' . now()->year,
             'status' => 'required|in:generated,review,locked,paid',
             'paid_on' => 'nullable|date',
             'salary_payment_method_id' => 'nullable|exists:salary_payment_methods,id',
@@ -277,6 +278,16 @@ class PayrollController extends AccountBaseController
         $validated['company_id'] = company()->id;
         $validated['added_by'] = user()->id;
         $validated['last_updated_by'] = user()->id;
+
+        [$periodStart, $periodEnd] = $this->resolveSalaryPeriod((int) $validated['year'], (string) $validated['month']);
+        $validated['salary_from'] = $periodStart->toDateString();
+        $validated['salary_to'] = $request->filled('salary_to') ? $validated['salary_to'] : $periodEnd->toDateString();
+        $validated['tds'] = (float) ($validated['tds'] ?? 0);
+        $validated['gross_salary'] = (float) ($validated['gross_salary'] ?? $validated['net_salary'] ?? 0);
+        $validated['monthly_salary'] = (float) ($validated['monthly_salary'] ?? $validated['net_salary'] ?? 0);
+        $validated['total_deductions'] = (float) ($validated['total_deductions'] ?? 0);
+        $validated['expense_claims'] = (float) ($validated['expense_claims'] ?? 0);
+        $validated['pay_days'] = (int) ($validated['pay_days'] ?? $periodEnd->day);
 
         $netSalary = (float) ($validated['net_salary'] ?? 0);
         $paidAmount = min((float) ($validated['paid_amount'] ?? 0), $netSalary);
@@ -315,8 +326,8 @@ class PayrollController extends AccountBaseController
             'salary_group_id' => 'nullable|exists:salary_groups,id',
             'basic_salary' => 'required|numeric|min:0',
             'net_salary' => 'required|numeric|min:0',
-            'month' => 'required|string|max:20',
-            'year' => 'required|digits:4',
+            'month' => 'required|in:01,02,03,04,05,06,07,08,09,10,11,12',
+            'year' => 'required|integer|min:2000|max:' . now()->year,
             'status' => 'required|in:generated,review,locked,paid',
             'paid_on' => 'nullable|date',
             'salary_payment_method_id' => 'nullable|exists:salary_payment_methods,id',
@@ -346,6 +357,16 @@ class PayrollController extends AccountBaseController
         $validated['last_updated_by'] = user()->id;
         $salaryJson = is_string($salarySlip->salary_json) ? json_decode($salarySlip->salary_json, true) : (array) $salarySlip->salary_json;
         $salaryJson['payee_type'] = $payeeType;
+
+        [$periodStart, $periodEnd] = $this->resolveSalaryPeriod((int) $validated['year'], (string) $validated['month']);
+        $validated['salary_from'] = $periodStart->toDateString();
+        $validated['salary_to'] = $request->filled('salary_to') ? $validated['salary_to'] : $periodEnd->toDateString();
+        $validated['tds'] = (float) ($validated['tds'] ?? $salarySlip->tds ?? 0);
+        $validated['gross_salary'] = (float) ($validated['gross_salary'] ?? $salarySlip->gross_salary ?? $validated['net_salary'] ?? 0);
+        $validated['monthly_salary'] = (float) ($validated['monthly_salary'] ?? $salarySlip->monthly_salary ?? $validated['net_salary'] ?? 0);
+        $validated['total_deductions'] = (float) ($validated['total_deductions'] ?? $salarySlip->total_deductions ?? 0);
+        $validated['expense_claims'] = (float) ($validated['expense_claims'] ?? $salarySlip->expense_claims ?? 0);
+        $validated['pay_days'] = (int) ($validated['pay_days'] ?? $salarySlip->pay_days ?? $periodEnd->day);
 
         $netSalary = (float) ($validated['net_salary'] ?? $salarySlip->net_salary ?? 0);
         $paidAmount = (float) ($validated['paid_amount'] ?? $salarySlip->paid_amount ?? 0);
@@ -803,5 +824,13 @@ class PayrollController extends AccountBaseController
         }
 
         return 'Pending Onboarding';
+    }
+
+    private function resolveSalaryPeriod(int $year, string $month): array
+    {
+        $periodStart = Carbon::create($year, (int) $month, 1)->startOfMonth();
+        $periodEnd = (clone $periodStart)->endOfMonth();
+
+        return [$periodStart, $periodEnd];
     }
 }
