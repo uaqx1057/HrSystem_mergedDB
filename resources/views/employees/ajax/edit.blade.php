@@ -211,6 +211,12 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             fieldName="joining_date" :fieldPlaceholder="__('placeholders.date')" fieldRequired="true"
                             :fieldValue="$employee->employeeDetail->joining_date->format(company()->date_format)" />
                     </div>
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.text fieldId="basic_salary" :fieldLabel="__('modules.employees.basic_salary')"
+                            fieldName="basic_salary" fieldRequired="false" :fieldPlaceholder="__('placeholders.basic_salary')"
+                            :fieldValue="($employee->employeeDetail->basic_salary ? $employee->employeeDetail->basic_salary : '')">
+                        </x-forms.text>
+                    </div>
                     <div class="col-md-4 col-lg-3">
                         <x-forms.datepicker fieldId="date_of_birth" :fieldLabel="__('modules.employees.dateOfBirth')"
                             fieldName="date_of_birth" :fieldPlaceholder="__('placeholders.date')"
@@ -262,6 +268,21 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                 :fieldValue="($employee->employeeDetail->last_date ? $employee->employeeDetail->last_date->format(company()->date_format) : '')" />
                         </div>
                     @endif
+
+                    <div class="col-lg-3 col-md-6">
+                        <div class="form-group my-3">
+                            <label class="f-14 text-dark-grey mb-12 w-100"
+                                for="usr">@lang('modules.employees.vehicle_allocation')</label>
+                            <div class="d-flex">
+                                <x-forms.radio fieldId="vehicle_allocation_yes" :fieldLabel="__('app.yes')" fieldValue="yes"
+                                    fieldName="vehicle_allocation" :checked="($employee->employeeDetail->vehicle_allocation == 'yes') ? 'checked' : ''">
+                                </x-forms.radio>
+                                <x-forms.radio fieldId="vehicle_allocation_no" :fieldLabel="__('app.no')" fieldValue="no"
+                                    fieldName="vehicle_allocation" :checked="($employee->employeeDetail->vehicle_allocation == 'no') ? 'checked' : ''">
+                                </x-forms.radio>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="col-md-12">
                         <div class="form-group my-3">
@@ -480,6 +501,41 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
 
                 <x-forms.custom-field :fields="$fields" :model="$employeeDetail"></x-forms.custom-field>
 
+                {{-- Add Allowance  --}}
+<div class="col-md-12 allowances-rows-wrapper">
+    <hr>
+    <h6 class="f-15 font-weight-bold mb-3">@lang('modules.employees.allowances')</h6>
+    <div id="allowances-rows">
+        @foreach($existingAllowances as $alIdx => $allowance)
+            <div class="row allowance-row p-2 mb-2" data-index="{{ $alIdx }}">
+                <input type="hidden" name="allowances[{{ $alIdx }}][id]" value="{{ $allowance->id }}">
+                <div class="col-lg-4 col-md-6 mb-2">
+                    <label class="f-14 text-dark-grey">@lang('modules.employees.allowanceName') <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control height-35 f-14"
+                           name="allowances[{{ $alIdx }}][name]"
+                           value="{{ $allowance->name }}"
+                           placeholder="@lang('placeholders.allowanceName')" required>
+                </div>
+                <div class="col-lg-4 col-md-6 mb-2">
+                    <label class="f-14 text-dark-grey">@lang('modules.employees.allowanceAmount') <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control height-35 f-14"
+                           name="allowances[{{ $alIdx }}][amount]"
+                           value="{{ $allowance->amount }}"
+                           placeholder="@lang('placeholders.allowanceAmount')" min="0" step="0.01" required>
+                </div>
+                <div class="col-lg-1 col-md-1 mb-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger btn-sm remove-allowance-btn">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        @endforeach
+    </div>
+    <button type="button" id="add-allowances-btn" class="btn btn-outline-primary btn-sm my-2">
+        <i class="fa fa-plus mr-1"></i> @lang('modules.employees.addAllowance')
+    </button>
+</div>
+
                 <x-form-actions>
                     <x-forms.button-primary id="save-form" class="mr-3" icon="check">@lang('app.save')
                     </x-forms.button-primary>
@@ -645,12 +701,91 @@ $(document).ready(function () {
     return allValid;
 }
 
+// ── ALLOWANCE ROWS LOGIC ──────────────────────────────
+var allowanceIndex = {{ $existingAllowances->count() }}; // start after existing
+
+function addAllowanceRow() {
+    var row = `
+        <div class="row allowance-row p-2 mb-2" data-index="${allowanceIndex}">
+            <div class="col-lg-4 col-md-6 mb-2">
+                <label class="f-14 text-dark-grey">@lang('modules.employees.allowanceName') <span class="text-danger">*</span></label>
+                <input type="text" class="form-control height-35 f-14"
+                       name="allowances[${allowanceIndex}][name]" placeholder="@lang('placeholders.allowanceName')" required>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-2">
+                <label class="f-14 text-dark-grey">@lang('modules.employees.allowanceAmount') <span class="text-danger">*</span></label>
+                <input type="number" class="form-control height-35 f-14"
+                       name="allowances[${allowanceIndex}][amount]" placeholder="@lang('placeholders.allowanceAmount')" min="0" step="0.01" required>
+            </div>
+            <div class="col-lg-1 col-md-1 mb-2 d-flex align-items-end">
+                <button type="button" class="btn btn-danger btn-sm remove-allowance-btn">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+        </div>`;
+
+    $('#allowances-rows').append(row);
+    allowanceIndex++;
+}
+
+$('#add-allowances-btn').on('click', function () {
+    addAllowanceRow();
+});
+
+$(document).on('click', '.remove-allowance-btn', function () {
+    $(this).closest('.allowance-row').remove();
+
+    // Re-index remaining rows
+    $('#allowances-rows .allowance-row').each(function (i) {
+        $(this).find('[name]').each(function () {
+            var newName = $(this).attr('name').replace(/\[\d+\]/, '[' + i + ']');
+            $(this).attr('name', newName);
+        });
+        allowanceIndex = i + 1;
+    });
+
+    // Reset index if no rows left
+    if ($('#allowances-rows .allowance-row').length === 0) {
+        allowanceIndex = 0;
+    }
+});
+
+function validateAllowances() {
+    var allValid = true;
+
+    $('#allowances-rows .allowance-row').each(function () {
+        var nameInput   = $(this).find('input[name$="[name]"]');
+        var amountInput = $(this).find('input[name$="[amount]"]');
+
+        if (nameInput.val().trim() === '') {
+            nameInput.addClass('is-invalid');
+            allValid = false;
+        } else {
+            nameInput.removeClass('is-invalid');
+        }
+
+        if (amountInput.val().trim() === '' || parseFloat(amountInput.val()) < 0) {
+            amountInput.addClass('is-invalid');
+            allValid = false;
+        } else {
+            amountInput.removeClass('is-invalid');
+        }
+    });
+
+    if (!allValid) {
+        alert('All allowance fields (Name and Amount) are required.');
+    }
+
+    return allValid;
+}
+
 
 $('#save-employee-form').click(function () {
 
     if (!validateDependants()) {
         return; // Stop form submission
     }
+    if (!validateAllowances()) return;  // ← add this line
 
     const url = "{{ route('employees.store') }}";
     var data = $('#save-employee-data-form').serialize();
@@ -726,6 +861,9 @@ $('#save-employee-form').click(function () {
     $('#save-form').click(function () {
         if (!validateDependants()) {
             return; // Stop form submission
+        }
+         if (!validateAllowances()){
+             return;
         }
         const url = "{{ route('employees.update', $employee->id) }}";
         $.easyAjax({

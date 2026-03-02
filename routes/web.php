@@ -567,6 +567,7 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('leaves/pre-approve-leave', [LeaveController::class, 'preApprove'])->name('leaves.pre_approve_leave');
     Route::post('leaves/apply-quick-action', [LeaveController::class, 'applyQuickAction'])->name('leaves.apply_quick_action');
     Route::get('leaves/view-related-leave/{id}', [LeaveController::class, 'viewRelatedLeave'])->name('leaves.view_related_leave');
+    Route::get('leaves/employee-summary', [LeaveController::class, 'employeeLeaveSummary'])->name('leaves.employee_summary');
     Route::resource('leaves', LeaveController::class);
 
     // Messages

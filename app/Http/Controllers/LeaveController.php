@@ -111,6 +111,56 @@ class LeaveController extends AccountBaseController
      * @return array|void
      * @throws \Froiden\RestAPI\Exceptions\RelatedResourceNotFoundException
      */
+    public function employeeLeaveSummary()
+    {
+        $viewPermission = user()->permission('view_leave');
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
+
+        $employees = User::allEmployees(null, true, ($viewPermission == 'all' ? 'all' : null));
+        $employees->load(['employeeDetail']);
+
+        $summary = $employees->map(function ($employee) {
+            $joiningDate = $employee->employeeDetail->joining_date
+                ? \Carbon\Carbon::parse($employee->employeeDetail->joining_date)
+                : null;
+
+            $totalEarned = 0;
+
+            if ($joiningDate) {
+                $now = now($this->company->timezone);
+                $cursor = $joiningDate->copy()->startOfMonth();
+
+                while ($cursor->lte($now)) {
+                    $totalEarned += 2.5;
+                    $cursor->addMonth();
+                }
+            }
+
+            $fullTaken = \App\Models\Leave::where('user_id', $employee->id)
+                ->where('status', 'approved')
+                ->whereNull('half_day_type')
+                ->count();
+
+            $halfTaken = \App\Models\Leave::where('user_id', $employee->id)
+                ->where('status', 'approved')
+                ->whereNotNull('half_day_type')
+                ->count();
+
+            $taken = $fullTaken + ($halfTaken / 2);
+
+            return [
+                'id'        => $employee->id,
+                'name'      => $employee->name,
+                'image'     => $employee->image,
+                'given'     => $totalEarned,
+                'taken'     => $taken,
+                'remaining' => max(0, $totalEarned - $taken),
+            ];
+        });
+
+        return response()->json(['data' => $summary->values()]);
+    }
+
     public function store(StoreLeave $request)
     {
         $this->addPermission = user()->permission('add_leave');

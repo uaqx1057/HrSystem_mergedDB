@@ -12,6 +12,7 @@ use App\DataTables\TicketDataTable;
 use App\DataTables\TimeLogsDataTable;
 use App\Enums\Salutation;
 use App\Models\Company;
+use App\Models\EmployeeAllowance;
 use App\Scopes\ActiveScope;
 use App\Scopes\CompanyScope;
 use Carbon\Carbon;
@@ -124,12 +125,9 @@ class EmployeeController extends AccountBaseController
 
         $userRoles = user()->roles->pluck('name')->toArray();
 
-        if(in_array('admin', $userRoles))
-        {
+        if (in_array('admin', $userRoles)) {
             $this->roles = Role::where('name', '<>', 'client')->get();
-        }
-        else
-        {
+        } else {
             $this->roles = Role::whereNotIn('name', ['admin', 'client'])->get();
         }
 
@@ -198,7 +196,7 @@ class EmployeeController extends AccountBaseController
         DB::beginTransaction();
         try {
 
-            $userAuth = UserAuth::createUserAuthCredentials($request->email,$request->password);
+            $userAuth = UserAuth::createUserAuthCredentials($request->email, $request->password);
 
             $user = new User();
             $user->name = $request->name;
@@ -251,6 +249,7 @@ class EmployeeController extends AccountBaseController
                 $this->employeeData($request, $employee);
                 $employee->save();
                 $this->saveDependants($request, $employee);
+                $this->saveAllowances($request, $employee);
 
                 // To add custom fields data
                 if ($request->custom_fields_data) {
@@ -279,13 +278,13 @@ class EmployeeController extends AccountBaseController
             // Rollback Transaction
             DB::rollback();
 
-            return Reply::error('Please configure SMTP details to add employee. Visit Settings -> notification setting to set smtp '.$e->getMessage(), 'smtp_error');
+            return Reply::error('Please configure SMTP details to add employee. Visit Settings -> notification setting to set smtp ' . $e->getMessage(), 'smtp_error');
         } catch (\Exception $e) {
             logger($e->getMessage());
             // Rollback Transaction
             DB::rollback();
 
-            return Reply::error('Some error occurred when inserting the data. Please try again or contact support '. $e->getMessage());
+            return Reply::error('Some error occurred when inserting the data. Please try again or contact support ' . $e->getMessage());
         }
 
 
@@ -305,25 +304,25 @@ class EmployeeController extends AccountBaseController
     public function applyQuickAction(Request $request)
     {
         switch ($request->action_type) {
-        case 'delete':
-            $this->deleteRecords($request);
-            // WORKSUITESAAS
-            session()->forget('company');
-            return Reply::success(__('messages.deleteSuccess'));
-        case 'change-status':
-            $company = Company::with(['package', 'employees'])->where('id', user()->company_id)->first();
+            case 'delete':
+                $this->deleteRecords($request);
+                // WORKSUITESAAS
+                session()->forget('company');
+                return Reply::success(__('messages.deleteSuccess'));
+            case 'change-status':
+                $company = Company::with(['package', 'employees'])->where('id', user()->company_id)->first();
 
-            $updateIds = explode(',', str_replace('on,', '', $request->row_ids));
+                $updateIds = explode(',', str_replace('on,', '', $request->row_ids));
 
-            if ($request->status == 'active' && !is_null($company->employees) && ($company->employees->count() + count($updateIds)) > $company->package->max_employees) {
-                return Reply::error(__('superadmin.maxEmployeesLimitReached'));
-            }
+                if ($request->status == 'active' && !is_null($company->employees) && ($company->employees->count() + count($updateIds)) > $company->package->max_employees) {
+                    return Reply::error(__('superadmin.maxEmployeesLimitReached'));
+                }
 
-            $this->changeStatus($request);
+                $this->changeStatus($request);
 
-            return Reply::success(__('messages.updateSuccess'));
-        default:
-            return Reply::error(__('messages.selectAction'));
+                return Reply::success(__('messages.updateSuccess'));
+            default:
+                return Reply::error(__('messages.selectAction'));
         }
     }
 
@@ -417,6 +416,8 @@ class EmployeeController extends AccountBaseController
         }
 
         $this->employees = User::allEmployees($exceptUsers, true);
+
+        $this->existingAllowances = EmployeeAllowance::where('employee_id', $this->employee->id)->get();
 
         if (!is_null($this->employee->employeeDetail)) {
             $this->employeeDetail = $this->employee->employeeDetail->withCustomFields();
@@ -545,6 +546,8 @@ class EmployeeController extends AccountBaseController
         $this->employeeData($request, $employee);
 
         $employee->last_date = null;
+        $employee->basic_salary = $request->basic_salary;
+        $employee->vehicle_allocation = $request->vehicle_allocation;
 
         if ($request->last_date != '') {
             $employee->last_date = Carbon::createFromFormat($this->company->date_format, $request->last_date)->format('Y-m-d');
@@ -552,6 +555,7 @@ class EmployeeController extends AccountBaseController
 
         $employee->save();
         $this->saveDependants($request, $employee);
+        $this->saveAllowances($request, $employee);
 
         // To add custom fields data
         if ($request->custom_fields_data) {
@@ -586,7 +590,9 @@ class EmployeeController extends AccountBaseController
         $this->deleteEmployee($user);
 
         // WORKSUITESAAS
-
+        $employeeDetail = EmployeeDetails::where('employee_id', $id)->first();
+        EmployeeDependant::where('employee_id', $id)->delete();
+        EmployeeAllowance::where('employee_id', $id)->delete();
         session()->forget('company');
 
         return Reply::success(__('messages.deleteSuccess'));
@@ -603,20 +609,37 @@ class EmployeeController extends AccountBaseController
     {
         $this->viewPermission = user()->permission('view_employees');
 
-        $this->employee = User::with(['employeeDetail','employeeDetail.designation', 'employeeDetail.department','appreciations', 'appreciations.award', 'appreciations.award.awardIcon', 'employeeDetail.reportingTo', 'country', 'emergencyContacts', 'reportingTeam' => function ($query) {
-            $query->join('users', 'users.id', '=', 'employee_details.user_id');
-            $query->where('users.status', '=', 'active');
-        }, 'reportingTeam.user', 'leaveTypes', 'leaveTypes.leaveType', 'appreciationsGrouped', 'appreciationsGrouped.award', 'appreciationsGrouped.award.awardIcon'])
-        ->withoutGlobalScope(ActiveScope::class)
-        ->withOut('clientDetails', 'role')
-        ->withCount('member', 'agents', 'openTasks')
-        ->findOrFail($id);
+        $this->employee = User::with([
+            'employeeDetail',
+            'employeeDetail.designation',
+            'employeeDetail.department',
+            'appreciations',
+            'appreciations.award',
+            'appreciations.award.awardIcon',
+            'employeeDetail.reportingTo',
+            'country',
+            'emergencyContacts',
+            'reportingTeam' => function ($query) {
+                $query->join('users', 'users.id', '=', 'employee_details.user_id');
+                $query->where('users.status', '=', 'active');
+            },
+            'reportingTeam.user',
+            'leaveTypes',
+            'leaveTypes.leaveType',
+            'appreciationsGrouped',
+            'appreciationsGrouped.award',
+            'appreciationsGrouped.award.awardIcon'
+        ])
+            ->withoutGlobalScope(ActiveScope::class)
+            ->withOut('clientDetails', 'role')
+            ->withCount('member', 'agents', 'openTasks')
+            ->findOrFail($id);
 
         $this->employeeLanguage = LanguageSetting::where('language_code', $this->employee->locale)->first();
         $this->employeeInsurances = \App\Models\Insurance::where('employee_id', $id)
             ->orderBy('expiry_date', 'desc')
             ->get();
-            // Leave balance history
+        // Leave balance history
         $joiningDate = $this->employee->employeeDetail->joining_date
             ? \Carbon\Carbon::parse($this->employee->employeeDetail->joining_date)
             : null;
@@ -647,9 +670,9 @@ class EmployeeController extends AccountBaseController
                 $taken = $fullTaken + ($halfTaken / 2);
 
                 $leaveHistory[] = [
-                    'month'   => $monthLabel,
-                    'earned'  => 2.5,
-                    'taken'   => $taken,
+                    'month' => $monthLabel,
+                    'earned' => 2.5,
+                    'taken' => $taken,
                     'balance' => 2.5 - $taken,
                 ];
 
@@ -661,8 +684,8 @@ class EmployeeController extends AccountBaseController
             $this->homelandTickets = $yearsCompleted;
         }
         $leaveHistory = array_reverse($leaveHistory);
-        $this->leaveHistory  = $leaveHistory;
-        $this->joiningDate   = $joiningDate;
+        $this->leaveHistory = $leaveHistory;
+        $this->joiningDate = $joiningDate;
         if (!$this->employee->hasRole('employee')) {
             abort(404);
         }
@@ -733,85 +756,84 @@ class EmployeeController extends AccountBaseController
         $viewImmigrationPermission = user()->permission('view_immigration');
 
         switch ($tab) {
-        case 'tickets':
-            return $this->tickets();
-        case 'projects':
-            return $this->projects();
-        case 'insurance':
-            return $this->insurance($id);
+            case 'tickets':
+                return $this->tickets();
+            case 'projects':
+                return $this->projects();
+            case 'insurance':
+                return $this->insurance($id);
 
-        case 'tasks':
-            return $this->tasks();
-        case 'leaves':
-            return $this->leaves();
-        case 'timelogs':
-            return $this->timelogs();
-        case 'documents':
-            abort_403(($viewDocumentPermission == 'none'));
-            $this->view = 'employees.ajax.documents';
-            break;
-        case 'emergency-contacts':
-            $this->view = 'employees.ajax.emergency-contacts';
-            break;
-        case 'appreciation':
-            $viewAppreciationPermission = user()->permission('view_appreciation');
-            abort_403(!in_array($viewAppreciationPermission, ['all', 'added', 'owned', 'both']));
+            case 'tasks':
+                return $this->tasks();
+            case 'leaves':
+                return $this->leaves();
+            case 'timelogs':
+                return $this->timelogs();
+            case 'documents':
+                abort_403(($viewDocumentPermission == 'none'));
+                $this->view = 'employees.ajax.documents';
+                break;
+            case 'emergency-contacts':
+                $this->view = 'employees.ajax.emergency-contacts';
+                break;
+            case 'appreciation':
+                $viewAppreciationPermission = user()->permission('view_appreciation');
+                abort_403(!in_array($viewAppreciationPermission, ['all', 'added', 'owned', 'both']));
 
-            $this->appreciations = $this->appreciation($this->employee->id);
-            $this->view = 'employees.ajax.appreciations';
-            break;
-        case 'leaves-quota':
-            $this->leaveQuota($id);
-            $this->leavesTakenByUser = Leave::byUserCount($this->employee);
-            $this->leaveTypes = LeaveType::byUser($this->employee);
-            $this->employeeLeavesQuotas = $this->employee->leaveTypes;
-            $this->employeeLeavesQuota = clone $this->employeeLeavesQuotas;
+                $this->appreciations = $this->appreciation($this->employee->id);
+                $this->view = 'employees.ajax.appreciations';
+                break;
+            case 'leaves-quota':
+                $this->leaveQuota($id);
+                $this->leavesTakenByUser = Leave::byUserCount($this->employee);
+                $this->leaveTypes = LeaveType::byUser($this->employee);
+                $this->employeeLeavesQuotas = $this->employee->leaveTypes;
+                $this->employeeLeavesQuota = clone $this->employeeLeavesQuotas;
 
-            $totalLeaves = 0;
+                $totalLeaves = 0;
 
-            foreach($this->leaveTypes as $key => $leavesCount)
-            {
-                $leavesCountCheck = $leavesCount->leaveTypeCodition($leavesCount, $this->userRole);
+                foreach ($this->leaveTypes as $key => $leavesCount) {
+                    $leavesCountCheck = $leavesCount->leaveTypeCodition($leavesCount, $this->userRole);
 
-                if($leavesCountCheck && $this->employeeLeavesQuotas[$key]->leave_type_id == $leavesCount->id){
-                    $totalLeaves += $this->employeeLeavesQuotas[$key]->no_of_leaves;
+                    if ($leavesCountCheck && $this->employeeLeavesQuotas[$key]->leave_type_id == $leavesCount->id) {
+                        $totalLeaves += $this->employeeLeavesQuotas[$key]->no_of_leaves;
+                    }
                 }
-            }
 
-            $this->allowedLeaves = $totalLeaves;
-            $this->view = 'employees.ajax.leaves_quota';
-            break;
-        case 'shifts':
-            abort_403(user()->permission('view_shift_roster') != 'all' || !in_array('attendance', user_modules()));
-            $this->view = 'employees.ajax.shifts';
-            break;
-        case 'permissions':
-            abort_403(user()->permission('manage_role_permission_setting') != 'all');
+                $this->allowedLeaves = $totalLeaves;
+                $this->view = 'employees.ajax.leaves_quota';
+                break;
+            case 'shifts':
+                abort_403(user()->permission('view_shift_roster') != 'all' || !in_array('attendance', user_modules()));
+                $this->view = 'employees.ajax.shifts';
+                break;
+            case 'permissions':
+                abort_403(user()->permission('manage_role_permission_setting') != 'all');
 
-            $this->modulesData = Module::with('permissions')->withCount('customPermissions')->get();
-            $this->view = 'employees.ajax.permissions';
-            break;
+                $this->modulesData = Module::with('permissions')->withCount('customPermissions')->get();
+                $this->view = 'employees.ajax.permissions';
+                break;
 
-        case 'activity':
-            $this->activities = UserActivity::where('user_id', $id)->orderBy('id', 'desc')->get();
-            $this->view = 'employees.ajax.activity';
-            break;
+            case 'activity':
+                $this->activities = UserActivity::where('user_id', $id)->orderBy('id', 'desc')->get();
+                $this->view = 'employees.ajax.activity';
+                break;
 
-        case 'immigration':
-            abort_403($viewImmigrationPermission == 'none');
-            $this->passport = Passport::with('country')->where('user_id', $this->employee->id )->first();
-            $this->visa = VisaDetail::with('country')->where('user_id', $this->employee->id)->get();
-            $this->view = 'employees.ajax.immigration';
-            break;
+            case 'immigration':
+                abort_403($viewImmigrationPermission == 'none');
+                $this->passport = Passport::with('country')->where('user_id', $this->employee->id)->first();
+                $this->visa = VisaDetail::with('country')->where('user_id', $this->employee->id)->get();
+                $this->view = 'employees.ajax.immigration';
+                break;
 
-        case 'link-branch':
-            $linkBranchPermission = $this->employee->permission('link_to_branch');
-            abort_403(!(in_array($linkBranchPermission, ['all', 'owned', 'both'])));
-            return $this->branchEmployee();
+            case 'link-branch':
+                $linkBranchPermission = $this->employee->permission('link_to_branch');
+                abort_403(!(in_array($linkBranchPermission, ['all', 'owned', 'both'])));
+                return $this->branchEmployee();
 
-        default:
-            $this->view = 'employees.ajax.profile';
-            break;
+            default:
+                $this->view = 'employees.ajax.profile';
+                break;
         }
 
         if (request()->ajax()) {
@@ -887,11 +909,11 @@ class EmployeeController extends AccountBaseController
     {
         $viewAppreciationPermission = user()->permission('view_appreciation');
 
-        if($viewAppreciationPermission == 'none'){
+        if ($viewAppreciationPermission == 'none') {
             return [];
         }
 
-        $appreciations = Appreciation::with(['award','award.awardIcon', 'awardTo'])->select('id', 'award_id', 'award_to', 'award_date', 'image', 'summary', 'created_at');
+        $appreciations = Appreciation::with(['award', 'award.awardIcon', 'awardTo'])->select('id', 'award_id', 'award_to', 'award_date', 'image', 'summary', 'created_at');
         $appreciations->join('awards', 'awards.id', '=', 'appreciations.award_id');
 
         if ($viewAppreciationPermission == 'added') {
@@ -941,7 +963,7 @@ class EmployeeController extends AccountBaseController
         $this->activeTab = $tab ?: 'profile';
         $this->view = 'employees.ajax.insurance';
 
-        $dataTable = new InsuranceDataTable($employeeId,0);
+        $dataTable = new InsuranceDataTable($employeeId, 0);
 
         return $dataTable->render('employees.show', $this->data);
 
@@ -1074,41 +1096,45 @@ class EmployeeController extends AccountBaseController
      * @param mixed $request
      * @param mixed $employee
      */
-        public function employeeData($request, $employee): void
+    public function employeeData($request, $employee): void
     {
-        $employee->employee_id            = $request->employee_id;
-        $employee->address                = $request->address;
-        $employee->slack_username         = $request->slack_username;
-        $employee->iqama_no               = $request->iqama_no;
-        $employee->iqama_designation      = $request->iqama_designation;
-        $employee->iqama_profession       = $request->iqama_profession;
+        $employee->employee_id = $request->employee_id;
+        $employee->address = $request->address;
+        $employee->slack_username = $request->slack_username;
+        $employee->iqama_no = $request->iqama_no;
+        $employee->iqama_designation = $request->iqama_designation;
+        $employee->iqama_profession = $request->iqama_profession;
+
+        $employee->basic_salary = $request->basic_salary;
+        $employee->vehicle_allocation = $request->vehicle_allocation;
+
         if ($request->hasFile('iqama_image')) {
             $employee->iqama_image = \App\Helper\Files::uploadLocalOrS3($request->iqama_image, 'iqama');
         }
-        $employee->iqama_expiry_date      = $request->iqama_expiry_date
+        $employee->iqama_expiry_date = $request->iqama_expiry_date
             ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->iqama_expiry_date)->format('Y-m-d')
             : null;
-        $employee->passport_no            = $request->passport_no;
+        $employee->passport_no = $request->passport_no;
         if ($request->hasFile('passport_image')) {
             $employee->passport_image = \App\Helper\Files::uploadLocalOrS3($request->passport_image, 'passport');
         }
-        $employee->passport_expiry_date   = $request->passport_expiry_date
+        $employee->passport_expiry_date = $request->passport_expiry_date
             ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->passport_expiry_date)->format('Y-m-d')
             : null;
-        $employee->sponsor_kafala         = $request->sponsor_kafala;
+        $employee->sponsor_kafala = $request->sponsor_kafala;
         $employee->sponsorship_transfer_date = $request->sponsorship_transfer_date
             ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->sponsorship_transfer_date)->format('Y-m-d')
             : null;
-        $employee->department_id          = $request->department;
-        $employee->designation_id         = $request->designation;
-        $employee->reporting_to           = $request->reporting_to;
-        $employee->about_me               = $request->about_me;
-        $employee->joining_date           = \Carbon\Carbon::createFromFormat($this->company->date_format, $request->joining_date)->format('Y-m-d');
-        $employee->date_of_birth          = $request->date_of_birth
+        $employee->department_id = $request->department;
+        $employee->designation_id = $request->designation;
+        $employee->reporting_to = $request->reporting_to;
+        $employee->about_me = $request->about_me;
+        $employee->joining_date = \Carbon\Carbon::createFromFormat($this->company->date_format, $request->joining_date)->format('Y-m-d');
+        $employee->date_of_birth = $request->date_of_birth
             ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->date_of_birth)->format('Y-m-d')
             : null;
-        $employee->calendar_view          = 'task,events,holiday,tickets,leaves';
-        $employee->probation_end_date     = $request->probation_end_date
+        $employee->calendar_view = 'task,events,holiday,tickets,leaves';
+        $employee->probation_end_date = $request->probation_end_date
             ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->probation_end_date)->format('Y-m-d')
             : null;
         $employee->notice_period_start_date = $request->notice_period_start_date
@@ -1117,15 +1143,47 @@ class EmployeeController extends AccountBaseController
         $employee->notice_period_end_date = $request->notice_period_end_date
             ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->notice_period_end_date)->format('Y-m-d')
             : null;
-        $employee->marital_status         = $request->marital_status;
-        $employee->no_of_dependants       = $request->no_of_dependants;
-        $employee->employment_type        = $request->employment_type;
-        $employee->internship_end_date    = $request->internship_end_date
+        $employee->marital_status = $request->marital_status;
+        $employee->no_of_dependants = $request->no_of_dependants;
+        $employee->employment_type = $request->employment_type;
+        $employee->internship_end_date = $request->internship_end_date
             ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->internship_end_date)->format('Y-m-d')
             : null;
-        $employee->contract_end_date      = $request->contract_end_date
+        $employee->contract_end_date = $request->contract_end_date
             ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->contract_end_date)->format('Y-m-d')
             : null;
+    }
+    protected function saveAllowances($request, $employee)
+    {
+        if ($request->has('allowances') && is_array($request->allowances)) {
+            // Delete removed allowances
+            $submittedIds = collect($request->allowances)
+                ->pluck('id')
+                ->filter()
+                ->toArray();
+
+            EmployeeAllowance::where('employee_id', $employee->user_id)
+                ->whereNotIn('id', $submittedIds)
+                ->delete();
+
+            foreach ($request->allowances as $allowance) {
+                if (!empty($allowance['name']) && $allowance['amount'] !== null) {
+                    EmployeeAllowance::updateOrCreate(
+                        [
+                            'id' => $allowance['id'] ?? null,
+                            'employee_id' => $employee->user_id,
+                        ],
+                        [
+                            'name' => $allowance['name'],
+                            'amount' => $allowance['amount'],
+                        ]
+                    );
+                }
+            }
+        } else {
+            // All allowances removed, delete all
+            EmployeeAllowance::where('employee_id', $employee->user_id)->delete();
+        }
     }
     private function saveDependants($request, EmployeeDetails $employee): void
     {
@@ -1136,11 +1194,11 @@ class EmployeeController extends AccountBaseController
             $dep = $id
                 ? EmployeeDependant::find($id) ?? new EmployeeDependant()
                 : new EmployeeDependant();
-            $dep->employee_id    = $employee->user_id;
-            $dep->name           = $data['name'];
-            $dep->iqama_no       = $data['iqama_no'] ?? null;
-            $dep->relation       = $data['relation'];
-            $dep->date_of_birth  = !empty($data['date_of_birth'])
+            $dep->employee_id = $employee->user_id;
+            $dep->name = $data['name'];
+            $dep->iqama_no = $data['iqama_no'] ?? null;
+            $dep->relation = $data['relation'];
+            $dep->date_of_birth = !empty($data['date_of_birth'])
                 ? \Carbon\Carbon::createFromFormat($this->company->date_format, $data['date_of_birth'])->format('Y-m-d')
                 : null;
             $dep->save();
@@ -1194,16 +1252,17 @@ class EmployeeController extends AccountBaseController
 
         $userRoles = $roles->roles->count() > 1 ? $roles->roles->where('name', '!=', 'employee') : $roles->roles;
 
-        foreach($userRoles as $role){
+        foreach ($userRoles as $role) {
             $userRole[] = $role->id;
         }
 
         $this->userRole = $userRole;
     }
 
-    public function changePassword(ChangePasswordRequest $request){
+    public function changePassword(ChangePasswordRequest $request)
+    {
 
-        $userAuth = UserAuth::where('email',$request->email)->first();
+        $userAuth = UserAuth::where('email', $request->email)->first();
         $userAuth->password = Hash::make($request->password);
         $userAuth->save();
         return Reply::successWithData(__('messages.passwordChanged'), ['html' => '', 'add_more' => true]);

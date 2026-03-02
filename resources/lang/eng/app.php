@@ -193,6 +193,7 @@ return array(
         'attendance' => 'Attendance',
         'estimates' => 'Estimates',
         'expenses' => 'Expenses',
+        'leaveDetail' => 'Pending/Approve',
         'leaves' => 'Leaves',
         'leavesQuota' => 'Leaves Quota',
         'noticeBoard' => 'Notice Board',

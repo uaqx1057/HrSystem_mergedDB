@@ -36,6 +36,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
 
 // Dependants
 $dependants = \App\Models\EmployeeDependant::where('employee_id', $employee->id)->get();
+$allowance = \App\Models\EmployeeAllowance::where('employee_id', $employee->id)->get();
 
 @endphp
 
@@ -130,7 +131,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 <div>{{ $employee->employeeDetail->about_me }}</div>
                             </x-cards.data>
                         @endif
-                        
+
                         {{-- ── PROFILE INFO ──────────────────────────────────────── --}}
                         <x-cards.data :title="__('modules.client.profileInfo')" class="mt-4">
                             <x-cards.data-row :label="__('modules.employees.employeeId')"
@@ -177,7 +178,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 <x-cards.data-row :label="__('app.mobile')"
                                     :value="$employee->mobile_with_phonecode" />
 
-                                <x-cards.data-row :label="__('modules.employees.slackUsername')"
+                                <x-cards.data-row :label="__('modules.employees.linkedinUsername')"
                                     :value="$employee->employeeDetail->slack_username
                                         ? '@'.$employee->employeeDetail->slack_username
                                         : '--'" />
@@ -218,6 +219,14 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                     :value="$employee->employeeDetail->employment_type
                                         ? __('modules.employees.' . $employee->employeeDetail->employment_type)
                                         : '--'" />
+                                <x-cards.data-row :label="__('modules.employees.basic_salary')"
+                                    :value="$employee->employeeDetail->basic_salary
+                                        ? __($employee->employeeDetail->basic_salary)
+                                        : '--'" />
+                                <x-cards.data-row :label="__('modules.employees.vehicle_allocation')"
+                                    :value="$employee->employeeDetail->vehicle_allocation
+                                        ? __($employee->employeeDetail->vehicle_allocation)
+                                        : '--'" />
 
                                 @if($employee->employeeDetail->employment_type == 'internship')
                                     <x-cards.data-row :label="__('modules.employees.internshipEndDate')"
@@ -237,7 +246,30 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 <x-forms.custom-field-show :fields="$fields" :model="$employee->employeeDetail"></x-forms.custom-field-show>
                             @endif
                         </x-cards.data>
-
+                            @if ($allowance->count() > 0)
+                                <x-cards.data :title="__('modules.employees.allowances')" class="mt-4">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover f-14 mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>@lang('modules.employees.allowanceName')</th>
+                                                    <th>@lang('modules.employees.allowanceAmount')</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($allowance as $i => $al)
+                                                    <tr>
+                                                        <td>{{ $i + 1 }}</td>
+                                                        <td>{{ $al->name }}</td>
+                                                        <td>{{ $al->amount ?? '--' }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </x-cards.data>
+                            @endif
                         {{-- ── NEW: IQAMA & PASSPORT INFO ───────────────────────── --}}
                         @if ($showFullProfile)
                             <x-cards.data :title="__('modules.employees.iqamaPassportInfo')" class="mt-4">
@@ -419,20 +451,24 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                         <x-cards.data title="Leaves" class="mt-4">
 
                                             {{-- Summary row --}}
-                                            <div class="d-flex justify-content-between f-13 mb-3 px-2">
-                                                <span class="text-dark-grey">
-                                                    <strong>Total Earned:</strong> {{ number_format($totalEarned, 1) }} days
-                                                </span>
-                                                <span class="text-dark-grey">
-                                                    <strong>Total Taken:</strong> {{ number_format($totalTaken, 1) }} days
-                                                </span>
-                                                <span class="{{ $totalBalance >= 0 ? 'text-success' : 'text-danger' }}">
-                                                    <strong>Balance:</strong> {{ number_format($totalBalance, 1) }} days
-                                                </span>
+                                            <div class="row f-13 mb-3 px-2">
+
+                                                <div class="col-4">
+                                                    <strong>Total Earned:</strong> <p>{{ number_format($totalEarned, 1) }} days</p>
+                                                </div>
+
+                                                <div class="col-4">
+                                                    <strong>Total Taken:</strong><p>{{ number_format($totalTaken, 1) }} days</p>
+                                                </div>
+
+                                                <div class="col-4 {{ $totalBalance >= 0 ? 'text-success' : 'text-danger' }}">
+                                                    <strong>Balance:</strong> <p>{{ number_format($totalBalance, 1) }} days</p>
+                                                </div>
+
                                             </div>
 
                                             {{-- Per month breakdown --}}
-                                            @foreach ($leaveHistory as $row)
+                                            {{-- @foreach ($leaveHistory as $row)
                                                 <div class="col-12 px-0 pb-2 d-block d-lg-flex d-md-flex">
                                                     <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
                                                         {{ $row['month'] }}
@@ -446,11 +482,11 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                                         </strong>
                                                     </p>
                                                 </div>
-                                            @endforeach
+                                            @endforeach --}}
 
                                         </x-cards.data>
                                     </div>
-                                    
+
                                     {{-- Homeland ticket --}}
                                     @if (!empty($homelandTickets) && $homelandTickets > 0)
                                         <div class="col-md-12 mb-4">
@@ -473,14 +509,34 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                     <div class="col-md-12 mb-4">
                                         <x-cards.data :title="__('app.menu.insurance')">
                                             @foreach ($employeeInsurances as $ins)
-                                                <x-cards.data-row label="Policy No" :value="$ins->policy_no ?? '--'" />
-                                                <x-cards.data-row label="Company" :value="$ins->company ?? '--'" />
-                                                <x-cards.data-row label="Class" :value="$ins->class ?? '--'" />
-                                                <x-cards.data-row label="Issue Date"
-                                                    :value="$ins->issue_date ? $ins->issue_date->translatedFormat(company()->date_format) : '--'" />
-                                                <x-cards.data-row label="Expiry Date"
-                                                    :value="$ins->expiry_date ? $ins->expiry_date->translatedFormat(company()->date_format) : '--'" />
-                                                <x-cards.data-row label="Status" :value="ucfirst($ins->status ?? '--')" />
+                                                <div class="row">
+
+                                                    <div class="col-6 mb-2">
+                                                        <span class="text-lightest f-14 w-30 text-capitalize">Policy No:</span><span class="text-dark-grey f-14 w-70"> {{ $ins->policy_no ?? '--' }}</span>
+                                                    </div>
+
+                                                    <div class="col-6 mb-2">
+                                                        <span class="text-lightest f-14 w-30 text-capitalize">Company:</span><span class="text-dark-grey f-14 w-70"> {{ $ins->company ?? '--' }}</span>
+                                                    </div>
+
+                                                    <div class="col-6 mb-2">
+                                                        <span class="text-lightest f-14 w-30 text-capitalize">Class:</span><span class="text-dark-grey f-14 w-70"> {{ $ins->class ?? '--' }}</span>
+                                                    </div>
+
+                                                    <div class="col-6 mb-2">
+                                                        <span class="text-lightest f-14 w-30 text-capitalize">Issue Date:</span><span class="text-dark-grey f-14 w-70"> {{ $ins->issue_date ? $ins->issue_date->translatedFormat(company()->date_format) : '--' }}</span>
+                                                    </div>
+
+                                                    <div class="col-6 mb-2">
+                                                        <span class="text-lightest f-14 w-30 text-capitalize">Expiry Date:</span><span class="text-dark-grey f-14 w-70"> {{ $ins->expiry_date ? $ins->expiry_date->translatedFormat(company()->date_format) : '--' }}</span>
+
+                                                    </div>
+
+                                                    <div class="col-6 mb-2">
+                                                        <span class="text-lightest f-14 w-30 text-capitalize">Status:</span><span class="text-dark-grey f-14 w-70"> {{ ucfirst($ins->status ?? '--') }}</span>
+                                                    </div>
+
+                                                </div>
 
                                                 @if (!$loop->last)
                                                     <hr class="my-2">
