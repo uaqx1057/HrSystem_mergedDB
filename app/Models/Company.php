@@ -319,7 +319,7 @@ class Company extends BaseModel
     {
         $admins = Role::with('users')->where('name', 'admin')->where('company_id', $company->id)->first();
 
-        return $admins->users->first();
+        return $admins?->users?->first();
     }
 
     public function employees()

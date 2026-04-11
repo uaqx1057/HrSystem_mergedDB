@@ -686,6 +686,9 @@ class EmployeeController extends AccountBaseController
         $leaveHistory = array_reverse($leaveHistory);
         $this->leaveHistory = $leaveHistory;
         $this->joiningDate = $joiningDate;
+
+        $this->ticketHistory = $this->getAirTicketStats($id);
+
         if (!$this->employee->hasRole('employee')) {
             abort(404);
         }
@@ -845,6 +848,32 @@ class EmployeeController extends AccountBaseController
         $this->activeTab = $tab ?: 'profile';
 
         return view('employees.show', $this->data);
+    }
+
+    public function getAirTicketStats(int $employeeId): array
+    {
+        $employee = User::with(['employeeDetails', 'airTicket'])
+            ->findOrFail($employeeId);
+
+        $joiningDate = $employee->employeeDetails?->joining_date;
+
+        if (!$joiningDate) {
+            return [
+                'total_earned'    => 0,
+                'total_used'      => 0,
+                'total_remaining' => 0,
+            ];
+        }
+
+        $totalEarned    = (int) \Carbon\Carbon::parse($joiningDate)->diffInYears(now());
+        $totalUsed      = $employee->airTicket->count();
+        $totalRemaining = max(0, $totalEarned - $totalUsed); // ✅ max(0) prevents negative value
+
+        return [
+            'total_earned'    => $totalEarned,
+            'total_used'      => $totalUsed,
+            'total_remaining' => $totalRemaining,
+        ];
     }
 
     /**

@@ -1752,6 +1752,17 @@ return array(
         'addTitle' => 'Add Insurance',
         'editTitle' => 'Edit Insurance',
     ),
+    'airTicket' => array(
+        'title' => 'Air Ticket',
+        'addInsurance' => 'Add Air Ticket',
+        'date' => 'Date',
+        'expiry_date' => 'Expiry Date',
+        'treeView' => 'Hierarchy View',
+        'hierarchy' => 'Hierarchy',
+        'searchValidation' => 'Type atleast 3 characters',
+        'addTitle' => 'Add Air Ticket',
+        'editTitle' => 'Edit Air Ticket',
+    ),
     'offlinePayment' => array(
         'title' => 'Offline Payment Method',
         'method' => 'Method',

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AirTicketController;
 use App\Http\Controllers\CronJobsController;
 use App\Http\Controllers\InsuranceController;
 use Illuminate\Support\Facades\Route;
@@ -249,6 +250,8 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::resource('employees', EmployeeController::class);
     Route::post('insurance/apply_quick_action', [InsuranceController::class, 'applyQuickAction'])->name('insurance.apply_quick_action');
     Route::resource('insurance', InsuranceController::class);
+    Route::resource('air-tickets', AirTicketController::class);
+    Route::post('air-tickets/apply_quick_action', [AirTicketController::class, 'applyQuickAction'])->name('air-tickets.apply_quick_action');
     Route::resource('employees.branches', BranchEmployeeController::class);
     Route::resource('passport', PassportController::class);
     Route::resource('employee-visa', EmployeeVisaController::class);

@@ -491,15 +491,21 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                     @if (!empty($homelandTickets) && $homelandTickets > 0)
                                         <div class="col-md-12 mb-4">
                                             <x-cards.data title="Homeland Ticket" class="mt-4">
-                                                    <div class="col-12 px-0 pt-3 border-top-grey">
-                                                        <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">Homeland Ticket</p>
-                                                        <p class="mb-0 text-dark-grey f-14 w-70 d-inline-block">
-                                                            <span class="badge badge-primary">
-                                                                {{ $homelandTickets }} ticket{{ $homelandTickets > 1 ? 's' : '' }} earned
-                                                            </span>
-                                                        </p>
+                                                <div class="row f-13 mb-3 px-2">
+
+                                                    <div class="col-4">
+                                                        <strong>Total Earned:</strong> <p>{{ $ticketHistory['total_earned'] }}</p>
                                                     </div>
 
+                                                    <div class="col-4">
+                                                        <strong>Total Taken:</strong><p>{{ $ticketHistory['total_used'] }}</p>
+                                                    </div>
+
+                                                    <div class="col-4 text-success }}">
+                                                        <strong>Remaining:</strong> <p>{{ $ticketHistory['total_remaining'] }}</p>
+                                                    </div>
+
+                                                </div>
                                             </x-cards.data>
                                         </div>
                                     @endif

@@ -85,6 +85,11 @@
                 @if (in_array('leaves', user_modules()) && $sidebarUserPermissions['view_leave'] != 5 && $sidebarUserPermissions['view_leave'] != 'none')
                     <x-sub-menu-item :link="route('leaves.index')" :text="__('app.menu.leaves')" />
                 @endif
+
+                @if (in_array('employees', user_modules()) && $sidebarUserPermissions['view_employees'] != 4 && $sidebarUserPermissions['view_employees'] != 'none')
+                    <x-sub-menu-item :link="route('air-tickets.index')" :text="__('app.menu.airTickets')" />
+                @endif
+
                 @if (in_array('attendance', user_modules()) && isset($sidebarUserPermissions['view_shift_roster']) && $sidebarUserPermissions['view_shift_roster'] != 5 && $sidebarUserPermissions['view_shift_roster'] != 'none')
                     <x-sub-menu-item :link="route('shifts.index')" :text="__('app.menu.shiftRoster')" />
                 @endif

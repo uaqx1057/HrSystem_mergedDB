@@ -829,6 +829,11 @@ class User extends BaseModel
         return $this->hasMany(UserChat::class, 'to')->where('message_seen', 'no');
     }
 
+    public function airTicket(): HasMany
+    {
+        return $this->hasMany(AirTicket::class, 'employee_id');
+    }
+
     public function employeeDetails(): HasOne
     {
         return $this->hasOne(EmployeeDetails::class);

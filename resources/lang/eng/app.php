@@ -157,6 +157,7 @@ return array(
         'clients' => 'Clients',
         'employees' => 'Employees',
         'insurance' => 'Insurance',
+        'airTickets' => 'Air Tickets',
         'projects' => 'Projects',
         'taskCalendar' => 'Task Calendar',
         'calendar' => 'Calendar',
