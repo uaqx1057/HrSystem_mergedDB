@@ -18,6 +18,16 @@
                     :fieldValue="$lead->client_email ?? ''">
                 </x-forms.email>
             </div>
+
+            <div class="col-md-12">
+                <x-forms.select fieldId="gender" :fieldLabel="__('modules.employees.gender')"
+                    fieldName="gender">
+                    <option value="male">@lang('app.male')</option>
+                    <option value="female">@lang('app.female')</option>
+                    <option value="others">@lang('app.others')</option>
+                </x-forms.select>
+            </div>
+
             <div class="col-md-12">
                 <x-forms.text class="mb-3" fieldId="company_name"
                     :fieldLabel="__('modules.client.companyName')" fieldName="company_name"

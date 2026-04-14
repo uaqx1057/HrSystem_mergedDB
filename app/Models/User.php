@@ -244,8 +244,23 @@ class User extends BaseModel
         'updated_at' => 'datetime',
         'last_login' => 'datetime',
         'two_factor_expires_at	' => 'array',
-        'salutation' => Salutation::class,
+        // 'salutation' => Salutation::class,
     ];
+
+    protected function salutation(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                if (is_null($value)) {
+                    return null;
+                }
+                return Salutation::tryFrom(strtolower($value)) ?? $value;
+            },
+            set: function ($value) {
+                return ($value instanceof Salutation) ? $value->value : strtolower($value);
+            }
+        );
+    }
 
     protected $appends = ['image_url', 'modules', 'mobile_with_phonecode'];
 
