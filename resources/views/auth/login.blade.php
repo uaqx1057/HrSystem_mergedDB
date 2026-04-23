@@ -1,9 +1,47 @@
 @push('styles')
-    @foreach ($frontWidgets as $item)
-    @if(!is_null($item->header_script))
-        {!! $item->header_script !!}
-    @endif
 
+    <style>
+        .login_section {
+            position: relative;
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            /* CHANGE 1: Set the main background to your purple color */
+            background: #364574 !important;
+            overflow: hidden;
+        }
+
+        .login_section::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("{{ asset('img/login-image/car-main.png') }}") !important;
+            background-position: center center;
+            background-size: cover;
+            background-repeat: no-repeat;
+
+            /* CHANGE 2: Adjust opacity (0.1 looks good on dark colors) */
+            opacity: 0.15;
+
+            /* CHANGE 3: Blend mode makes the image merge with the purple */
+            background-blend-mode: overlay;
+
+            z-index: 0;
+        }
+
+        .login_section .container {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+
+    @foreach ($frontWidgets as $item)
+        @if(!is_null($item->header_script))
+            {!! $item->header_script !!}
+        @endif
     @endforeach
 @endpush
 

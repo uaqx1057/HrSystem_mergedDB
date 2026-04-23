@@ -20,7 +20,7 @@
                         </h1>
                         <div class="mb-0 position-relative pro-name">
                             <span class="bg-light-green rounded-circle"></span>
-                            <p class="f-13 text-lightest mb-0" data-placement="bottom" data-toggle="tooltip"
+                            <p class="f-13 mb-0" data-placement="bottom" data-toggle="tooltip"
                                 data-original-title="{{ user()->name }}">{{ user()->name }}</p>
                         </div>
                     </div>

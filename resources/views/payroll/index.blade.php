@@ -24,35 +24,67 @@
     $yearOptions = range($currentYear, max($currentYear - 10, 2000), -1);
 @endphp
 
-@section('content')
-    <div class="content-wrapper">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="mb-0">@lang('app.menu.payroll')</h4>
+@section('filter-section')
+    <!-- FILTER START -->
+    <div class="d-flex d-lg-block filter-box project-header bg-white">
+        <div class="mobile-close-overlay w-100 h-100" id="close-client-overlay"></div>
+
+        <div class="project-menu" id="mob-client-detail">
+            <a class="d-none close-it" href="javascript:;" id="close-client-detail">
+                <i class="fa fa-times"></i>
+            </a>
+
+            <nav class="tabs">
+                <ul class="-primary">
+                    <li>
+                        <x-tab :href="route('payroll.index', ['tab' => 'salary-slips'])"
+                            :text="__('Salary Slips')"
+                            class="salary-slips" ajax="false" />
+                    </li>
+                    <li>
+                        <x-tab :href="route('payroll.index', ['tab' => 'salary-groups'])"
+                            :text="__('Salary Groups')"
+                            class="salary-groups" ajax="false" />
+                    </li>
+                    <li>
+                        <x-tab :href="route('payroll.index', ['tab' => 'salary-components'])"
+                            :text="__('Salary Components')"
+                            class="salary-components" ajax="false" />
+                    </li>
+                    <li>
+                        <x-tab :href="route('payroll.index', ['tab' => 'salary-setups'])"
+                            :text="__('Salary Setups')"
+                            class="salary-setups" ajax="false" />
+                    </li>
+                    <li>
+                        <x-tab :href="route('payroll.index', ['tab' => 'payroll-cycles'])"
+                            :text="__('Payroll Cycles')"
+                            class="payroll-cycles" ajax="false" />
+                    </li>
+                    <li>
+                        <x-tab :href="route('payroll.index', ['tab' => 'payment-methods'])"
+                            :text="__('Payment Methods')"
+                            class="payment-methods" ajax="false" />
+                    </li>
+                    <li>
+                        <x-tab :href="route('payroll.index', ['tab' => 'settings'])"
+                            :text="__('app.menu.settings')"
+                            class="settings" ajax="false" />
+                    </li>
+                </ul>
+            </nav>
         </div>
 
-        <ul class="nav nav-tabs mb-3">
-            <li class="nav-item">
-                <a class="nav-link {{ $activeTab === 'salary-slips' ? 'active' : '' }}" href="{{ route('payroll.index', ['tab' => 'salary-slips']) }}">Salary Slips</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ $activeTab === 'salary-groups' ? 'active' : '' }}" href="{{ route('payroll.index', ['tab' => 'salary-groups']) }}">Salary Groups</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ $activeTab === 'salary-components' ? 'active' : '' }}" href="{{ route('payroll.index', ['tab' => 'salary-components']) }}">Salary Components</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ $activeTab === 'salary-setups' ? 'active' : '' }}" href="{{ route('payroll.index', ['tab' => 'salary-setups']) }}">Salary Setups</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ $activeTab === 'payroll-cycles' ? 'active' : '' }}" href="{{ route('payroll.index', ['tab' => 'payroll-cycles']) }}">Payroll Cycles</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ $activeTab === 'payment-methods' ? 'active' : '' }}" href="{{ route('payroll.index', ['tab' => 'payment-methods']) }}">Payment Methods</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ $activeTab === 'settings' ? 'active' : '' }}" href="{{ route('payroll.index', ['tab' => 'settings']) }}">Settings</a>
-            </li>
-        </ul>
+        <a class="mb-0 d-block d-lg-none text-dark-grey ml-auto mr-2 border-left-grey" onclick="openClientDetailSidebar()">
+            <i class="fa fa-ellipsis-v"></i>
+        </a>
+    </div>
+    <!-- PROJECT HEADER END -->
+@endsection
+
+@section('content')
+
+    <div class="content-wrapper">
 
         @if ($activeTab === 'salary-slips')
             @if (in_array($addPayrollPermission, ['all', 'added']))
@@ -945,6 +977,86 @@
 @endsection
 
 @push('scripts')
+    <script>
+
+        const activeTab = "{{ $activeTab }}";
+        $('.project-menu .' + activeTab).addClass('active');
+
+        const container = document.querySelector('.tabs');
+        const primary = container.querySelector('.-primary');
+        const primaryItems = container.querySelectorAll('.-primary > li:not(.-more)');
+
+        if (container) {
+            container.classList.add('--jsfied');
+
+            primary.insertAdjacentHTML('beforeend', `
+            <li class="-more">
+                <button type="button" class="px-4 h-100 bg-grey d-none d-lg-flex align-items-center" aria-haspopup="true" aria-expanded="false">
+                {{__('app.more')}} <span>&darr;</span>
+                </button>
+                <ul class="-secondary" id="hide-project-menues">
+                ${primary.innerHTML}
+                </ul>
+            </li>
+            `);
+
+            const secondary = container.querySelector('.-secondary');
+            const secondaryItems = secondary.querySelectorAll('li');
+            const allItems = container.querySelectorAll('li');
+            const moreLi = primary.querySelector('.-more');
+            const moreBtn = moreLi.querySelector('button');
+
+            moreBtn.addEventListener('click', e => {
+                e.preventDefault();
+                container.classList.toggle('--show-secondary');
+                moreBtn.setAttribute('aria-expanded', container.classList.contains('--show-secondary'));
+            });
+
+            const doAdapt = () => {
+                allItems.forEach(item => {
+                    item.classList.remove('--hidden');
+                });
+
+                let stopWidth = moreBtn.offsetWidth;
+                let hiddenItems = [];
+                const primaryWidth = primary.offsetWidth;
+                primaryItems.forEach((item, i) => {
+                    if (primaryWidth >= stopWidth + item.offsetWidth) {
+                        stopWidth += item.offsetWidth;
+                    } else {
+                        item.classList.add('--hidden');
+                        hiddenItems.push(i);
+                    }
+                });
+
+                if (!hiddenItems.length) {
+                    moreLi.classList.add('--hidden');
+                    container.classList.remove('--show-secondary');
+                    moreBtn.setAttribute('aria-expanded', false);
+                } else {
+                    secondaryItems.forEach((item, i) => {
+                        if (!hiddenItems.includes(i)) {
+                            item.classList.add('--hidden');
+                        }
+                    });
+                }
+            };
+
+            doAdapt();
+            window.addEventListener('resize', doAdapt);
+
+            document.addEventListener('click', e => {
+                let el = e.target;
+                while (el) {
+                    if (el === secondary || el === moreBtn) return;
+                    el = el.parentNode;
+                }
+                container.classList.remove('--show-secondary');
+                moreBtn.setAttribute('aria-expanded', false);
+            });
+        }
+
+    </script>
     <script>
         (function () {
             const payeeType = document.getElementById('payee_type');
