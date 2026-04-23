@@ -174,79 +174,14 @@
                 @lang('app.login') <i class="fa fa-arrow-right pl-1"></i>
             </button>
             {{-- WORKSUITESAAS --}}
-            @if ($company?->allow_client_signup && isWorksuite())
-                <a href="{{ route('register') }}"
-                   class="btn-secondary f-w-500 rounded w-100 height-50 f-15 mt-3">
-                    @lang('app.signUpAsClient')
-                </a>
-            @endif
+         
         </div>
 
-        <x-slot name="outsideLoginBox">
-            @if (isWorksuiteSaas())
-                @php
-                    $subdomain = config('app.main_application_subdomain');
-                    $rootCrmSubDomain = preg_replace('#^https?://#', '', $subdomain);
-                    $redirect = route('front.home');
-                    $signup = route('front.signup.index');
-                    if(module_enabled('Subdomain')){
-                        $redirect = (!is_null($rootCrmSubDomain) && $rootCrmSubDomain !=='')?'//'.$rootCrmSubDomain:'//'.getDomain();
-                        $signup = $redirect.'/signup';
-                    }
-                @endphp
-
-                @if(!$globalSetting->frontend_disable)
-                    <p class="my-2 f-12"><a
-                            href="{{ $redirect }}"
-                            class="text-dark-grey">@lang('superadmin.goToWebsite')</a>
-                    </p>
-                @endif
-                @if ($globalSetting->enable_register)
-                    <p class="my-2 f-12">@lang('superadmin.dontHaveAccount') <a
-                            href="{{ $signup }}"
-                            class="text-dark-grey">@lang('app.signUp') </a>
-                    </p>
-                @endif
-            @endif
-        </x-slot>
 
     </form>
 
     <x-slot name="scripts">
 
-
-        @if ($globalSetting->google_recaptcha_status == 'active' && $globalSetting->google_recaptcha_v2_status == 'active')
-            <script src="https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit" async
-                    defer></script>
-            <script>
-                var gcv3;
-                var onloadCallback = function () {
-                    // Renders the HTML element with id 'captcha_container' as a reCAPTCHA widget.
-                    // The id of the reCAPTCHA widget is assigned to 'gcv3'.
-                    gcv3 = grecaptcha.render('captcha_container', {
-                        'sitekey': '{{ $globalSetting->google_recaptcha_v2_site_key }}',
-                        'theme': 'light',
-                        'callback': function (response) {
-                            if (response) {
-                                $('#g_recaptcha').val(response);
-                            }
-                        },
-                    });
-                };
-            </script>
-        @endif
-        @if ($globalSetting->google_recaptcha_status == 'active' && $globalSetting->google_recaptcha_v3_status == 'active')
-            <script
-                src="https://www.google.com/recaptcha/api.js?render={{ $globalSetting->google_recaptcha_v3_site_key }}"></script>
-            <script>
-                grecaptcha.ready(function () {
-                    grecaptcha.execute('{{ $globalSetting->google_recaptcha_v3_site_key }}').then(function (token) {
-                        // Add your logic to submit to your backend server here.
-                        $('#g_recaptcha').val(token);
-                    });
-                });
-            </script>
-        @endif
 
         <script>
 
@@ -307,12 +242,7 @@
             });
         </script>
 
-        @foreach ($frontWidgets as $item)
-        @if(!is_null($item->footer_script))
-            {!! $item->footer_script !!}
-        @endif
-
-        @endforeach
+        
     </x-slot>
 
 </x-auth>
