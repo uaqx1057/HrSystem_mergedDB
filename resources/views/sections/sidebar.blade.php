@@ -20,7 +20,7 @@
                         </h1>
                         <div class="mb-0 position-relative pro-name">
                             <span class="bg-light-green rounded-circle"></span>
-                            <p class="f-13 mb-0" data-placement="bottom" data-toggle="tooltip"
+                            <p class="f-13 text-lightest mb-0" data-placement="bottom" data-toggle="tooltip"
                                 data-original-title="{{ user()->name }}">{{ user()->name }}</p>
                         </div>
                     </div>
@@ -128,7 +128,7 @@
         class="text-center d-flex justify-content-between align-items-center position-fixed sidebarTogglerBox {{ user()->dark_theme ? 'bg-dark' : '' }}">
         <button class="border-0 d-lg-block d-none text-lightest font-weight-bold" id="sidebarToggle"></button>
 
-        <div class="d-flex align-items-center">
+        {{-- <div class="d-flex align-items-center">
             @if(isWorksuite() || user()->is_superadmin)
             <p class="mb-0 text-dark-grey px-1 py-0 rounded f-10">v{{ File::get('version.txt') }}</p>
             @endif
@@ -140,7 +140,7 @@
                  @endif
              @endif
 
-        </div>
+        </div> --}}
     </div>
     <!-- Sidebar Toggler -->
 </aside>
