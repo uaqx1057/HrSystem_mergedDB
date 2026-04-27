@@ -20,10 +20,10 @@ $manageBillingPermission = user()->permission('manage_billing');
             </a>
 
             <x-tab :href="route('superadmin.companies.show', $company->id)" :text="__('superadmin.company') . ' ' . __('app.details')" class="company" />
-            @if($manageBillingPermission == 'all')
+            {{-- @if($manageBillingPermission == 'all')
                 <x-tab :href="route('superadmin.companies.show', $company->id).'?tab=billing'" ajax="false" :text="__('superadmin.menu.billing')"
                         class="billing" />
-            @endif
+            @endif --}}
         </div>
 
         <a class="mb-0 d-block d-lg-none text-dark-grey ml-auto mr-2 border-left-grey"
