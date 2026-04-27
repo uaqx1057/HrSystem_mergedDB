@@ -69,23 +69,6 @@
 
                 {{ $outsideLoginBox ?? '' }}
 
-                @if($languages->count() >1)
-                    <div class="my-3 d-flex flex-column flex-grow-1">
-                        <div class="align-items-center flex-grow-1">
-                            @foreach($languages as $language)
-                                <span class="my-10 f-12 mx-1 ">
-                                <a href="javascript:;" class="text-dark-grey my-2 change-lang"
-                                   data-lang="{{$language->language_code}}">
-                                    <span
-                                        class='flag-icon flag-icon-{{ ($language->flag_code == 'en') ? 'gb' : $language->flag_code }} flag-icon-squared'></span>
-                                    {{\App\Models\LanguageSetting::LANGUAGES_TRANS[$language->language_code] ?? $language->language_name}}
-                                </a>
-                            </span>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
 
             </div>
         </div>

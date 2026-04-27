@@ -12,6 +12,14 @@
 #tab-summary input[type="checkbox"] {
     display: none !important;
 }
+
+    .nav-tabs .nav-link.active{
+        background-color: #722C81 !important;
+        color: #fff !important;
+    }
+    .nav-tabs .nav-link{
+        background-color: #fff !important;
+    }
     </style>
 @endpush
 
