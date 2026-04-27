@@ -9,8 +9,8 @@
     <!-- CONTENT WRAPPER START -->
     <div class="px-4 py-0 py-lg-4 border-top-0 super-admin-dashboard">
         <div class="row">
-            @include('dashboard.update-message-dashboard')
-            @includeIf('dashboard.update-message-module-dashboard')
+            {{-- @include('dashboard.update-message-dashboard') --}}
+            {{-- @includeIf('dashboard.update-message-module-dashboard') --}}
             <x-cron-message :modal="true"></x-cron-message>
         </div>
 

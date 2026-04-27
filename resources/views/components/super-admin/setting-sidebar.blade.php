@@ -82,17 +82,17 @@
                              :href="route('superadmin.settings.super-admin-theme-settings.index')"
                              :text="__('app.menu.themeSettings')"/>
         @endif
-        @if (user()->permission('manage_superadmin_custom_module_settings') == 'all')
+        {{-- @if (user()->permission('manage_superadmin_custom_module_settings') == 'all')
         <x-setting-menu-item :active="$activeMenu" menu="module_settings"
                              :href="route('superadmin.settings.custom-module-settings.index')"
                              :text="__('app.menu.moduleSettings')"/>
-        @endif
+        @endif --}}
 
         @foreach (worksuite_plugins() as $item)
             @includeIf(strtolower($item).'::sections.superadmin.setting-sidebar')
         @endforeach
 
-        @if (user()->permission('manage_superadmin_database_backup_settings') == 'all')
+        {{-- @if (user()->permission('manage_superadmin_database_backup_settings') == 'all')
         <x-setting-menu-item :active="$activeMenu" menu="database_backup_settings"
                              :href="route('database-backup-settings.index')"
                              :text="__('app.menu.databaseBackupSetting')"/>
@@ -101,7 +101,7 @@
         @if (global_setting()->system_update && user()->permission('manage_superadmin_update_settings') == 'all')
             <x-setting-menu-item :active="$activeMenu" menu="update_settings" :href="route('update-settings.index')"
                                  :text="__('app.menu.updates')"/>
-        @endif
+        @endif --}}
     </ul>
     <!-- SETTINGS MENU END -->
 

@@ -196,11 +196,11 @@
             @endif
         @endif
 
-            @if (in_array('admin', user_roles()))
+            {{-- @if (in_array('admin', user_roles())) --}}
                 {{-- WORKSUITESAAS --}}
-                <x-setting-menu-item :active="$activeMenu" menu="billing" :href="route('billing.index')"
+                {{-- <x-setting-menu-item :active="$activeMenu" menu="billing" :href="route('billing.index')"
                                      :text="__('superadmin.menu.billing')"/>
-            @endif
+            @endif --}}
 
     </ul>
     <!-- SETTINGS MENU END -->
