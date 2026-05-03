@@ -700,6 +700,7 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
         Route::get('/', [PayrollController::class, 'index'])->name('index');
         Route::post('salary-slips/generate-monthly', [PayrollController::class, 'generateMonthlySlips'])->name('salary-slips.generate-monthly');
         Route::get('salary-slips/export', [PayrollController::class, 'exportSalarySlipsCsv'])->name('salary-slips.export');
+        Route::get('add-salary-slips', [PayrollController::class, 'create'])->name('salary-slips.add');
         Route::get('salary-slips/{salarySlip}/print', [PayrollController::class, 'printSalarySlip'])->name('salary-slips.print');
         Route::get('salary-slips/{salarySlip}/pdf', [PayrollController::class, 'downloadSalarySlipPdf'])->name('salary-slips.pdf');
 

@@ -16722,6 +16722,7 @@ button.disabled, button:disabled {
   white-space: nowrap;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: thin !important;
 }
 @media (max-width: 991.98px) {
   .sidebar-menu {

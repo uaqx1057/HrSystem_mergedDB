@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Currency;
 use App\Models\Driver;
 use App\Models\EmployeeSalaryGroup;
+use App\Models\Order;
 use App\Models\PayrollDriverSetup;
 use App\Models\PayrollEmployeeSetup;
 use App\Models\PayrollCycle;
@@ -20,6 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use App\Helper\Reply;
 
 class PayrollController extends AccountBaseController
 {
@@ -30,7 +32,7 @@ class PayrollController extends AccountBaseController
 
         $this->middleware(function ($request, $next) {
             $isImpersonatingCompany = session()->has('impersonate');
-            abort_403(!$isImpersonatingCompany && !in_array('payroll', $this->user->modules));
+            // abort_403(!$isImpersonatingCompany && !in_array('payroll', $this->user->modules));
 
             return $next($request);
         });
@@ -43,6 +45,10 @@ class PayrollController extends AccountBaseController
 
         $tab = $request->get('tab', 'salary-slips');
         $this->activeTab = $tab;
+
+        $currentDate = Carbon::now();
+        $currentYear = (int) $currentDate->year;
+        $currentMonth = (int) $currentDate->month;
 
         $this->salarySlips = SalarySlip::with(['user:id,name', 'salaryGroup:id,group_name', 'paymentMethod:id,payment_method', 'cycle:id,cycle'])
             ->latest('id')
@@ -142,7 +148,15 @@ class PayrollController extends AccountBaseController
         $fileName = 'salary-slips-' . now()->format('Ymd-His') . '.csv';
 
         return response()->streamDownload(function () use ($query) {
+            // 1. Clear any previous output buffers to prevent the empty first row
+            if (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+
             $output = fopen('php://output', 'w');
+
+            // 2. Optional: Add UTF-8 BOM for Excel compatibility (Fixes special character issues)
+            fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
 
             fputcsv($output, [
                 'ID',
@@ -183,7 +197,7 @@ class PayrollController extends AccountBaseController
                         optional($slip->salaryGroup)->group_name,
                         optional($slip->paymentMethod)->payment_method,
                         optional($slip->cycle)->cycle,
-                        optional($slip->paid_on)->format('Y-m-d'),
+                        $slip->paid_on ? $slip->paid_on->format('Y-m-d') : '',
                     ]);
                 }
             });
@@ -832,5 +846,18 @@ class PayrollController extends AccountBaseController
         $periodEnd = (clone $periodStart)->endOfMonth();
 
         return [$periodStart, $periodEnd];
+    }
+
+    public function create()
+    {
+        $addPayrollPermission = user()->permission('add_payroll');
+        abort_403(!in_array($addPayrollPermission, ['all', 'added']));
+
+        $this->employees = User::allEmployees(null, false, 'all');
+        $this->allGroups = SalaryGroup::orderBy('group_name')->get(['id', 'group_name']);
+        $this->allCycles = PayrollCycle::orderBy('cycle')->get(['id', 'cycle']);
+        $this->allPaymentMethods = SalaryPaymentMethod::orderBy('payment_method')->get(['id', 'payment_method']);
+
+        return view('payroll.create', $this->data);
     }
 }
