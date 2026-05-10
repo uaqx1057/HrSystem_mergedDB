@@ -23,6 +23,7 @@ class EmployeesDataTable extends BaseDataTable
     private $deleteEmployeePermission;
     private $viewEmployeePermission;
     private $changeEmployeeRolePermission;
+    private $assignRole;
 
     public function __construct()
     {
@@ -31,6 +32,8 @@ class EmployeesDataTable extends BaseDataTable
         $this->deleteEmployeePermission = user()->permission('delete_employees');
         $this->viewEmployeePermission = user()->permission('view_employees');
         $this->changeEmployeeRolePermission = user()->permission('change_employee_role');
+
+        $this->assignRole = user()->roles->pluck('name')->toArray();
     }
 
     /**
@@ -130,13 +133,15 @@ class EmployeesDataTable extends BaseDataTable
                 }
             }
 
-            if ($this->deleteEmployeePermission == 'all' || ($this->deleteEmployeePermission == 'added' && user()->id == $row->added_by)) {
+            if (in_array('admin', $this->assignRole)) {
+                if ($this->deleteEmployeePermission == 'all' || ($this->deleteEmployeePermission == 'added' && user()->id == $row->added_by)) {
                 if ((!in_array('admin', $userRole) && user()->id !== $row->id) || (user()->id !== $row->id && in_array('admin', $userRole) && in_array('admin', user_roles()))) {
                     $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-user-id="' . $row->id . '">
                                 <i class="fa fa-trash mr-2"></i>
                                 ' . trans('app.delete') . '
                             </a>';
                 }
+            }
             }
 
             $action .= '</div>
@@ -235,6 +240,10 @@ class EmployeesDataTable extends BaseDataTable
 
         if ($request->employee != 'all' && $request->employee != '') {
             $users = $users->where('users.id', $request->employee);
+        }
+
+        if (!in_array('admin', $this->assignRole)) {
+            $users = $users->where('users.id', user()->id);
         }
 
         if ($request->designation != 'all' && $request->designation != '') {

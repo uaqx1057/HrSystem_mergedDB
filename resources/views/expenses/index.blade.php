@@ -136,8 +136,8 @@ $recurringExpensesPermission = user()->permission('manage_recurring_expense');
                 <div class="select-status mr-3 pl-3">
                     <select name="action_type" class="form-control select-picker" id="quick-action-type" disabled>
                         <option value="">@lang('app.selectAction')</option>
-                        <option value="change-status">@lang('modules.tasks.changeStatus')</option>
-                        <option value="delete">@lang('app.delete')</option>
+                        {{-- <option value="change-status">@lang('modules.tasks.changeStatus')</option>
+                        <option value="delete">@lang('app.delete')</option> --}}
                     </select>
                 </div>
                 <div class="select-status mr-3 d-none quick-action-field" id="change-status-action">

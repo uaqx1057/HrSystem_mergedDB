@@ -17,12 +17,6 @@ class AirTicketController extends AccountBaseController
     {
         parent::__construct();
         $this->pageTitle = __('app.menu.airTickets');
-
-        $this->middleware(function ($request, $next) {
-            abort_403(!in_array('employees', $this->user->modules));
-
-            return $next($request);
-        });
     }
     /**
      * @param AirTicketDataTable $dataTable
@@ -32,8 +26,7 @@ class AirTicketController extends AccountBaseController
 
     public function index(AirTicketDataTable $dataTable)
     {
-        $viewPermission = user()->permission('view_employees');
-        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
+        $this->assignRole = user()->roles->pluck('name')->toArray();
 
         $this->employees = User::allEmployees();
         return $dataTable->render('air-tickets.index', $this->data);
@@ -44,14 +37,20 @@ class AirTicketController extends AccountBaseController
      */
     public function create()
     {
+        $this->assignRole = user()->roles->pluck('name')->toArray();
+
         $today = now();
 
-        $this->employees = User::with(['employeeDetails', 'airTicket'])
+        $eligibleEmployees = User::with(['employeeDetails', 'airTicket'])
             ->whereHas('employeeDetails', function ($query) use ($today) {
                 // Only employees who have completed at least 1 year
                 $query->where('joining_date', '<=', $today->copy()->subYear());
-            })
-            ->get()
+            });
+
+        if(!in_array('admin', $this->assignRole)){
+            $eligibleEmployees = $eligibleEmployees->where('id', user()->id);
+        }
+        $this->employees = $eligibleEmployees->get()
             ->filter(function ($employee) use ($today) {
                 $joiningDate = $employee->employeeDetails->joining_date;
 
@@ -62,7 +61,7 @@ class AirTicketController extends AccountBaseController
                 $yearsCompleted = (int) \Carbon\Carbon::parse($joiningDate)->diffInYears($today);
 
                 // How many air tickets they have received
-                $ticketsReceived = $employee->airTicket->count();
+                $ticketsReceived = $employee->airTicket->where('status','!==', 'rejected')->count();
 
                 // Fetch only if they are owed more tickets than they have
                 return $ticketsReceived < $yearsCompleted;
@@ -90,6 +89,7 @@ class AirTicketController extends AccountBaseController
         $ticket = new AirTicket();
         $ticket->employee_id = $request->employee;
         $ticket->date = $request->date;
+        $ticket->status = $request->status ?? 'pending';
         $ticket->save();
 
         $redirectUrl = urldecode($request->redirect_url);
@@ -123,7 +123,14 @@ class AirTicketController extends AccountBaseController
      */
     public function edit(string $id)
     {
+        $this->assignRole = user()->roles->pluck('name')->toArray();
+
         $this->airTicket = AirTicket::findOrFail($id);
+        if(!in_array('admin', $this->assignRole)){
+            if($this->airTicket->status !== 'pending'){
+                abort_403(true);
+            }
+        }
         $today = now();
         $currentEmployeeId = $this->airTicket->employee_id; // ✅ Store for use in filter
 
@@ -140,7 +147,7 @@ class AirTicketController extends AccountBaseController
                     return false;
 
                 $yearsCompleted = (int) \Carbon\Carbon::parse($joiningDate)->diffInYears($today);
-                $ticketsReceived = $employee->airTicket->count();
+                $ticketsReceived = $employee->airTicket->where('status','!==', 'rejected')->count();
 
                 // ✅ Subtract 1 for current employee so they pass the eligibility check
                 if ($employee->id == $currentEmployeeId) {
@@ -176,6 +183,7 @@ class AirTicketController extends AccountBaseController
 
         $ticket->employee_id = $request->employee;
         $ticket->date = $request->date;
+        $ticket->status = $request->status ?? $ticket->status;
 
         $ticket->save();
 
@@ -213,5 +221,37 @@ class AirTicketController extends AccountBaseController
         }
 
         return response()->json(['status' => 'error', 'message' => 'Invalid action.']);
+    }
+
+    public function approveTicket(Request $request)
+    {
+        $this->ticketID = $request->ticket_id;
+        $this->ticketAction = $request->ticket_action; // This is 'approved'
+        return view('air-tickets.approve.index', $this->data);
+    }
+
+    public function rejectTicket(Request $request)
+    {
+        $this->ticketID = $request->ticket_id;
+        $this->ticketAction = $request->ticket_action; // This is 'rejected'
+        return view('air-tickets.reject.index', $this->data);
+    }
+
+    public function ticketAction(Request $request)
+    {
+        $ticket = AirTicket::findOrFail($request->ticketId);
+        $ticket->status = $request->action;
+
+        if ($request->action == 'approved') {
+            $ticket->approve_reason = $request->approveReason;
+        } else {
+            $ticket->reject_reason = $request->reason;
+        }
+
+        $ticket->approved_by = user()->id;
+        // $ticket->approved_at = now()->toDateTimeString();
+        $ticket->save();
+
+        return Reply::success(__('messages.updateSuccess'));
     }
 }

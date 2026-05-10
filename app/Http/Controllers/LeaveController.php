@@ -82,13 +82,16 @@ class LeaveController extends AccountBaseController
 
         if ($this->addPermission == 'added') {
             $this->defaultAssign = user();
-            $this->leaveQuotas = $leaveQuotas->where('users.id', user()->id)->get();
-            $this->leaveTypeRole(user()->id);
+            // $this->leaveQuotas = $leaveQuotas->where('users.id', user()->id)->get();
+            // $this->leaveTypeRole(user()->id);
+            $this->leaveTypes = LeaveType::all();
         }
         else if (isset(request()->default_assign)) {
             $this->defaultAssign = User::findOrFail(request()->default_assign);
-            $this->leaveQuotas = $leaveQuotas->where('users.id', request()->default_assign)->get();
-            $this->leaveTypeRole(request()->default_assign);
+            // $this->leaveQuotas = $leaveQuotas->where('users.id', request()->default_assign)->get();
+            // $this->leaveTypeRole(request()->default_assign);
+
+            $this->leaveTypes = LeaveType::all();
         }
         else {
             $this->leaveTypes = LeaveType::all();
@@ -116,7 +119,15 @@ class LeaveController extends AccountBaseController
         $viewPermission = user()->permission('view_leave');
         abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
 
+        $assignRole = user()->roles->pluck('name')->toArray();
+
         $employees = User::allEmployees(null, true, ($viewPermission == 'all' ? 'all' : null));
+        $employeeIDs = $employees->where('id', '!==', user()->id)->pluck('id')->toArray();
+
+        if(!in_array('admin', $assignRole))
+        {
+            $employees = User::allEmployees($employeeIDs, true, ($viewPermission == 'all' ? 'all' : null));
+        };
         $employees->load(['employeeDetail']);
 
         $summary = $employees->map(function ($employee) {

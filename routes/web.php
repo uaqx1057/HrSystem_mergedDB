@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AirTicketController;
+use App\Http\Controllers\AdvanceSalaryController;
+use App\Http\Controllers\CompanyAssetController;
 use App\Http\Controllers\CronJobsController;
 use App\Http\Controllers\InsuranceController;
 use Illuminate\Support\Facades\Route;
@@ -250,11 +252,39 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::resource('employees', EmployeeController::class);
     Route::post('insurance/apply_quick_action', [InsuranceController::class, 'applyQuickAction'])->name('insurance.apply_quick_action');
     Route::resource('insurance', InsuranceController::class);
+
+    // 1. Specific custom routes FIRST
+    Route::get('air-tickets/approve-modal', [AirTicketController::class, 'approveTicket'])->name('air_tickets.approve_modal');
+    Route::get('air-tickets/reject-modal', [AirTicketController::class, 'rejectTicket'])->name('air_tickets.reject_modal');
+    Route::post('air-tickets/ticket-action', [AirTicketController::class, 'ticketAction'])->name('air_tickets.ticket_action');
+
+    // 1. Advance salary routes
+    Route::get('advance-salaries/approve-modal', [AdvanceSalaryController::class, 'approveSalary'])->name('advance_salaries.approve_modal');
+    Route::get('advance-salaries/reject-modal', [AdvanceSalaryController::class, 'rejectSalary'])->name('advance_salaries.reject_modal');
+    Route::post('advance-salaries/salary-action', [AdvanceSalaryController::class, 'salaryAction'])->name('advance_salaries.salary_action');
+
+    // 2. Resource routes
     Route::resource('air-tickets', AirTicketController::class);
+    Route::resource('advance-salaries', AdvanceSalaryController::class);
+
     Route::post('air-tickets/apply_quick_action', [AirTicketController::class, 'applyQuickAction'])->name('air-tickets.apply_quick_action');
+    Route::post('advance-salaries/apply_quick_action', [AdvanceSalaryController::class, 'applyQuickAction'])->name('advance-salaries.apply_quick_action');
     Route::resource('employees.branches', BranchEmployeeController::class);
     Route::resource('passport', PassportController::class);
     Route::resource('employee-visa', EmployeeVisaController::class);
+
+    Route::post('company-assets/apply-quick-action', [CompanyAssetController::class, 'applyQuickAction'])->name('company-assets.apply_quick_action');
+    // Assign company assets
+    Route::get('company-assets/assign/{id}', [CompanyAssetController::class, 'assignAsset'])->name('company-assets.assign');
+    Route::post('company-assets/assign/store', [CompanyAssetController::class, 'storeAssignAsset'])->name('company-assets.assign.store');
+    Route::get('company-assets/edit-assign/{id}', [CompanyAssetController::class, 'editAssignAsset'])->name('company-assets.edit-assign');
+    Route::post('company-assets/update-assign/{id}', [CompanyAssetController::class, 'updateAssignAsset'])->name('company-assets.update-assign');
+    Route::get('company-assets/generate-pdf/{id}', [CompanyAssetController::class, 'generatePdf'])->name('company-assets.generate-pdf');
+    Route::get('company-assets/upload-signature/{id}', [CompanyAssetController::class, 'uploadSignature'])->name('company-assets.upload-signature');
+    Route::get('company-assets/view-assign/{id}', [CompanyAssetController::class, 'viewAssign'])->name('company-assets.view-assign');
+    Route::post('company-assets/store-signature/{id}', [CompanyAssetController::class, 'storeSignature'])->name('company-assets.store-signature');
+
+    Route::resource('company-assets', CompanyAssetController::class);
 
     Route::resource('emergency-contacts', EmergencyContactController::class);
 

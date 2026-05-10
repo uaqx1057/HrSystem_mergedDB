@@ -40,6 +40,7 @@ class StoreRequest extends CoreRequest
             'email' => 'required|email:rfc|unique:users,email,null,id,company_id,' . company()->id.'|max:100|check_superadmin',
             'slack_username' => 'nullable|unique:employee_details,slack_username,null,id,company_id,' . company()->id.'|max:30',
             'hourly_rate' => 'nullable|numeric',
+            'transfer_number' => 'nullable|numeric',
             'joining_date' => 'required',
             'last_date' => 'nullable|date_format:"' . $setting->date_format . '"|after_or_equal:joining_date',
             'date_of_birth' => 'nullable|date_format:"' . $setting->date_format . '"|before_or_equal:'.now($setting->timezone)->toDateString(),

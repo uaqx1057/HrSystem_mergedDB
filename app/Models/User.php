@@ -637,7 +637,7 @@ class User extends BaseModel
         $users = User::withRole('employee')
             ->join('employee_details', 'employee_details.user_id', '=', 'users.id')
             ->leftJoin('designations', 'employee_details.designation_id', '=', 'designations.id')
-            ->select('users.id', 'users.company_id', 'users.name', 'users.created_at', 'users.image', 'designations.name as designation_name', 'users.email_notifications', 'users.mobile', 'users.country_id');
+            ->select('users.id', 'users.company_id', 'users.name', 'users.created_at', 'users.image', 'designations.name as designation_name', 'users.email_notifications', 'users.mobile', 'users.country_id','users.email');
 
         if (!is_null($exceptId)) {
             if (is_array($exceptId)) {
@@ -847,6 +847,11 @@ class User extends BaseModel
     public function airTicket(): HasMany
     {
         return $this->hasMany(AirTicket::class, 'employee_id');
+    }
+
+    public function advanceSalary(): HasMany
+    {
+        return $this->hasMany(AdvanceSalary::class, 'employee_id');
     }
 
     public function employeeDetails(): HasOne

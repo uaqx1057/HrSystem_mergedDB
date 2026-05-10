@@ -56,21 +56,24 @@ class ExpensesDataTable extends BaseDataTable
 
             $action .= '<a href="' . route('expenses.show', [$row->id]) . '" class="dropdown-item openRightModal"><i class="fa fa-eye mr-2"></i>' . __('app.view') . '</a>';
 
-            if (is_null($row->expenses_recurring_id)) {
-                if ($this->editExpensePermission == 'all' || ($this->editExpensePermission == 'added' && user()->id == $row->added_by)) {
-                    $action .= '<a class="dropdown-item openRightModal" href="' . route('expenses.edit', [$row->id]) . '">
-                                <i class="fa fa-edit mr-2"></i>
-                                ' . trans('app.edit') . '
-                            </a>';
-                }
+            if($row->status == 'pending'){
+                if (is_null($row->expenses_recurring_id)) {
+                    if ($this->editExpensePermission == 'all' || ($this->editExpensePermission == 'added' && user()->id == $row->added_by)) {
+                        $action .= '<a class="dropdown-item openRightModal" href="' . route('expenses.edit', [$row->id]) . '">
+                                    <i class="fa fa-edit mr-2"></i>
+                                    ' . trans('app.edit') . '
+                                </a>';
+                    }
 
-                if ($this->deleteExpensePermission == 'all' || ($this->deleteExpensePermission == 'added' && user()->id == $row->added_by)) {
-                    $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-expense-id="' . $row->id . '">
-                                <i class="fa fa-trash mr-2"></i>
-                                ' . trans('app.delete') . '
-                            </a>';
+                    if ($this->deleteExpensePermission == 'all' || ($this->deleteExpensePermission == 'added' && user()->id == $row->added_by)) {
+                        $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-expense-id="' . $row->id . '">
+                                    <i class="fa fa-trash mr-2"></i>
+                                    ' . trans('app.delete') . '
+                                </a>';
+                    }
                 }
             }
+
 
             $action .= '</div>
                     </div>

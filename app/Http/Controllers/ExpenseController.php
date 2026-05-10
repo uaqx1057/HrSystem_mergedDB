@@ -112,9 +112,10 @@ class ExpenseController extends AccountBaseController
 
         // Get only current login employee projects
         if ($this->addPermission == 'added') {
-            $this->projects = Project::where('added_by', user()->id)->orWhereHas('projectMembers', function ($query) {
-                $query->where('user_id', user()->id);
-            })->get();
+            $this->projects = Project::where('projects.added_by', user()->id) // Added table prefix here too
+    ->orWhereHas('projectMembers', function ($query) {
+        $query->where('project_members.user_id', user()->id);
+    })->get();
 
         } else {
             $this->projects = Project::all();

@@ -16,9 +16,12 @@
                         <x-forms.label class="my-3" fieldId="employee"
                             :fieldLabel="__('app.employee')" fieldRequired="true">
                         </x-forms.label>
+                        @if (!in_array('admin', $assignRole))
+                        <input type="hidden" value="{{ $airTicket->employee_id }}" name="employee">
+                        @endif
                         <x-forms.input-group>
                             <select class="form-control select-picker" name="employee"
-                                id="employee" data-live-search="true">
+                                id="employee" data-live-search="true" @if (!in_array('admin', $assignRole)) disabled @endif>
                                 <option value="">--</option>
                                 @foreach ($employees as $employee)
                                     <option value="{{ $employee->id }}"
@@ -39,6 +42,17 @@
                             maxlength="10"
                         />
                     </div>
+
+                    @if (in_array('admin', $assignRole))
+                    <div class="col-lg-4 col-md-6">
+                        <x-forms.select fieldId="status" :fieldLabel="__('app.status')" fieldName="status"
+                            search="true">
+                            <option @if ($airTicket->status == 'approved') selected @endif value="approved">@lang('app.approved')</option>
+                            <option @if ($airTicket->status == 'pending') selected @endif value="pending">@lang('app.pending')</option>
+                            <option @if ($airTicket->status == 'rejected') selected @endif value="rejected">@lang('app.rejected')</option>
+                        </x-forms.select>
+                    </div>
+                    @endif
 
                 </div>
 

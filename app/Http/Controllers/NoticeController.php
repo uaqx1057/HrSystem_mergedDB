@@ -67,7 +67,7 @@ class NoticeController extends AccountBaseController
         $notice = new Notice();
         $notice->heading = $request->heading;
         $notice->description = trim_editor($request->description);
-        $notice->to = $request->to;
+        $notice->to = 'employee';
         $notice->department_id = $request->team_id;
         $notice->save();
 

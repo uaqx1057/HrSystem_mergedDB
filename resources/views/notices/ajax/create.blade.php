@@ -7,7 +7,7 @@
                 <div class="row p-20">
                     <div class="col-lg-12">
                         <div class="row">
-                            <div class="col-md-12">
+                            {{-- <div class="col-md-12">
                                 <div class="form-group my-3">
                                     <div class="d-flex">
                                         <x-forms.radio fieldId="toEmployee"
@@ -22,7 +22,7 @@
 
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
 
                             <div class="col-md-6">
                                 <x-forms.text fieldId="heading" :fieldLabel="__('modules.notices.noticeHeading')"

@@ -22,10 +22,10 @@
                        aria-selected="true">@lang('modules.employees.inviteEmail')
                     </a>
 
-                    <a class="nav-item nav-link f-15" href="#inviteLink" role="tab" data-toggle="tab"
+                    {{-- <a class="nav-item nav-link f-15" href="#inviteLink" role="tab" data-toggle="tab"
                        id="inviteLink-tab" aria-controls="inviteLink" aria-selected="false">
                         @lang('modules.employees.inviteLink')
-                    </a>
+                    </a> --}}
                 </div>
             </nav>
             <div class="tab-content" id="myTabContent">

@@ -19,11 +19,11 @@ class InsuranceController extends AccountBaseController
         parent::__construct();
         $this->pageTitle = __('app.menu.insurance');
 
-        $this->middleware(function ($request, $next) {
-            abort_403(!in_array('employees', $this->user->modules));
+        // $this->middleware(function ($request, $next) {
+        // abort_403(!in_array('employees', $this->user->modules));
 
-            return $next($request);
-        });
+        //     return $next($request);
+        // });
     }
     /**
      * @param InsuranceDataTable $dataTable
@@ -33,8 +33,8 @@ class InsuranceController extends AccountBaseController
 
     public function index(InsuranceDataTable $dataTable)
     {
-        $viewPermission = user()->permission('view_employees');
-        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
+        // $viewPermission = user()->permission('view_employees');
+        // abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
 
         $this->employees = User::allEmployees();
         return $dataTable->render('insurances.index', $this->data);
@@ -167,8 +167,8 @@ class InsuranceController extends AccountBaseController
      */
     public function update(UpdateInsurance $request, $id)
     {
-        $editDepartment = user()->permission('edit_employees');
-        abort_403($editDepartment != 'all');
+        // $editDepartment = user()->permission('edit_employees');
+        // abort_403($editDepartment != 'all');
 
         $insurance = Insurance::findOrFail($id);
         if ($request->type == 'employee') {
@@ -196,8 +196,8 @@ class InsuranceController extends AccountBaseController
      */
     public function destroy($id)
     {
-        $deletePermission = user()->permission('delete_employees');
-        abort_403($deletePermission != 'all');
+        // $deletePermission = user()->permission('delete_employees');
+        // abort_403($deletePermission != 'all');
 
         Insurance::findOrFail($id)->delete();
 

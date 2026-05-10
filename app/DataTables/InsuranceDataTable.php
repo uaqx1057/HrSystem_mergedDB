@@ -48,19 +48,19 @@ class InsuranceDataTable extends BaseDataTable
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
 
-                if ($this->editInsurancePermission == 'all') {
+                // if ($this->editInsurancePermission == 'all') {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('insurance.edit', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
                                 ' . trans('app.edit') . '
                             </a>';
-                }
+                // }
 
-                if ($this->deleteInsurancePermission == 'all') {
+                // if ($this->deleteInsurancePermission == 'all') {
                     $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-insurance-id="' . $row->id . '">
                                 <i class="fa fa-trash mr-2"></i>
                                 ' . trans('app.delete') . '
                             </a>';
-                }
+                // }
 
                 $action .= '</div>
                     </div>

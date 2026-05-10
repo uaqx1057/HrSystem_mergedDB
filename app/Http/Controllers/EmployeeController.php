@@ -94,6 +94,7 @@ class EmployeeController extends AccountBaseController
             $this->totalEmployees = count($this->employees);
             $this->roles = Role::where('name', '<>', 'client')
                 ->orderBy('id')->get();
+            $this->assignRole = user()->roles->pluck('name')->toArray();
         }
 
         return $dataTable->render('employees.index', $this->data);
@@ -110,6 +111,9 @@ class EmployeeController extends AccountBaseController
 
         $addPermission = user()->permission('add_employees');
         abort_403(!in_array($addPermission, ['all', 'added']));
+
+        $this->assignRole = user()->roles->pluck('name')->toArray();
+        abort_403(!in_array('admin', $this->assignRole));
 
 
         $this->teams = Team::all();
@@ -380,6 +384,12 @@ class EmployeeController extends AccountBaseController
      */
     public function edit($id)
     {
+        $this->assignRole = user()->roles->pluck('name')->toArray();
+        
+        if (!in_array('admin', $this->assignRole) && (int)$id !== user()->id) {
+            abort_403(true);
+        }
+
         $this->employee = User::withoutGlobalScope(ActiveScope::class)->with('employeeDetail', 'reportingTeam')->findOrFail($id);
         $this->emailCountInCompanies = User::withoutGlobalScopes([ActiveScope::class, CompanyScope::class])
             ->where('email', $this->employee->email)
@@ -1137,16 +1147,37 @@ class EmployeeController extends AccountBaseController
         $employee->basic_salary = $request->basic_salary;
         $employee->vehicle_allocation = $request->vehicle_allocation;
 
+        // --- NEW FIELDS (Text) ---
+        $employee->transfer_number = $request->transfer_number;
+        $employee->probation_time = $request->probation_time;
+
+        // Handle Iqama Image
         if ($request->hasFile('iqama_image')) {
-            $employee->iqama_image = \App\Helper\Files::uploadLocalOrS3($request->iqama_image, 'iqama');
+            Files::deleteFile($employee->iqama_image, 'iqama'); // Delete old file
+            $employee->iqama_image = Files::uploadLocalOrS3($request->iqama_image, 'iqama');
         }
+
+            // --- NEW CONTRACT FILES ---
+        if ($request->hasFile('qiva_contract')) {
+            Files::deleteFile($employee->qiva_contract, 'contracts'); // Delete old file
+            $employee->qiva_contract = Files::uploadLocalOrS3($request->qiva_contract, 'contracts');
+        }
+
+        if ($request->hasFile('company_contract')) {
+            Files::deleteFile($employee->company_contract, 'contracts'); // Delete old file
+            $employee->company_contract = Files::uploadLocalOrS3($request->company_contract, 'contracts');
+        }
+
         $employee->iqama_expiry_date = $request->iqama_expiry_date
             ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->iqama_expiry_date)->format('Y-m-d')
             : null;
         $employee->passport_no = $request->passport_no;
+
         if ($request->hasFile('passport_image')) {
-            $employee->passport_image = \App\Helper\Files::uploadLocalOrS3($request->passport_image, 'passport');
+            Files::deleteFile($employee->passport_image, 'passport');
+            $employee->passport_image = Files::uploadLocalOrS3($request->passport_image, 'passport');
         }
+
         $employee->passport_expiry_date = $request->passport_expiry_date
             ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->passport_expiry_date)->format('Y-m-d')
             : null;

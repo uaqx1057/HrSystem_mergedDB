@@ -118,6 +118,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('send-daily-timelog-report')->daily();
         $schedule->command('log:clear --keep-last')->daily();
 
+        $schedule->command('send:expiry-reminders')->daily();
+
         // Hourly
         $schedule->command('clear-null-session')->hourly();
         $schedule->command('create-database-backup')->hourly();

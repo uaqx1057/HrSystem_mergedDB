@@ -101,8 +101,8 @@
                 <div class="select-filter mb-4">
                     <div class="select-others">
                         <select class="form-control select-picker" name="status" id="status" data-container="body">
-                            <option value="all">@lang('app.all')</option>
-                            <option selected value="active">@lang('app.active')</option>
+                            <option selected value="all">@lang('app.all')</option>
+                            <option value="active">@lang('app.active')</option>
                             <option value="deactive">@lang('app.inactive')</option>
                             <option {{ request('status') == 'ex_employee' ? 'selected' : '' }} value="ex_employee">
                                 @lang('modules.employees.exEmployee')</option>
@@ -144,6 +144,7 @@
         <div class="d-flex justify-content-between action-bar">
 
             <div id="table-actions" class="d-block d-lg-flex align-items-center">
+                @if (in_array('admin', $assignRole))
                 @if (checkCompanyCanAddMoreEmployees(user()->company_id))
                 @if ($addEmployeePermission == 'all')
                     <x-forms.link-primary :link="route('employees.create')" class="mr-3 openRightModal" icon="plus">
@@ -160,6 +161,7 @@
                                             icon="file-upload">
                         @lang('app.importExcel')
                     </x-forms.link-secondary>
+                @endif
                 @endif
                 @endif
             </div>

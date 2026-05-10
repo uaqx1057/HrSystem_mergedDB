@@ -18,6 +18,7 @@ use App\Models\UserAuth;
 use App\Models\UserInvitation;
 use Database\Seeders\SuperAdminUsersTableSeeder;
 use Illuminate\Support\Facades\DB;
+use App\Enums\Salutation;
 use Illuminate\Support\Facades\Auth;
 use App\Events\NewUserRegistrationViaInviteEvent;
 use Symfony\Component\Mailer\Exception\TransportException;
@@ -41,6 +42,9 @@ class RegisterController extends Controller
         $this->globalSetting = GlobalSetting::first();
         $this->frontWidgets = FrontWidget::all();
 
+        $this->salutations = Salutation::cases();
+        $this->countries = countries();
+
         return view('auth.invitation', $this->data);
     }
 
@@ -52,7 +56,11 @@ class RegisterController extends Controller
 
         $this->company = $invite->company;
 
-        if (!checkCompanyCanAddMoreEmployees($invite->company_id) || (is_null($invite) || ($invite->invitation_type == 'email' && $request->email != $invite->email))) {
+        if (
+            !checkCompanyCanAddMoreEmployees($invite->company_id)
+            || is_null($invite)
+            || ($invite->invitation_type == 'email' && $request->email != $invite->email)
+        ) {
             return Reply::error('messages.acceptInviteError');
         }
 
@@ -60,31 +68,77 @@ class RegisterController extends Controller
         try {
             $userAuth = UserAuth::createUserAuthCredentials($request->email, $request->password);
 
-            $user = new User();
-            $user->name = $request->name;
-            $user->company_id = $invite->company_id;
-            $user->email = $request->email;
+            $user               = new User();
+            $user->name         = $request->name;
+            $user->company_id   = $invite->company_id;
+            $user->email        = $request->email;
+            $user->salutation   = $request->salutation;
+            $user->gender       = $request->gender ?? 'Male';
+            $user->mobile       = $request->mobile;
+            $user->country_id   = $request->country;
+            $user->country_phonecode = $request->country_phonecode;
             $user->user_auth_id = $userAuth->id;
+
+            // Employee fills their own data — login disabled until HR approves
+            $user->login        = 'disable';
+            $user->status       = 'active';
+
             $user->save();
             $user = $user->setAppends([]);
 
-            $lastEmployeeID = EmployeeDetails::where('company_id', $invite->company_id)->count();
-            $checkifExistEmployeeId = EmployeeDetails::select('id')->where('employee_id', ($lastEmployeeID + 1))->where('company_id', $invite->company_id)->first();
+            $lastEmployeeID       = EmployeeDetails::where('company_id', $invite->company_id)->count();
+            $checkifExistEmployeeId = EmployeeDetails::select('id')
+                ->where('employee_id', ($lastEmployeeID + 1))
+                ->where('company_id', $invite->company_id)
+                ->first();
 
             if ($user->id) {
-                $employee = new EmployeeDetails();
-                $employee->user_id = $user->id;
+                $employee             = new EmployeeDetails();
+                $employee->user_id    = $user->id;
                 $employee->company_id = $invite->company_id;
-                $employee->employee_id = ((!$checkifExistEmployeeId) ? ($lastEmployeeID + 1) : null);
+                $employee->employee_id = (!$checkifExistEmployeeId) ? ($lastEmployeeID + 1) : null;
                 $employee->joining_date = now($this->company->timezone)->format('Y-m-d');
-                $employee->added_by = $user->id;
+                $employee->added_by        = $user->id;
                 $employee->last_updated_by = $user->id;
+
+                // ── Personal ──────────────────────────────────────────
+                $employee->date_of_birth = $request->date_of_birth
+                    ? \Carbon\Carbon::parse($request->date_of_birth)->format('Y-m-d')
+                    : null;
+
+                // ── Documents ─────────────────────────────────────────
+                $employee->iqama_no         = $request->iqama_no;
+                $employee->iqama_profession = $request->iqama_profession;
+                $employee->iqama_expiry_date = $request->iqama_expiry_date
+                    ? \Carbon\Carbon::parse($request->iqama_expiry_date)->format('Y-m-d')
+                    : null;
+
+                if ($request->hasFile('iqama_image')) {
+                    $employee->iqama_image = \App\Helper\Files::uploadLocalOrS3(
+                        $request->iqama_image, 'iqama'
+                    );
+                }
+
+                $employee->passport_no = $request->passport_no;
+                $employee->passport_expiry_date = $request->passport_expiry_date
+                    ? \Carbon\Carbon::parse($request->passport_expiry_date)->format('Y-m-d')
+                    : null;
+
+                if ($request->hasFile('passport_image')) {
+                    $employee->passport_image = \App\Helper\Files::uploadLocalOrS3(
+                        $request->passport_image, 'passport'
+                    );
+                }
+
+                $employee->sponsor_kafala = $request->sponsor_kafala;
+
                 $employee->save();
             }
 
-            $employeeRole = Role::where('name', 'employee')->where('company_id', $invite->company_id)->first();
+            $employeeRole = Role::where('name', 'employee')
+                ->where('company_id', $invite->company_id)
+                ->first();
             $user->attachRole($employeeRole);
-
             $user->assignUserRolePermission($employeeRole->id);
 
             $logSearch = new AccountBaseController();
@@ -95,12 +149,10 @@ class RegisterController extends Controller
                 $invite->save();
             }
 
-            // Commit Transaction
             DB::commit();
 
-            // Send Notification to all admins about recently added member
+            // Notify admins about new registration pending review
             $admins = User::allAdmins($user->company->id);
-
             foreach ($admins as $admin) {
                 event(new NewUserRegistrationViaInviteEvent($admin, $user));
             }
@@ -110,23 +162,21 @@ class RegisterController extends Controller
             }
 
             session()->forget('user');
-            Auth::login($userAuth);
 
-            return Reply::success(__('messages.signupSuccess'));
+            // NOTE: We do NOT auto-login the user — HR must approve first.
+            // Return a success message instructing them to wait for HR activation.
+            return Reply::success(
+                __('Your registration is complete. HR will review your details and activate your account shortly.')
+            );
+
         } catch (TransportException $e) {
-            // Rollback Transaction
             DB::rollback();
-
             return Reply::error('Please configure SMTP details. Visit Settings -> notification setting to set smtp: ' . $e->getMessage(), 'smtp_error');
         } catch (\Exception $e) {
-            // Rollback Transaction
             DB::rollback();
-
             return Reply::error('Some error occurred when inserting the data. Please try again or contact support: ' . $e->getMessage());
         }
-
-        return view('auth.invitation', $this->data);
-    }
+}
 
     /**
      * XXXXXXXXXXX

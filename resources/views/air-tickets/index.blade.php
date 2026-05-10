@@ -9,10 +9,6 @@
     </style>
 @endpush
 
-@php
-    $addDepartmentPermission = user()->permission('add_employees');
-@endphp
-
 @section('filter-section')
     <x-filters.filter-box>
         <!-- SEARCH BY TASK START -->
@@ -72,12 +68,10 @@
         <!-- Add Task Export Buttons Start -->
         <div class="d-grid d-lg-flex d-md-flex action-bar">
             <div id="table-actions" class="flex-grow-1 align-items-center">
-                @if ($addDepartmentPermission == 'all')
-                    <x-forms.link-primary :link="route('air-tickets.create')" class="mr-3 openRightModal float-left"
-                                          icon="plus">
-                        @lang('modules.airTicket.addTitle')
-                    </x-forms.link-primary>
-                @endif
+                <x-forms.link-primary :link="route('air-tickets.create')" class="mr-3 openRightModal float-left"
+                                        icon="plus">
+                    @lang('modules.airTicket.addTitle')
+                </x-forms.link-primary>
             </div>
 
             <x-datatable.actions>
@@ -275,6 +269,22 @@
                 }
             })
         };
+
+        $('body').on('click', '.ticket-action-approved', function() {
+            const id = $(this).data('ticket-id');
+            const action = $(this).data('action');
+            const url = "{{ route('air_tickets.approve_modal') }}?ticket_id=" + id + "&ticket_action=" + action;
+            $(MODAL_LG + ' ' + MODAL_HEADING).html('...');
+            $.ajaxModal(MODAL_LG, url);
+        });
+
+        $('body').on('click', '.ticket-action-reject', function() {
+            const id = $(this).data('ticket-id');
+            const action = $(this).data('action');
+            const url = "{{ route('air_tickets.reject_modal') }}?ticket_id=" + id + "&ticket_action=" + action;
+            $(MODAL_LG + ' ' + MODAL_HEADING).html('...');
+            $.ajaxModal(MODAL_LG, url);
+        });
 
     </script>
 @endpush
