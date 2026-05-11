@@ -242,6 +242,21 @@ class EmailNotificationSetting extends BaseModel
             'send_slack' => 'no',
             'setting_name' => 'Shift Assign Notification',
             'slug' => 'shift-assign-notification',
+        ],
+        [
+            'send_email' => 'yes',
+            'send_push' => 'no',
+            'send_slack' => 'no',
+            'setting_name' => 'New Advance Salary Request',
+            'slug' => 'new-advance-salary-request',
+
+        ],
+        [
+            'send_email' => 'yes',
+            'send_push' => 'no',
+            'send_slack' => 'no',
+            'setting_name' => 'Advance Salary Status Update',
+            'slug' => 'advance-salary-status-update',
         ]
     ];
 

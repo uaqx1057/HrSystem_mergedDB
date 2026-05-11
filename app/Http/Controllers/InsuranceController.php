@@ -35,6 +35,7 @@ class InsuranceController extends AccountBaseController
     {
         // $viewPermission = user()->permission('view_employees');
         // abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
+        $this->assignRole = user()->roles->pluck('name')->toArray();
 
         $this->employees = User::allEmployees();
         return $dataTable->render('insurances.index', $this->data);
@@ -45,6 +46,12 @@ class InsuranceController extends AccountBaseController
      */
     public function create()
     {
+        $this->assignRole = user()->roles->pluck('name')->toArray();
+
+        if (!in_array('admin', $this->assignRole)) {
+            abort_403(true);
+        }
+
         $existEmployeeInsurance = Insurance::whereNotNull('employee_id')
             ->where('status', 'active')
             ->whereDate('expiry_date', '>', today())
@@ -83,13 +90,14 @@ class InsuranceController extends AccountBaseController
     {
         // dd($request);
         $insurance = new Insurance();
-        if ($request->type == 'employee') {
-            $insurance->employee_id = $request->employee;
-            $insurance->driver_id = null;
-        } else {
-            $insurance->employee_id = null;
-            $insurance->driver_id = $request->driver;
-        }
+        // if ($request->type == 'employee') {
+        //     $insurance->employee_id = $request->employee;
+        //     $insurance->driver_id = null;
+        // } else {
+        //     $insurance->employee_id = null;
+        //     $insurance->driver_id = $request->driver;
+        // }
+        $insurance->employee_id = $request->employee;
         $insurance->issue_date = $request->issue_date;
         $insurance->expiry_date = $request->expiry_date;
         $insurance->company = $request->company_name;
@@ -129,6 +137,12 @@ class InsuranceController extends AccountBaseController
      */
     public function edit(string $id)
     {
+        $this->assignRole = user()->roles->pluck('name')->toArray();
+
+        if (!in_array('admin', $this->assignRole)) {
+            abort_403(true);
+        }
+
         $existEmployeeInsurance = Insurance::whereNotNull('employee_id')
             ->where('status', 'active')->where('employee_id', '!==', $id)
             ->whereDate('expiry_date', '>', today())
@@ -208,6 +222,12 @@ class InsuranceController extends AccountBaseController
 
     public function applyQuickAction(Request $request)
     {
+        $this->assignRole = user()->roles->pluck('name')->toArray();
+
+        if (!in_array('admin', $this->assignRole)) {
+            abort_403(true);
+        }
+
         $ids = explode(',', $request->row_ids);
 
         if ($request->action_type === 'delete') {

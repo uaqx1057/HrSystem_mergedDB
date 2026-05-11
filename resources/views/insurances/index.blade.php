@@ -72,12 +72,12 @@
         <!-- Add Task Export Buttons Start -->
         <div class="d-grid d-lg-flex d-md-flex action-bar">
             <div id="table-actions" class="flex-grow-1 align-items-center">
-                {{-- @if ($addDepartmentPermission == 'all') --}}
+                @if (in_array('admin', $assignRole))
                     <x-forms.link-primary :link="route('insurance.create')" class="mr-3 openRightModal float-left"
                                           icon="plus">
                         @lang('modules.insurance.addTitle')
                     </x-forms.link-primary>
-                {{-- @endif --}}
+                @endif
             </div>
 
             <x-datatable.actions>

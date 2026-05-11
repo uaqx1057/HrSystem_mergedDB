@@ -22,7 +22,7 @@
             <div class="px-4 py-3">@lang('superadmin.workspacesFor') <strong>{{ user()->email }}</strong></div>
 
             @foreach ($userCompanies as $userCompany)
-                @if ($userCompany->company->status == 'active')
+                @if ($userCompany?->company?->status == 'active')
                 <a href="javascript:;"
                 class="border-0 text-dark-grey justify-content-between d-inline {{ ($userCompany->login == 'disable' || !$userCompany->company->approved) ? 'disabled' : 'choose-workspace'}}"
                 data-user-id="{{ $userCompany->id }}" data-company-id="{{ $userCompany->company->id }}"

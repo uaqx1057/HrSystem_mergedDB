@@ -160,7 +160,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                     </x-forms.text>
                                 </div>
                                 <div class="col-md-4">
-                                    <x-forms.label class="my-3" fieldId="designation"
+                                    <x-forms.label class="" fieldId="designation"
                                         :fieldLabel="__('app.designation')" fieldRequired="true">
                                     </x-forms.label>
                                     <x-forms.input-group>
@@ -175,7 +175,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                     </x-forms.input-group>
                                 </div>
                                 <div class="col-md-4">
-                                    <x-forms.label class="my-3" fieldId="department"
+                                    <x-forms.label class="" fieldId="department"
                                         :fieldLabel="__('app.department')" fieldRequired="true">
                                     </x-forms.label>
                                     <x-forms.input-group>
@@ -246,7 +246,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                 fieldId="iqama_image"
                                 fieldHeight="119"
                                 :fieldValue="($employee->employeeDetail->iqama_image ? asset('user-uploads/iqama/' . $employee->employeeDetail->iqama_image) : null)"
-                                :popover="__('messages.fileFormat.iqama_image')" />
+                                 />
                         </div>
 
                         {{-- PASSPORT --}}
@@ -272,7 +272,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                 fieldId="passport_image"
                                 fieldHeight="119"
                                 :fieldValue="($employee->employeeDetail->passport_image ? asset('user-uploads/passport/' . $employee->employeeDetail->passport_image) : null)"
-                                :popover="__('messages.fileFormat.passport_image')" />
+                                 />
                         </div>
 
                         {{-- SPONSOR --}}
@@ -313,7 +313,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             <x-forms.file allowedFileExtensions="pdf png jpg jpeg bmp" class="mr-0 mr-lg-2 mr-md-2"
                                 :fieldLabel="__('modules.employees.qiva_contract')" fieldName="qiva_contract" fieldId="qiva_contract"
                                 :fieldValue="($employee->employeeDetail->qiva_contract ? asset('user-uploads/contracts/' . $employee->employeeDetail->qiva_contract) : null)"
-                                :popover="__('messages.fileFormat.docFile')" />
+                                 />
                         </div>
 
                         {{-- NEW: Company Contract --}}
@@ -321,7 +321,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             <x-forms.file allowedFileExtensions="pdf png jpg jpeg bmp" class="mr-0 mr-lg-2 mr-md-2"
                                 :fieldLabel="__('modules.employees.company_contract')" fieldName="company_contract" fieldId="company_contract"
                                 :fieldValue="($employee->employeeDetail->company_contract ? asset('user-uploads/contracts/' . $employee->employeeDetail->company_contract) : null)"
-                                :popover="__('messages.fileFormat.docFile')" />
+                                 />
                         </div>
 
                     </div>
@@ -361,8 +361,8 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                 @endforeach
                             </x-forms.select>
                         </div>
-                        <div class="col-md-4">
-                            <x-forms.label class="my-3" fieldId="mobile" :fieldLabel="__('app.mobile')"></x-forms.label>
+                        <div class="col-md-4 col-lg-3">
+                            <x-forms.label class="" fieldId="mobile" :fieldLabel="__('app.mobile')"></x-forms.label>
                             <x-forms.input-group style="margin-top:-4px">
                                 <x-forms.select fieldId="country_phonecode" fieldName="country_phonecode" search="true">
                                     @foreach ($countries as $item)
@@ -389,7 +389,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                 fieldName="joining_date" :fieldPlaceholder="__('placeholders.date')" fieldRequired="true"
                                 :fieldValue="$employee->employeeDetail->joining_date->format(company()->date_format)" />
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                        <div class="col-lg-3 col-md-4">
                             <x-forms.text fieldId="basic_salary" :fieldLabel="__('modules.employees.basic_salary')"
                                 fieldName="basic_salary" fieldRequired="false" :fieldPlaceholder="__('placeholders.basic_salary')"
                                 :fieldValue="($employee->employeeDetail->basic_salary ? $employee->employeeDetail->basic_salary : '')">
@@ -447,8 +447,8 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </div>
                         @endif
 
-                        <div class="col-lg-3 col-md-6">
-                            <div class="form-group my-3">
+                        <div class="col-lg-3 col-md-4">
+                            <div class="form-group">
                                 <label class="f-14 text-dark-grey mb-12 w-100"
                                     for="usr">@lang('modules.employees.vehicle_allocation')</label>
                                 <div class="d-flex">
@@ -504,8 +504,8 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                     <div class="row p-20">
 
                         @if ($employee->id != user()->id)
-                            <div class="col-md-4">
-                                <div class="form-group my-3">
+                            <div class="col-md-4 col-lg-3">
+                                <div class="form-group">
                                     <label class="f-14 text-dark-grey mb-12 w-100" for="usr">@lang('modules.client.clientCanLogin')</label>
                                     <div class="d-flex">
                                         <x-forms.radio fieldId="login-yes" :fieldLabel="__('app.yes')" fieldName="login"
@@ -519,8 +519,8 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </div>
                         @endif
 
-                        <div class="col-md-4">
-                            <div class="form-group my-3">
+                        <div class="col-md-4 col-lg-3">
+                            <div class="form-group ">
                                 <label class="f-14 text-dark-grey mb-12 w-100" for="usr">@lang('modules.emailSettings.emailNotifications')</label>
                                 <div class="d-flex">
                                     <x-forms.radio fieldId="notification-yes" :fieldLabel="__('app.yes')" fieldValue="1"
@@ -534,8 +534,8 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                         </div>
 
                         @if ($employee->id != user()->id && $employee->id != 1)
-                            <div class="col-md-4">
-                                <div class="form-group my-3">
+                            <div class="col-md-4 col-lg-3">
+                                <div class="form-group">
                                     <label class="f-14 text-dark-grey mb-12 w-100" for="usr">@lang('app.status')</label>
                                     <div class="d-flex">
                                         <x-forms.radio fieldId="status-active" :fieldLabel="__('app.active')"
@@ -551,8 +551,8 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </div>
                         @endif
 
-                        <div class="col-md-4">
-                            <x-forms.label class="my-3" fieldId="slack_username"
+                        <div class="col-md-4 col-lg-3">
+                            <x-forms.label class="" fieldId="slack_username"
                                 :fieldLabel="__('modules.employees.linkedinUsername')"></x-forms.label>
                             <x-forms.input-group>
                                 <input type="text" class="form-control height-35 f-14" autocomplete="off"
@@ -579,25 +579,25 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </div>
                         @endif
 
-                        <div class="col-lg-3 col-md-6">
+                        <div class="col-lg-3 col-md-4">
                             <x-forms.datepicker fieldId="probation_end_date" :fieldLabel="__('modules.employees.probationEndDate')"
                                 fieldName="probation_end_date" :fieldPlaceholder="__('placeholders.date')"
                                 :fieldValue="$employee->employeeDetail->probation_end_date ? Carbon\Carbon::parse($employee->employeeDetail->probation_end_date)->format(company()->date_format) : ''"
                                 :popover="__('messages.probationEndDate')"/>
                         </div>
-                        <div class="col-lg-3 col-md-6">
+                        <div class="col-lg-3 col-md-4">
                             <x-forms.datepicker fieldId="notice_period_start_date" :fieldLabel="__('modules.employees.noticePeriodStartDate')"
                                 fieldName="notice_period_start_date" :fieldPlaceholder="__('placeholders.date')"
                                 :fieldValue="$employee->employeeDetail->notice_period_start_date ? Carbon\Carbon::parse($employee->employeeDetail->notice_period_start_date)->format(company()->date_format) : ''"
                                 :popover="__('messages.noticePeriodStartDate')"/>
                         </div>
-                        <div class="col-lg-3 col-md-6">
+                        <div class="col-lg-3 col-md-4">
                             <x-forms.datepicker fieldId="notice_period_end_date" :fieldLabel="__('modules.employees.noticePeriodEndDate')"
                                 fieldName="notice_period_end_date" :fieldPlaceholder="__('placeholders.date')"
                                 :fieldValue="$employee->employeeDetail->notice_period_end_date ? Carbon\Carbon::parse($employee->employeeDetail->notice_period_end_date)->format(company()->date_format) : ''"
                                 :popover="__('messages.noticePeriodEndDate')"/>
                         </div>
-                        <div class="col-lg-3 col-md-6">
+                        <div class="col-lg-3 col-md-4">
                             <x-forms.select fieldId="employment_type" :fieldLabel="__('modules.employees.employmentType')"
                                 fieldName="employment_type">
                                 <option value="">--</option>
@@ -608,19 +608,19 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                 <option value="trainee" @if($employee->employeeDetail->employment_type == 'trainee') selected @endif>@lang('app.trainee')</option>
                             </x-forms.select>
                         </div>
-                        <div class="col-lg-3 col-md-6 d-none internship-date">
+                        <div class="col-lg-3 col-md-4 d-none internship-date">
                             <x-forms.datepicker fieldId="internship_end_date" :fieldLabel="__('modules.employees.internshipEndDate')"
                                 fieldName="internship_end_date" :fieldPlaceholder="__('placeholders.date')"
                                 :fieldValue="$employee->employeeDetail->internship_end_date ? Carbon\Carbon::parse($employee->employeeDetail->internship_end_date)->format(company()->date_format) : ''"/>
                         </div>
-                        <div class="col-lg-3 col-md-6 d-none contract-date">
+                        <div class="col-lg-3 col-md-4 d-none contract-date">
                             <x-forms.datepicker fieldId="contract_end_date" :fieldLabel="__('modules.employees.contractEndDate')"
                                 fieldName="contract_end_date" :fieldPlaceholder="__('placeholders.date')"
                                 :fieldValue="$employee->employeeDetail->contract_end_date ? Carbon\Carbon::parse($employee->employeeDetail->contract_end_date)->format(company()->date_format) : ''"/>
                         </div>
 
                         {{-- MARITAL STATUS --}}
-                        <div class="col-lg-3 col-md-6">
+                        <div class="col-lg-3 col-md-4">
                             <x-forms.select fieldId="marital_status" :fieldLabel="__('modules.employees.maritalStatus')"
                                 fieldName="marital_status">
                                 @foreach (\App\Enums\MaritalStatus::cases() as $status)
@@ -632,7 +632,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </x-forms.select>
                         </div>
 
-                        <div class="col-lg-3 col-md-6 {{ $isMarried ? '' : 'd-none' }} dependant">
+                        <div class="col-lg-3 col-md-4 {{ $isMarried ? '' : 'd-none' }} dependant">
                             <x-forms.text fieldId="no_of_dependants"
                                 :fieldLabel="__('modules.employees.no_of_dependants')"
                                 fieldName="no_of_dependants"
@@ -645,7 +645,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                         <div class="col-md-12 {{ $isMarried ? '' : 'd-none' }} dependant-rows-wrapper">
                             <hr>
                             <h6 class="f-15 font-weight-bold mb-3">@lang('modules.employees.dependants')</h6>
-                            <div id="dependant-rows">
+                            <div id="dependant-rows" class="p-3">
                                 @foreach($existingDependants as $depIdx => $dep)
                                     <div class="row dependant-row border rounded p-2 mb-2" data-index="{{ $depIdx }}">
                                         <input type="hidden" name="dependants[{{ $depIdx }}][id]" value="{{ $dep->id }}">
@@ -667,7 +667,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                                    name="dependants[{{ $depIdx }}][relation]"
                                                    value="{{ $dep->relation }}" placeholder="e.g. Spouse, Child" required>
                                         </div>
-                                        <div class="col-lg-2 col-md-5 mb-2">
+                                        <div class="col-lg-3 col-md-6 mb-2">
                                             <label class="f-14 text-dark-grey">Date of Birth</label>
                                             <input type="text" id="dep_dob_{{ $depIdx }}"
                                                    class="form-control height-35 f-14 dependant-dob"
@@ -981,7 +981,7 @@ $(document).ready(function () {
                     <input type="text" class="form-control height-35 f-14"
                            name="dependants[${idx}][relation]" placeholder="e.g. Spouse, Child" required>
                 </div>
-                <div class="col-lg-2 col-md-5 mb-2">
+                <div class="col-lg-3 col-md-6 mb-2">
                     <label class="f-14 text-dark-grey">Date of Birth</label>
                     <input type="text" id="dep_dob_${idx}"
                            class="form-control height-35 f-14 dependant-dob"

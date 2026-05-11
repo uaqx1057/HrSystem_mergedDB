@@ -150,7 +150,7 @@
                                         :fieldPlaceholder="__('placeholders.date')" />
                                 </div>
                                 <div class="col-lg-4 col-md-6">
-                                    <x-forms.label class="my-3" fieldId="category_id" :fieldLabel="__('app.designation')"
+                                    <x-forms.label class="" fieldId="category_id" :fieldLabel="__('app.designation')"
                                         fieldRequired="true">
                                     </x-forms.label>
                                     <x-forms.input-group>
@@ -164,7 +164,7 @@
                                     </x-forms.input-group>
                                 </div>
                                 <div class="col-lg-4 col-md-6">
-                                    <x-forms.label class="my-3" fieldId="category_id" :fieldLabel="__('app.department')"
+                                    <x-forms.label class="" fieldId="category_id" :fieldLabel="__('app.department')"
                                         fieldRequired="true">
                                     </x-forms.label>
                                     <x-forms.input-group>
@@ -220,7 +220,7 @@
                         <div class="col-lg-4 col-md-6">
                             <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
                                 :fieldLabel="__('modules.employees.iqama_image')" fieldName="iqama_image" fieldId="iqama_image" fieldHeight="119"
-                                :popover="__('messages.fileFormat.iqama_image')" />
+                                 />
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <x-forms.text fieldId="passport_no" :fieldLabel="__('modules.employees.passport_no')" fieldName="passport_no"
@@ -234,7 +234,7 @@
                         <div class="col-lg-4 col-md-6">
                             <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
                                 :fieldLabel="__('modules.employees.passport_image')" fieldName="passport_image" fieldId="passport_image" fieldHeight="119"
-                                :popover="__('messages.fileFormat.passport_image')" />
+                                 />
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <x-forms.text fieldId="sponsor_kafala." :fieldLabel="__('modules.employees.Sponsor / kafala')" fieldName="sponsor_kafala"
@@ -260,14 +260,14 @@
                         <div class="col-lg-4 col-md-6">
                             <x-forms.file allowedFileExtensions="pdf png jpg jpeg bmp" class="mr-0 mr-lg-2 mr-md-2"
                                 :fieldLabel="__('modules.employees.qiva_contract')" fieldName="qiva_contract" fieldId="qiva_contract"
-                                :popover="__('messages.fileFormat.docFile')" />
+                                 />
                         </div>
 
                         {{-- NEW: Company Contract File --}}
                         <div class="col-lg-4 col-md-6">
                             <x-forms.file allowedFileExtensions="pdf png jpg jpeg bmp" class="mr-0 mr-lg-2 mr-md-2"
                                 :fieldLabel="__('modules.employees.company_contract')" fieldName="company_contract" fieldId="company_contract"
-                                :popover="__('messages.fileFormat.docFile')" />
+                                 />
                         </div>
                     </div>
 
@@ -311,7 +311,7 @@
                             </x-forms.select>
                         </div>
                         <div class="col-lg-3 col-md-6">
-                            <x-forms.label class="my-3" fieldId="mobile" :fieldLabel="__('app.mobile')"></x-forms.label>
+                            <x-forms.label class="" fieldId="mobile" :fieldLabel="__('app.mobile')"></x-forms.label>
                             <x-forms.input-group style="margin-top:-4px">
                                 <x-forms.select fieldId="country_phonecode" fieldName="country_phonecode" search="true">
                                     @foreach ($countries as $item)
@@ -336,7 +336,7 @@
                             <x-forms.datepicker fieldId="joining_date" :fieldLabel="__('modules.employees.joiningDate')" fieldName="joining_date"
                                 :fieldPlaceholder="__('placeholders.date')" fieldRequired="true" :fieldValue="now(company()->timezone)->format(company()->date_format)" />
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                        <div class="col-lg-3 col-md-6">
                             <x-forms.text fieldId="basic_salary" :fieldLabel="__('modules.employees.basic_salary')" fieldName="basic_salary"
                                 fieldRequired="false" :fieldPlaceholder="__('placeholders.basic_salary')">
                             </x-forms.text>
@@ -368,7 +368,7 @@
                             </x-forms.select>
                         </div>
                         <div class="col-lg-3 col-md-6">
-                            <div class="form-group my-3">
+                            <div class="form-group">
                                 <label class="f-14 text-dark-grey mb-12 w-100" for="usr">@lang('modules.employees.vehicle_allocation')</label>
                                 <div class="d-flex">
                                     <x-forms.radio fieldId="vehicle_allocation_yes" :fieldLabel="__('app.yes')" fieldValue="yes"
@@ -419,7 +419,7 @@
                         @lang('modules.client.clientOtherDetails')</h4>
                     <div class="row p-20">
                         <div class="col-lg-3 col-md-6">
-                            <div class="form-group my-3">
+                            <div class="form-group">
                                 <label class="f-14 text-dark-grey mb-12 w-100" for="usr">@lang('modules.client.clientCanLogin')</label>
                                 <div class="d-flex">
                                     <x-forms.radio fieldId="login-yes" :fieldLabel="__('app.yes')" fieldName="login"
@@ -431,7 +431,7 @@
                             </div>
                         </div>
                         <div class="col-lg-3 col-md-6">
-                            <div class="form-group my-3">
+                            <div class="form-group ">
                                 <label class="f-14 text-dark-grey mb-12 w-100" for="usr">@lang('modules.emailSettings.emailNotifications')</label>
                                 <div class="d-flex">
                                     <x-forms.radio fieldId="notification-yes" :fieldLabel="__('app.yes')" fieldValue="yes"
@@ -444,7 +444,7 @@
                             </div>
                         </div>
                         <div class="col-lg-3 col-md-6">
-                            <x-forms.label class="my-3" fieldId="slack_username" :fieldLabel="__('modules.employees.linkedinUsername')"></x-forms.label>
+                            <x-forms.label class="" fieldId="slack_username" :fieldLabel="__('modules.employees.linkedinUsername')"></x-forms.label>
                             <x-forms.input-group>
                                 <input type="text" class="form-control height-35 f-14" name="slack_username"
                                     id="slack_username">
@@ -519,7 +519,7 @@
                         <div class="col-md-12 d-none dependant-rows-wrapper">
                             <hr>
                             <h6 class="f-15 font-weight-bold mb-3">@lang('modules.employees.dependants')</h6>
-                            <div id="dependant-rows"></div>
+                            <div id="dependant-rows" class="p-3"></div>
                             <button type="button" id="add-dependant-btn" class="btn btn-outline-primary btn-sm mt-2">
                                 <i class="fa fa-plus mr-1"></i> @lang('modules.employees.addDependant')
                             </button>
@@ -741,7 +741,7 @@
                         <input type="text" class="form-control height-35 f-14"
                                name="dependants[${idx}][relation]" placeholder="e.g. Spouse, Child" required>
                     </div>
-                    <div class="col-lg-2 col-md-5 mb-2">
+                    <div class="col-lg-3 col-md-5 mb-2">
                         <label class="f-14 text-dark-grey">Date of Birth</label>
                         <input type="text" id="dep_dob_${idx}"
                                class="form-control height-35 f-14 dependant-dob"

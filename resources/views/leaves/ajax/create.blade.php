@@ -36,7 +36,7 @@
                     </div>
 
                     <div class="col-lg-4 col-md-6">
-                        <x-forms.label class="mt-3" fieldId="" :fieldLabel="__('modules.leaves.leaveType')" fieldRequired="true">
+                        <x-forms.label class="" fieldId="" :fieldLabel="__('modules.leaves.leaveType')" fieldRequired="true">
                         </x-forms.label>
                         <x-forms.input-group>
                             <select class="form-control select-picker" name="leave_type_id" id="leave_type_id"
@@ -83,9 +83,9 @@
                         </div>
                     @endif
 
-                    <div class="col-md-6 col-lg-4">
-                        <div class="form-group my-3">
-                            <label class="f-14 text-dark-grey mb-12 w-100" for="usr">@lang('modules.leaves.selectDuration')</label>
+                    <div class="col-md-12 col-lg-12 mt-2">
+                        <div class="form-group">
+                            <label class="f-14 text-dark-grey mb-8 w-100" for="usr">@lang('modules.leaves.selectDuration')</label>
                             <div class="d-block d-lg-flex d-md-flex">
                                 <x-forms.radio fieldId="duration_single" :fieldLabel="__('modules.leaves.single')" fieldName="duration"
                                     fieldValue="single" checked="true">
@@ -102,12 +102,12 @@
                         </div>
                     </div>
 
-                    <div class="col-lg-4 col-md-6 single_date_div">
+                    <div class="col-lg-4 col-md-6 single_date_div mt-2">
                         <x-forms.text :fieldLabel="__('app.date')" fieldName="leave_date" fieldId="single_date" :fieldPlaceholder="__('app.date')"
                             :fieldValue="now(company()->timezone)->translatedFormat(company()->date_format)" />
                     </div>
 
-                    <div class="col-lg-4 col-md-6 d-none multi_date_div">
+                    <div class="col-lg-4 col-md-6 d-none multi_date_div mt-2">
                         <x-forms.text :fieldLabel="__('messages.selectMultipleDates')" fieldName="multi_date" fieldId="multi_date" :fieldPlaceholder="__('messages.selectMultipleDates')"
                             :fieldValue="now(company()->timezone)->translatedFormat(company()->date_format)" />
                     </div>

@@ -8,7 +8,13 @@ use App\Http\Requests\AdvanceSalary\StoreAdvanceSalary;
 use App\Http\Requests\AdvanceSalary\UpdateAdvanceSalary;
 use App\Models\AdvanceSalary;
 use App\Models\User;
+use App\Notifications\AdvanceSalaryStatusUpdate;
+use App\Notifications\NewAdvanceSalaryRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+
+use App\Mail\AdvanceSalaryRequest as AdvanceSalaryMail; 
+use Illuminate\Support\Facades\Mail;
 
 class AdvanceSalaryController extends AccountBaseController
 {
@@ -48,6 +54,7 @@ class AdvanceSalaryController extends AccountBaseController
         return view('advance-salaries.create', $this->data);
     }
 
+
     public function store(StoreAdvanceSalary $request)
     {
         $salary = new AdvanceSalary();
@@ -56,6 +63,13 @@ class AdvanceSalaryController extends AccountBaseController
         $salary->advance_salary = $request->advance_salary;
         $salary->status = $request->status ?? 'pending';
         $salary->save();
+
+        // 1. Notify Admins (Existing logic)
+        $adminUsers = User::allAdmins($salary->employee->company->id);
+        Notification::send($adminUsers, new NewAdvanceSalaryRequest($salary));
+
+        // 2. Send Email to the Employee
+        Mail::to($salary->employee->email)->send(new AdvanceSalaryMail($salary));
 
         $redirectUrl = urldecode($request->redirect_url);
         if ($redirectUrl == '') {
@@ -169,6 +183,8 @@ class AdvanceSalaryController extends AccountBaseController
 
         $salary->approved_by = user()->id;
         $salary->save();
+
+        Notification::send($salary->employee, new AdvanceSalaryStatusUpdate($salary));
 
         return Reply::success(__('messages.updateSuccess'));
     }

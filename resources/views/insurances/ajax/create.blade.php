@@ -11,7 +11,7 @@
                 <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
                     @lang('modules.insurance.addTitle')</h4>
                 <div class="row p-20">
-                    <div class="col-lg-4 col-md-6">
+                    {{-- <div class="col-lg-4 col-md-6">
                         <x-forms.label class="my-3" fieldId="type"
                             :fieldLabel="__('app.type')" fieldRequired="true">
                         </x-forms.label>
@@ -23,9 +23,9 @@
                                 <option value="driver">Driver</option>
                             </select>
                         </x-forms.input-group>
-                    </div>
-                    <div class="col-lg-4 col-md-6 employee-select d-none">
-                        <x-forms.label class="my-3" fieldId="employee"
+                    </div> --}}
+                    <div class="col-lg-4 col-md-6 employee-select">
+                        <x-forms.label class="" fieldId="employee"
                             :fieldLabel="__('app.employee')" fieldRequired="true">
                         </x-forms.label>
                         <x-forms.input-group>
@@ -38,7 +38,7 @@
                             </select>
                         </x-forms.input-group>
                     </div>
-                    <div class="col-lg-4 col-md-6 driver-select d-none">
+                    {{-- <div class="col-lg-4 col-md-6 driver-select d-none">
                         <x-forms.label class="my-3" fieldId="driver"
                             :fieldLabel="__('app.driver')" fieldRequired="true">
                         </x-forms.label>
@@ -51,7 +51,7 @@
                                 @endforeach
                             </select>
                         </x-forms.input-group>
-                    </div>
+                    </div> --}}
                     <div class="col-lg-4 col-md-6">
                         <x-forms.datepicker
                             fieldId="issue_date" fieldRequired="true"
@@ -73,17 +73,17 @@
                         />
                     </div>
                     <div class="col-lg-4 col-md-6">
-                        <x-forms.text fieldId="designation_name" fieldRequired="true" :fieldLabel="__('app.company_name')" fieldName="company_name"
+                        <x-forms.text fieldId="company_name" fieldRequired="true" :fieldLabel="__('app.company_name')" fieldName="company_name"
                              :fieldPlaceholder="__('placeholders.company')">
                         </x-forms.text>
                     </div>
                     <div class="col-lg-4 col-md-6">
-                        <x-forms.text fieldId="designation_name" fieldRequired="true" :fieldLabel="__('app.policy_no')" fieldName="policy_no"
+                        <x-forms.text fieldId="policy_no" fieldRequired="true" :fieldLabel="__('app.policy_no')" fieldName="policy_no"
                              :fieldPlaceholder="__('placeholders.policy_no')">
                         </x-forms.text>
                     </div>
                     <div class="col-lg-4 col-md-6">
-                       <x-forms.text fieldId="designation_name" fieldRequired="true" :fieldLabel="__('app.class')" fieldName="class"
+                       <x-forms.text fieldId="class" fieldRequired="true" :fieldLabel="__('app.class')" fieldName="class"
                              :fieldPlaceholder="__('placeholders.class')">
                         </x-forms.text>
                     </div>
@@ -128,19 +128,19 @@
             ...datepickerConfig
         });
 
-        $('#type').change(function(){
-            var value = $(this).val();
-            if(value == 'employee') {
-                $('.employee-select').removeClass('d-none');
-                $('.driver-select').addClass('d-none');
-            } else if(value == 'driver') {
-                $('.driver-select').removeClass('d-none');
-                $('.employee-select').addClass('d-none');
-            } else {
-                $('.driver-select').addClass('d-none');
-                $('.employee-select').addClass('d-none');
-            }
-        });
+        // $('#type').change(function(){
+        //     var value = $(this).val();
+        //     if(value == 'employee') {
+        //         $('.employee-select').removeClass('d-none');
+        //         $('.driver-select').addClass('d-none');
+        //     } else if(value == 'driver') {
+        //         $('.driver-select').removeClass('d-none');
+        //         $('.employee-select').addClass('d-none');
+        //     } else {
+        //         $('.driver-select').addClass('d-none');
+        //         $('.employee-select').addClass('d-none');
+        //     }
+        // });
 
     });
 

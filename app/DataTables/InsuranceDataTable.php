@@ -14,6 +14,7 @@ class InsuranceDataTable extends BaseDataTable
     private $deleteInsurancePermission;
     private $employeeId; // ✅ Add this
     private $driverId; // ✅ Add this
+    private $assignRole;
 
     public function __construct($employeeId = null, $driverId = null)
     {
@@ -22,6 +23,7 @@ class InsuranceDataTable extends BaseDataTable
         $this->deleteInsurancePermission = user()->permission('delete_employees');
         $this->employeeId = $employeeId; // ✅ Store it
         $this->driverId = $driverId; // ✅ Store it
+        $this->assignRole = user()->roles->pluck('name')->toArray();
     }
 
     /**
@@ -40,13 +42,14 @@ class InsuranceDataTable extends BaseDataTable
             ->addColumn('action', function ($row) {
 
                 $action = '<div class="task_view">
-<a href="' . route('insurance.show', [$row->id]) . '" class="taskView text-darkest-grey f-w-500 openRightModal">' . __('app.view') . '</a>
-                    <div class="dropdown">
+<a href="' . route('insurance.show', [$row->id]) . '" class="taskView text-darkest-grey f-w-500 openRightModal">' . __('app.view') . '</a>';
+
+                    if (in_array('admin', $this->assignRole)) {
+                    $action .= '<div class="dropdown">
                         <a class="task_view_more d-flex align-items-center justify-content-center dropdown-toggle" type="link"
                             id="dropdownMenuLink-' . $row->id . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="icon-options-vertical icons"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
+                        </a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
 
                 // if ($this->editInsurancePermission == 'all') {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('insurance.edit', [$row->id]) . '">
@@ -61,6 +64,7 @@ class InsuranceDataTable extends BaseDataTable
                                 ' . trans('app.delete') . '
                             </a>';
                 // }
+                    }
 
                 $action .= '</div>
                     </div>
@@ -127,6 +131,13 @@ class InsuranceDataTable extends BaseDataTable
                 $model->where('insurances.driver_id', $this->driverId);
             }
         }
+
+        if (!in_array('admin', $this->assignRole)) {
+            $model->where(function ($query) use ($request) {
+                $query->where('insurances.employee_id', user()->id)->where('insurances.status', 'active');
+            });
+        }
+
         if ($request->searchText != '') {
             $model->where(function ($query) use ($request) {
                 $query->where('insurances.company', 'like', '%' . $request->searchText . '%')
@@ -189,7 +200,7 @@ class InsuranceDataTable extends BaseDataTable
             __('app.employee') . ' / ' . __('app.driver') => [
                 'data' => 'employee_name',
                 'name' => 'employee_name',
-                'title' => __('app.employee') . ' / ' . __('app.driver'),
+                'title' => __('app.employee'),
                 'visible' => ($this->driverId == null && $this->employeeId == null) // ✅ Added condition
             ],
             __('modules.insurance.issue_date') => ['data' => 'issue_date', 'name' => 'issue_date', 'title' => __('modules.insurance.issue_date')],

@@ -11,7 +11,8 @@
                 <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
                     @lang('modules.insurance.editTitle')</h4>
                 <div class="row p-20">
-                    <div class="col-lg-4 col-md-6">
+                    <input type="hidden" name="type" value="employee">
+                    {{-- <div class="col-lg-4 col-md-6">
                         <x-forms.label class="my-3" fieldId="type"
                             :fieldLabel="__('app.type')" fieldRequired="true">
                         </x-forms.label>
@@ -23,9 +24,9 @@
                                 <option @if ($insurance->driver_id) selected @endif value="driver">Driver</option>
                             </select>
                         </x-forms.input-group>
-                    </div>
+                    </div> --}}
                     <div class="col-lg-4 col-md-6 employee-select {{ !empty($insurance?->employee_id) ? '' : 'd-none' }}">
-                        <x-forms.label class="my-3" fieldId="employee" :fieldLabel="__('app.employee')" fieldRequired="true">
+                        <x-forms.label class="" fieldId="employee" :fieldLabel="__('app.employee')" fieldRequired="true">
                         </x-forms.label>
                         <x-forms.input-group>
                             <select class="form-control select-picker" name="employee" id="employee"
