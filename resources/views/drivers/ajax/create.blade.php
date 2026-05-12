@@ -13,7 +13,7 @@ $addDesignationPermission = user()->permission('add_designation');
                     @lang('modules.drivers.personalDetails')
                 </h4>
 
-                <div class="col-lg-3">
+                <div class="col-lg-3 mt-2">
                     <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
                         :fieldLabel="__('modules.drivers.image')" fieldName="image" fieldId="image"
                         fieldHeight="119" :popover="__('messages.fileFormat.ImageFile')" />
@@ -133,7 +133,7 @@ $addDesignationPermission = user()->permission('add_designation');
                     </div>
 
                     <div class="col-md-4">
-                        <div class="form-group my-3">
+                        <div class="form-group">
                             <x-forms.textarea class="mr-0 mr-lg-2 mr-md-2" :fieldLabel="__('modules.drivers.remarks')"
                                 fieldName="remarks" fieldId="remarks" :fieldPlaceholder="__('modules.drivers.remarks')">
                             </x-forms.textarea>
@@ -153,7 +153,7 @@ $addDesignationPermission = user()->permission('add_designation');
                     </div>
 
                     <div class="col-md-6">
-                        <x-forms.label class="my-3" fieldId="work_mobile_no"
+                        <x-forms.label class="" fieldId="work_mobile_no"
                             :fieldLabel="__('app.workMobile')" fieldRequired="true"></x-forms.label>
                         <x-forms.input-group style="margin-top:-4px">
 

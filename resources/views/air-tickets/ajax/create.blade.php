@@ -13,7 +13,7 @@
                 <div class="row p-20">
 
                     <div class="col-lg-4 col-md-6">
-                        <x-forms.label class="my-3" fieldId="employee"
+                        <x-forms.label class="" fieldId="employee"
                             :fieldLabel="__('app.employee')" fieldRequired="true">
                         </x-forms.label>
                         @if (!in_array('admin', $assignRole) && count($employees) > 0)

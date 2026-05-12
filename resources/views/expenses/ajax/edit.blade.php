@@ -50,7 +50,7 @@ $approveExpensePermission = user()->permission('approve_expenses');
                     </div>
 
                     <div class="col-md-6 col-lg-4">
-                        <x-forms.label class="mt-3" fieldId="project_id" :fieldLabel="__('app.project')">
+                        <x-forms.label class="" fieldId="project_id" :fieldLabel="__('app.project')">
                         </x-forms.label>
                         <x-forms.input-group>
                             <select class="form-control select-picker" name="project_id" id="project_id"
@@ -67,7 +67,7 @@ $approveExpensePermission = user()->permission('approve_expenses');
 
                     @if (user()->permission('add_expenses') == 'all')
                         <div class="col-md-6 col-lg-4">
-                            <x-forms.label class="mt-3" fieldId="user_id" :fieldLabel="__('app.employee')">
+                            <x-forms.label class="" fieldId="user_id" :fieldLabel="__('app.employee')">
                             </x-forms.label>
                             <x-forms.input-group>
                                 <select class="form-control select-picker" name="user_id" id="user_id"
@@ -84,7 +84,7 @@ $approveExpensePermission = user()->permission('approve_expenses');
                     @endif
 
                     <div class="col-lg-4 col-md-6">
-                        <x-forms.label class="mt-3" fieldId="category_id"
+                        <x-forms.label class="" fieldId="category_id"
                             :fieldLabel="__('modules.expenses.expenseCategory')">
                         </x-forms.label>
                         <x-forms.input-group>

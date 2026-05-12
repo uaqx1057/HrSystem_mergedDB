@@ -19,7 +19,7 @@
                     </div> --}}
 
                     <div class="col-lg-12">
-                        <x-forms.file :fieldLabel="__('app.signature')" fieldName="signature" fieldId="signature" allowedFileExtensions="pdf png jpg jpeg svg" :popover="__('messages.fileFormat.multipleImageFile')" />
+                        <x-forms.file :fieldLabel="__('app.signature')" fieldName="signature" fieldId="signature" allowedFileExtensions="pdf png jpg jpeg svg" />
                         @error('signature')
                             <div class="invalid-feedback d-block mt-1" style="color: red">
                                 {{ $message }}

@@ -54,7 +54,7 @@ $addExpenseCategoryPermission = user()->permission('manage_expense_category');
 
                     @if (user()->permission('add_expenses') == 'all')
                         <div class="col-md-6 col-lg-4">
-                            <x-forms.label class="mt-3" fieldId="user_id" :fieldLabel="__('app.employee')" fieldRequired="true">
+                            <x-forms.label class="" fieldId="user_id" :fieldLabel="__('app.employee')" fieldRequired="true">
                             </x-forms.label>
                             <x-forms.input-group>
                                 <select class="form-control select-picker" name="user_id" id="user_id"
@@ -88,7 +88,7 @@ $addExpenseCategoryPermission = user()->permission('manage_expense_category');
                     </div>
 
                     <div class="col-md-4">
-                        <x-forms.label class="mt-3" fieldId="category_id"
+                        <x-forms.label class="" fieldId="category_id"
                             :fieldLabel="__('modules.expenses.expenseCategory')">
                         </x-forms.label>
                         <x-forms.input-group>

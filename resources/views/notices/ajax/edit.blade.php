@@ -14,9 +14,9 @@
                                     :fieldValue="$notice->heading">
                                 </x-forms.text>
                             </div>
-
-                            <div class="col-lg-4 col-md-6">
-                                <div class="form-group my-3">
+                            <input type="hidden" name="to" value="employee">
+                            {{-- <div class="col-lg-4 col-md-6">
+                                <div class="form-group ">
                                     <label class="f-14 text-dark-grey mb-12 w-100" for="usr">Notify</label>
                                     <div class="d-flex">
                                         <x-forms.radio fieldId="toEmployee"
@@ -28,7 +28,7 @@
                                         </x-forms.radio>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
 
                             <div class="col-lg-4 col-md-6 department @if ($notice->to == 'client') d-none @endif">
                                 <x-forms.select fieldId="team_id" :fieldLabel="__('app.department')" fieldName="team_id"

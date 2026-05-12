@@ -15,14 +15,14 @@ $approveRejectPermission = user()->permission('approve_or_reject_leaves');
 
                     <div class="col-lg-3 col-md-6">
                         @if (isset($defaultAssign))
-                            <x-forms.label class="my-3" fieldId="" :fieldLabel="__('app.name')"
+                            <x-forms.label class="" fieldId="" :fieldLabel="__('app.name')"
                                 fieldRequired="true">
                             </x-forms.label>
                             <input type="hidden" name="user_id" id="user_id" value="{{ $defaultAssign->id }}">
                             <input type="text" value="{{ $defaultAssign->name }}"
                                 class="form-control height-35 f-15 readonly-background" readonly>
                         @else
-                            <x-forms.label class="my-3" fieldId="" :fieldLabel="__('modules.messages.chooseMember')"
+                            <x-forms.label class="" fieldId="" :fieldLabel="__('modules.messages.chooseMember')"
                                 fieldRequired="true">
                             </x-forms.label>
                             <select class="form-control select-picker" name="user_id" id="user_id"
@@ -38,7 +38,7 @@ $approveRejectPermission = user()->permission('approve_or_reject_leaves');
                     </div>
 
                     <div class="col-lg-3 col-md-6">
-                        <x-forms.label class="my-3" fieldId="" :fieldLabel="__('modules.leaves.leaveType')"
+                        <x-forms.label class="" fieldId="" :fieldLabel="__('modules.leaves.leaveType')"
                             fieldRequired="true">
                         </x-forms.label>
                         <x-forms.input-group>
