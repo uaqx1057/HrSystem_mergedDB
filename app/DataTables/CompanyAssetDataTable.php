@@ -124,7 +124,7 @@ class CompanyAssetDataTable extends BaseDataTable
             ->with('assignments')
             ->leftJoin('asset_assignments', 'asset_assignments.company_asset_id', '=', 'company_assets.id')
             ->select('company_assets.*')
-            ->groupBy('company_assets.id');
+            ->groupBy('company_assets.id')->orderBy('company_assets.id', 'desc');
 
         if ($request->searchText != '') {
             // FIX: Wrap OR conditions in a closure to keep logic correct with the non-admin filter

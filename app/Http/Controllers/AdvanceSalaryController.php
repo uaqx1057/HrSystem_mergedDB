@@ -13,7 +13,7 @@ use App\Notifications\NewAdvanceSalaryRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 
-use App\Mail\AdvanceSalaryRequest as AdvanceSalaryMail; 
+use App\Mail\AdvanceSalaryRequest as AdvanceSalaryMail;
 use Illuminate\Support\Facades\Mail;
 
 class AdvanceSalaryController extends AccountBaseController
@@ -33,6 +33,9 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function create()
     {
+        // dd(user()->company->id);
+        // $adminUsers = User::allAdmins($salary->employee->company->id);
+
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
         $today = now();
@@ -65,10 +68,7 @@ class AdvanceSalaryController extends AccountBaseController
         $salary->save();
 
         // 1. Notify Admins (Existing logic)
-        $adminUsers = User::allAdmins($salary->employee->company->id);
-        Notification::send($adminUsers, new NewAdvanceSalaryRequest($salary));
-
-        // 2. Send Email to the Employee
+        $adminUsers = User::allAdmins(user()->company->id);
         Mail::to($salary->employee->email)->send(new AdvanceSalaryMail($salary));
 
         $redirectUrl = urldecode($request->redirect_url);

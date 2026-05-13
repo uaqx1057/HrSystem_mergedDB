@@ -13,6 +13,9 @@ use Illuminate\Http\Request;
 use App\DataTables\CompanyAssetDataTable;
 use App\Http\Requests\CompanyAsset\StoreRequest;
 use App\Http\Requests\CompanyAsset\UpdateRequest;
+use App\Mail\AssetAssignedMail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class CompanyAssetController extends AccountBaseController
 {
@@ -269,7 +272,10 @@ class CompanyAssetController extends AccountBaseController
             'signature' => 'required',
         ]);
 
-        $assignment = AssetAssignment::where('company_asset_id', $id)->firstOrFail();
+        // Load assignment with its relationships
+        $assignment = AssetAssignment::with(['employee', 'asset'])
+            ->where('company_asset_id', $id)
+            ->firstOrFail();
 
         if ($request->hasFile('signature')) {
 
@@ -279,6 +285,13 @@ class CompanyAssetController extends AccountBaseController
             $assignment->status = 'Assigned';
             $assignment->save();
 
+            // Send the email to the employee
+            try {
+                Mail::to($assignment->employee->email)->send(new AssetAssignedMail($assignment));
+            } catch (\Exception $e) {
+                // Log the error so the user doesn't see a crash if email fails
+                Log::error("Failed to send asset assignment email: " . $e->getMessage());
+            }
         }
 
         return redirect()->route('company-assets.index')->with('success', __('messages.recordSaved'));
