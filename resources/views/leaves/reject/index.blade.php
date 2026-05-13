@@ -38,7 +38,9 @@
         $.easyAjax({
             url: url,
             type: "POST",
-            blockUI: true,
+            // blockUI: true,
+            disableButton: true,
+            buttonSelector: "#save-leave",
             data: { 'action': action,
                 'leaveId': leaveId,
                 '_token': '{{ csrf_token() }}',

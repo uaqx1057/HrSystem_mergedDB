@@ -9,7 +9,7 @@
 @endif
 
 @if (!empty($url))
-    @component('mail::button', ['url' => $url, 'themeColor' => ((!empty($themeColor)) ? $themeColor : '#1f75cb')])
+    @component('mail::button', ['url' => $url, 'themeColor' => '#722C81'])
     {{ $actionText }}
     @endcomponent
 @endif

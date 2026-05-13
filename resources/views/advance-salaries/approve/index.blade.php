@@ -21,6 +21,8 @@
         $.easyAjax({
             url: '{{ route("advance_salaries.salary_action") }}',
             type: "POST",
+            disableButton: true,
+            buttonSelector: "#save-approve-salary",
             data: {
                 'action': 'approved',
                 'salaryId': '{{ $salaryID }}',

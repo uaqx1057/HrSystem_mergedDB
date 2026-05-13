@@ -13,7 +13,7 @@ use App\Notifications\NewAdvanceSalaryRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 
-use App\Mail\AdvanceSalaryRequest as AdvanceSalaryMail;
+use App\Mail\AdvanceSalaryRequest;
 use Illuminate\Support\Facades\Mail;
 
 class AdvanceSalaryController extends AccountBaseController
@@ -67,9 +67,20 @@ class AdvanceSalaryController extends AccountBaseController
         $salary->status = $request->status ?? 'pending';
         $salary->save();
 
-        // 1. Notify Admins (Existing logic)
-        $adminUsers = User::allAdmins(user()->company->id);
-        Mail::to($salary->employee->email)->send(new AdvanceSalaryMail($salary));
+        $this->assignRole = user()->roles->pluck('name')->toArray();
+
+        if (!in_array('admin', $this->assignRole)) {
+
+            $adminUsers = User::allAdmins(user()->company->id);
+
+            foreach ($adminUsers as $admin) {
+                Mail::to($admin->email)->send(new AdvanceSalaryRequest($salary));
+            }
+        } else{
+            if($salary->status !== 'pending'){
+                Mail::to($salary->employee->email)->send(new \App\Mail\AdvanceSalaryStatusUpdate($salary));
+            }
+        }
 
         $redirectUrl = urldecode($request->redirect_url);
         if ($redirectUrl == '') {
@@ -172,7 +183,7 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function salaryAction(Request $request)
     {
-        $salary = AdvanceSalary::findOrFail($request->salaryId);
+        $salary = AdvanceSalary::with('employee')->findOrFail($request->salaryId);
         $salary->status = $request->action;
 
         if ($request->action == 'approved') {
@@ -184,7 +195,10 @@ class AdvanceSalaryController extends AccountBaseController
         $salary->approved_by = user()->id;
         $salary->save();
 
-        Notification::send($salary->employee, new AdvanceSalaryStatusUpdate($salary));
+        // Send email to the employee
+        if ($salary->employee && $salary->employee->email) {
+            Mail::to($salary->employee->email)->send(new \App\Mail\AdvanceSalaryStatusUpdate($salary));
+        }
 
         return Reply::success(__('messages.updateSuccess'));
     }

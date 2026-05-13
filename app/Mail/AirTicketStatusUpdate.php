@@ -2,36 +2,36 @@
 
 namespace App\Mail;
 
-use App\Models\AdvanceSalary;
+use App\Models\AirTicket;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AdvanceSalaryRequest extends Mailable
+class AirTicketStatusUpdate extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public $salary;
+    public $ticket;
 
-    public function __construct(AdvanceSalary $salary)
+    public function __construct(AirTicket $ticket)
     {
-        $this->salary = $salary;
+        $this->ticket = $ticket;
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            // Subject updated for Admin notification
-            subject: 'New Advance Salary Request: ' . $this->salary->employee->name,
+            subject: 'Update: Your Air Ticket Request has been ' . ucfirst($this->ticket->status),
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'mail.advance-salary.advance_salary_request',
+            view: 'mail.air-ticket.status_update',
         );
     }
 

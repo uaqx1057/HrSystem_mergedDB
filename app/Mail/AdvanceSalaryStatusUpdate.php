@@ -4,12 +4,13 @@ namespace App\Mail;
 
 use App\Models\AdvanceSalary;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class AdvanceSalaryRequest extends Mailable
+class AdvanceSalaryStatusUpdate extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
@@ -23,15 +24,14 @@ class AdvanceSalaryRequest extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            // Subject updated for Admin notification
-            subject: 'New Advance Salary Request: ' . $this->salary->employee->name,
+            subject: 'Update: Your Advance Salary Request has been ' . ucfirst($this->salary->status),
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'mail.advance-salary.advance_salary_request',
+            view: 'mail.advance-salary.status_update',
         );
     }
 

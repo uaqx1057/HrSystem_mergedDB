@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <style>
@@ -11,11 +12,13 @@
             padding: 0;
             width: 100% !important;
         }
+
         .wrapper {
             width: 100%;
             background-color: #f4f4f7;
             padding: 20px;
         }
+
         .email-content {
             max-width: 600px;
             margin: 0 auto;
@@ -24,23 +27,23 @@
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
         .header {
             background-color: #722C81;
             color: #ffffff;
             padding: 30px;
             text-align: center;
         }
+
         .header h1 {
             margin: 0;
             font-size: 20px;
         }
+
         .body {
             padding: 30px;
         }
-        .body p {
-            font-size: 16px;
-            line-height: 1.6;
-        }
+
         .details-box {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
@@ -48,6 +51,7 @@
             padding: 20px;
             margin: 20px 0;
         }
+
         .detail-row {
             display: flex;
             justify-content: space-between;
@@ -55,27 +59,33 @@
             border-bottom: 1px solid #edf2f7;
             padding-bottom: 8px;
         }
+
         .detail-label {
             font-weight: bold;
             color: #64748b;
         }
+
         .detail-value {
             color: #1e293b;
             font-weight: 600;
         }
-        .button-wrapper {
-            text-align: center;
-            margin-top: 30px;
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: white;
+            font-size: 14px;
+            background-color: {{ $salary->status == 'approved' ? '#10b981' : '#ef4444' }};
         }
-        .button {
-            background-color: #722C81;
-            color: #ffffff !important;
-            padding: 12px 30px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            display: inline-block;
+
+        .reason-box {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #fbe8ff;
+            border-left: 4px solid #722C81;
+            font-style: italic;
         }
+
         .footer {
             text-align: center;
             padding: 20px;
@@ -84,40 +94,40 @@
         }
     </style>
 </head>
+
 <body>
     <div class="wrapper">
         <div class="email-content">
             <div class="header">
-                <h1>Advance Salary Request</h1>
+                <h1>Advance Salary Request {{ ucfirst($salary->status) }}</h1>
             </div>
             <div class="body">
-                <p>Hello,</p>
-                <p>A new advance salary request has been submitted and requires your review.</p>
+                <p>Hello {{ $salary->employee->name }},</p>
+                <p>There has been an update regarding your advance salary request.</p>
 
                 <div class="details-box">
                     <div class="detail-row">
-                        <span class="detail-label">Employee:</span>
-                        <span class="detail-value">{{ $salary->employee->name }}</span>
+                        <span class="detail-label">Requested Amount:</span>
+                        <span
+                            class="detail-value">{{ currency_format($salary->advance_salary, $salary->employee->company->currency_id) }}</span>
                     </div>
                     <div class="detail-row">
-                        <span class="detail-label">Amount:</span>
-                        <span class="detail-value">{{ currency_format($salary->advance_salary, $salary->employee->company->currency_id) }}</span>
+                        <span class="detail-label">Status:</span>
+                        <span class="status-badge">{{ ucfirst($salary->status) }}</span>
                     </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Requested Date:</span>
-                        <span class="detail-value">{{ $salary->date }}</span>
-                    </div>
-                    <div class="detail-row" style="border:none;">
-                        <span class="detail-label">Current Status:</span>
-                        <span class="detail-value" style="color: #f59e0b;">{{ ucfirst($salary->status) }}</span>
-                    </div>
+
+                    @if ($salary->status == 'approved' && $salary->approve_reason)
+                        <div class="reason-box">
+                            <strong>Note:</strong> {{ $salary->approve_reason }}
+                        </div>
+                    @elseif($salary->status == 'rejected' && $salary->reject_reason)
+                        <div class="reason-box">
+                            <strong>Reason for Rejection:</strong> {{ $salary->reject_reason }}
+                        </div>
+                    @endif
                 </div>
 
-                <div class="button-wrapper">
-                    <a href="{{ route('advance-salaries.index') }}" class="button">Review Request</a>
-                </div>
-
-                <p>Regards,<br>{{ config('app.name') }} System</p>
+                <p>Regards,<br>{{ config('app.name') }}</p>
             </div>
         </div>
         <div class="footer">
@@ -125,4 +135,5 @@
         </div>
     </div>
 </body>
+
 </html>

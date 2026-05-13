@@ -10,6 +10,9 @@ use App\Models\AirTicket;
 use App\Models\Insurance;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Mail\AirTicketRequest;
+use App\Mail\AirTicketStatusUpdate;
+use Illuminate\Support\Facades\Mail;
 
 class AirTicketController extends AccountBaseController
 {
@@ -85,15 +88,29 @@ class AirTicketController extends AccountBaseController
      */
     public function store(StoreAirTicket $request)
     {
-        // dd($request);
         $ticket = new AirTicket();
         $ticket->employee_id = $request->employee;
         $ticket->date = $request->date;
         $ticket->status = $request->status ?? 'pending';
         $ticket->save();
 
-        $redirectUrl = urldecode($request->redirect_url);
+        // Logic for sending email (Exactly like Advance Salary)
+        $this->assignRole = user()->roles->pluck('name')->toArray();
 
+        if (!in_array('admin', $this->assignRole)) {
+            // Notify Admins
+            $adminUsers = User::allAdmins(user()->company->id);
+            foreach ($adminUsers as $admin) {
+                Mail::to($admin->email)->send(new AirTicketRequest($ticket));
+            }
+        } else {
+            // If Admin created it and it's not pending, notify employee
+            if($ticket->status !== 'pending' && $ticket->employee->email){
+                Mail::to($ticket->employee->email)->send(new AirTicketStatusUpdate($ticket));
+            }
+        }
+
+        $redirectUrl = urldecode($request->redirect_url);
         if ($redirectUrl == '') {
             $redirectUrl = route('air-tickets.index');
         }
@@ -239,7 +256,7 @@ class AirTicketController extends AccountBaseController
 
     public function ticketAction(Request $request)
     {
-        $ticket = AirTicket::findOrFail($request->ticketId);
+        $ticket = AirTicket::with('employee')->findOrFail($request->ticketId);
         $ticket->status = $request->action;
 
         if ($request->action == 'approved') {
@@ -249,8 +266,12 @@ class AirTicketController extends AccountBaseController
         }
 
         $ticket->approved_by = user()->id;
-        // $ticket->approved_at = now()->toDateTimeString();
         $ticket->save();
+
+        // Send email to the employee (Exactly like Advance Salary)
+        if ($ticket->employee && $ticket->employee->email) {
+            Mail::to($ticket->employee->email)->send(new AirTicketStatusUpdate($ticket));
+        }
 
         return Reply::success(__('messages.updateSuccess'));
     }

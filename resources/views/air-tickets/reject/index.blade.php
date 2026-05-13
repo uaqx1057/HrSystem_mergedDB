@@ -36,6 +36,8 @@
         $.easyAjax({
             url: '{{ route("air_tickets.ticket_action") }}',
             type: "POST",
+            disableButton: true,
+            buttonSelector: "#save-reject-ticket",
             data: {
                 'action': 'rejected',
                 'ticketId': '{{ $ticketID }}',
