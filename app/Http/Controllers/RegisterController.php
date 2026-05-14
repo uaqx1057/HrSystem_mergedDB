@@ -81,7 +81,7 @@ class RegisterController extends Controller
 
             // Employee fills their own data — login disabled until HR approves
             $user->login        = 'disable';
-            $user->status       = 'active';
+            $user->status       = 'deactive';
 
             $user->save();
             $user = $user->setAppends([]);

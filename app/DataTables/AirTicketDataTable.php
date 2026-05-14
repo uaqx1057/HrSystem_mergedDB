@@ -100,7 +100,7 @@ class AirTicketDataTable extends BaseDataTable
     {
         $request = $this->request();
         $model = $model->leftJoin('users', 'users.id', '=', 'air_tickets.employee_id')
-            ->select('air_tickets.*', 'users.name as employee_name');
+            ->select('air_tickets.*', 'users.name as employee_name')->orderBy('air_tickets.id', 'desc');
 
         if ($request->searchText != '') {
             $model->where(function ($query) use ($request) {

@@ -8,6 +8,7 @@
 
     <x-filters.filter-box>
         <!-- CLIENT START -->
+        @if (in_array('admin', $assignRole))
         <div class="select-box py-2 d-flex pr-2 border-right-grey border-right-grey-sm-0">
             <p class="mb-0 pr-2 f-14 text-dark-grey d-flex align-items-center">@lang('app.employee')</p>
             <div class="select-status">
@@ -37,6 +38,7 @@
                 </select>
             </div>
         </div>
+        @endif
         <!-- DESIGNATION END -->
 
 
@@ -65,6 +67,7 @@
         <!-- RESET END -->
 
         <!-- MORE FILTERS START -->
+        @if (in_array('admin', $assignRole))
         <x-filters.more-filter-box>
             <div class="more-filter-items">
                 <label class="f-14 text-dark-grey mb-12 text-capitalize" for="usr">@lang('app.department')</label>
@@ -126,6 +129,7 @@
             </div>
 
         </x-filters.more-filter-box>
+        @endif
         <!-- MORE FILTERS END -->
     </x-filters.filter-box>
 

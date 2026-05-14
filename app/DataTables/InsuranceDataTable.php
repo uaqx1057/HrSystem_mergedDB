@@ -121,7 +121,7 @@ class InsuranceDataTable extends BaseDataTable
         $request = $this->request();
         // dd($this->employeeId);
         $model = $model->leftJoin('users', 'users.id', '=', 'insurances.employee_id')->leftJoin('drivers', 'drivers.id', '=', 'insurances.driver_id')
-            ->select('insurances.*', 'users.name as employee_name', 'drivers.name as driver_name');
+            ->select('insurances.*', 'users.name as employee_name', 'drivers.name as driver_name')->orderBy('insurances.id', 'desc');
         if ($this->driverId == null && $this->employeeId == null) {
 
         } else {

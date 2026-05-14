@@ -36,14 +36,20 @@
                     {{ isset($employee->employeeDetail) && !is_null($employee->employeeDetail->department) && !is_null($employee->employeeDetail->department) ? $employee->employeeDetail->department->team_name : '' }}
                 </p>
 
-                @if ($employee->status == 'active')
-                    <p class="card-text f-12 text-lightest">@lang('app.lastLogin')
+                @if ($employee->status == 'Active')
+                    {{-- <p class="card-text f-12 text-lightest">@lang('app.lastLogin')
 
+                        <p class="card-text f-12 text-lightest">
+                            <x-status :value="__('app.inactive')" color="red" />
+                        </p>
                         @if (!is_null($employee->last_login))
                             {{ $employee->last_login->timezone(company()->timezone)->translatedFormat(company()->date_format . ' ' . company()->time_format) }}
                         @else
                             --
                         @endif
+                    </p> --}}
+                    <p class="card-text f-12 text-lightest">
+                        <x-status :value="__('app.active')" color="success" />
                     </p>
 
                 @else
@@ -55,19 +61,19 @@
             </x-cards.user>
         </div>
         <div class="col-lg-4">
-            <x-cards.widget icon="sign-out-alt" :title="__('modules.leaves.remainingLeaves')" :value="($allowedLeaves - $leavesTakenByUser)" />
+            <x-cards.widget icon="sign-out-alt" :title="__('modules.leaves.remainingLeaves')" :value="($remaining_leave)" />
         </div>
     </div>
 
 
-    <x-cards.data :title="__('app.menu.leavesQuota')">
+    {{-- <x-cards.data :title="__('app.menu.leavesQuota')">
 
 
         <div class="d-flex flex-wrap justify-content-between" id="comment-list">
             @include('employees.leaves_quota')
         </div>
 
-    </x-cards.data>
+    </x-cards.data> --}}
 </div>
 <!-- TAB CONTENT END -->
 

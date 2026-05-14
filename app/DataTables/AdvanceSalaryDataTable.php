@@ -99,7 +99,7 @@ class AdvanceSalaryDataTable extends BaseDataTable
     {
         $request = $this->request();
         $model = $model->leftJoin('users', 'users.id', '=', 'advance_salaries.employee_id')
-            ->select('advance_salaries.*', 'users.name as employee_name');
+            ->select('advance_salaries.*', 'users.name as employee_name')->orderBy('advance_salaries.id', 'desc');
 
         if ($request->searchText != '') {
             $model->where(function ($query) use ($request) {

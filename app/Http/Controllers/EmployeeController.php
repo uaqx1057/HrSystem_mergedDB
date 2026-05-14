@@ -82,6 +82,9 @@ class EmployeeController extends AccountBaseController
      */
     public function index(EmployeesDataTable $dataTable)
     {
+        
+        $this->assignRole = user()->roles->pluck('name')->toArray();
+
         $viewPermission = user()->permission('view_employees');
 
         abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
@@ -385,7 +388,7 @@ class EmployeeController extends AccountBaseController
     public function edit($id)
     {
         $this->assignRole = user()->roles->pluck('name')->toArray();
-        
+
         if (!in_array('admin', $this->assignRole) && (int)$id !== user()->id) {
             abort_403(true);
         }

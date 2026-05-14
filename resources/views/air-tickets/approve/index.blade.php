@@ -6,7 +6,7 @@
     <x-form id="approve-ticket-form" method="POST">
         <div class="row">
             <div class="col-md-12">
-                <x-forms.textarea :fieldLabel="__('app.reason')" fieldName="approve_reason" fieldId="approve_reason" />
+                <x-forms.textarea :fieldLabel="__('app.note')" fieldName="approve_reason" fieldId="approve_reason" />
             </div>
         </div>
     </x-form>

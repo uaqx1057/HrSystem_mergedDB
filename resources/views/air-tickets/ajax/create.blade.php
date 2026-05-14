@@ -13,21 +13,26 @@
                 <div class="row p-20">
 
                     <div class="col-lg-4 col-md-6">
+                        @if (in_array('admin', $assignRole))
                         <x-forms.label class="" fieldId="employee"
                             :fieldLabel="__('app.employee')" fieldRequired="true">
                         </x-forms.label>
-                        @if (!in_array('admin', $assignRole) && count($employees) > 0)
-                        <input type="hidden" value="{{ user()->id }}" name="employee">
-                        @endif
                         <x-forms.input-group>
                             <select class="form-control select-picker" name="employee"
-                                id="employee" data-live-search="true" @if (!in_array('admin', $assignRole)) disabled @endif>
+                                id="employee" data-live-search="true">
                                 <option value="">--</option>
                                 @foreach ($employees as $employee)
-                                    <option value="{{ $employee->id }}" @if ($employee->id == user()->id) selected @endif>{{ $employee->name }}</option>
+                                    <option value="{{ $employee->id }}">{{ $employee->name }}</option>
                                 @endforeach
                             </select>
                         </x-forms.input-group>
+                        @else
+                        <input type="hidden" value="{{ user()->id }}" name="employee">
+                        <x-forms.text fieldId="basic_salary" :fieldLabel="__('app.employee')"
+                                fieldName="basic_salary" fieldRequired="true" :fieldPlaceholder="__('placeholders.basic_salary')"
+                                :fieldValue="user()->name" :fieldReadOnly="true">
+                            </x-forms.text>
+                        @endif
                     </div>
 
 

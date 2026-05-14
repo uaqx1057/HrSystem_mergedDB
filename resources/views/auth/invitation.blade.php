@@ -163,7 +163,7 @@
             <h3 class="text-capitalize mb-3 f-w-500">@lang('app.signUp')</h3>
 
             <div class="alert alert-danger m-t-10 d-none"  id="alert"></div>
-            <div class="alert alert-success m-t-10 d-none" id="success-msg"></div>
+            {{-- <div class="alert alert-success m-t-10 d-none" id="success-msg"></div> --}}
 
             {{-- ── STEP INDICATORS ── --}}
             <div class="ms-steps-wrapper" id="ms-steps-wrapper">
@@ -456,8 +456,8 @@
 
         </x-form>
 
-        <div class="forgot_pswd mt-3">
-            <a href="{{ route('login') }}" class="justify-content-center">@lang('app.login')</a>
+        <div class="forgot_pswd">
+            <div class="alert alert-success m-t-10 d-none" id="success-msg">"Your registration is complete. HR will review your details and activate your account shortly."</div>
         </div>
 
     @else
@@ -504,6 +504,7 @@
                 }
 
                 if (step === 2) {
+                    var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
                     @if (!is_null($invite->email_restriction))
                         var emailUser = $.trim($('#email_address').val());
                         if (emailUser === '') {
@@ -518,13 +519,18 @@
                         if (email === '') {
                             highlightError('#user-email', 'Email is required.');
                             ok = false;
+                        } else if (!emailReg.test(email)) {
+                            highlightError('#user-email', 'Please enter a valid email address.');
+                            ok = false;
                         }
                     @endif
 
-                    var password = $('#password').val();
-                    if (password.length < 6) {
-                        highlightError('#password', 'Password must be at least 6 characters.');
-                        ok = false;
+                    if(ok == true){
+                        var password = $('#password').val();
+                        if (password.length < 6) {
+                            highlightError('#password', 'Password must be at least 6 characters.');
+                            ok = false;
+                        }
                     }
 
                     @if ($globalSetting->sign_up_terms == 'yes')
@@ -542,35 +548,46 @@
                         ok = false;
                     }
 
-                    // ADDED: Validation for Iqama Expiry Date
-                    var iqamaExp = $.trim($('#iqama_expiry_date').val());
-                    if (iqamaExp === '') {
-                        highlightError('#iqama_expiry_date', 'Iqama Expiry Date is required.');
-                        ok = false;
+                    if(ok == true){
+                        // ADDED: Validation for Iqama Expiry Date
+                        var iqamaExp = $.trim($('#iqama_expiry_date').val());
+                        if (iqamaExp === '') {
+                            highlightError('#iqama_expiry_date', 'Iqama Expiry Date is required.');
+                            ok = false;
+                        }
                     }
 
-                    var iqamaProf = $.trim($('#iqama_profession').val());
-                    if (iqamaProf === '') {
-                        highlightError('#iqama_profession', 'Iqama Profession is required.');
-                        ok = false;
-                    }
-                    var passport = $.trim($('#passport_no').val());
-                    if (passport === '') {
-                        highlightError('#passport_no', 'Passport No is required.');
-                        ok = false;
+                    if(ok == true){
+                        var iqamaProf = $.trim($('#iqama_profession').val());
+                        if (iqamaProf === '') {
+                            highlightError('#iqama_profession', 'Iqama Profession is required.');
+                            ok = false;
+                        }
                     }
 
-                    // ADDED: Validation for Passport Expiry Date
-                    var passportExp = $.trim($('#passport_expiry_date').val());
-                    if (passportExp === '') {
-                        highlightError('#passport_expiry_date', 'Passport Expiry Date is required.');
-                        ok = false;
+                    if(ok == true){
+                        var passport = $.trim($('#passport_no').val());
+                        if (passport === '') {
+                            highlightError('#passport_no', 'Passport No is required.');
+                            ok = false;
+                        }
                     }
 
-                    var sponsor = $.trim($('#sponsor_kafala').val());
-                    if (sponsor === '') {
-                        highlightError('#sponsor_kafala', 'Sponsor / Kafala is required.');
-                        ok = false;
+                    if(ok == true){
+                        // ADDED: Validation for Passport Expiry Date
+                        var passportExp = $.trim($('#passport_expiry_date').val());
+                        if (passportExp === '') {
+                            highlightError('#passport_expiry_date', 'Passport Expiry Date is required.');
+                            ok = false;
+                        }
+                    }
+
+                    if(ok == true){
+                        var sponsor = $.trim($('#sponsor_kafala').val());
+                        if (sponsor === '') {
+                            highlightError('#sponsor_kafala', 'Sponsor / Kafala is required.');
+                            ok = false;
+                        }
                     }
                 }
 
@@ -664,11 +681,11 @@
                             );
                             return;
                         }
-                        $('#success-msg').removeClass('d-none').html(response.message);
+                        $('#success-msg').removeClass('d-none');
                         $('#acceptInviteForm').hide();
                         setTimeout(function () {
                             window.location.href = "{{ route('dashboard') }}";
-                        }, 2500);
+                        }, 4000);
                     },
                     error: function (xhr) {
                         var msg = 'Something went wrong. Please try again.';

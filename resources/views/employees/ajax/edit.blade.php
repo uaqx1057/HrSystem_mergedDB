@@ -194,7 +194,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                         <div class="col-lg-3">
                             <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
                                 :fieldLabel="__('modules.profile.profilePicture')"
-                                :fieldValue="($employee->image ? $employee->masked_image_url : $employee->image_url)" fieldName="image"
+                                :fieldValue="($employee->image ? $employee->image_url : '')" fieldName="image"
                                 fieldId="image" fieldHeight="119" :popover="__('messages.fileFormat.ImageFile')" />
                         </div>
                     </div>
@@ -807,8 +807,78 @@ $(document).ready(function () {
         }, 200);
     }
 
+    function validateStep(step) {
+        var ok = true;
+
+        if (step === 1) {
+            var name = $.trim($('#name').val());
+            if (name === '') {
+                highlightError('#name', 'Employee name is required.', false);
+                ok = false;
+            }
+
+            if(ok == true){
+                var designation = $.trim($('#employee_designation').val());
+                if (designation === '') {
+                    highlightError('#employee_designation', 'Designation is required.', true);
+                    ok = false;
+                }
+            }
+
+            if(ok == true){
+                var department = $.trim($('#employee_department').val());
+                if (department === '') {
+                    highlightError('#employee_department', 'Department is required.', true);
+                    ok = false;
+                }
+            }
+        }
+
+        if (step === 2) {
+
+
+        }
+
+        if (step === 3) {
+            var joiningDate = $.trim($('#joining_date').val());
+            if (joiningDate === '') {
+                highlightError('#joining_date', 'Joining date is required.', false);
+                ok = false;
+            }
+        }
+
+        return ok;
+    }
+
+    function highlightError(selector, msg, parent) {
+        if(parent == true){
+            $(selector).parent('.select-picker').addClass('is-invalid');
+        } else{
+            $(selector).addClass('is-invalid');
+        }
+        showAlert(msg);
+        setTimeout(function () {
+            if(parent == true){
+                $(selector).parent('.select-picker').removeClass('is-invalid');
+            } else{
+                $(selector).removeClass('is-invalid');
+            }
+        }, 3000);
+    }
+
+    function showAlert(msg) {
+        Swal.fire({
+            icon: 'error', text: msg,
+            toast: true, position: 'top-end', timer: 3000,
+            timerProgressBar: true, showConfirmButton: false,
+            showClass: { popup: 'swal2-noanimation', backdrop: 'swal2-noanimation' },
+        });
+    }
+
     $(document).on('click', '.ms-next-btn', function () {
         var next = parseInt($(this).data('next'));
+        var current = next - 1;
+        if (!validateStep(current)) return;
         goToStep(next);
     });
 

@@ -18,7 +18,7 @@
 
                     <div class="col-lg-4 col-md-6">
                         @if (isset($defaultAssign))
-                            <x-forms.label class="mt-3" fieldId="" :fieldLabel="__('app.name')" fieldRequired="true">
+                            <x-forms.label class="" fieldId="" :fieldLabel="__('app.name')" fieldRequired="true">
                             </x-forms.label>
                             <input type="hidden" name="user_id" id="user_id" value="{{ $defaultAssign->id }}">
                             <input type="text" value="{{ $defaultAssign->name }}"

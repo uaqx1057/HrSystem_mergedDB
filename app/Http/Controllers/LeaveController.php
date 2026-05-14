@@ -970,6 +970,37 @@ class LeaveController extends AccountBaseController
 
         $this->allowedLeaves = $totalLeaves;
 
+        $joiningDate = user()->employeeDetail->joining_date
+                ? \Carbon\Carbon::parse(user()->employeeDetail->joining_date)
+                : null;
+
+        $totalEarned = 0;
+
+            if ($joiningDate) {
+                $now = now($this->company->timezone);
+                $cursor = $joiningDate->copy()->startOfMonth();
+
+                while ($cursor->lte($now)) {
+                    $totalEarned += 2.5;
+                    $cursor->addMonth();
+                }
+            }
+
+            $fullTaken = \App\Models\Leave::where('user_id', user()->id)
+                ->where('status', 'approved')
+                ->whereNull('half_day_type')
+                ->count();
+
+            $halfTaken = \App\Models\Leave::where('user_id', user()->id)
+                ->where('status', 'approved')
+                ->whereNotNull('half_day_type')
+                ->count();
+
+            $taken = $fullTaken + ($halfTaken / 2);
+
+            $this->remaining_leave = max(0, $totalEarned - $taken);
+            
+
         $this->view = 'leaves.ajax.personal';
 
         return view('leaves.create', $this->data);

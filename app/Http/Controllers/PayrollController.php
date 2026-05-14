@@ -46,13 +46,25 @@ class PayrollController extends AccountBaseController
         $tab = $request->get('tab', 'salary-slips');
         $this->activeTab = $tab;
 
+        $this->assignRole = user()->roles->pluck('name')->toArray();
+        if(!in_array('admin', $this->assignRole)){
+            if($tab !== 'salary-slips'){
+                abort_403(true);
+            }
+        }
+
         $currentDate = Carbon::now();
         $currentYear = (int) $currentDate->year;
         $currentMonth = (int) $currentDate->month;
 
         $this->salarySlips = SalarySlip::with(['user:id,name', 'salaryGroup:id,group_name', 'paymentMethod:id,payment_method', 'cycle:id,cycle'])
-            ->latest('id')
-            ->paginate(15, ['*'], 'salary_slips_page')
+            ->latest('id');
+
+        if(!in_array('admin', $this->assignRole)){
+            $this->salarySlips = $this->salarySlips->where('user_id', user()->id);
+        }
+
+        $this->salarySlips = $this->salarySlips->paginate(15, ['*'], 'salary_slips_page')
             ->withQueryString();
 
         $this->salarySlips->getCollection()->load('driver:id,name,email,mobile');
@@ -123,6 +135,8 @@ class PayrollController extends AccountBaseController
 
     public function exportSalarySlipsCsv(Request $request)
     {
+        $this->assignRole = user()->roles->pluck('name')->toArray();
+
         $isImpersonatingCompany = session()->has('impersonate');
         abort_403(!$isImpersonatingCompany && (user()->permission('view_payroll') === 'none' || user()->permission('view_payroll') == 5));
 
@@ -132,6 +146,10 @@ class PayrollController extends AccountBaseController
 
         $query = SalarySlip::with(['user:id,name', 'driver:id,name', 'salaryGroup:id,group_name', 'paymentMethod:id,payment_method', 'cycle:id,cycle'])
             ->orderByDesc('id');
+
+        if(!in_array('admin', $this->assignRole)){
+            $query->where('user_id', user()->id);
+        }
 
         if (!empty($status) && in_array($status, ['generated', 'review', 'locked', 'paid'])) {
             $query->where('status', $status);
@@ -850,6 +868,11 @@ class PayrollController extends AccountBaseController
 
     public function create()
     {
+        $this->assignRole = user()->roles->pluck('name')->toArray();
+        if(!in_array('admin', $this->assignRole)){
+            abort_403(true);
+        }
+
         $addPayrollPermission = user()->permission('add_payroll');
         abort_403(!in_array($addPayrollPermission, ['all', 'added']));
 

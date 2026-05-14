@@ -88,6 +88,31 @@ class AirTicketController extends AccountBaseController
      */
     public function store(StoreAirTicket $request)
     {
+        $today = now();
+
+        $eligibleEmployees = User::with(['employeeDetails', 'airTicket'])
+            ->whereHas('employeeDetails', function ($query) use ($today) {
+                // Only employees who have completed at least 1 year
+                $query->where('joining_date', '<=', $today->copy()->subYear());
+            })->where('id', $request->employee)->get()
+            ->filter(function ($employee) use ($today) {
+                $joiningDate = $employee->employeeDetails->joining_date;
+
+                if (!$joiningDate)
+                    return false;
+
+                $yearsCompleted = (int) \Carbon\Carbon::parse($joiningDate)->diffInYears($today);
+
+                $ticketsReceived = $employee->airTicket->where('status','!==', 'rejected')->count();
+
+                return $ticketsReceived < $yearsCompleted;
+            });
+
+
+        if(count($eligibleEmployees) <= 0){
+            return Reply::error('messages.invalidAirticket');
+        }
+
         $ticket = new AirTicket();
         $ticket->employee_id = $request->employee;
         $ticket->date = $request->date;

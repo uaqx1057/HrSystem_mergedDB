@@ -34,6 +34,7 @@
                 <i class="fa fa-times"></i>
             </a>
 
+            @if (in_array('admin', $assignRole))
             <nav class="tabs">
                 <ul class="-primary">
                     <li>
@@ -41,7 +42,7 @@
                             :text="__('Salary Slips')"
                             class="salary-slips" ajax="false" />
                     </li>
-            
+
                     <li>
                         <x-tab :href="route('payroll.index', ['tab' => 'salary-groups'])"
                             :text="__('Salary Groups')"
@@ -75,6 +76,7 @@
 
                 </ul>
             </nav>
+            @endif
         </div>
 
         <a class="mb-0 d-block d-lg-none text-dark-grey ml-auto mr-2 border-left-grey" onclick="openClientDetailSidebar()">
@@ -90,16 +92,20 @@
 
         @if ($activeTab === 'salary-slips')
             <div class="d-flex justify-content-between align-items-center mb-3">
+                @if (in_array('admin', $assignRole))
                 <x-forms.link-primary :link="route('payroll.salary-slips.add')" class="mr-3"
                                           icon="plus">
                     @lang('app.addSalary')
                 </x-forms.link-primary>
+                @endif
                 <div>
+                    @if (in_array('admin', $assignRole))
                     @if (in_array($addPayrollPermission, ['all', 'added']))
                         <form method="POST" action="{{ route('payroll.salary-slips.generate-monthly') }}" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-sm btn-outline-success mr-1">Generate Current Month Slips</button>
                         </form>
+                    @endif
                     @endif
                     <a href="{{ route('payroll.salary-slips.export') }}" class="btn btn-sm btn-outline-primary">Export CSV</a>
                 </div>
@@ -286,6 +292,7 @@
                                     <td class="d-flex">
                                         <a href="{{ route('payroll.salary-slips.print', $slip->id) }}" target="_blank" class="btn btn-sm btn-primary mr-1">Print</a>
                                         <a href="{{ route('payroll.salary-slips.pdf', $slip->id) }}" class="btn btn-sm btn-primary mr-1">Download PDF</a>
+                                        @if (in_array('admin', $assignRole))
                                         @if (in_array($editPayrollPermission, ['all', 'added']))
                                             <form method="POST" action="{{ route('payroll.salary-slips.update', $slip->id) }}" class="mr-1 d-flex align-items-center salary-slip-update-form">
                                                 @csrf
@@ -332,6 +339,7 @@
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                             </form>
+                                        @endif
                                         @endif
                                     </td>
                                 </tr>

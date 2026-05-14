@@ -633,9 +633,91 @@
             }, 200);
         }
 
+        function validateStep(step) {
+            var ok = true;
+
+            if (step === 1) {
+                var name = $.trim($('#name').val());
+                if (name === '') {
+                    highlightError('#name', 'Employee name is required.', false);
+                    ok = false;
+                }
+
+                if(ok == true){
+                    var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+                    var email = $.trim($('#email').val());
+                    if (email === '') {
+                        highlightError('#email', 'Email is required.', false);
+                        ok = false;
+                    } else if (!emailReg.test(email)) {
+                        highlightError('#email', 'Please enter a valid email.', false);
+                        ok = false;
+                    }
+                }
+
+                if(ok == true){
+                    var designation = $.trim($('#employee_designation').val());
+                    if (designation === '') {
+                        highlightError('#employee_designation', 'Designation is required.', true);
+                        ok = false;
+                    }
+                }
+
+                if(ok == true){
+                    var department = $.trim($('#employee_department').val());
+                    if (department === '') {
+                        highlightError('#employee_department', 'Department is required.', true);
+                        ok = false;
+                    }
+                }
+            }
+
+            if (step === 2) {
+
+
+            }
+
+            if (step === 3) {
+                var password = $.trim($('#password').val());
+                if (password === '') {
+                    highlightError('#password', 'Password is required.', false);
+                    ok = false;
+                }
+            }
+
+            return ok;
+        }
+
+        function highlightError(selector, msg, parent) {
+            if(parent == true){
+                $(selector).parent('.select-picker').addClass('is-invalid');
+            } else{
+                $(selector).addClass('is-invalid');
+            }
+            showAlert(msg);
+            setTimeout(function () {
+                if(parent == true){
+                    $(selector).parent('.select-picker').removeClass('is-invalid');
+                } else{
+                    $(selector).removeClass('is-invalid');
+                }
+            }, 3000);
+        }
+
+        function showAlert(msg) {
+            Swal.fire({
+                icon: 'error', text: msg,
+                toast: true, position: 'top-end', timer: 3000,
+                timerProgressBar: true, showConfirmButton: false,
+                showClass: { popup: 'swal2-noanimation', backdrop: 'swal2-noanimation' },
+            });
+        }
+
         // Next buttons
         $(document).on('click', '.ms-next-btn', function() {
             var next = parseInt($(this).data('next'));
+            var current = next - 1;
+            if (!validateStep(current)) return;
             goToStep(next);
         });
 
