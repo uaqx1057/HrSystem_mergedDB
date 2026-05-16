@@ -311,7 +311,7 @@
                         isValid = false;
                     }
 
-                    if (workingDays === "" || workingDays > 32) {
+                    if (workingDays === "" || workingDays > 31) {
                         $('#pay_days').addClass('is-invalid');
                         isValid = false;
                     }
