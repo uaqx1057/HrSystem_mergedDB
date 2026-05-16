@@ -11,7 +11,7 @@
                     <div class="col-lg-12">
                         <div class="row">
                             <div class="col-lg-4 col-md-6">
-                                <x-forms.label class="my-3" fieldId="appreciation_type"
+                                <x-forms.label class="" fieldId="appreciation_type"
                                                :fieldLabel="__('modules.appreciations.appreciationType')">
                                 </x-forms.label>
                                 <x-forms.input-group>

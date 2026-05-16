@@ -6,7 +6,7 @@
                     @lang('app.menu.addHoliday')</h4>
                 <input type="hidden" name="redirect_url" value="{{ $redirectUrl }}">
                 <div class="row pl-20 pr-20 pt-20">
-                    <div class="col-lg-5">
+                    <div class="col-lg-5 my-3">
                         <x-forms.text class="date-picker" :fieldLabel="__('app.date')" fieldName="date[]"
                             fieldId="dateField1" :fieldPlaceholder="__('app.date')" fieldValue="{{ $date }}"
                             fieldRequired="true" />
@@ -55,7 +55,7 @@
             i += 1;
 
             $(`<div id="addMoreBox${i}" class="row pl-20 pr-20 clearfix">
-                <div class="col-lg-5 col-md-6 col-12"> <x-forms.text class="date-picker" :fieldLabel="__('app.date')" fieldName="date[]"
+                <div class="col-lg-5 col-md-6 col-12 my-3"> <x-forms.text class="date-picker" :fieldLabel="__('app.date')" fieldName="date[]"
                 fieldId="dateField${i}" :fieldPlaceholder="__('app.date')" fieldValue="{{ $date }}" fieldRequired="true"  />
                 </div>  <div class="col-lg-5 col-md-5 col-10"> <div class="form-group my-3">
                 <x-forms.text :fieldLabel="__('modules.holiday.occasion')" fieldName="occassion[]" fieldId="occassion${i}" :fieldPlaceholder="__('modules.holiday.occasion')" fieldValue="" fieldRequired="true" />

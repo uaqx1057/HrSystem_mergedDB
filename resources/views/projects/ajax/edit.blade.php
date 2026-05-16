@@ -18,7 +18,7 @@ $createPublicProjectPermission = user()->permission('create_public_project');
                 <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
                     @lang('modules.projects.projectInfo')</h4>
                 <div class="row p-20">
-                    <div class="col-lg-6 col-md-6">
+                    <div class="col-lg-4 col-md-6">
                         <x-forms.text class="mr-0 mr-lg-2 mr-md-2" :fieldLabel="__('modules.taskShortCode')"
                             fieldName="project_code" fieldRequired="true" fieldId="project_code"
                             :fieldPlaceholder="__('placeholders.writeshortcode')" :fieldValue="$project->project_short_code" />
@@ -43,7 +43,7 @@ $createPublicProjectPermission = user()->permission('create_public_project');
                             :fieldPlaceholder="__('placeholders.date')" />
                     </div>
 
-                    <div class="col-md-6 col-lg-3">
+                    <div class="col-md-6 col-lg-4">
                         <div class="form-group">
                             <div class="d-flex mt-5">
                                 <x-forms.checkbox fieldId="without_deadline"

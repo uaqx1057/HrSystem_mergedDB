@@ -258,7 +258,7 @@
                     <span>Salary Slips</span>
                 </div>
                 <div class="card-body table-responsive">
-                    <table class="table table-bordered">
+                    <table class="table table-bordered text-nowrap">
                         <thead>
                             <tr>
                                 <th>ID</th>

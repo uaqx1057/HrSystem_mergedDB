@@ -20,7 +20,7 @@
                     </div>
 
                     <div class="col-md-9">
-                        <div class="form-group my-3">
+                        <div class="form-group ">
                             <x-forms.label fieldId="selectEmployee" :fieldLabel="__('app.menu.employees')"
                                 fieldRequired="true">
                             </x-forms.label>
@@ -49,7 +49,7 @@
                     </div>
 
                     <div class="col-lg-3 col-md-6">
-                        <div class="form-group my-3">
+                        <div class="form-group ">
                             <x-forms.label fieldId="mark_attendance_by_month" :fieldLabel="__('modules.attendance.markAttendance'). ' ' . __('app.by')">
                             </x-forms.label>
                             <div class="d-flex">
@@ -108,7 +108,7 @@
                     </div>
 
                     <div class="col-lg-4 col-md-6 col-xl-3">
-                        <div class="form-group my-3">
+                        <div class="form-group ">
                             <x-forms.label fieldId="late_yes" :fieldLabel="__('modules.attendance.late')">
                             </x-forms.label>
                             <div class="d-flex">
@@ -122,7 +122,7 @@
                     </div>
 
                     <div class="col-lg-4 col-md-6 col-xl-3">
-                        <div class="form-group my-3">
+                        <div class="form-group ">
                             <x-forms.label fieldId="half_day_yes" :fieldLabel="__('modules.attendance.halfDay')">
                             </x-forms.label>
                             <div class="d-flex">
@@ -152,7 +152,7 @@
                         <x-forms.text fieldId="working_from" :fieldLabel="__('modules.attendance.otherPlace')" fieldName="working_from" fieldRequired="true" >
                         </x-forms.text>
                     </div>
-                    <div class="col-lg-4 col-md-6 mt-5">
+                    <div class="col-lg-4 col-md-6 mt-4">
                         <x-forms.checkbox class="mr-0 mr-lg-2 mr-md-2" :fieldLabel="__('app.overwriteAttendance')"
                                           fieldName="overwrite_attendance" fieldId="overwrite_attendance" fieldValue="yes"
                                           fieldRequired="true" :popover="__('messages.overwriteAttendanceTooltip')"/>

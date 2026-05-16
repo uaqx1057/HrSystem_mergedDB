@@ -13,7 +13,7 @@
                     </div>
 
                     <div class="col-lg-6">
-                        <div class="form-group my-3">
+                        <div class="form-group ">
                             <x-forms.text :fieldLabel="__('modules.holiday.occasion')" fieldName="occassion"
                                           fieldId="occassion" :fieldPlaceholder="__('modules.holiday.occasion')"
                                           :fieldValue="$holiday->occassion" fieldRequired="true"/>

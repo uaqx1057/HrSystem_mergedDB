@@ -51,7 +51,7 @@ $addExpenseCategoryPermission = user()->permission('manage_expense_category');
                             <input type="hidden" name="user_id" value="{{ $expense->user_id }}">
                         @endif
                         <div class="col-md-6 col-lg-4">
-                            <x-forms.label class="mt-3" fieldId="user_id" :fieldLabel="__('app.employee')"
+                            <x-forms.label class="" fieldId="user_id" :fieldLabel="__('app.employee')"
                                 fieldRequired="true">
                             </x-forms.label>
                             <x-forms.input-group>
@@ -87,7 +87,7 @@ $addExpenseCategoryPermission = user()->permission('manage_expense_category');
                 </div>
                 <!-- STATUS START -->
                 <div class="col-md-6 col-lg-4">
-                    <x-forms.label class="mt-3" fieldId="status" :fieldLabel="__('app.status')">
+                    <x-forms.label class="" fieldId="status" :fieldLabel="__('app.status')">
                     </x-forms.label>
                     <div class="select-others height-35 rounded">
                         <select class="form-control select-picker" name="status" id="status">
@@ -102,7 +102,7 @@ $addExpenseCategoryPermission = user()->permission('manage_expense_category');
                 </div>
                 <!-- STATUS END -->
                 @if($linkExpensePermission == 'all')
-                <div class="col-md-6 col-lg-4 my-3">
+                <div class="col-md-6 col-lg-4 mt-3">
                     <x-forms.select fieldId="bank_account_id" :fieldLabel="__('app.menu.bankaccount')" fieldName="bank_account_id"
                         search="true">
                         <option value="">--</option>
@@ -117,8 +117,8 @@ $addExpenseCategoryPermission = user()->permission('manage_expense_category');
                     </x-forms.select>
                 </div>
                 @endif
-                <div class="col-md-6 col-lg-4 my-3">
-                    <x-forms.label class="mt-3" fieldId="category_id"
+                <div class="col-md-6 col-lg-4 mt-3">
+                    <x-forms.label class="" fieldId="category_id"
                         :fieldLabel="__('modules.expenses.expenseCategory')">
                     </x-forms.label>
                     <x-forms.input-group>
@@ -142,8 +142,8 @@ $addExpenseCategoryPermission = user()->permission('manage_expense_category');
                     </x-forms.input-group>
                 </div>
 
-                <div class="col-md-6 col-lg-4 my-3">
-                    <x-forms.text class="mt-3" :fieldLabel="__('modules.expenses.purchaseFrom')" fieldName="purchase_from"
+                <div class="col-md-6 col-lg-4 mt-3">
+                    <x-forms.text class="" :fieldLabel="__('modules.expenses.purchaseFrom')" fieldName="purchase_from"
                         fieldId="purchase_from" :fieldPlaceholder="__('placeholders.expense.vendor')"
                         :fieldValue="$expense->purchase_from" :fieldReadOnly="(count($expense->recurrings) > 0) ? true : ''"/>
                 </div>

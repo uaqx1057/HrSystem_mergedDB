@@ -28,7 +28,7 @@
             </div>
         </div>
 
-        <div class="col-lg-4">
+        <div class="col-lg-4 mt-3">
             <x-forms.text class="mr-0 mr-lg-2 mr-md-2" :fieldLabel="__('modules.profile.yourEmail')"
                           fieldRequired="true" :fieldPlaceholder="__('placeholders.email')" fieldName="email"
                           fieldId="email" :fieldValue="$user->email"></x-forms.text>
@@ -118,7 +118,7 @@
         </div>
 
         <div class="col-lg-4">
-            <x-forms.label class="my-3" fieldId="mobile"
+            <x-forms.label class="" fieldId="mobile"
                            :fieldLabel="__('app.mobile')"></x-forms.label>
             <x-forms.input-group style="margin-top:-4px">
                 <x-forms.select fieldId="country_phonecode" fieldName="country_phonecode"
@@ -162,7 +162,7 @@
                                     :fieldValue="($user->employeeDetail->date_of_birth ? $user->employeeDetail->date_of_birth->format(company()->date_format) : '')"/>
             </div>
             <div class="col-lg-4">
-                <x-forms.label class="my-3" fieldId="slack_username"
+                <x-forms.label class="" fieldId="slack_username"
                                :fieldLabel="__('modules.employees.slackUsername')"></x-forms.label>
                 <x-forms.input-group>
                     <x-slot name="prepend">

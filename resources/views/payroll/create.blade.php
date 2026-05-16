@@ -311,7 +311,7 @@
                         isValid = false;
                     }
 
-                    if (workingDays === "") {
+                    if (workingDays === "" || workingDays > 32) {
                         $('#pay_days').addClass('is-invalid');
                         isValid = false;
                     }
@@ -320,7 +320,7 @@
                         // alert("Please select a driver and enter working days before proceeding.");
                         Swal.fire({
                             icon: 'error',
-                            text: 'Employee and working days required.',
+                            text: 'Employee and working days required and working days less than 32.',
                             toast: true,
                             position: 'top-end',
                             timer: 3000,

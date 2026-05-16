@@ -39,7 +39,7 @@
 
                             @if ($editTimelogPermission == 'all')
                                 <div class="col-md-6 col-lg-4">
-                                    <x-forms.label class="mt-3" fieldId="user_id2" :fieldLabel="__('app.employee')"
+                                    <x-forms.label class="" fieldId="user_id2" :fieldLabel="__('app.employee')"
                                         fieldRequired="true">
                                     </x-forms.label>
                                     <x-forms.input-group>
@@ -62,14 +62,14 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-3 col-lg-3">
+                            <div class="col-md-3 col-lg-3 mt-3">
                                 <x-forms.datepicker fieldId="start_date" fieldRequired="true"
                                     :fieldLabel="__('modules.timeLogs.startDate')" fieldName="start_date"
                                     :fieldValue="$timeLog->start_time->timezone(company()->timezone)->format(company()->date_format)"
                                     :fieldPlaceholder="__('placeholders.date')" />
                             </div>
 
-                            <div class="col-md-3 col-lg-3">
+                            <div class="col-md-3 col-lg-3 mt-3">
                                 <div class="bootstrap-timepicker timepicker">
                                     <x-forms.text :fieldLabel="__('modules.timeLogs.startTime')"
                                         :fieldPlaceholder="__('placeholders.hours')" fieldName="start_time"
@@ -78,7 +78,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-3 col-lg-3">
+                            <div class="col-md-3 col-lg-3 mt-3">
                                 <x-forms.datepicker fieldId="end_date" fieldRequired="true"
                                     :fieldLabel="__('modules.timeLogs.endDate')" fieldName="end_date"
                                     :fieldValue="\Carbon\Carbon::now(company()->timezone)->format(company()->date_format)"
@@ -86,7 +86,7 @@
                                     :fieldValue="$timeLog->end_time->timezone(company()->timezone)->format(company()->date_format)" />
                             </div>
 
-                            <div class="col-md-3 col-lg-3">
+                            <div class="col-md-3 col-lg-3 mt-3">
                                 <div class="bootstrap-timepicker timepicker">
                                     <x-forms.text :fieldLabel="__('modules.timeLogs.endTime')"
                                         :fieldPlaceholder="__('placeholders.hours')" fieldName="end_time"
@@ -104,7 +104,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <x-forms.label fieldId="total_time" class="my-3"
+                        <x-forms.label fieldId="total_time" class=""
                             :fieldLabel="__('modules.timeLogs.totalHours')" />
                         <p id="total_time" class="f-w-500 text-primary f-21">{{ $timeLog->hours }}</p>
                     </div>

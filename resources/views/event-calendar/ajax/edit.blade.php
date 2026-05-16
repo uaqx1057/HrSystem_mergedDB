@@ -17,7 +17,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <div class="form-group my-3">
+                        <div class="form-group ">
                             <x-forms.label fieldId="colorselector" fieldRequired="true"
                                 :fieldLabel="__('modules.tasks.labelColor')">
                             </x-forms.label>
@@ -94,7 +94,7 @@
                             </x-forms.input-group>
                         </div>
                     </div>
-
+{{--
                 @if(!in_array('client', user_roles()))
                     <div class="col-md-6">
                         <div class="form-group my-3">
@@ -111,7 +111,7 @@
                             </x-forms.input-group>
                         </div>
                     </div>
-                @endif
+                @endif --}}
 
 
                     <div class="col-lg-12 mb-2">

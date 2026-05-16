@@ -19,7 +19,7 @@
                     @if (!in_array('client', user_roles()))
                         @if ($addPermission == 'all')
                             @if (!(isset($client)) && !(isset($employee)) && in_array('clients', user_modules()) && in_array('employees', user_modules()))
-                                <div class="col-md-4">
+                                {{-- <div class="col-md-4">
                                     <div class="form-group my-3">
                                         <x-forms.label fieldId="requester-client"
                                                        :fieldLabel="__('modules.tickets.requester')"/>
@@ -33,7 +33,8 @@
                                                            fieldName="requester_type"></x-forms.radio>
                                         </div>
                                     </div>
-                                </div>
+                                </div> --}}
+                            <input type="hidden" name="requester_type" id="requester_type" value="employee">
                             @elseif(!in_array('employees', user_modules()))
                                 <input type="hidden" name="requester_type" id="requester_type" value="client">
                             @elseif(!in_array('clients', user_modules()))
@@ -73,7 +74,7 @@
                                     <input type="text" value="{{ $employee->name }}"
                                            class="form-control height-35 f-15 readonly-background" readonly>
                                 @else
-                                    <x-forms.label class="my-3" fieldId="requestuser_id"
+                                    <x-forms.label class="mt-3" fieldId="requestuser_id"
                                                    :fieldLabel="__('modules.tickets.requesterName')"
                                                    fieldRequired="true">
                                     </x-forms.label>
@@ -96,8 +97,8 @@
                         <input type="hidden" name="requester_type" value="client">
                         <input type="hidden" id="client_id" name="client_id" value="{{ user()->id }}">
                     @endif
-                    <div class="col-md-4 assign_group">
-                        <x-forms.label class="mt-3" fieldId="ticket_group" fieldRequired="true"
+                    <div class="col-md-4 mt-3 assign_group">
+                        <x-forms.label class="" fieldId="ticket_group" fieldRequired="true"
                             :fieldLabel="__('modules.tickets.assignGroup')">
                         </x-forms.label>
                         <x-forms.input-group>
@@ -117,8 +118,8 @@
                     </div>
 
                     @if (!in_array('client', user_roles()))
-                        <div class="col-md-6 col-lg-4">
-                            <x-forms.label class="mt-3" fieldId="ticket_agent_id" :fieldLabel="__('modules.tickets.agent')">
+                        <div class="col-md-6 col-lg-4 mt-3">
+                            <x-forms.label class="" fieldId="ticket_agent_id" :fieldLabel="__('modules.tickets.agent')">
                             </x-forms.label>
                             <x-forms.input-group>
                                 <select class="form-control select-picker" name="agent_id" id="ticket_agent_id"
@@ -147,14 +148,14 @@
                         </div>
 
                     @endif
-                    <div class="col-md-4">
+                    <div class="col-md-4 mt-3">
                         <x-forms.select fieldId="project_id" :fieldLabel="__('app.project')"
                                         fieldName="project_id"
                                         search="true" alignRight="true">
                             <option value="">--</option>
                         </x-forms.select>
                     </div>
-                    <div class="col-md-12">
+                    <div class="col-md-4 mt-3">
                         <x-forms.text :fieldLabel="__('modules.tickets.ticketSubject')" fieldName="subject"
                                       fieldRequired="true" fieldId="subject"/>
                     </div>
@@ -207,7 +208,7 @@
                     </div>
 
                     <div class="col-md-6 col-lg-4">
-                        <x-forms.label class="my-3" fieldId="ticket_type_id" :fieldLabel="__('modules.invoices.type')">
+                        <x-forms.label class="" fieldId="ticket_type_id" :fieldLabel="__('modules.invoices.type')">
                         </x-forms.label>
                         <x-forms.input-group>
                             <select class="form-control select-picker" name="type_id" id="ticket_type_id"
@@ -228,7 +229,7 @@
                     </div>
 
                     <div class="col-md-6 col-lg-4">
-                        <x-forms.label class="my-3" fieldId="ticket_channel_id"
+                        <x-forms.label class="" fieldId="ticket_channel_id"
                                        :fieldLabel="__('modules.tickets.channelName')">
                         </x-forms.label>
                         <x-forms.input-group>
@@ -250,7 +251,7 @@
                         </x-forms.input-group>
                     </div>
 
-                    <div class="col-md-12">
+                    <div class="col-md-12 mt-3">
                         <x-forms.text fieldId="tags" :fieldLabel="__('modules.tickets.tags')" fieldName="tags"/>
                     </div>
 
@@ -380,17 +381,17 @@
             tagify = new Tagify(input);
 
 
-        $('body').on('change', "input[name=requester_type]", function () {
-            let value = $(this).val();
-            if (value == 'client')
-            {
+        // $('body').on('change', "input[name=requester_type]", function () {
+        //     let value = $(this).val();
+        //     if (value == 'client')
+        //     {
                 $('#client-requester').removeClass('d-none');
                 $('#employee-requester').addClass('d-none');
-            } else {
+            // } else {
                 $('#client-requester').addClass('d-none');
                 $('#employee-requester').removeClass('d-none');
-            }
-        });
+        //     }
+        // });
 
         /* open add agent modal */
         $('body').on('click', '#add-agent', function () {

@@ -155,7 +155,7 @@ class TimelogController extends AccountBaseController
                 );
             })
             ->join('users', 'users.id', '=', 'project_time_logs.user_id')
-            ->where('user_id', $userID)
+            ->where('project_time_logs.user_id', $userID)
             ->first();
 
         if (is_null($activeTimer)) {
@@ -275,7 +275,7 @@ class TimelogController extends AccountBaseController
                     );
             })
             ->join('users', 'users.id', '=', 'project_time_logs.user_id')
-            ->where('user_id', $userID)
+            ->where('project_time_logs.user_id', $userID)
             ->where('project_time_logs.id', '!=', $id)
             ->select('project_time_logs.*')
             ->first();

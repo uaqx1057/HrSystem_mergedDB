@@ -12,7 +12,7 @@
                             </x-forms.text>
                         </div>
                         <div class="col-md-6">
-                            <x-forms.label class="mt-3" fieldId="parent_label" :fieldLabel="__('app.menu.parent_id')" fieldName="parent_label">
+                            <x-forms.label class="" fieldId="parent_label" :fieldLabel="__('app.menu.parent_id')" fieldName="parent_label">
                             </x-forms.label>
                             <x-forms.input-group>
                                 <select class="form-control select-picker" name="parent_id" id="parent_id"

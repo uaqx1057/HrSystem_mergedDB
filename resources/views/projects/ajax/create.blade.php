@@ -44,7 +44,7 @@
 
                     <div class="col-md-6 col-lg-4">
                         <div class="form-group">
-                            <div class="d-flex mt-5">
+                            <div class="d-flex mt-4">
                                 <x-forms.checkbox fieldId="without_deadline"
                                 :checked="($project && $project->deadline == null) ? true : false" :fieldLabel="__('modules.projects.withoutDeadline')"  fieldName="without_deadline"/>
                             </div>
@@ -52,7 +52,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <x-forms.label class="my-3" fieldId="category_id"
+                        <x-forms.label class="" fieldId="category_id"
                                        :fieldLabel="__('modules.projects.projectCategory')">
                         </x-forms.label>
                         <x-forms.input-group>
@@ -81,7 +81,7 @@
 
                     @if (!in_array('client', user_roles()))
                         <div class="col-md-4">
-                            <x-forms.label class="my-3" fieldId="department" :fieldLabel="__('app.department')">
+                            <x-forms.label class="" fieldId="department" :fieldLabel="__('app.department')">
                             </x-forms.label>
                             <x-forms.input-group>
                                 <select class="form-control select-picker" name="team_id" id="employee_department"
@@ -95,7 +95,7 @@
                         </div>
                     @endif
 
-                    <div class="col-md-4 @if (!isset($client) && is_null($client)) py-3 @endif">
+                    <div class="col-md-4 @if (!isset($client) && is_null($client)) @endif">
                         @if (isset($client) && !is_null($client))
                             <x-forms.label class="my-3" fieldId="client_id" :fieldLabel="__('app.client')">
                             </x-forms.label>

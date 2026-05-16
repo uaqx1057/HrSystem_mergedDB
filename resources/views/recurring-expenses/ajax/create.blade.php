@@ -51,7 +51,7 @@ foreach ($projects as $project) {
 
                     @if (user()->permission('add_expenses') == 'all')
                         <div class="col-md-6 col-lg-4">
-                            <x-forms.label class="mt-3" fieldId="user_id" :fieldLabel="__('app.employee')"
+                            <x-forms.label class="" fieldId="user_id" :fieldLabel="__('app.employee')"
                                 fieldRequired="true">
                             </x-forms.label>
                             <x-forms.input-group>
@@ -126,7 +126,7 @@ foreach ($projects as $project) {
                         </x-forms.input-group>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-6 mt-3">
                         <x-forms.text :fieldLabel="__('modules.expenses.purchaseFrom')" fieldName="purchase_from"
                             fieldId="purchase_from" :fieldPlaceholder="__('placeholders.expense.vendor')" />
                     </div>

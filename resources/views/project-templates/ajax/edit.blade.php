@@ -16,7 +16,7 @@ $addProjectCategoryPermission = user()->permission('manage_project_category');
                     </div>
 
                     <div class="col-md-6">
-                        <div class="form-group my-3 mr-0 mr-lg-2 mr-md-2">
+                        <div class="form-group  mr-0 mr-lg-2 mr-md-2">
                             <x-forms.label fieldId="category_id"
                                 :fieldLabel="__('modules.projects.projectCategory')">
                             </x-forms.label>

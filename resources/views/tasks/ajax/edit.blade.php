@@ -24,7 +24,7 @@ $viewTaskCategoryPermission = user()->permission('view_task_category');
                     </div>
 
                     <div class="col-md-6 col-lg-6">
-                        <x-forms.label class="my-3" fieldId="category_id"
+                        <x-forms.label class="" fieldId="category_id"
                             :fieldLabel="__('modules.tasks.taskCategory')">
                         </x-forms.label>
                         <x-forms.input-group>
@@ -75,14 +75,14 @@ $viewTaskCategoryPermission = user()->permission('view_task_category');
                     </div>
 
 
-                    <div class="col-md-5 col-lg-4">
+                    <div class="col-md-5 col-lg-4 mt-3">
                         <x-forms.datepicker fieldId="task_start_date" fieldRequired="true"
                             :fieldLabel="__('modules.projects.startDate')" fieldName="start_date"
                             :fieldValue="(($task->start_date) ? $task->start_date->format(company()->date_format) : '')"
                             :fieldPlaceholder="__('placeholders.date')" />
                     </div>
 
-                    <div class="col-md-5 col-lg-4 dueDateBox" @if(is_null($task->due_date)) style="display: none" @endif>
+                    <div class="col-md-5 col-lg-4 mt-3 dueDateBox" @if(is_null($task->due_date)) style="display: none" @endif>
                         <x-forms.datepicker fieldId="due_date" fieldRequired="true" :fieldLabel="__('app.dueDate')"
                                             fieldName="due_date" :fieldPlaceholder="__('placeholders.date')"
                                             :fieldValue="(($task->due_date) ? $task->due_date->format(company()->date_format) : '')"  />
@@ -155,7 +155,7 @@ $viewTaskCategoryPermission = user()->permission('view_task_category');
                     <div class="col-sm-12">
                         <div class="row">
                             <div class="col-md-12 col-lg-4">
-                                <div class="form-group my-3">
+                                <div class="form-group ">
                                     <x-forms.label fieldId="task_labels" :fieldLabel="__('app.label')">
                                     </x-forms.label>
                                     <x-forms.input-group>

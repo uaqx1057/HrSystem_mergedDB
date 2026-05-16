@@ -26,7 +26,7 @@
                     </div>
 
                     <div class="col-md-6 col-lg-6">
-                        <x-forms.label class="my-3" fieldId="category_id"
+                        <x-forms.label class="" fieldId="category_id"
                                        :fieldLabel="__('modules.tasks.taskCategory')">
                         </x-forms.label>
                         <x-forms.input-group>
@@ -91,14 +91,14 @@
                     <div class="col-md-6 col-lg-6 pt-5" id='clientDetails'></div>
 
 
-                    <div class="col-md-5 col-lg-3">
+                    <div class="col-md-5 col-lg-3 mt-3">
                         <x-forms.datepicker fieldId="task_start_date" fieldRequired="true"
                                             :fieldLabel="__('modules.projects.startDate')" fieldName="start_date"
                                             :fieldValue="(($task) ? $task->start_date->format(company()->date_format) : \Carbon\Carbon::now(company()->timezone)->translatedFormat(company()->date_format))"
                                             :fieldPlaceholder="__('placeholders.date')"/>
                     </div>
 
-                    <div class="col-md-5 col-lg-3 dueDateBox"
+                    <div class="col-md-5 col-lg-3 mt-3 dueDateBox"
                          @if($task && is_null($task->due_date)) style="display: none" @endif>
                         <x-forms.datepicker fieldId="due_date" fieldRequired="true" :fieldLabel="__('app.dueDate')"
                                 fieldName="due_date" :fieldPlaceholder="__('placeholders.date')"
@@ -172,7 +172,7 @@
                         <div class="row">
 
                             <div class="col-md-12 col-lg-4">
-                                <div class="form-group my-3">
+                                <div class="form-group ">
                                     <x-forms.label fieldId="task_labels" :fieldLabel="__('app.label')">
                                     </x-forms.label>
                                     <x-forms.input-group>
