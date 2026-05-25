@@ -1,5 +1,10 @@
 @push('styles')
     <style>
+        .card,
+        .card * {
+            color: #fff !important;
+        }
+
         pre {
             background: rgba(0, 0, 0, .05);
             padding: 10px;
@@ -30,11 +35,11 @@
     @endif
 
     <!--  USER CARDS START -->
-    <div class="col-md-6 col-xl-4 mb-4 mb-xl-0 mb-lg-4 mb-md-0">
+    <div class="col-md-6 col-xl-6 mb-4 mb-xl-0 mb-lg-6 mb-md-0">
         <div class="row">
 
             <div class="col-md-12">
-                <div class="card border-0 b-shadow-4">
+                <div class="card e-card-d-info-light">
                     <div class="card-horizontal align-items-center">
                         <div class="card-img">
                             <img class="" src="{{ $company->logo_url }}" alt="">
@@ -58,7 +63,7 @@
                                         <div
                                             class="dropdown-menu dropdown-menu-right border-grey rounded b-shadow-4 p-0"
                                             aria-labelledby="dropdownMenuLink" tabindex="0">
-                                            <a class="dropdown-item openRightModal"
+                                            <a class="dropdown-item openRightModal" style="background:#000000"
                                                href="{{ route('superadmin.companies.edit', $company->id) }}">@lang('app.edit')</a>
                                         </div>
                                     </div>
@@ -87,9 +92,10 @@
     <!--  USER CARDS END -->
 
     <!--  USER CARDS START -->
+      {{--
     <div class="col-md-6 col-xl-4 mb-4 mb-xl-0 mb-lg-4 mb-md-0">
         @if($company->user)
-            <x-cards.user :image="$company->user->image_url">
+            <x-cards.user :image="$company->user->image_url"    class="e-card-d-info-light">
                 <div class="row mb-1">
                     <div class="col-12">
                         <h4 class="card-title f-15 f-w-500 text-darkest-grey mb-0">
@@ -127,11 +133,11 @@
                 <div class="card-text f-12 text-lightest m-t-5">There is no active company admin for this company</div>
             </x-cards.user>
         @endif
-    </div>
+    </div> --}}
     <!--  USER CARDS END -->
 
     <!--  WIDGETS START -->
-    <div class="col-xl-4 col-md-12">
+    <div class="col-xl-6 col-md-12">
         <x-cards.data>
             <div class="row">
                 <div class="col-12">
@@ -140,17 +146,6 @@
                     </h4>
                 </div>
             </div>
-            <p class="card-text f-12 text-lightest mb-2">
-                @lang('superadmin.licenceExpiresOn')
-                @if (!is_null($company->licence_expire_on))
-                    <span class="font-weight-bold">
-                        {{ \Carbon\Carbon::parse($company->licence_expire_on)->timezone(global_setting()->timezone)->translatedFormat(global_setting()->date_format) }}
-                    </span>
-                    <em>({{ \Carbon\Carbon::parse($company->licence_expire_on)->diffForHumans() }})</em>
-                @else
-                    --
-                @endif
-            </p>
             <p class="card-text d-flex justify-content-between f-12 text-lightest">
                 @if($updateCompanyPackagePermission == 'all')
                     <a href="{{ route('superadmin.companies.edit_package', [$company->id]) }}?requestFrom=show"

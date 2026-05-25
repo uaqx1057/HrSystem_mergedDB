@@ -14,12 +14,21 @@
 }
 
     .nav-tabs .nav-link.active{
-        background-color: #722C81 !important;
+        background: @if(!user()->dark_theme)
+            radial-gradient(circle at 14% 18%, rgba(217, 119, 6, 0.16), transparent 22%),
+            radial-gradient(circle at 84% 20%, rgba(5, 150, 105, 0.26), transparent 24%),
+            radial-gradient(circle at 70% 82%, rgba(6, 182, 212, 0.18), transparent 22%),
+            linear-gradient(135deg, #010e09 0%, #021810 38%, #031f14 100%);
+        @else
+
+        @endif;
+
         color: #fff !important;
     }
     .nav-tabs .nav-link{
-        background-color: #fff !important;
+        background-color: transparent !important;
     }
+
     </style>
 @endpush
 

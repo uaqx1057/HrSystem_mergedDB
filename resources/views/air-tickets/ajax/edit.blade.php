@@ -8,7 +8,7 @@
     <div class="col-sm-12">
         <x-form id="save-air-ticket-data-form">
             <div class="add-client bg-white rounded">
-                <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
+                <h4 class="mb-0 p-20 f-21 form-heading-background font-weight-normal text-capitalize border-bottom-grey">
                     @lang('modules.airTicket.editTitle')</h4>
                 <div class="row p-20">
 

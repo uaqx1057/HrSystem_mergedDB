@@ -22,8 +22,8 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
         justify-content: center;
         gap: 0;
         padding: 24px 20px 20px;
-        background: #fff;
-        border-bottom: 1px solid #e8e8e8;
+        /* background: #fff;  */
+        border-bottom: 1px solid #4b4e69;
         flex-wrap: wrap;
     }
     .ms-step {
@@ -37,7 +37,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
         height: 32px;
         border-radius: 50%;
         border: 2px solid #dee2e6;
-        background: #fff;
+        /* background: #fff; */
         display: flex;
         align-items: center;
         justify-content: center;
@@ -55,17 +55,51 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
         transition: color .25s;
     }
     .ms-step.active .ms-step-circle {
-        border-color: #722C81;
-        background: #722C81;
-        color: #fff;
+        border-color: #ffffff;
+        background: @if(!user()->dark_theme)
+            radial-gradient(circle at 14% 18%, rgba(217, 119, 6, 0.16), transparent 22%),
+            radial-gradient(circle at 84% 20%, rgba(5, 150, 105, 0.26), transparent 24%),
+            radial-gradient(circle at 70% 82%, rgba(6, 182, 212, 0.18), transparent 22%),
+            linear-gradient(135deg, #010e09 0%, #021810 38%, #031f14 100%);
+        @else
+            #ffffff;
+        @endif
+        color: @if(!user()->dark_theme)
+            #ffffff;
+        @else
+            #181c34;
+        @endif
     }
-    .ms-step.active .ms-step-label { color: #722C81; }
+    .ms-step.active .ms-step-label {
+        color: @if(!user()->dark_theme)
+            #021810;
+        @else
+            #ffffff;
+        @endif
+    }
     .ms-step.done .ms-step-circle {
-        border-color: #722C81;
-        background: #722C81;
-        color: #fff;
+        border-color: #021810;
+        background: @if(!user()->dark_theme)
+            radial-gradient(circle at 14% 18%, rgba(217, 119, 6, 0.16), transparent 22%),
+            radial-gradient(circle at 84% 20%, rgba(5, 150, 105, 0.26), transparent 24%),
+            radial-gradient(circle at 70% 82%, rgba(6, 182, 212, 0.18), transparent 22%),
+            linear-gradient(135deg, #010e09 0%, #021810 38%, #031f14 100%);
+        @else
+            #ffffff;
+        @endif
+        color: @if(!user()->dark_theme)
+            #ffffff;
+        @else
+            #181c34;
+        @endif
     }
-    .ms-step.done .ms-step-label { color: #722C81; }
+    .ms-step.done .ms-step-label {
+        color: @if(!user()->dark_theme)
+            #021810;
+        @else
+            #ffffff;
+        @endif
+    }
     .ms-step-line {
         height: 2px;
         width: 40px;
@@ -73,7 +107,16 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
         flex-shrink: 0;
         transition: background .25s;
     }
-    .ms-step-line.done { background: #722C81; }
+    .ms-step-line.done {
+        background: @if(!user()->dark_theme)
+            radial-gradient(circle at 14% 18%, rgba(217, 119, 6, 0.16), transparent 22%),
+            radial-gradient(circle at 84% 20%, rgba(5, 150, 105, 0.26), transparent 24%),
+            radial-gradient(circle at 70% 82%, rgba(6, 182, 212, 0.18), transparent 22%),
+            linear-gradient(135deg, #010e09 0%, #021810 38%, #031f14 100%);
+        @else
+            #ffffff;
+        @endif
+    }
 
     .form-step { display: none; }
     .form-step.active { display: block; }
@@ -83,8 +126,8 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
         justify-content: space-between;
         align-items: center;
         padding: 16px 20px;
-        border-top: 1px solid #e8e8e8;
-        background: #fff;
+        /* border-top: 1px solid #4b4e69; */
+        /* background: #fff; */
     }
     .ms-nav-buttons .left-btns { display: flex; gap: 8px; }
     .ms-nav-buttons .right-btns { display: flex; gap: 8px; }
@@ -127,7 +170,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                      STEP 1 — Account Details
                 ══════════════════════════════════════ --}}
                 <div class="form-step active" id="form-step-1">
-                    <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
+                    <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey form-heading-background">
                         @lang('modules.employees.accountDetails')</h4>
                     <div class="row p-20">
                         <div class="col-lg-9">
@@ -214,7 +257,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                      STEP 2 — Documents
                 ══════════════════════════════════════ --}}
                 <div class="form-step" id="form-step-2">
-                    <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
+                    <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey form-heading-background">
                         @lang('modules.employees.documentDetails')</h4>
                     <div class="row p-20">
 
@@ -345,7 +388,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                      STEP 3 — Personal & Contact
                 ══════════════════════════════════════ --}}
                 <div class="form-step" id="form-step-3">
-                    <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
+                    <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey form-heading-background">
                         @lang('modules.employees.personalContactDetails')</h4>
                     <div class="row p-20">
 
@@ -499,7 +542,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                      STEP 4 — Other Details
                 ══════════════════════════════════════ --}}
                 <div class="form-step" id="form-step-4">
-                    <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
+                    <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey form-heading-background">
                         @lang('modules.client.clientOtherDetails')</h4>
                     <div class="row p-20">
 

@@ -3,10 +3,10 @@
         <div class="row">
             <!-- EMP DASHBOARD NOTICE START -->
             <div class="col-md-12">
-                <div class="my-3 b-shadow-4 rounded bg-white pb-2">
+                <div class="my-3 b-shadow-4 rounded {{ !user()->dark_theme ? 'e-card-d-info-light' : '' }} pb-2">
                     <!-- NOTICE HEADING START -->
                     <div class="d-flex align-items-center b-shadow-4 p-20">
-                        <p class="mb-0 f-18 f-w-500"> @lang('app.menu.notices') </p>
+                        <p class="mb-0 f-18 f-w-500 text-darkest-white"> @lang('app.menu.notices') </p>
                     </div>
                     <!-- NOTICE HEADING END -->
                     <!-- NOTICE DETAIL START -->
@@ -15,9 +15,9 @@
 
 
                         @foreach ($notices as $notice)
-                            <div class="card border-0 b-shadow-4 p-20 rounded-0">
+                            <div class="card border-0 b-shadow-4 p-20 rounded-0 {{ !user()->dark_theme ? 'e-card-d-info-light' : '' }}">
                                 <div class="card-horizontal">
-                                    <div class="card-header m-0 p-0 bg-white rounded">
+                                    <div class="card-header m-0 p-0 text-darkest-white  rounded">
                                         <x-date-badge :month="$notice->created_at->translatedFormat('M')" :date="$notice->created_at
                                                             ->timezone(company()->timezone)
                                                             ->translatedFormat('d')" />
@@ -25,7 +25,7 @@
                                     <div class="card-body border-0 p-0 ml-3">
                                         <h4 class="card-title f-14 font-weight-normal mb-0">
                                             <a href="{{ route('notices.show', $notice->id) }}"
-                                               class="openRightModal text-darkest-grey">{{ $notice->heading }}</a>
+                                               class="openRightModal text-darkest-white">{{ $notice->heading }}</a>
                                         </h4>
                                     </div>
                                 </div>

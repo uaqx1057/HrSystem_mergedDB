@@ -1,9 +1,17 @@
 <style>
     :root {
+
         /* For Logged in user take header color a app theme*/
         /* For public pages use company specific header color example invoice,estimate public page*/
         /* For all other pages use like auth use global setting header*/
-        --header_color: @if(isset($appTheme)) {{ $appTheme->header_color}} @elseif(isset($company)) {{$company->header_color}} @else {{ global_setting()->header_color}} @endif;
+        --header_color: @if (isset($appTheme))
+            {{ $appTheme->header_color }}
+        @elseif(isset($company))
+            {{ $company->header_color }}
+        @else
+            {{ global_setting()->header_color }}
+        @endif
+        ;
     }
 
     .btn-primary,
@@ -21,13 +29,15 @@
         background: var(--header_color) !important;
     }
 
-    .datepicker table tr td, .datepicker table tr th {
+    .datepicker table tr td,
+    .datepicker table tr th {
         font-size: 14px;
     }
 
     .project-header .project-menu .p-sub-menu.active:after,
     .project-header .project-menu .p-sub-menu::after,
-    .qs-current, .datepicker table tr td.active.active {
+    .qs-current,
+    .datepicker table tr td.active.active {
         background: var(--header_color) !important;
         text-shadow: none;
         border-color: var(--header_color) !important;
@@ -40,7 +50,7 @@
     }
 
     .pagination .page-item.active .page-link,
-    .custom-control-input:checked ~ .custom-control-label::before {
+    .custom-control-input:checked~.custom-control-label::before {
         background-color: var(--header_color) !important;
         border-color: var(--header_color) !important;
     }
@@ -64,7 +74,9 @@
         color: var(--header_color) !important;
     }
 
-    .menu-item-count, .unread-notifications-count, .active-timer-count {
+    .menu-item-count,
+    .unread-notifications-count,
+    .active-timer-count {
         background-color: var(--header_color) !important;
     }
 
@@ -72,4 +84,37 @@
         color: #ffffff;
     }
 
+    .project-header .project-menu .p-sub-menu.active {
+        color: {{ !user()->dark_theme ? 'white' : 'white' }};
+
+        background: @if (!user()->dark_theme)
+            var(--header_color);
+        @else
+            white;
+        @endif
+
+        border: 1px solid white !important;
+    }
+
+    .form-heading-background {
+        color: {{ !user()->dark_theme ? 'white' : 'white' }};
+
+        background: @if (!user()->dark_theme)
+            linear-gradient(135deg, {{ $themeColor ?? 'var(--header_color)' }}, color-mix(in srgb, var(--header_color) 80%, black 20%));
+
+        @else
+
+        @endif
+    }
+
+    table.dataTable thead th {
+        color: {{ !user()->dark_theme ? 'white' : '' }};
+
+    background: @if (!user()->dark_theme)
+        #246A45;
+        
+    @else
+        /* ڈارک موڈ کی سیٹنگز اگر ہیں */
+    @endif
+}
 </style>

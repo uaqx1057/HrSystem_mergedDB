@@ -8,22 +8,10 @@
     <div class="col-sm-12">
         <x-form id="save-insurance-data-form">
             <div class="add-client bg-white rounded">
-                <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
+                <h4 class="mb-0 p-20 f-21 form-heading-background form-heading-background font-weight-normal text-capitalize border-bottom-grey">
                     @lang('modules.insurance.addTitle')</h4>
                 <div class="row p-20">
-                    {{-- <div class="col-lg-4 col-md-6">
-                        <x-forms.label class="my-3" fieldId="type"
-                            :fieldLabel="__('app.type')" fieldRequired="true">
-                        </x-forms.label>
-                        <x-forms.input-group>
-                            <select class="form-control select-picker" name="type"
-                                id="type" data-live-search="true">
-                                <option value="">--</option>
-                                <option value="employee">Employee</option>
-                                <option value="driver">Driver</option>
-                            </select>
-                        </x-forms.input-group>
-                    </div> --}}
+
                     <div class="col-lg-4 col-md-6 employee-select">
                         <x-forms.label class="" fieldId="employee"
                             :fieldLabel="__('app.employee')" fieldRequired="true">
@@ -38,20 +26,7 @@
                             </select>
                         </x-forms.input-group>
                     </div>
-                    {{-- <div class="col-lg-4 col-md-6 driver-select d-none">
-                        <x-forms.label class="my-3" fieldId="driver"
-                            :fieldLabel="__('app.driver')" fieldRequired="true">
-                        </x-forms.label>
-                        <x-forms.input-group>
-                            <select class="form-control select-picker" name="driver"
-                                id="driver" data-live-search="true">
-                                <option value="">--</option>
-                                @foreach ($drivers as $driver)
-                                    <option value="{{ $driver->id }}">{{ $driver->name }}</option>
-                                @endforeach
-                            </select>
-                        </x-forms.input-group>
-                    </div> --}}
+
                     <div class="col-lg-4 col-md-6">
                         <x-forms.datepicker
                             fieldId="issue_date" fieldRequired="true"

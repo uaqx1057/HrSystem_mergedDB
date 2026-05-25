@@ -15,7 +15,7 @@ $createPublicProjectPermission = user()->permission('create_public_project');
     <div class="col-sm-12">
         <x-form id="save-project-data-form" method="PUT">
             <div class="add-client bg-white rounded">
-                <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
+                <h4 class="mb-0 p-20 form-heading-background f-21 font-weight-normal text-capitalize border-bottom-grey">
                     @lang('modules.projects.projectInfo')</h4>
                 <div class="row p-20">
                     <div class="col-lg-4 col-md-6">

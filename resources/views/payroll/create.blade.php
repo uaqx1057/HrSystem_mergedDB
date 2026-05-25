@@ -1,16 +1,28 @@
 <style>
-
-    .nav{
-        background-color: white;
-        border-bottom: 1px solid gray !important;
+    .nav {
+        /* background-color: white; */
+        /* border-bottom: 1px solid gray !important; */
+        background-color: @if(!user()->dark_theme)
+            #ffffff;
+        @else
+            #181c34;
+        @endif
     }
-    .nav > .nav-item{
+
+    .nav>.nav-item {
         border: 1px solid #99A5B5;
         border-radius: 0.25rem;
     }
 
-    .nav-link.active{
-        background-color: #722C81 !important;
+    .nav-link.active {
+        background: @if(!user()->dark_theme)
+            radial-gradient(circle at 14% 18%, rgba(217, 119, 6, 0.16), transparent 22%),
+            radial-gradient(circle at 84% 20%, rgba(5, 150, 105, 0.26), transparent 24%),
+            radial-gradient(circle at 70% 82%, rgba(6, 182, 212, 0.18), transparent 22%),
+            linear-gradient(135deg, #010e09 0%, #021810 38%, #031f14 100%);
+        @else
+            #ffffff;
+        @endif
         color: white !important;
     }
 
@@ -32,19 +44,29 @@
     $currentMonth = (int) $currentDate->month;
 
     $monthOptions = [
-        1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April',
-        5 => 'May', 6 => 'June', 7 => 'July', 8 => 'August',
-        9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December',
+        1 => 'January',
+        2 => 'February',
+        3 => 'March',
+        4 => 'April',
+        5 => 'May',
+        6 => 'June',
+        7 => 'July',
+        8 => 'August',
+        9 => 'September',
+        10 => 'October',
+        11 => 'November',
+        12 => 'December',
     ];
     $yearOptions = range($currentYear, max($currentYear - 10, 2000), -1);
 @endphp
 @section('content')
     <div class="content-wrapper">
-        <div class="d-flex justify-content-between align-items-center">
-            <h4 class="mb-4">Add Employee Salary Slip</h4>
-            <a href="{{ route('payroll.index', ['tab' => 'salary-slips']) }}" class="btn btn-primary rounded f-14 p-2 mb-2">
+        <div class="d-flex justify-content-between align-items-center form-heading-background">
+            <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize">
+                Add Employee Salary Slip</h4>
+            {{-- <a href="{{ route('payroll.index', ['tab' => 'salary-slips']) }}" class="btn btn-primary rounded f-14 p-2 mb-2">
                 Cancel
-            </a>
+            </a> --}}
         </div>
 
         <form method="POST" action="{{ route('payroll.salary-slips.store') }}" id="save-salary-form">
@@ -56,22 +78,26 @@
             {{-- TABS --}}
             <ul class="nav nav-tabs border-bottom-0 p-4" id="payrollTabs" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link active f-15 f-w-500 text-dark" id="tab-working-days-link" data-toggle="tab" href="#tab-working-days" role="tab">
+                    <a class="nav-link active f-15 f-w-500 text-dark" id="tab-working-days-link" data-toggle="tab"
+                        href="#tab-working-days" role="tab">
                         <i class="bi bi-calendar-check mr-1"></i> Working Days
                     </a>
                 </li>
                 <li class="nav-item mx-2">
-                    <a class="nav-link f-15 f-w-500 text-dark" id="tab-allowances-link" data-toggle="tab" href="#tab-allowances" role="tab">
+                    <a class="nav-link f-15 f-w-500 text-dark" id="tab-allowances-link" data-toggle="tab"
+                        href="#tab-allowances" role="tab">
                         <i class="bi bi-plus-circle mr-1"></i> Allowances
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link f-15 f-w-500 text-dark" id="tab-deductions-link" data-toggle="tab" href="#tab-deductions" role="tab">
+                    <a class="nav-link f-15 f-w-500 text-dark" id="tab-deductions-link" data-toggle="tab"
+                        href="#tab-deductions" role="tab">
                         <i class="bi bi-dash-circle mr-1"></i> Deductions
                     </a>
                 </li>
                 <li class="nav-item ml-2">
-                    <a class="nav-link f-15 f-w-500 text-dark" id="tab-final-salary-link" data-toggle="tab" href="#tab-final-salary" role="tab">
+                    <a class="nav-link f-15 f-w-500 text-dark" id="tab-final-salary-link" data-toggle="tab"
+                        href="#tab-final-salary" role="tab">
                         <i class="bi bi-cash-stack mr-1"></i> Final Salary
                     </a>
                 </li>
@@ -85,7 +111,8 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Employee</label>
-                                    <select name="employee_id" id="employee_id" class="form-control select-picker height-35" data-size="8" data-live-search="true" required>
+                                    <select name="employee_id" id="employee_id" class="form-control select-picker height-35"
+                                        data-size="8" data-live-search="true" required>
                                         <option value="">-- Choose Employee --</option>
                                         @foreach ($employees as $employee)
                                             <option value="{{ $employee->id }}">{{ $employee->name }}</option>
@@ -96,7 +123,8 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Salary Group</label>
-                                    <select name="salary_group_id" class="form-control select-picker height-35" data-size="8" data-live-search="true">
+                                    <select name="salary_group_id" class="form-control select-picker height-35"
+                                        data-size="8" data-live-search="true">
                                         <option value="">--</option>
                                         @foreach ($allGroups as $group)
                                             <option value="{{ $group->id }}">{{ $group->group_name }}</option>
@@ -107,15 +135,18 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Pay Days</label>
-                                    <input type="number" min="0" max="31" name="pay_days" id="pay_days" class="form-control height-35" data-size="8" placeholder="e.g. 30">
+                                    <input type="number" min="0" max="31" name="pay_days" id="pay_days"
+                                        class="form-control height-35" data-size="8" placeholder="e.g. 30">
                                 </div>
                             </div>
                             <div class="col-md-3 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Month</label>
-                                    <select name="month" id="salary_month" class="form-control height-35" data-size="8" required>
+                                    <select name="month" id="salary_month" class="form-control height-35" data-size="8"
+                                        required>
                                         @foreach ($monthOptions as $num => $label)
-                                            <option value="{{ str_pad($num, 2, '0', STR_PAD_LEFT) }}" {{ $num == $currentMonth ? 'selected' : '' }}>{{ $label }}</option>
+                                            <option value="{{ str_pad($num, 2, '0', STR_PAD_LEFT) }}"
+                                                {{ $num == $currentMonth ? 'selected' : '' }}>{{ $label }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -123,9 +154,11 @@
                             <div class="col-md-3 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Year</label>
-                                    <select name="year" id="salary_year" class="form-control height-35" data-size="8" required>
+                                    <select name="year" id="salary_year" class="form-control height-35" data-size="8"
+                                        required>
                                         @foreach ($yearOptions as $yr)
-                                            <option value="{{ $yr }}" {{ $yr == $currentYear ? 'selected' : '' }}>{{ $yr }}</option>
+                                            <option value="{{ $yr }}"
+                                                {{ $yr == $currentYear ? 'selected' : '' }}>{{ $yr }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -133,18 +166,21 @@
                             <div class="col-md-3 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Salary From</label>
-                                    <input type="date" id="salary_from" name="salary_from" class="form-control height-35" data-size="8" readonly>
+                                    <input type="date" id="salary_from" name="salary_from"
+                                        class="form-control height-35" data-size="8" readonly>
                                 </div>
                             </div>
                             <div class="col-md-3 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Salary To</label>
-                                    <input type="date" id="salary_to" name="salary_to" class="form-control height-35" data-size="8" >
+                                    <input type="date" id="salary_to" name="salary_to" class="form-control height-35"
+                                        data-size="8">
                                 </div>
                             </div>
                         </div>
                         <div class="d-flex justify-content-end mt-3">
-                            <button type="button" class="btn btn-primary btn-next" data-next="#tab-allowances-link">Next <i class="bi bi-arrow-right"></i></button>
+                            <button type="button" class="btn btn-primary btn-next" data-next="#tab-allowances-link">Next
+                                <i class="bi bi-arrow-right"></i></button>
                         </div>
                     </div>
                 </div>
@@ -156,19 +192,23 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Basic Salary</label>
-                                    <input type="number" step="0.01" min="0" name="basic_salary" class="form-control height-35" data-size="8" required value="0">
+                                    <input type="number" step="0.01" min="0" name="basic_salary"
+                                        class="form-control height-35" data-size="8" required value="0">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Expense Claims</label>
-                                    <input type="number" step="0.01" min="0" name="expense_claims" class="form-control height-35" data-size="8" value="0">
+                                    <input type="number" step="0.01" min="0" name="expense_claims"
+                                        class="form-control height-35" data-size="8" value="0">
                                 </div>
                             </div>
                         </div>
                         <div class="d-flex justify-content-between mt-3">
-                            <button type="button" class="btn btn-primary btn-prev" data-prev="#tab-working-days-link">Previous</button>
-                            <button type="button" class="btn btn-primary btn-next" data-next="#tab-deductions-link">Next <i class="bi bi-arrow-right"></i></button>
+                            <button type="button" class="btn btn-primary btn-prev"
+                                data-prev="#tab-working-days-link">Previous</button>
+                            <button type="button" class="btn btn-primary btn-next" data-next="#tab-deductions-link">Next
+                                <i class="bi bi-arrow-right"></i></button>
                         </div>
                     </div>
                 </div>
@@ -180,19 +220,23 @@
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Total Deductions</label>
-                                    <input type="number" step="0.01" min="0" name="total_deductions" class="form-control height-35" data-size="8" value="0">
+                                    <input type="number" step="0.01" min="0" name="total_deductions"
+                                        class="form-control height-35" data-size="8" value="0">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">TDS</label>
-                                    <input type="number" step="0.01" min="0" name="tds" class="form-control height-35" data-size="8" value="0">
+                                    <input type="number" step="0.01" min="0" name="tds"
+                                        class="form-control height-35" data-size="8" value="0">
                                 </div>
                             </div>
                         </div>
                         <div class="d-flex justify-content-between mt-3">
-                            <button type="button" class="btn btn-primary btn-prev" data-prev="#tab-allowances-link">Previous</button>
-                            <button type="button" class="btn btn-primary btn-next" data-next="#tab-final-salary-link">Next <i class="bi bi-arrow-right"></i></button>
+                            <button type="button" class="btn btn-primary btn-prev"
+                                data-prev="#tab-allowances-link">Previous</button>
+                            <button type="button" class="btn btn-primary btn-next"
+                                data-next="#tab-final-salary-link">Next <i class="bi bi-arrow-right"></i></button>
                         </div>
                     </div>
                 </div>
@@ -204,26 +248,30 @@
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Monthly Salary</label>
-                                    <input type="number" step="0.01" name="monthly_salary" class="form-control height-35" data-size="8" value="0">
+                                    <input type="number" step="0.01" name="monthly_salary"
+                                        class="form-control height-35" data-size="8" value="0">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Gross Salary</label>
-                                    <input type="number" step="0.01" name="gross_salary" class="form-control height-35" data-size="8" value="0">
+                                    <input type="number" step="0.01" name="gross_salary"
+                                        class="form-control height-35" data-size="8" value="0">
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500 text-success">Net Salary</label>
-                                    <input type="number" step="0.01" name="net_salary" class="form-control height-35" data-size="8" required value="0">
+                                    <input type="number" step="0.01" name="net_salary"
+                                        class="form-control height-35" data-size="8" required value="0">
                                 </div>
                             </div>
 
                             <div class="col-md-4 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Paid Amount</label>
-                                    <input type="number" step="0.01" name="paid_amount" class="form-control height-35" data-size="8" value="0">
+                                    <input type="number" step="0.01" name="paid_amount"
+                                        class="form-control height-35" data-size="8" value="0">
                                 </div>
                             </div>
                             <div class="col-md-4 mt-2">
@@ -247,7 +295,8 @@
                             <div class="col-md-6 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Payroll Cycle</label>
-                                    <select name="payroll_cycle_id" class="form-control select-picker height-35" data-size="8">
+                                    <select name="payroll_cycle_id" class="form-control select-picker height-35"
+                                        data-size="8">
                                         <option value="">--</option>
                                         @foreach ($allCycles as $cycle)
                                             <option value="{{ $cycle->id }}">{{ $cycle->cycle }}</option>
@@ -258,7 +307,8 @@
                             <div class="col-md-6 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Payment Method</label>
-                                    <select name="salary_payment_method_id" class="form-control select-picker height-35" data-size="8">
+                                    <select name="salary_payment_method_id" class="form-control select-picker height-35"
+                                        data-size="8">
                                         <option value="">--</option>
                                         @foreach ($allPaymentMethods as $method)
                                             <option value="{{ $method->id }}">{{ $method->payment_method }}</option>
@@ -269,7 +319,8 @@
                         </div>
 
                         <div class="d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-primary btn-prev" data-prev="#tab-deductions-link">Previous</button>
+                            <button type="button" class="btn btn-primary btn-prev"
+                                data-prev="#tab-deductions-link">Previous</button>
                             <button type="submit" class="btn btn-success" id="save-form">
                                 <i class="bi bi-check-circle mr-1"></i> Save Salary Slip
                             </button>
@@ -326,7 +377,10 @@
                             timer: 3000,
                             timerProgressBar: true,
                             showConfirmButton: false,
-                            showClass: { popup: 'swal2-noanimation', backdrop: 'swal2-noanimation' },
+                            showClass: {
+                                popup: 'swal2-noanimation',
+                                backdrop: 'swal2-noanimation'
+                            },
                         });
                         return false; // Stop the tab from switching
                     }
@@ -342,7 +396,9 @@
                 $(this).removeClass('is-invalid');
             });
 
-            $('.btn-prev').click(function() { $($(this).data('prev')).tab('show'); });
+            $('.btn-prev').click(function() {
+                $($(this).data('prev')).tab('show');
+            });
 
             // 2. Sync hidden employee_id
             employeeId.on('change', function() {
@@ -350,7 +406,7 @@
             });
 
             // 3. Date Logic (Salary From/To)
-            const syncSalaryPeriod = function () {
+            const syncSalaryPeriod = function() {
                 const month = parseInt(salaryMonth.val(), 10);
                 const year = parseInt(salaryYear.val(), 10);
 

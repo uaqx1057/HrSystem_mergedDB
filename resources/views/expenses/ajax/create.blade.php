@@ -7,7 +7,7 @@ $addExpenseCategoryPermission = user()->permission('manage_expense_category');
         <x-form id="save-expense-data-form">
 
             <div class="add-client bg-white rounded">
-                <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
+                <h4 class="mb-0 p-20 f-21 form-heading-background font-weight-normal text-capitalize border-bottom-grey">
                     @lang('app.expenseDetails')</h4>
                 <div class="row p-20">
                     <div class="col-md-6 col-lg-3">

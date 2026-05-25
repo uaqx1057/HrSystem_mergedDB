@@ -42,12 +42,12 @@
 
         <div class="row">
 
-            <div class="col-sm-12 col-lg-6 mt-4">
+            {{-- <div class="col-sm-12 col-lg-6 mt-4">
                 @include('super-admin.dashboard.recent-registered-companies')
-            </div>
-            <div class="col-sm-12 col-lg-6 mt-4">
+            </div> --}}
+            {{-- <div class="col-sm-12 col-lg-6 mt-4">
                 @include('super-admin.dashboard.top-user-count-companies')
-            </div>
+            </div> --}}
             <div class="col-sm-12 col-lg-6 mt-4">
                 @include('super-admin.dashboard.recent-subscriptions')
             </div>
@@ -55,9 +55,9 @@
                 @include('super-admin.dashboard.recent-license-expired')
             </div>
 
-            <div class="col-sm-12 col-lg-6 mt-4">
+            {{-- <div class="col-sm-12 col-lg-6 mt-4">
                 @include('super-admin.dashboard.package-company-count')
-            </div>
+            </div> --}}
             <div class="col-sm-12 col-lg-6 mt-4">
                 @include('super-admin.dashboard.charts')
             </div>

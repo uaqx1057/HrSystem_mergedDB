@@ -5,7 +5,7 @@
         <x-form id="save-task-data-form" method="PUT">
             <input type="hidden" name="template_id" value="{{ $template->id }}" />
             <div class="add-client bg-white rounded">
-                <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
+                <h4 class="mb-0 p-20 form-heading-background f-21 font-weight-normal text-capitalize border-bottom-grey">
                     @lang('modules.tasks.taskInfo')</h4>
                 <div class="row p-20">
                     <div class="col-lg-6 col-md-6">

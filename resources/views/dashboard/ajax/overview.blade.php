@@ -100,7 +100,7 @@
         </div>
     @endif
 
-    @if (in_array('leaves', user_modules()) && in_array('settings_leaves', $activeWidgets))
+    {{-- @if (in_array('leaves', user_modules()) && in_array('settings_leaves', $activeWidgets))
         <div class="col-sm-12 col-lg-6 mt-3">
             <x-cards.data :title="__('modules.leaves.pendingLeaves').' <i class=\'fa fa-question-circle\' data-toggle=\'popover\' data-placement=\'top\' data-content=\''.__('app.from').' '.$startDate->translatedFormat(company()->date_format).' '.__('app.to').' '.$endDate->translatedFormat(company()->date_format).'\' data-trigger=\'hover\'></i>'" padding="false" otherClasses="h-200">
                 <x-table>
@@ -151,7 +151,7 @@
                 </x-table>
             </x-cards.data>
         </div>
-    @endif
+    @endif --}}
 
     @if (in_array('tickets', user_modules()) && in_array('new_tickets', $activeWidgets))
         <div class="col-sm-12 col-lg-6 mt-3">
@@ -270,7 +270,7 @@
             </x-cards.data>
         </div>
     @endif
-
+{{--
     @if (in_array('projects', user_modules()) && in_array('project_activity_timeline', $activeWidgets))
         <div class="col-sm-12 col-lg-6 mt-3">
             <x-cards.data :title="__('modules.dashboard.projectActivityTimeline').' <i class=\'fa fa-question-circle\' data-toggle=\'popover\' data-placement=\'top\' data-content=\''.__('app.from').' '.$startDate->translatedFormat(company()->date_format).' '.__('app.to').' '.$endDate->translatedFormat(company()->date_format).'\' data-trigger=\'hover\'></i>'" padding="false"
@@ -339,7 +339,8 @@
                 @endforelse
             </x-cards.data>
         </div>
-    @endif
+    @endif 
+--}}
 </div>
 
 <script>

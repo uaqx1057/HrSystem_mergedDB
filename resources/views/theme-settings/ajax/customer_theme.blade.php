@@ -18,6 +18,23 @@
         </x-forms.input-group>
     </div>
 </div>
+{{-- <div class="col-lg-6">
+    <div class="form-group my-3">
+        <x-forms.label fieldId="admin_text_color" fieldRequired="true"
+                       :fieldLabel="__('modules.themeSettings.textColor')">
+        </x-forms.label>
+        <x-forms.input-group class="color-picker">
+            <input type="text" class="form-control height-35 f-14"
+                   value="{{ $adminTheme->text_color ?? '#ffffff' }}"
+                   placeholder="{{ __('placeholders.colorPicker') }}" name="theme_settings[1][text_color]">
+
+            <x-slot name="append">
+                <span class="input-group-text height-35 colorpicker-input-addon"><i></i></span>
+            </x-slot>
+        </x-forms.input-group>
+    </div>
+</div> --}}
+
 
 <div class="col-lg-6">
     <div class="form-group my-3">
@@ -58,6 +75,22 @@
         </x-forms.input-group>
     </div>
 </div>
+{{-- <div class="col-lg-6">
+    <div class="form-group my-3">
+        <x-forms.label fieldId="employee_text_color" fieldRequired="true"
+                       :fieldLabel="__('modules.themeSettings.textColor')">
+        </x-forms.label>
+        <x-forms.input-group class="color-picker">
+            <input type="text" class="form-control height-35 f-14"
+                   value="{{ $employeeTheme->text_color ?? '#ffffff' }}"
+                   placeholder="{{ __('placeholders.colorPicker') }}" name="theme_settings[3][text_color]">
+
+            <x-slot name="append">
+                <span class="input-group-text height-35 colorpicker-input-addon"><i></i></span>
+            </x-slot>
+        </x-forms.input-group>
+    </div>
+</div> --}}
 
 <div class="col-lg-6">
     <div class="form-group my-3">
@@ -98,6 +131,22 @@
         </x-forms.input-group>
     </div>
 </div>
+{{-- <div class="col-lg-6">
+    <div class="form-group my-3">
+        <x-forms.label fieldId="client_text_color" fieldRequired="true"
+                       :fieldLabel="__('modules.themeSettings.textColor')">
+        </x-forms.label>
+        <x-forms.input-group class="color-picker">
+            <input type="text" class="form-control height-35 f-14"
+                   value="{{ $clientTheme->text_color ?? '#ffffff' }}"
+                   placeholder="{{ __('placeholders.colorPicker') }}" name="theme_settings[4][text_color]">
+
+            <x-slot name="append">
+                <span class="input-group-text height-35 colorpicker-input-addon"><i></i></span>
+            </x-slot>
+        </x-forms.input-group>
+    </div>
+</div> --}}
 
 <div class="col-lg-6">
     <div class="form-group my-3">

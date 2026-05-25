@@ -13,9 +13,9 @@
     @if (in_array('invoices', user_modules()) && (in_array('total_paid_invoices', $activeWidgets) || in_array('total_unpaid_invoices', $activeWidgets)))
         <div class="col-xl-4 col-lg-6 col-md-6">
             <div
-                class="bg-white p-3 rounded b-shadow-4 d-flex justify-content-between align-items-center mb-4 mb-md-0 mb-lg-0">
+                class="form-heading-background p-3 rounded b-shadow-4 d-flex justify-content-between align-items-center mb-4 mb-md-0 mb-lg-0">
                 <div class="d-block text-capitalize">
-                    <h5 class="f-13 f-w-500 mb-20 text-darkest-grey">@lang('app.menu.invoices')</h5>
+                    <h5 class="f-13 f-w-500 mb-20 text-darkest-white">@lang('app.menu.invoices')</h5>
                     <div class="d-flex">
                         @if (in_array('total_paid_invoices', $activeWidgets))
                             <a href="javascript:;" id="totalPaidInvoices">
@@ -46,9 +46,9 @@
     @if (in_array('invoices', user_modules()) && (in_array('total_expenses', $activeWidgets) || in_array('total_earnings', $activeWidgets)))
         <div class="col-xl-4 col-lg-6 col-md-6">
             <div
-                class="bg-white p-3 rounded b-shadow-4 d-flex justify-content-between align-items-center mb-4 mb-md-0 mb-lg-0">
+                class="form-heading-background p-3 rounded b-shadow-4 d-flex justify-content-between align-items-center mb-4 mb-md-0 mb-lg-0">
                 <div class="d-block text-capitalize">
-                    <h5 class="f-13 f-w-500 mb-20 text-darkest-grey">@lang('app.menu.finance')</h5>
+                    <h5 class="f-13 f-w-500 mb-20 text-darkest-white">@lang('app.menu.finance')</h5>
                     <a href="javascript:;" id="totalEarnings">
                         <div class="d-flex">
                             @if (in_array('total_expenses', $activeWidgets))

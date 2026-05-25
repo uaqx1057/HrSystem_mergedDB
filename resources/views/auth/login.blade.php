@@ -192,7 +192,7 @@
             letter-spacing: 0.08em;
             text-transform: uppercase;
             backdrop-filter: blur(12px);
-            font-family: 'Syne', sans-serif;
+            
         }
 
         .hrs-badge-dot {
@@ -235,7 +235,7 @@
         }
 
         .hrs-logo-name {
-            font-family: 'Syne', sans-serif;
+            
             font-size: 1.9rem;
             font-weight: 800;
             color: #064e3b;
@@ -254,7 +254,7 @@
         /* ── TITLE & TEXT ── */
         .hrs-title {
             margin: 14px 0 10px;
-            font-family: 'Syne', sans-serif;
+            
             font-size: clamp(2rem, 3.4vw, 3.7rem);
             line-height: 0.96;
             font-weight: 800;
@@ -343,13 +343,13 @@
             font-weight: 700;
             letter-spacing: 0.14em;
             text-transform: uppercase;
-            font-family: 'Syne', sans-serif;
+            
         }
 
         .hrs-heading {
             margin: 0;
             color: #f0fdf4;
-            font-family: 'Syne', sans-serif;
+            
             font-size: clamp(1.8rem, 3vw, 2.6rem);
             line-height: 1.02;
             font-weight: 800;
@@ -482,7 +482,7 @@
             border-radius: 18px;
             background: linear-gradient(135deg, #059669, #0d9488);
             color: #fff;
-            font-family: 'Syne', sans-serif;
+            
             font-size: 1rem;
             font-weight: 800;
             letter-spacing: 0.02em;

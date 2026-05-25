@@ -13,7 +13,7 @@
         <x-form id="save-ticket-data-form">
             <input type="hidden" id="replyID">
             <div class="add-client bg-white rounded">
-                <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
+                <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey form-heading-background">
                     @lang('modules.tickets.ticketDetail')</h4>
                 <div class="row p-20">
                     @if (!in_array('client', user_roles()))

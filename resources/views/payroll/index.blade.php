@@ -254,7 +254,7 @@
             @endif --}}
 
             <div class="card">
-                <div class="card-header btn-primary d-flex justify-content-between align-items-center">
+                <div class="card-header form-heading-background d-flex justify-content-between align-items-center">
                     <span>Salary Slips</span>
                 </div>
                 <div class="card-body table-responsive">
@@ -359,7 +359,7 @@
             <div class="row">
                 <div class="col-12 mb-3">
                     <div class="card">
-                        <div class="card-header btn-primary">Employee Salary Setup (One-Time)</div>
+                        <div class="card-header form-heading-background">Employee Salary Setup (One-Time)</div>
                         <div class="card-body">
                             @if (in_array($addPayrollPermission, ['all', 'added']))
                                 <form method="POST" action="{{ route('payroll.salary-setups.employees.store') }}" class="mb-3">
@@ -581,7 +581,7 @@
                 @if (in_array($addPayrollPermission, ['all', 'added']))
                     <div class="col-md-4 mb-3">
                         <div class="card">
-                            <div class="card-header btn-primary">Add Salary Group</div>
+                            <div class="card-header form-heading-background">Add Salary Group</div>
                             <div class="card-body">
                                 <form method="POST" action="{{ route('payroll.salary-groups.store') }}">
                                     @csrf
@@ -614,7 +614,7 @@
 
                 <div class="col-md-8">
                     <div class="card">
-                        <div class="card-header btn-primary">Salary Groups</div>
+                        <div class="card-header form-heading-background">Salary Groups</div>
                         <div class="card-body table-responsive">
                             <table class="table table-bordered">
                                 <thead>
@@ -675,7 +675,7 @@
                 @if (in_array($addPayrollPermission, ['all', 'added']))
                     <div class="col-12 mb-3">
                         <div class="card">
-                            <div class="card-header btn-primary">Add Salary Component</div>
+                            <div class="card-header form-heading-background">Add Salary Component</div>
                             <div class="card-body">
                                 <form method="POST" action="{{ route('payroll.salary-components.store') }}">
                                     @csrf
@@ -715,7 +715,7 @@
 
                 <div class="col-12">
                     <div class="card">
-                        <div class="card-header btn-primary">Salary Components</div>
+                        <div class="card-header form-heading-background">Salary Components</div>
                         <div class="card-body table-responsive">
                             <table class="table table-bordered">
                                 <thead>
@@ -787,7 +787,7 @@
                 @if (in_array($addPayrollPermission, ['all', 'added']))
                     <div class="col-md-4 mb-3">
                         <div class="card">
-                            <div class="card-header btn-primary">Add Payroll Cycle</div>
+                            <div class="card-header form-heading-background">Add Payroll Cycle</div>
                             <div class="card-body">
                                 <form method="POST" action="{{ route('payroll.payroll-cycles.store') }}">
                                     @csrf
@@ -811,7 +811,7 @@
 
                 <div class="col-md-8">
                     <div class="card">
-                        <div class="card-header btn-primary">Payroll Cycles</div>
+                        <div class="card-header form-heading-background">Payroll Cycles</div>
                         <div class="card-body table-responsive">
                             <table class="table table-bordered">
                                 <thead>
@@ -872,7 +872,7 @@
                 @if (in_array($addPayrollPermission, ['all', 'added']))
                     <div class="col-md-4 mb-3">
                         <div class="card">
-                            <div class="card-header btn-primary">Add Payment Method</div>
+                            <div class="card-header form-heading-background">Add Payment Method</div>
                             <div class="card-body">
                                 <form method="POST" action="{{ route('payroll.payment-methods.store') }}">
                                     @csrf
@@ -893,7 +893,7 @@
 
                 <div class="col-md-8">
                     <div class="card">
-                        <div class="card-header btn-primary">Payment Methods</div>
+                        <div class="card-header form-heading-background">Payment Methods</div>
                         <div class="card-body table-responsive">
                             <table class="table table-bordered">
                                 <thead>
@@ -949,7 +949,7 @@
 
         @if ($activeTab === 'settings')
             <div class="card">
-                <div class="card-header btn-primary">Payroll Settings</div>
+                <div class="card-header form-heading-background">Payroll Settings</div>
                 <div class="card-body">
                     <form method="POST" action="{{ route('payroll.settings.update') }}">
                         @csrf

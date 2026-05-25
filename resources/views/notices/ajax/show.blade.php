@@ -6,10 +6,10 @@ $deletePermission = user()->permission('delete_notice');
     <div class="row">
         <div class="col-sm-12">
             <div class="card bg-white border-0 b-shadow-4">
-                <div class="card-header bg-white  border-bottom-grey text-capitalize justify-content-between p-20">
+                <div class="card-header bg-white  border-bottom-grey text-capitalize justify-content-between p-20 form-heading-background">
                     <div class="row">
                         <div class="col-lg-10 col-10">
-                            <h3 class="heading-h1 mb-3">@lang('app.noticeDetails')</h3>
+                            <h3 class="heading-h1 mb-3 ">@lang('app.noticeDetails')</h3>
                         </div>
                         <div class="col-lg-2 col-2 text-right">
 

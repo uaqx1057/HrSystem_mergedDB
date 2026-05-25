@@ -6,7 +6,7 @@ $addProductPermission = user()->permission('add_product');
 <div class="bg-white rounded b-shadow-4 create-inv">
     <!-- HEADING START -->
     <div class="px-lg-4 px-md-4 px-3 py-3">
-        <h4 class="mb-0 f-21 font-weight-normal text-capitalize">@lang('modules.orders.createOrder')</h4>
+        <h4 class="mb-0 f-21 form-heading-background font-weight-normal text-capitalize">@lang('modules.orders.createOrder')</h4>
     </div>
     <!-- HEADING END -->
     <hr class="m-0 border-top-grey">
