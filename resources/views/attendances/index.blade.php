@@ -154,7 +154,7 @@
         <!-- Task Box Start -->
         <x-cards.data class="mt-3">
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-12 text-lightest">
                     <span class="f-w-500 mr-1">@lang('app.note'):</span> <i class="fa fa-star text-warning"></i> <i
                         class="fa fa-arrow-right text-lightest f-11 mx-1"></i> @lang('app.menu.holiday') &nbsp;|&nbsp;<i
                         class="fa fa-calendar-week text-red"></i> <i class="fa fa-arrow-right text-lightest f-11 mx-1"></i>
@@ -169,7 +169,7 @@
                     @lang('modules.attendance.absent') &nbsp;|&nbsp; <i class="fa fa-plane-departure text-danger"></i> <i
                         class="fa fa-arrow-right text-lightest f-11 mx-1"></i>
                     @lang('modules.attendance.leave')
-    
+
                 </div>
             </div>
 

@@ -10,15 +10,18 @@ class Employee extends Component
     public $user;
     public $disabledLink;
 
+    public $background;
+
     /**
      * Create a new component instance.
      *
      * @return void
      */
-    public function __construct($user, $disabledLink=null)
+    public function __construct($user, $disabledLink=null, $background = null)
     {
         $this->user = $user;
         $this->disabledLink = $disabledLink;
+        $this->background = $background;
     }
 
     /**

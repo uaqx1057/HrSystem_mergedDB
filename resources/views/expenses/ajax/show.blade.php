@@ -4,10 +4,10 @@
             @if (is_null($expense->expenses_recurring_id))
                 <x-slot name="action">
                     <div class="dropdown">
-                        <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
+                        {{-- <button class="btn f-14 px-0 py-0 text-darkest-white dropdown-toggle" type="button"
                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fa fa-ellipsis-h"></i>
-                        </button>
+                        </button> --}}
 
                         <div class="dropdown-menu dropdown-menu-right border-grey rounded b-shadow-4 p-0"
                             aria-labelledby="dropdownMenuLink" tabindex="0">
@@ -24,34 +24,34 @@
                     </div>
                 </x-slot>
             @endif
-            <x-cards.data-row :label="__('modules.expenses.itemName')" :value="$expense->item_name" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.expenses.itemName')" :value="$expense->item_name" />
 
-            <x-cards.data-row :label="__('app.category')" :value="$expense->category->category_name ?? '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('app.category')" :value="$expense->category->category_name ?? '--'" />
 
-            <x-cards.data-row :label="__('app.price')" :value="$expense->total_amount" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('app.price')" :value="$expense->total_amount" />
 
-            <x-cards.data-row :label="__('modules.expenses.purchaseDate')"
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.expenses.purchaseDate')"
                 :value="(!is_null($expense->purchase_date) ? $expense->purchase_date->translatedFormat(company()->date_format) : '--')" />
 
-            <x-cards.data-row :label="__('modules.expenses.purchaseFrom')" :value="$expense->purchase_from ?? '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.expenses.purchaseFrom')" :value="$expense->purchase_from ?? '--'" />
 
-            <x-cards.data-row :label="__('app.project')"
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('app.project')"
                 :value="(!is_null($expense->project_id) ? $expense->project->project_name : '--')" />
 
             @php
                 $bankName = isset($expense->transactions[0]) && $expense->transactions[0]->bankAccount->bank_name ? $expense->transactions[0]->bankAccount->bank_name.' |' : ''
             @endphp
-            <x-cards.data-row :label="__('app.menu.bankaccount')"
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('app.menu.bankaccount')"
             :value="(count($expense->transactions) > 0  ? $bankName.' '.$expense->transactions[0]->bankAccount->account_name : '--')" />
 
             <div class="col-12 px-0 pb-3 d-lg-flex d-md-flex d-block">
-                <p class="mb-0 text-lightest f-14 w-30 text-capitalize">
+                <p class="mb-0 text-darkest-white f-14 w-30 text-capitalize">
                     @lang('app.bill')</p>
-                <p class="mb-0 text-dark-grey f-14">
+                <p class="mb-0 text-darkest-white f-14">
                     @if (!is_null($expense->bill))
-                        <a target="_blank" href="{{ $expense->bill_url }}" class="text-darkest-grey">@lang('app.view')
+                        <a target="_blank" href="{{ $expense->bill_url }}" class="text-darkest-white">@lang('app.view')
                             @lang('app.bill') <i class="fa fa-link"></i></a>&nbsp
-                            <a href="{{ $expense->bill_url }}" class="text-darkest-grey" download>@lang('app.download')
+                            <a href="{{ $expense->bill_url }}" class="text-darkest-white" download>@lang('app.download')
                             <i class="fa fa-download f-w-500 mr-1 f-11"></i></a>
                     @else
                         --
@@ -60,20 +60,20 @@
             </div>
 
             <div class="col-12 px-0 pb-3 d-lg-flex d-md-flex d-block">
-                <p class="mb-0 text-lightest f-14 w-30 text-capitalize">
+                <p class="mb-0 text-darkest-white f-14 w-30 text-capitalize">
                     @lang('app.employee')</p>
-                <p class="mb-0 text-dark-grey f-14">
-                    <x-employee :user="$expense->user" />
+                <p class="mb-0 text-darkest-white f-14">
+                    <x-employee :user="$expense->user" :background="'text-darkest-white'" />
                 </p>
             </div>
-            <x-cards.data-row :label="__('app.description')"
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('app.description')"
             :value="!empty($expense->description) ? $expense->description : '--'"
             html="true"/>
 
             <div class="col-12 px-0 pb-3 d-lg-flex d-md-flex d-block">
-                <p class="mb-0 text-lightest f-14 w-30 text-capitalize">
+                <p class="mb-0 text-darkest-white f-14 w-30 text-capitalize">
                     @lang('app.status')</p>
-                <p class="mb-0 text-dark-grey f-14">
+                <p class="mb-0 text-darkest-white f-14">
                     @if ($expense->status == 'pending')
                         <x-status :value="__('app.'.$expense->status)" color="yellow" />
                     @elseif ($expense->status == 'approved')
@@ -86,9 +86,9 @@
 
             @if ($expense->status == 'approved')
                 <div class="col-12 px-0 pb-3 d-lg-flex d-md-flex d-block">
-                    <p class="mb-0 text-lightest f-14 w-30 text-capitalize">
+                    <p class="mb-0 text-darkest-white f-14 w-30 text-capitalize">
                         @lang('modules.expenses.approvedBy')</p>
-                    <p class="mb-0 text-dark-grey f-14">
+                    <p class="mb-0 text-darkest-white f-14">
                         <x-employee :user="$expense->approver" />
                     </p>
                 </div>

@@ -1171,6 +1171,7 @@ return array(
     'totalLeads' => 'Total Leads',
     'departmentDetails' => 'Department Details',
     'insuranceDetails' => 'Insurance Details',
+    'airTicketDetails' => 'Air Ticket Details',
     'assignCompanyAsset' => 'Assign Company Asset',
     'companyAssetDetail' => 'Company Asset Detail',
     'newHierarchy' => 'New Hierarchy',

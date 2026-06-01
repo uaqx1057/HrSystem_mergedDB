@@ -27,7 +27,7 @@ trait OverviewDashboard
      */
     public function overviewDashboard()
     {
-        abort_403($this->viewOverviewDashboard !== 'all');
+        // abort_403($this->viewOverviewDashboard !== 'all');
 
         $this->startDate  = (request('startDate') != '') ? Carbon::createFromFormat($this->company->date_format, request('startDate')) : now($this->company->timezone)->startOfMonth();
         $this->endDate = (request('endDate') != '') ? Carbon::createFromFormat($this->company->date_format, request('endDate')) : now($this->company->timezone);

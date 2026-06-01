@@ -10,17 +10,19 @@ class DataRow extends Component
     public $label;
     public $value;
     public $html;
+    public $background;
 
     /**
      * Create a new component instance.
      *
      * @return void
      */
-    public function __construct($label, $value, $html = false)
+    public function __construct($label, $value, $html = false , $background = null)
     {
         $this->label = $label;
         $this->value = $value;
         $this->html = $html;
+        $this->background = $background;
     }
 
     /**

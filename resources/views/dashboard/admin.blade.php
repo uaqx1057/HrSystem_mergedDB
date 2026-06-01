@@ -46,10 +46,10 @@
                        ajax="false"/>
             @endif
 
-            @if (in_array('clients', user_modules()) && $viewClientDashboard == 'all')
+            {{-- @if (in_array('clients', user_modules()) && $viewClientDashboard == 'all')
                 <x-tab :href="route('dashboard.advanced').'?tab=client'" :text="__('app.client')" class="client"
                        ajax="false"/>
-            @endif
+            @endif --}}
 
             @if ($viewHRDashboard == 'all' && (in_array('employees', user_modules()) || in_array('leaves', user_modules()) || in_array('attendance', user_modules())))
                 <x-tab :href="route('dashboard.advanced').'?tab=hr'" :text="__('app.menu.hr')" class="hr" ajax="false"/>

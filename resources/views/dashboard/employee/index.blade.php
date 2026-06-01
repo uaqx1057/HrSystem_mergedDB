@@ -91,7 +91,7 @@
                     </button>
                 @endif
 
-                @if (in_array('admin', user_roles()))
+                {{-- @if (in_array('admin', user_roles()))
                     <div class="private-dash-settings ml-3">
                         <x-form id="privateDashboardWidgetForm" method="POST">
                             <div class="dropdown keep-open">
@@ -128,7 +128,7 @@
                             </div>
                         </x-form>
                     </div>
-                @endif
+                @endif --}}
             </div>
         </div>
 
@@ -151,9 +151,9 @@
                                                 <img class="" src=" {{ $user->image_url }}" alt="Card image">
                                             </div>
                                             <div class="card-body border-0 pl-0">
-                                                <h4 class="card-title text-darkest-white f-18 f-w-500 mb-0">
+                                                <h4 class="card-title f-18 f-w-500 mb-0">
                                                     {{ $user->name }}</h4>
-                                                <p class="f-14 font-weight-normal text-darkest-white mb-2">
+                                                <p class="f-14 font-weight-normal mb-2">
                                                     {{ $user->employeeDetails->designation->name ?? '--' }}</p>
                                                 <p class="card-text f-12 text-lightest"> @lang('app.employeeId') :
                                                     {{ $user->employeeDetails->employee_id }}</p>
@@ -298,9 +298,9 @@
 
                         @include('dashboard.employee.widgets.probation')
 
-                        @include('dashboard.employee.widgets.internship')
+                        {{-- @include('dashboard.employee.widgets.internship')
 
-                        @include('dashboard.employee.widgets.contract')
+                        @include('dashboard.employee.widgets.contract') --}}
                     </div>
                 </div>
             @endif
@@ -346,7 +346,7 @@
                 @include('dashboard.employee.widgets.my_tasks')
                 @include('dashboard.employee.widgets.tickets')
                 @include('dashboard.employee.widgets.my_calendar')
-                @include('dashboard.employee.widgets.notices')
+        {{--   @include('dashboard.employee.widgets.notices') --}}
 
             </div>
             <!-- EMP DASHBOARD TASKS PROJECTS EVENTS END -->

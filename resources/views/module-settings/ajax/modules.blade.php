@@ -1,3 +1,8 @@
+<style>
+    .e-card-d-info-light {
+        background: white;
+    }
+</style>
 <x-cards.data class="w-100">
     <div class="row">
         @foreach ($modulesData as $setting)

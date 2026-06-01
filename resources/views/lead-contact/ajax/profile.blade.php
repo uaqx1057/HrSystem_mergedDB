@@ -7,10 +7,10 @@
 
             <x-slot name="action">
                 <div class="dropdown">
-                    <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
+                    {{-- <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="fa fa-ellipsis-h"></i>
-                    </button>
+                    </button> --}}
 
                     <div class="dropdown-menu dropdown-menu-right border-grey rounded b-shadow-4 p-0"
                         aria-labelledby="dropdownMenuLink" tabindex="0">
@@ -34,31 +34,31 @@
                     </div>
                 </div>
             </x-slot>
-            <x-cards.data-row :label="__('app.name')" :value="$leadContact->client_name ?? '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('app.name')" :value="$leadContact->client_name ?? '--'" />
 
-            <x-cards.data-row :label="__('app.email')" :value="$leadContact->client_email ?? '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('app.email')" :value="$leadContact->client_email ?? '--'" />
 
-            <x-cards.data-row :label="__('modules.lead.source')" :value="$leadContact->leadSource ? $leadContact->leadSource->type : '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.lead.source')" :value="$leadContact->leadSource ? $leadContact->leadSource->type : '--'" />
 
-            <x-cards.data-row :label="__('modules.lead.leadCategory')" :value="$leadContact->category->category_name ?? '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.lead.leadCategory')" :value="$leadContact->category->category_name ?? '--'" />
 
-            <x-cards.data-row :label="__('modules.lead.companyName')" :value="!empty($leadContact->company_name) ? $leadContact->company_name : '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.lead.companyName')" :value="!empty($leadContact->company_name) ? $leadContact->company_name : '--'" />
 
-            <x-cards.data-row :label="__('modules.lead.website')" :value="$leadContact->website ?? '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.lead.website')" :value="$leadContact->website ?? '--'" />
 
-            <x-cards.data-row :label="__('modules.lead.mobile')" :value="$leadContact->mobile ?? '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.lead.mobile')" :value="$leadContact->mobile ?? '--'" />
 
-            <x-cards.data-row :label="__('modules.client.officePhoneNumber')" :value="$leadContact->office ?? '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.client.officePhoneNumber')" :value="$leadContact->office ?? '--'" />
 
-            <x-cards.data-row :label="__('app.country')" :value="$leadContact->country ?? '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('app.country')" :value="$leadContact->country ?? '--'" />
 
-            <x-cards.data-row :label="__('modules.stripeCustomerAddress.state')" :value="$leadContact->state ?? '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.stripeCustomerAddress.state')" :value="$leadContact->state ?? '--'" />
 
-            <x-cards.data-row :label="__('modules.stripeCustomerAddress.city')" :value="$leadContact->city ?? '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.stripeCustomerAddress.city')" :value="$leadContact->city ?? '--'" />
 
-            <x-cards.data-row :label="__('modules.stripeCustomerAddress.postalCode')" :value="$leadContact->postal_code ?? '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.stripeCustomerAddress.postalCode')" :value="$leadContact->postal_code ?? '--'" />
 
-            <x-cards.data-row :label="__('modules.lead.address')" :value="$leadContact->address ?? '--'" />
+            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.lead.address')" :value="$leadContact->address ?? '--'" />
 
             {{-- Custom fields data --}}
             <x-forms.custom-field-show :fields="$fields" :model="$leadContact"></x-forms.custom-field-show>

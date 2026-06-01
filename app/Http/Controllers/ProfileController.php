@@ -126,7 +126,7 @@ class ProfileController extends AccountBaseController
 
         if (in_array('employee', user_roles())) {
             $employee->marital_status = $request->marital_status;
-            $employee->marriage_anniversary_date = $request->marriage_anniversary_date ? Carbon::createFromFormat($this->company->date_format, $request->marriage_anniversary_date)->format('Y-m-d') : null;
+            // $employee->marriage_anniversary_date = $request->marriage_anniversary_date ? Carbon::createFromFormat($this->company->date_format, $request->marriage_anniversary_date)->format('Y-m-d') : null;
         }
 
         $employee->save();

@@ -57,10 +57,10 @@
 
             {{-- <div class="col-sm-12 col-lg-6 mt-4">
                 @include('super-admin.dashboard.package-company-count')
-            </div> --}}
+            </div> 
             <div class="col-sm-12 col-lg-6 mt-4">
                 @include('super-admin.dashboard.charts')
-            </div>
+            </div> --}}
         </div>
     </div>
     <!-- CONTENT WRAPPER END -->

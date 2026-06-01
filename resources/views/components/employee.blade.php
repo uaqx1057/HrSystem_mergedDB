@@ -83,9 +83,9 @@
 
             <h5 class="mb-0 f-12">
                 <a href="{{  isset($disabledLink) ? 'javascript:;' : route('employees.show', [$user?->id]) }}"
-                   class="text-darkest-grey {{ isset($disabledLink) ? 'disabled-link' : '' }}">{!! $user?->userBadge() !!}</a>
+                   class="{{ isset($background) ? $background : 'text-darkest-grey' }} {{ isset($disabledLink) ? 'disabled-link' : '' }}">{!! $user?->userBadge() !!}</a>
             </h5>
-            <p class="mb-0 f-12 text-dark-grey">
+            <p class="mb-0 f-12 {{ isset($background) ? $background : 'text-darkest-grey' }}">
                 {{ $user?->employeeDetail && !is_null($user?->employeeDetail->designation) ? $user?->employeeDetail->designation->name : ' ' }}
             </p>
         </div>

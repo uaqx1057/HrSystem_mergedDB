@@ -315,10 +315,10 @@
         $('#marital_status').change(function(){
             var value = $(this).val();
             if(value == '{{ \App\Enums\MaritalStatus::Married->value }}') {
-                $('.marriage_date').removeClass('d-none');
+                // $('.marriage_date').removeClass('d-none');
             }
             else {
-                $('.marriage_date').addClass('d-none');
+                // $('.marriage_date').addClass('d-none');
             }
         })
 
