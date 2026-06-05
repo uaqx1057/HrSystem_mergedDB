@@ -33,8 +33,10 @@ class InsuranceController extends AccountBaseController
 
     public function index(InsuranceDataTable $dataTable)
     {
-        // $viewPermission = user()->permission('view_employees');
-        // abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
+        $viewPermission = user()->permission('view_insurance');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
         $this->employees = User::allEmployees();
@@ -46,6 +48,10 @@ class InsuranceController extends AccountBaseController
      */
     public function create()
     {
+        $viewPermission = user()->permission('add_insurance');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
         if (!in_array('admin', $this->assignRole)) {
@@ -88,6 +94,10 @@ class InsuranceController extends AccountBaseController
      */
     public function store(StoreInsurance $request)
     {
+        $viewPermission = user()->permission('add_insurance');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         // dd($request);
         $insurance = new Insurance();
         // if ($request->type == 'employee') {
@@ -120,6 +130,10 @@ class InsuranceController extends AccountBaseController
      */
     public function show($id)
     {
+        $viewPermission = user()->permission('view_insurance');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->insurance = Insurance::with(['driver', 'employee'])->findOrFail($id);
         if (request()->ajax()) {
             $html = view('insurances.ajax.show', $this->data)->render();
@@ -137,6 +151,11 @@ class InsuranceController extends AccountBaseController
      */
     public function edit(string $id)
     {
+        $viewPermission = user()->permission('edit_insurance');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
+
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
         if (!in_array('admin', $this->assignRole)) {
@@ -181,6 +200,9 @@ class InsuranceController extends AccountBaseController
      */
     public function update(UpdateInsurance $request, $id)
     {
+        $viewPermission = user()->permission('edit_insurance');
+
+        abort_403(!in_array($viewPermission, ['all']));
         // $editDepartment = user()->permission('edit_employees');
         // abort_403($editDepartment != 'all');
 
@@ -210,6 +232,9 @@ class InsuranceController extends AccountBaseController
      */
     public function destroy($id)
     {
+        $viewPermission = user()->permission('delete_insurance');
+
+        abort_403(!in_array($viewPermission, ['all']));
         // $deletePermission = user()->permission('delete_employees');
         // abort_403($deletePermission != 'all');
 
@@ -222,6 +247,10 @@ class InsuranceController extends AccountBaseController
 
     public function applyQuickAction(Request $request)
     {
+        $viewPermission = user()->permission('delete_insurance');
+
+        abort_403(!in_array($viewPermission, ['all']));
+        
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
         if (!in_array('admin', $this->assignRole)) {

@@ -19,8 +19,8 @@ class InsuranceDataTable extends BaseDataTable
     public function __construct($employeeId = null, $driverId = null)
     {
         parent::__construct();
-        $this->editInsurancePermission = user()->permission('edit_employees');
-        $this->deleteInsurancePermission = user()->permission('delete_employees');
+        $this->editInsurancePermission = user()->permission('edit_insurance');
+        $this->deleteInsurancePermission = user()->permission('delete_insurance');
         $this->employeeId = $employeeId; // ✅ Store it
         $this->driverId = $driverId; // ✅ Store it
         $this->assignRole = user()->roles->pluck('name')->toArray();
@@ -44,27 +44,25 @@ class InsuranceDataTable extends BaseDataTable
                 $action = '<div class="task_view">
 <a href="' . route('insurance.show', [$row->id]) . '" class="taskView text-darkest-grey f-w-500 openRightModal">' . __('app.view') . '</a>';
 
-                    if (in_array('admin', $this->assignRole)) {
                     $action .= '<div class="dropdown">
                         <a class="task_view_more d-flex align-items-center justify-content-center dropdown-toggle" type="link"
                             id="dropdownMenuLink-' . $row->id . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="icon-options-vertical icons"></i>
                         </a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
 
-                // if ($this->editInsurancePermission == 'all') {
+                if ($this->editInsurancePermission == 'all') {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('insurance.edit', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
                                 ' . trans('app.edit') . '
                             </a>';
-                // }
+                }
 
-                // if ($this->deleteInsurancePermission == 'all') {
+                if ($this->deleteInsurancePermission == 'all') {
                     $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-insurance-id="' . $row->id . '">
                                 <i class="fa fa-trash mr-2"></i>
                                 ' . trans('app.delete') . '
                             </a>';
-                // }
-                    }
+                }
 
                 $action .= '</div>
                     </div>
@@ -132,7 +130,7 @@ class InsuranceDataTable extends BaseDataTable
             }
         }
 
-        if (!in_array('admin', $this->assignRole)) {
+        if (in_array('employee', $this->assignRole) && count($this->assignRole) < 2) {
             $model->where(function ($query) use ($request) {
                 $query->where('insurances.employee_id', user()->id)->where('insurances.status', 'active');
             });

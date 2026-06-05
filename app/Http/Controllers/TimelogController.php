@@ -35,7 +35,8 @@ class TimelogController extends AccountBaseController
 
     public function index(TimeLogsDataTable $dataTable)
     {
-        $viewPermission = $this->viewTimelogPermission;
+        $viewPermission = user()->permission('view_timelogs');
+        // dd($viewPermission);
         abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
 
         if (!request()->ajax()) {

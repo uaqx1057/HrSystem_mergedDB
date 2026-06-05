@@ -10,7 +10,7 @@
 @endpush
 
 @php
-    $addAssetPermission = user()->permission('add_company_asset');
+    $addAssetPermission = user()->permission('add_company_assets');
 @endphp
 
 @section('filter-section')
@@ -50,14 +50,12 @@
         <!-- Add Task Export Buttons Start -->
         <div class="d-grid d-lg-flex d-md-flex action-bar">
             <div id="table-actions" class="flex-grow-1 align-items-center">
-                {{-- @if ($addAssetPermission == 'all' || $addAssetPermission == 'added') --}}
-                    @if (in_array('admin', $assignRole))
+                @if ($addAssetPermission == 'all' || $addAssetPermission == 'added')
                     <x-forms.link-primary :link="route('company-assets.create')" class="mr-3 openRightModal float-left"
                                           icon="plus">
                         @lang('app.menu.addCompanyAsset')
                     </x-forms.link-primary>
-                    @endif
-                {{-- @endif --}}
+                @endif
             </div>
 
             <x-datatable.actions>

@@ -40,7 +40,7 @@ class ProposalController extends AccountBaseController
 
     public function index(ProposalDataTable $dataTable)
     {
-        abort_403($this->sidebarUserPermissions['view_lead_proposals'] == 5);
+        abort_403(user()->permission('view_lead_proposals') == 'none');
 
         if (!request()->ajax()) {
             $this->leads = Deal::allLeads();

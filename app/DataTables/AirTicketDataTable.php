@@ -9,14 +9,14 @@ use Yajra\DataTables\Html\Column;
 
 class AirTicketDataTable extends BaseDataTable
 {
-    private $editInsurancePermission;
+    private $editAirTicketPermission;
     private $deleteInsurancePermission;
     private $assignRole;
 
     public function __construct()
     {
         parent::__construct();
-        $this->editInsurancePermission = user()->permission('edit_employees');
+        $this->editAirTicketPermission = user()->permission('edit_employees');
         $this->deleteInsurancePermission = user()->permission('delete_employees');
         $this->assignRole = user()->roles->pluck('name')->toArray();
     }
@@ -39,7 +39,7 @@ class AirTicketDataTable extends BaseDataTable
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
 
                     // Approve/Reject Buttons (Only if status is pending)
-                if ($row->status == 'pending' && in_array('admin', $this->assignRole)) {
+                if ($row->status == 'pending' && user()->permission('approve_or_reject_air_tickets') == 'all') {
                     $action .= '<a class="dropdown-item ticket-action-approved" href="javascript:;" data-ticket-id="' . $row->id . '" data-action="approved">
                             <i class="fa fa-check mr-2"></i> ' . __('app.approve') . '
                         </a>
@@ -48,14 +48,14 @@ class AirTicketDataTable extends BaseDataTable
                         </a>';
                 }
 
-                if ($row->status == 'pending' || in_array('admin', $this->assignRole)) {
+                if (user()->permission('edit_air_tickets') == 'all') {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('air-tickets.edit', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
                                 ' . trans('app.edit') . '
                             </a>';
                 }
 
-                if ($row->status == 'pending' || in_array('admin', $this->assignRole)) {
+                if (user()->permission('delete_air_tickets') == 'all') {
                     $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-air-ticket-id="' . $row->id . '">
                                 <i class="fa fa-trash mr-2"></i>
                                 ' . trans('app.delete') . '
@@ -112,7 +112,7 @@ class AirTicketDataTable extends BaseDataTable
             $model->where('air_tickets.employee_id', $request->employeeId);
         }
 
-        if (!in_array('admin', $this->assignRole)) {
+        if (in_array('employee', $this->assignRole) && count($this->assignRole) < 2) {
             $model->where(function ($query) use ($request) {
                 $query->where('users.id', user()->id);
             });

@@ -26,6 +26,10 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function index(AdvanceSalaryDataTable $dataTable)
     {
+        $viewPermission = user()->permission('view_advance_salary');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->assignRole = user()->roles->pluck('name')->toArray();
         $this->employees = User::allEmployees();
         return $dataTable->render('advance-salaries.index', $this->data);
@@ -33,6 +37,10 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function create()
     {
+        $viewPermission = user()->permission('add_advance_salary');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         // dd(user()->company->id);
         // $adminUsers = User::allAdmins($salary->employee->company->id);
 
@@ -42,7 +50,7 @@ class AdvanceSalaryController extends AccountBaseController
 
         $eligibleEmployees = User::with(['employeeDetails', 'advanceSalary']);
 
-        if (!in_array('admin', $this->assignRole)) {
+        if (count($this->assignRole) < 2) {
             $eligibleEmployees = $eligibleEmployees->where('id', user()->id);
         }
 
@@ -60,6 +68,10 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function store(StoreAdvanceSalary $request)
     {
+        $viewPermission = user()->permission('add_advance_salary');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $salary = new AdvanceSalary();
         $salary->employee_id = $request->employee;
         $salary->date = $request->date;
@@ -92,6 +104,10 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function show($id)
     {
+        $viewPermission = user()->permission('view_advance_salary');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->advanceSalary = AdvanceSalary::with(['employee'])->findOrFail($id);
         if (request()->ajax()) {
             $html = view('advance-salaries.ajax.show', $this->data)->render();
@@ -104,13 +120,17 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function edit(string $id)
     {
+        $viewPermission = user()->permission('edit_advance_salary');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->assignRole = user()->roles->pluck('name')->toArray();
         $this->advanceSalary = AdvanceSalary::findOrFail($id);
-        if(!in_array('admin', $this->assignRole)){
-            if($this->advanceSalary->status !== 'pending'){
-                abort_403(true);
-            }
-        }
+        // if(!in_array('admin', $this->assignRole)){
+        //     if($this->advanceSalary->status !== 'pending'){
+        //         abort_403(true);
+        //     }
+        // }
         $today = now();
         $currentEmployeeId = $this->advanceSalary->employee_id;
 
@@ -128,6 +148,10 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function update(UpdateAdvanceSalary $request, $id)
     {
+        $viewPermission = user()->permission('edit_advance_salary');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $editDepartment = user()->permission('edit_employees');
         abort_403($editDepartment != 'all');
 
@@ -144,6 +168,10 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function destroy($id)
     {
+        $viewPermission = user()->permission('delete_advance_salary');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $deletePermission = user()->permission('delete_employees');
         abort_403($deletePermission != 'all');
 
@@ -154,6 +182,10 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function applyQuickAction(Request $request)
     {
+        $viewPermission = user()->permission('delete_advance_salary');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $ids = explode(',', $request->row_ids);
 
         if ($request->action_type === 'delete') {
@@ -169,6 +201,10 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function approveSalary(Request $request)
     {
+        $viewPermission = user()->permission('approve_or_reject_advance_salary');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->salaryID = $request->ticket_id;
         $this->salaryAction = $request->ticket_action;
         return view('advance-salaries.approve.index', $this->data);
@@ -176,6 +212,10 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function rejectSalary(Request $request)
     {
+        $viewPermission = user()->permission('approve_or_reject_advance_salary');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->salaryID = $request->ticket_id;
         $this->salaryAction = $request->ticket_action;
         return view('advance-salaries.reject.index', $this->data);
@@ -183,6 +223,10 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function salaryAction(Request $request)
     {
+        $viewPermission = user()->permission('approve_or_reject_advance_salary');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $salary = AdvanceSalary::with('employee')->findOrFail($request->salaryId);
         $salary->status = $request->action;
 

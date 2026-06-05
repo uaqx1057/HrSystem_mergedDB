@@ -37,9 +37,9 @@ class CompanyAssetController extends AccountBaseController
      */
     public function index(CompanyAssetDataTable $dataTable)
     {
+        $viewPermission = user()->permission('view_company_assets');
+        abort_403(!in_array($viewPermission, ['all']));
         $this->assignRole = user()->roles->pluck('name')->toArray();
-        // $viewPermission = user()->permission('view_company_asset');
-        // abort_403(!in_array($viewPermission, ['all']));
 
         return $dataTable->render('company-assets.index', $this->data);
     }
@@ -49,8 +49,8 @@ class CompanyAssetController extends AccountBaseController
      */
     public function create()
     {
-        $this->assignRole = user()->roles->pluck('name')->toArray();
-        abort_403(!in_array('admin', $this->assignRole));
+        $viewPermission = user()->permission('add_company_assets');
+        abort_403(!in_array($viewPermission, ['all']));
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.create', $this->data)->render();
@@ -66,6 +66,9 @@ class CompanyAssetController extends AccountBaseController
      */
     public function store(StoreRequest $request)
     {
+        $viewPermission = user()->permission('add_company_assets');
+        abort_403(!in_array($viewPermission, ['all']));
+
         $asset = new CompanyAsset();
         $asset->name = $request->name;
         $asset->catalog = $request->catalog ?? '';
@@ -88,6 +91,9 @@ class CompanyAssetController extends AccountBaseController
      */
     public function show($id)
     {
+        $viewPermission = user()->permission('view_company_assets');
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->asset = CompanyAsset::findOrFail($id);
 
         if (request()->ajax()) {
@@ -104,8 +110,8 @@ class CompanyAssetController extends AccountBaseController
      */
     public function edit($id)
     {
-        $this->assignRole = user()->roles->pluck('name')->toArray();
-        abort_403(!in_array('admin', $this->assignRole));
+        $viewPermission = user()->permission('edit_company_assets');
+        abort_403(!in_array($viewPermission, ['all']));
 
         $this->asset = CompanyAsset::findOrFail($id);
 
@@ -123,8 +129,8 @@ class CompanyAssetController extends AccountBaseController
      */
     public function update(UpdateRequest $request, $id)
     {
-        // $editPermission = user()->permission('edit_company_asset');
-        // abort_403($editPermission != 'all');
+        $viewPermission = user()->permission('edit_company_assets');
+        abort_403(!in_array($viewPermission, ['all']));
 
         $asset = CompanyAsset::findOrFail($id);
         $asset->name = $request->name;
@@ -143,8 +149,8 @@ class CompanyAssetController extends AccountBaseController
      */
     public function destroy($id)
     {
-        // $deletePermission = user()->permission('delete_company_asset');
-        // abort_403($deletePermission != 'all');
+        $viewPermission = user()->permission('delete_company_assets');
+        abort_403(!in_array($viewPermission, ['all']));
 
         CompanyAsset::destroy($id);
 
@@ -157,6 +163,9 @@ class CompanyAssetController extends AccountBaseController
      */
     public function applyQuickAction(Request $request)
     {
+        $viewPermission = user()->permission('delete_company_assets');
+        abort_403(!in_array($viewPermission, ['all']));
+        
         if ($request->action_type === 'delete') {
             $this->deleteRecords($request);
             return Reply::success(__('messages.deleteSuccess'));

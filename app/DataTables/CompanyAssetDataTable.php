@@ -17,8 +17,8 @@ class CompanyAssetDataTable extends BaseDataTable
     public function __construct()
     {
         parent::__construct();
-        $this->editCompanyAssetPermission = user()->permission('edit_company_asset');
-        $this->deleteCompanyAssetPermission = user()->permission('delete_company_asset');
+        $this->editCompanyAssetPermission = user()->permission('edit_company_assets');
+        $this->deleteCompanyAssetPermission = user()->permission('delete_company_assets');
         $this->assignRole = user()->roles->pluck('name')->toArray();
     }
 
@@ -55,21 +55,21 @@ class CompanyAssetDataTable extends BaseDataTable
                 $assignment = $row->assignments->first();
 
                 if (!$assignment) {
-                    if (in_array('admin', $this->assignRole)) {
+                    if (user()->permission('assign_company_asset_to_employee') == 'all') {
                         $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.assign', [$row->id]) . '">
                                 <i class="fa fa-user-check mr-2"></i>
                                 ' . trans('app.assign') . '
                             </a>';
                     }
                 } elseif ($assignment->status == 'Pending') {
-                    if (in_array('admin', $this->assignRole)) {
+                    if (user()->permission('edit_assign_company_assets_to_employee') == 'all') {
                         $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.edit-assign', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
                                 Edit Assign
                             </a>';
                     }
                 } elseif ($assignment->status == 'Approve') {
-                    if (in_array('admin', $this->assignRole)) {
+                    if (user()->permission('upload_signature_assign_company_assets_to_employee') == 'all') {
                         $action .= '<a class="dropdown-item" href="' . route('company-assets.generate-pdf', [$row->id]) . '">
                                 <i class="fa fa-file-pdf mr-2"></i>
                                 Generate Pdf
@@ -80,18 +80,21 @@ class CompanyAssetDataTable extends BaseDataTable
                             </a>';
                     }
                 } elseif ($assignment->status == 'Assigned') {
+                    if (user()->permission('view_assign_company_assets_to_employee') == 'all') {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.view-assign', [$row->id]) . '">
                                 <i class="fa fa-eye mr-2"></i>
                                 View Assign
                             </a>';
+                    }
                 }
 
-                if (in_array('admin', $this->assignRole)) {
+                if ($this->editCompanyAssetPermission == 'all') {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.edit', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
                                 ' . trans('app.edit') . '
                             </a>';
-
+                }
+                if ($this->deleteCompanyAssetPermission == 'all') {
                     $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-asset-id="' . $row->id . '">
                                 <i class="fa fa-trash mr-2"></i>
                                 ' . trans('app.delete') . '
@@ -138,7 +141,7 @@ class CompanyAssetDataTable extends BaseDataTable
         }
 
         // Logic: Only show assigned assets for non-admins
-        if (!in_array('admin', $this->assignRole)) {
+        if (count($this->assignRole) < 2) {
             $model->where('asset_assignments.employee_id', user()->id)->where('asset_assignments.status', 'Assigned');
         }
 

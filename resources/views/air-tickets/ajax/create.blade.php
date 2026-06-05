@@ -1,5 +1,5 @@
 <style>
-    .mt{
+    .mt {
         margin-top: -4px;
     }
 </style>
@@ -13,47 +13,39 @@
                 <div class="row p-20">
 
                     <div class="col-lg-4 col-md-6">
-                        @if (in_array('admin', $assignRole))
-                        <x-forms.label class="" fieldId="employee"
-                            :fieldLabel="__('app.employee')" fieldRequired="true">
-                        </x-forms.label>
-                        <x-forms.input-group>
-                            <select class="form-control select-picker" name="employee"
-                                id="employee" data-live-search="true">
-                                <option value="">--</option>
-                                @foreach ($employees as $employee)
-                                    <option value="{{ $employee->id }}">{{ $employee->name }}</option>
-                                @endforeach
-                            </select>
-                        </x-forms.input-group>
+                        @if (count($assignRole) > 1)
+                            <x-forms.label class="" fieldId="employee" :fieldLabel="__('app.employee')" fieldRequired="true">
+                            </x-forms.label>
+                            <x-forms.input-group>
+                                <select class="form-control select-picker" name="employee" id="employee"
+                                    data-live-search="true">
+                                    <option value="">--</option>
+                                    @foreach ($employees as $employee)
+                                        <option value="{{ $employee->id }}">{{ $employee->name }}</option>
+                                    @endforeach
+                                </select>
+                            </x-forms.input-group>
                         @else
-                        <input type="hidden" value="{{ user()->id }}" name="employee">
-                        <x-forms.text fieldId="basic_salary" :fieldLabel="__('app.employee')"
-                                fieldName="basic_salary" fieldRequired="true" :fieldPlaceholder="__('placeholders.basic_salary')"
-                                :fieldValue="user()->name" :fieldReadOnly="true">
+                            <input type="hidden" value="{{ user()->id }}" name="employee">
+                            <x-forms.text fieldId="basic_salary" :fieldLabel="__('app.employee')" fieldName="basic_salary"
+                                fieldRequired="true" :fieldPlaceholder="__('placeholders.basic_salary')" :fieldValue="user()->name" :fieldReadOnly="true">
                             </x-forms.text>
                         @endif
                     </div>
 
 
                     <div class="col-lg-4 col-md-6">
-                        <x-forms.datepicker
-                            fieldId="date" fieldRequired="true"
-                            :fieldLabel="__('modules.airTicket.date')"
-                            fieldName="date"
-                            :fieldPlaceholder="__('placeholders.date')"
-                            minlength="10"
-                            maxlength="10"
-                        />
+                        <x-forms.datepicker fieldId="date" fieldRequired="true" :fieldLabel="__('modules.airTicket.date')" fieldName="date"
+                            :fieldPlaceholder="__('placeholders.date')" minlength="10" maxlength="10" />
                     </div>
 
-                    @if (in_array('admin', $assignRole))
-                    <div class="col-lg-4 col-md-6">
-                        <x-forms.select fieldId="status" :fieldLabel="__('app.status')" fieldName="status" search="true">
-                            <option value="pending">@lang('app.pending')</option>
-                            <option value="approved">@lang('app.approved')</option>
-                        </x-forms.select>
-                    </div>
+                    @if (count($assignRole) > 1)
+                        <div class="col-lg-4 col-md-6">
+                            <x-forms.select fieldId="status" :fieldLabel="__('app.status')" fieldName="status" search="true">
+                                <option value="pending">@lang('app.pending')</option>
+                                <option value="approved">@lang('app.approved')</option>
+                            </x-forms.select>
+                        </div>
                     @endif
 
                 </div>
@@ -71,8 +63,7 @@
 </div>
 
 <script>
-
-    $( document ).ready(function() {
+    $(document).ready(function() {
         $(".select-picker").selectpicker();
 
         datepicker('#date', {
@@ -102,5 +93,4 @@
             }
         })
     });
-
 </script>

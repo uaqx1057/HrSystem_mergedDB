@@ -1908,7 +1908,6 @@ return array(
         'contracts' => 'Contracts',
         'product' => 'Product',
         'asset' => 'Assets',
-        'payroll' => 'Payroll',
         'restapi' => 'RestAPI',
         'gitlab' => 'Gitlab',
         'zoom' => 'Zoom',
@@ -1930,6 +1929,10 @@ return array(
         'custom_domain' => 'Custom Domain',
         'qrcode' => 'QR Code',
         'cybersecurity' => 'Cyber Security',
+        'air_tickets' => 'Air Tickets',
+        'insurance' => 'Insurance',
+        'advance_salary' => 'Advance Salary',
+        'company_assets' => 'Company Assets',
     ),
     'projectSettings' => array(
         'sendNotificationsTo' => 'Send Reminder To',

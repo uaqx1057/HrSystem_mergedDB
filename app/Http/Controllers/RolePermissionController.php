@@ -95,20 +95,29 @@ class RolePermissionController extends AccountBaseController
 
         // Update user permission with the role
         foreach ($role->users as $roleuser) {
-            if (($role->name == 'employee') || $role->name != 'employee') {
-                $userPermission = UserPermission::where('user_permissions.permission_id', $permissionId)
-                    ->leftJoin('users', 'users.id', '=', 'user_permissions.user_id')
-                    ->where('user_permissions.user_id', $roleuser->id)
-                    ->select('users.customised_permissions', 'user_permissions.*')
-                    ->firstOrNew();
-
-                if ($userPermission->customised_permissions == 0) {
-                    $userPermission->permission_id = $permissionId;
-                    $userPermission->user_id = $roleuser->id;
-                    $userPermission->permission_type_id = $permissionType;
-                    $userPermission->save();
-                }
+            // Skip users who have customised their permissions
+            if ($roleuser->customised_permissions == 1) {
+                continue;
             }
+
+            // If user also has the `admin` role, do not overwrite their permissions
+            $userRoles = $roleuser->roles->pluck('name')->toArray();
+            $countRoles = count($userRoles);
+            if (!in_array($role->name, $userRoles)) {
+                continue;
+            }
+
+            if ($role->name == 'employee' && $countRoles > 1) {
+                continue;
+            }
+
+            $userPermission = UserPermission::firstOrNew([
+                'permission_id' => $permissionId,
+                'user_id' => $roleuser->id,
+            ]);
+
+            $userPermission->permission_type_id = $permissionType;
+            $userPermission->save();
         }
 
         \Illuminate\Support\Facades\Artisan::call('cache:clear');

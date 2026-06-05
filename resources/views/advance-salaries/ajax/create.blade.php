@@ -16,15 +16,15 @@
                         <x-forms.label class="" fieldId="employee"
                             :fieldLabel="__('app.employee')" fieldRequired="true">
                         </x-forms.label>
-                        @if (!in_array('admin', $assignRole) && count($employees) > 0)
+                        @if (count($assignRole) < 2)
                         <input type="hidden" value="{{ user()->id }}" name="employee">
                         @endif
                         <x-forms.input-group>
                             <select class="form-control select-picker" name="employee"
-                                id="employee" data-live-search="true" @if (!in_array('admin', $assignRole)) disabled @endif>
+                                id="employee" data-live-search="true" @if (count($assignRole) < 2) disabled @endif>
                                 <option value="">--</option>
                                 @foreach ($employees as $employee)
-                                    <option value="{{ $employee->id }}" @if ($employee->id == user()->id) selected @endif>{{ $employee->name }}</option>
+                                    <option value="{{ $employee->id }}" @if ($employee->id == user()->id && count($assignRole) < 2) selected @endif>{{ $employee->name }}</option>
                                 @endforeach
                             </select>
                         </x-forms.input-group>
@@ -45,7 +45,7 @@
                         />
                     </div>
 
-                    @if (in_array('admin', $assignRole))
+                    @if (count($assignRole) > 1)
                     <div class="col-lg-4 col-md-6">
                         <x-forms.select fieldId="status" :fieldLabel="__('app.status')" fieldName="status" search="true">
                             <option value="pending">@lang('app.pending')</option>

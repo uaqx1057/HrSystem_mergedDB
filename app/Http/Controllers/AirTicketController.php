@@ -29,6 +29,10 @@ class AirTicketController extends AccountBaseController
 
     public function index(AirTicketDataTable $dataTable)
     {
+        $viewPermission = user()->permission('view_air_tickets');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
         $this->employees = User::allEmployees();
@@ -40,6 +44,10 @@ class AirTicketController extends AccountBaseController
      */
     public function create()
     {
+        $viewPermission = user()->permission('add_air_tickets');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
         $today = now();
@@ -50,7 +58,7 @@ class AirTicketController extends AccountBaseController
                 $query->where('joining_date', '<=', $today->copy()->subYear());
             });
 
-        if(!in_array('admin', $this->assignRole)){
+        if(count($this->assignRole) < 2){
             $eligibleEmployees = $eligibleEmployees->where('id', user()->id);
         }
         $this->employees = $eligibleEmployees->get()
@@ -88,6 +96,10 @@ class AirTicketController extends AccountBaseController
      */
     public function store(StoreAirTicket $request)
     {
+        $viewPermission = user()->permission('add_air_tickets');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $today = now();
 
         $eligibleEmployees = User::with(['employeeDetails', 'airTicket'])
@@ -148,6 +160,10 @@ class AirTicketController extends AccountBaseController
      */
     public function show($id)
     {
+        $viewPermission = user()->permission('view_air_tickets');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->airTicket = AirTicket::with(['employee'])->findOrFail($id);
         if (request()->ajax()) {
             $html = view('air-tickets.ajax.show', $this->data)->render();
@@ -165,14 +181,14 @@ class AirTicketController extends AccountBaseController
      */
     public function edit(string $id)
     {
+        $viewPermission = user()->permission('edit_air_tickets');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
         $this->airTicket = AirTicket::findOrFail($id);
-        if(!in_array('admin', $this->assignRole)){
-            if($this->airTicket->status !== 'pending'){
-                abort_403(true);
-            }
-        }
+        
         $today = now();
         $currentEmployeeId = $this->airTicket->employee_id; // ✅ Store for use in filter
 
@@ -218,8 +234,9 @@ class AirTicketController extends AccountBaseController
      */
     public function update(UpdateAirTicket $request, $id)
     {
-        $editDepartment = user()->permission('edit_employees');
-        abort_403($editDepartment != 'all');
+        $viewPermission = user()->permission('edit_air_tickets');
+
+        abort_403(!in_array($viewPermission, ['all']));
 
         $ticket = AirTicket::findOrFail($id);
 
@@ -239,8 +256,9 @@ class AirTicketController extends AccountBaseController
      */
     public function destroy($id)
     {
-        $deletePermission = user()->permission('delete_employees');
-        abort_403($deletePermission != 'all');
+        $viewPermission = user()->permission('delete_air_tickets');
+
+        abort_403(!in_array($viewPermission, ['all']));
 
         AirTicket::findOrFail($id)->delete();
 
@@ -251,6 +269,10 @@ class AirTicketController extends AccountBaseController
 
     public function applyQuickAction(Request $request)
     {
+        $viewPermission = user()->permission('delete_air_tickets');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $ids = explode(',', $request->row_ids);
 
         if ($request->action_type === 'delete') {
@@ -267,6 +289,10 @@ class AirTicketController extends AccountBaseController
 
     public function approveTicket(Request $request)
     {
+        $viewPermission = user()->permission('approve_or_reject_air_tickets');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->ticketID = $request->ticket_id;
         $this->ticketAction = $request->ticket_action; // This is 'approved'
         return view('air-tickets.approve.index', $this->data);
@@ -274,6 +300,10 @@ class AirTicketController extends AccountBaseController
 
     public function rejectTicket(Request $request)
     {
+        $viewPermission = user()->permission('approve_or_reject_air_tickets');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $this->ticketID = $request->ticket_id;
         $this->ticketAction = $request->ticket_action; // This is 'rejected'
         return view('air-tickets.reject.index', $this->data);
@@ -281,6 +311,10 @@ class AirTicketController extends AccountBaseController
 
     public function ticketAction(Request $request)
     {
+        $viewPermission = user()->permission('approve_or_reject_air_tickets');
+
+        abort_403(!in_array($viewPermission, ['all']));
+
         $ticket = AirTicket::with('employee')->findOrFail($request->ticketId);
         $ticket->status = $request->action;
 

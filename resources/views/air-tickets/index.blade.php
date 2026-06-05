@@ -68,10 +68,12 @@
         <!-- Add Task Export Buttons Start -->
         <div class="d-grid d-lg-flex d-md-flex action-bar">
             <div id="table-actions" class="flex-grow-1 align-items-center">
-                <x-forms.link-primary :link="route('air-tickets.create')" class="mr-3 openRightModal float-left"
-                                        icon="plus">
-                    @lang('modules.airTicket.addTitle')
-                </x-forms.link-primary>
+                @if (user()->permission('add_air_tickets') == 'all')
+                    <x-forms.link-primary :link="route('air-tickets.create')" class="mr-3 openRightModal float-left"
+                                            icon="plus">
+                        @lang('modules.airTicket.addTitle')
+                    </x-forms.link-primary>
+                @endif
             </div>
 
             <x-datatable.actions>

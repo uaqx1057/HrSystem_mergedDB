@@ -82,7 +82,7 @@ class EmployeeController extends AccountBaseController
      */
     public function index(EmployeesDataTable $dataTable)
     {
-        
+
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
         $viewPermission = user()->permission('view_employees');
@@ -272,7 +272,12 @@ class EmployeeController extends AccountBaseController
                 $user->attachRole($otherRole);
             }
 
-            $user->assignUserRolePermission($employeeRole->id);
+            if ($employeeRole->id != $request->role) {
+                $user->assignUserRolePermission($otherRole->id);
+            } else{
+                $user->assignUserRolePermission($employeeRole->id);
+            }
+
             $this->logSearchEntry($user->id, $user->name, 'employees.show', 'employee');
 
             // Commit Transaction

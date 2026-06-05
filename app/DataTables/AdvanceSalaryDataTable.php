@@ -11,13 +11,15 @@ class AdvanceSalaryDataTable extends BaseDataTable
 {
     private $editSalaryPermission;
     private $deleteSalaryPermission;
+    private $approveRejectSalaryPermission;
     private $assignRole;
 
     public function __construct()
     {
         parent::__construct();
-        $this->editSalaryPermission = user()->permission('edit_employees');
-        $this->deleteSalaryPermission = user()->permission('delete_employees');
+        $this->editSalaryPermission = user()->permission('edit_advance_salary');
+        $this->deleteSalaryPermission = user()->permission('delete_advance_salary');
+        $this->approveRejectSalaryPermission = user()->permission('approve_or_reject_advance_salary');
         $this->assignRole = user()->roles->pluck('name')->toArray();
     }
 
@@ -38,7 +40,7 @@ class AdvanceSalaryDataTable extends BaseDataTable
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
 
-                if ($row->status == 'pending' && in_array('admin', $this->assignRole)) {
+                if ($row->status == 'pending' && $this->approveRejectSalaryPermission == 'all') {
                     $action .= '<a class="dropdown-item salary-action-approved" href="javascript:;" data-salary-id="' . $row->id . '" data-action="approved">
                             <i class="fa fa-check mr-2"></i> ' . __('app.approve') . '
                         </a>
@@ -47,14 +49,14 @@ class AdvanceSalaryDataTable extends BaseDataTable
                         </a>';
                 }
 
-                if ($row->status == 'pending' || in_array('admin', $this->assignRole)) {
+                if ($this->editSalaryPermission == 'all') {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('advance-salaries.edit', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
                                 ' . trans('app.edit') . '
                             </a>';
                 }
 
-                if ($row->status == 'pending' || in_array('admin', $this->assignRole)) {
+                if ($this->deleteSalaryPermission == 'all') {
                     $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-advance-salary-id="' . $row->id . '">
                                 <i class="fa fa-trash mr-2"></i>
                                 ' . trans('app.delete') . '
@@ -111,7 +113,7 @@ class AdvanceSalaryDataTable extends BaseDataTable
             $model->where('advance_salaries.employee_id', $request->employeeId);
         }
 
-        if (!in_array('admin', $this->assignRole)) {
+        if (count($this->assignRole) < 2) {
             $model->where(function ($query) use ($request) {
                 $query->where('users.id', user()->id);
             });
