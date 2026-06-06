@@ -208,6 +208,7 @@ class EmployeeController extends AccountBaseController
             $user->gender = $request->gender;
             $user->locale = $request->locale;
             $user->user_auth_id = $userAuth->id;
+            $user->dark_theme       = 1;
 
             if ($request->has('login')) {
                 $user->login = $request->login;
