@@ -317,9 +317,16 @@ class Company extends BaseModel
 
     public static function firstActiveAdmin($company)
     {
-        $admins = Role::with('users')->where('name', 'admin')->where('company_id', $company->id)->first();
-
-        return $admins?->users?->first();
+        return User::withoutGlobalScopes([CompanyScope::class, ActiveScope::class])
+            ->where('company_id', $company->id)
+            ->where('status', 'active')
+            ->whereHas('roles', function ($query) use ($company) {
+                $query->withoutGlobalScope(CompanyScope::class)
+                    ->where('roles.company_id', $company->id)
+                    ->where('roles.name', 'admin');
+            })
+            ->orderBy('id')
+            ->first();
     }
 
     public function employees()

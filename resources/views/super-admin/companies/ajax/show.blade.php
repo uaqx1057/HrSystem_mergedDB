@@ -371,7 +371,7 @@
                     },
                     success: function (response) {
                         if (response.status == "success") {
-                            location.href = "{{ route('dashboard') }}"
+                            window.location.href = response.redirectUrl || "{{ route('dashboard') }}";
                         }
                     }
                 });

@@ -56,9 +56,10 @@ class LoginController extends Controller
 
             // Attempt login
             Auth::login($user);
+            session(['user' => UserAuth::resolveSessionUser($user)]);
 
             // WORKSUITESAAS
-            if ($user->user->is_superadmin) {
+            if (user()?->is_superadmin) {
                 return redirect()->route('superadmin.super_admin_dashboard');
             }
 
@@ -144,9 +145,9 @@ class LoginController extends Controller
     {
 
         if (isWorksuiteSaas()) {
-            session(['user' => User::find(user()->id)]);
+            session(['user' => UserAuth::resolveSessionUser(auth()->user())]);
 
-            if (auth()->user() && auth()->user()->user->is_superadmin) {
+            if (user()?->is_superadmin) {
                 return (session()->has('url.intended') ? session()->get('url.intended') : RouteServiceProvider::SUPER_ADMIN_HOME);
             }
 

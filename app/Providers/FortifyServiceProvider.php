@@ -57,13 +57,15 @@ class FortifyServiceProvider extends ServiceProvider
 
             public function toResponse($request)
             {
-                session(['user' => User::find(user()->id)]);
+                flushCompanySpecificSessions();
+                $sessionUser = UserAuth::resolveSessionUser(auth()->user());
+                session(['user' => $sessionUser]);
 
-                if (auth()->user() && auth()->user()->user->is_superadmin) {
+                if ($sessionUser?->is_superadmin) {
                     return redirect(RouteServiceProvider::SUPER_ADMIN_HOME);
                 }
 
-                $emailCountInCompanies = DB::table('users')->where('email', user()->email)->count();
+                $emailCountInCompanies = DB::table('users')->where('email', $sessionUser?->email ?? auth()->user()->email)->count();
                 session()->forget('user_company_count');
 
                 if ($emailCountInCompanies > 1) {
@@ -87,13 +89,15 @@ class FortifyServiceProvider extends ServiceProvider
 
             public function toResponse($request)
             {
-                session(['user' => User::find(user()->id)]);
+                flushCompanySpecificSessions();
+                $sessionUser = UserAuth::resolveSessionUser(auth()->user());
+                session(['user' => $sessionUser]);
 
-                if (auth()->user() && auth()->user()->user->is_superadmin) {
+                if ($sessionUser?->is_superadmin) {
                     return redirect(RouteServiceProvider::SUPER_ADMIN_HOME);
                 }
 
-                $emailCountInCompanies = DB::table('users')->where('email', user()->email)->count();
+                $emailCountInCompanies = DB::table('users')->where('email', $sessionUser?->email ?? auth()->user()->email)->count();
                 session(['user_company_count' => $emailCountInCompanies]);
 
                 if ($emailCountInCompanies > 1) {

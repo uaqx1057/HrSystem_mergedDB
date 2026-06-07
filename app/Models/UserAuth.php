@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Notifications\VerifyEmail;
+use App\Models\Company;
 use App\Scopes\ActiveScope;
 use App\Scopes\CompanyScope;
 use Illuminate\Auth\Authenticatable;
@@ -236,6 +237,40 @@ class UserAuth extends BaseModel implements AuthenticatableContract, Authorizabl
             flushCompanySpecificSessions();
             Auth::loginUsingId($user->user_auth_id);
         }
+    }
+
+    public static function resolveSessionUser(?self $userAuth = null): ?User
+    {
+        $userAuth = $userAuth ?: Auth::user();
+
+        if (!$userAuth) {
+            return null;
+        }
+
+        if (session()->has('user') && session('user')->user_auth_id == $userAuth->id) {
+            return User::withoutGlobalScope(ActiveScope::class)->find(session('user')->id);
+        }
+
+        $companyId = session('company')?->id;
+
+        if (!$companyId) {
+            $company = getCompanyBySubDomain();
+            $companyId = $company?->id;
+        }
+
+        $query = User::withoutGlobalScope(ActiveScope::class)
+            ->where('user_auth_id', $userAuth->id)
+            ->where('status', 'active');
+
+        if ($companyId) {
+            return (clone $query)->where('company_id', $companyId)->first()
+                ?? (clone $query)->whereNull('company_id')->first()
+                ?? (clone $query)->first();
+        }
+
+        return (clone $query)->whereNull('company_id')->first()
+            ?? (clone $query)->where('is_superadmin', 0)->first()
+            ?? (clone $query)->first();
     }
 
     /**

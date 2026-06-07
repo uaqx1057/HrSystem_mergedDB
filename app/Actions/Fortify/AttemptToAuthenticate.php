@@ -62,18 +62,6 @@ class AttemptToAuthenticate
     public function handle($request, $next)
     {
         $globalSetting = GlobalSetting::first();
-        $authUser = User::withoutGlobalScope(ActiveScope::class)
-            ->where('email', $request->email)
-            ->first();
-
-        if($authUser->company){
-            $attendanceSetting = $authUser->company->attendanceSetting;
-            $checkAutoClockinConditions = $this->checkAutoClockinConditions($authUser);
-
-            if ($attendanceSetting->auto_clock_in == 'yes' && $checkAutoClockinConditions) {
-                $this->storeClockIn($request, $authUser->id);
-            }
-        }
 
         if ($globalSetting->google_recaptcha_status == 'active') {
             $gRecaptchaResponseInput = 'g-recaptcha-response';
@@ -100,6 +88,13 @@ class AttemptToAuthenticate
             $request->only(Fortify::username(), 'password'),
             $request->filled('remember'))
         ) {
+            $authUser = $this->guard->user();
+            $attendanceSetting = $authUser?->company?->attendanceSetting;
+
+            if ($attendanceSetting && $attendanceSetting->auto_clock_in == 'yes' && $this->checkAutoClockinConditions($authUser)) {
+                $this->storeClockIn($request, $authUser->id);
+            }
+
             return $next($request);
         }
 

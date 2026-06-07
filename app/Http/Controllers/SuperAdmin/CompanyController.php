@@ -525,16 +525,23 @@ class CompanyController extends AccountBaseController
 
         $user = user();
         session()->flush();
-        session()->forget('user');
 
         Auth::logout();
         session(['impersonate' => $user->user_auth_id]);
         session(['impersonate_company_id' => $company->id]);
+        session(['company' => $company]);
+        session(['multi_company_selected' => true]);
         session(['user' => $admin]);
+        session()->forget('user_roles');
+        session()->forget('sidebar_user_perms');
+
+        flushCompanySpecificSessions();
 
         Auth::loginUsingId($admin->user_auth_id);
 
-        return Reply::success(__('superadmin.successfullyLoginAsCompany'));
+        return Reply::successWithData(__('superadmin.successfullyLoginAsCompany'), [
+            'redirectUrl' => route('dashboard'),
+        ]);
     }
 
     public function billing()
