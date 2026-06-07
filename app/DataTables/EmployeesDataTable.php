@@ -133,7 +133,6 @@ class EmployeesDataTable extends BaseDataTable
                 }
             }
 
-            if (in_array('admin', $this->assignRole)) {
                 if ($this->deleteEmployeePermission == 'all' || ($this->deleteEmployeePermission == 'added' && user()->id == $row->added_by)) {
                 if ((!in_array('admin', $userRole) && user()->id !== $row->id) || (user()->id !== $row->id && in_array('admin', $userRole) && in_array('admin', user_roles()))) {
                     $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-user-id="' . $row->id . '">
@@ -141,7 +140,6 @@ class EmployeesDataTable extends BaseDataTable
                                 ' . trans('app.delete') . '
                             </a>';
                 }
-            }
             }
 
             $action .= '</div>
@@ -240,10 +238,6 @@ class EmployeesDataTable extends BaseDataTable
 
         if ($request->employee != 'all' && $request->employee != '') {
             $users = $users->where('users.id', $request->employee);
-        }
-
-        if (!in_array('admin', $this->assignRole)) {
-            $users = $users->where('users.id', user()->id);
         }
 
         if ($request->designation != 'all' && $request->designation != '') {

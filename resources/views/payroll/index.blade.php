@@ -34,49 +34,66 @@
                 <i class="fa fa-times"></i>
             </a>
 
-            @if (in_array('admin', $assignRole))
             <nav class="tabs">
                 <ul class="-primary">
-                    <li>
-                        <x-tab :href="route('payroll.index', ['tab' => 'salary-slips'])"
-                            :text="__('Salary Slips')"
-                            class="salary-slips" ajax="false" />
-                    </li>
+                    @if (user()->permission('view_payroll') !== 'none')
+                        <li>
+                            <x-tab :href="route('payroll.index', ['tab' => 'salary-slips'])"
+                                :text="__('Salary Slips')"
+                                class="salary-slips" ajax="false" />
+                        </li>
+                    @endif
 
+                    @if (in_array(user()->permission('manage_salary_group'), ['all']))
                     <li>
                         <x-tab :href="route('payroll.index', ['tab' => 'salary-groups'])"
                             :text="__('Salary Groups')"
                             class="salary-groups" ajax="false" />
                     </li>
+                    @endif
+
+                    @if (in_array(user()->permission('manage_salary_component'), ['all']))
                     <li>
                         <x-tab :href="route('payroll.index', ['tab' => 'salary-components'])"
                             :text="__('Salary Components')"
                             class="salary-components" ajax="false" />
                     </li>
+                    @endif
+
+                    @if (in_array(user()->permission('manage_employee_salary'), ['all']))
                     <li>
                         <x-tab :href="route('payroll.index', ['tab' => 'salary-setups'])"
                             :text="__('Salary Setups')"
                             class="salary-setups" ajax="false" />
                     </li>
+                    @endif
+
+                    @if (in_array($addPayrollPermission, ['all']))
                     <li>
                         <x-tab :href="route('payroll.index', ['tab' => 'payroll-cycles'])"
                             :text="__('Payroll Cycles')"
                             class="payroll-cycles" ajax="false" />
                     </li>
+                    @endif
+
+                    @if (in_array(user()->permission('manage_salary_payment_method'), ['all']))
                     <li>
                         <x-tab :href="route('payroll.index', ['tab' => 'payment-methods'])"
                             :text="__('Payment Methods')"
                             class="payment-methods" ajax="false" />
                     </li>
+                    @endif
+
+                    @if (in_array(user()->permission('manage_salary_tds'), ['all']))
                     <li>
                         <x-tab :href="route('payroll.index', ['tab' => 'settings'])"
                             :text="__('app.menu.settings')"
                             class="settings" ajax="false" />
                     </li>
+                    @endif
 
                 </ul>
             </nav>
-            @endif
         </div>
 
         <a class="mb-0 d-block d-lg-none text-dark-grey ml-auto mr-2 border-left-grey" onclick="openClientDetailSidebar()">
@@ -92,20 +109,19 @@
 
         @if ($activeTab === 'salary-slips')
             <div class="d-flex justify-content-between align-items-center mb-3">
-                @if (in_array('admin', $assignRole))
+                @if (in_array($addPayrollPermission, ['all']))
                 <x-forms.link-primary :link="route('payroll.salary-slips.add')" class="mr-3"
                                           icon="plus">
                     @lang('app.addSalary')
                 </x-forms.link-primary>
                 @endif
                 <div>
-                    @if (in_array('admin', $assignRole))
+
                     @if (in_array($addPayrollPermission, ['all', 'added']))
                         <form method="POST" action="{{ route('payroll.salary-slips.generate-monthly') }}" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-sm btn-outline-success mr-1">Generate Current Month Slips</button>
                         </form>
-                    @endif
                     @endif
                     <a href="{{ route('payroll.salary-slips.export') }}" class="btn btn-sm btn-outline-primary">Export CSV</a>
                 </div>
@@ -292,7 +308,7 @@
                                     <td class="d-flex">
                                         <a href="{{ route('payroll.salary-slips.print', $slip->id) }}" target="_blank" class="btn btn-sm btn-primary mr-1">Print</a>
                                         <a href="{{ route('payroll.salary-slips.pdf', $slip->id) }}" class="btn btn-sm btn-primary mr-1">Download PDF</a>
-                                        @if (in_array('admin', $assignRole))
+
                                         @if (in_array($editPayrollPermission, ['all', 'added']))
                                             <form method="POST" action="{{ route('payroll.salary-slips.update', $slip->id) }}" class="mr-1 d-flex align-items-center salary-slip-update-form">
                                                 @csrf
@@ -339,7 +355,6 @@
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                             </form>
-                                        @endif
                                         @endif
                                     </td>
                                 </tr>
@@ -578,7 +593,7 @@
 
         @if ($activeTab === 'salary-groups')
             <div class="row">
-                @if (in_array($addPayrollPermission, ['all', 'added']))
+                {{-- @if (in_array($addPayrollPermission, ['all', 'added'])) --}}
                     <div class="col-md-4 mb-3">
                         <div class="card">
                             <div class="card-header form-heading-background">Add Salary Group</div>
@@ -610,7 +625,7 @@
                             </div>
                         </div>
                     </div>
-                @endif
+                {{-- @endif --}}
 
                 <div class="col-md-8">
                     <div class="card">
@@ -631,7 +646,7 @@
                                         <tr>
                                             <td>{{ $group->id }}</td>
                                             <td>
-                                                @if (in_array($editPayrollPermission, ['all', 'added']))
+                                                {{-- @if (in_array($editPayrollPermission, ['all', 'added'])) --}}
                                                     <form method="POST" action="{{ route('payroll.salary-groups.update', $group->id) }}" class="d-flex">
                                                         @csrf
                                                         @method('PUT')
@@ -640,20 +655,20 @@
                                                         <input type="hidden" name="employee_ids[]" value="">
                                                         <button type="submit" class="btn btn-sm btn-secondary">Update</button>
                                                     </form>
-                                                @else
+                                                {{-- @else
                                                     {{ $group->group_name }}
-                                                @endif
+                                                @endif --}}
                                             </td>
                                             <td>{{ $group->employees_count }}</td>
                                             <td>{{ $group->components_count }}</td>
                                             <td>
-                                                @if ($deletePayrollPermission != 'none' && $deletePayrollPermission != 5)
+                                                {{-- @if ($deletePayrollPermission != 'none' && $deletePayrollPermission != 5) --}}
                                                     <form method="POST" action="{{ route('payroll.salary-groups.destroy', $group->id) }}" onsubmit="return confirm('Delete this salary group?');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                                     </form>
-                                                @endif
+                                                {{-- @endif --}}
                                             </td>
                                         </tr>
                                     @empty
@@ -672,7 +687,7 @@
 
         @if ($activeTab === 'salary-components')
             <div class="row">
-                @if (in_array($addPayrollPermission, ['all', 'added']))
+                {{-- @if (in_array($addPayrollPermission, ['all', 'added'])) --}}
                     <div class="col-12 mb-3">
                         <div class="card">
                             <div class="card-header form-heading-background">Add Salary Component</div>
@@ -711,7 +726,7 @@
                             </div>
                         </div>
                     </div>
-                @endif
+                {{-- @endif --}}
 
                 <div class="col-12">
                     <div class="card">
@@ -733,7 +748,7 @@
                                         <tr>
                                             <td>{{ $component->id }}</td>
                                             <td>
-                                                @if (in_array($editPayrollPermission, ['all', 'added']))
+                                                {{-- @if (in_array($editPayrollPermission, ['all', 'added'])) --}}
                                                     <form method="POST" action="{{ route('payroll.salary-components.update', $component->id) }}" class="d-flex flex-wrap">
                                                         @csrf
                                                         @method('PUT')
@@ -751,21 +766,21 @@
                                                         </select>
                                                         <button type="submit" class="btn btn-sm btn-secondary mb-1">Update</button>
                                                     </form>
-                                                @else
+                                                {{-- @else
                                                     {{ $component->component_name }}
-                                                @endif
+                                                @endif --}}
                                             </td>
                                             <td>{{ ucfirst($component->component_type) }}</td>
                                             <td>{{ $component->component_value }}</td>
                                             <td>{{ ucfirst(str_replace('_', ' ', $component->value_type)) }}</td>
                                             <td>
-                                                @if ($deletePayrollPermission != 'none' && $deletePayrollPermission != 5)
+                                                {{-- @if ($deletePayrollPermission != 'none' && $deletePayrollPermission != 5) --}}
                                                     <form method="POST" action="{{ route('payroll.salary-components.destroy', $component->id) }}" onsubmit="return confirm('Delete this salary component?');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                                     </form>
-                                                @endif
+                                                {{-- @endif --}}
                                             </td>
                                         </tr>
                                     @empty
@@ -784,7 +799,7 @@
 
         @if ($activeTab === 'payroll-cycles')
             <div class="row">
-                @if (in_array($addPayrollPermission, ['all', 'added']))
+                {{-- @if (in_array($addPayrollPermission, ['all', 'added'])) --}}
                     <div class="col-md-4 mb-3">
                         <div class="card">
                             <div class="card-header form-heading-background">Add Payroll Cycle</div>
@@ -807,7 +822,7 @@
                             </div>
                         </div>
                     </div>
-                @endif
+                {{-- @endif --}}
 
                 <div class="col-md-8">
                     <div class="card">
@@ -827,7 +842,7 @@
                                         <tr>
                                             <td>{{ $cycle->id }}</td>
                                             <td>
-                                                @if (in_array($editPayrollPermission, ['all', 'added']))
+                                                {{-- @if (in_array($editPayrollPermission, ['all', 'added'])) --}}
                                                     <form method="POST" action="{{ route('payroll.payroll-cycles.update', $cycle->id) }}" class="d-flex">
                                                         @csrf
                                                         @method('PUT')
@@ -838,19 +853,19 @@
                                                         </select>
                                                         <button type="submit" class="btn btn-sm btn-secondary">Update</button>
                                                     </form>
-                                                @else
+                                                {{-- @else
                                                     {{ $cycle->cycle }}
-                                                @endif
+                                                @endif --}}
                                             </td>
                                             <td>{{ ucfirst($cycle->status) }}</td>
                                             <td>
-                                                @if ($deletePayrollPermission != 'none' && $deletePayrollPermission != 5)
+                                                {{-- @if ($deletePayrollPermission != 'none' && $deletePayrollPermission != 5) --}}
                                                     <form method="POST" action="{{ route('payroll.payroll-cycles.destroy', $cycle->id) }}" onsubmit="return confirm('Delete this payroll cycle?');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                                     </form>
-                                                @endif
+                                                {{-- @endif --}}
                                             </td>
                                         </tr>
                                     @empty
@@ -869,7 +884,7 @@
 
         @if ($activeTab === 'payment-methods')
             <div class="row">
-                @if (in_array($addPayrollPermission, ['all', 'added']))
+                {{-- @if (in_array($addPayrollPermission, ['all', 'added'])) --}}
                     <div class="col-md-4 mb-3">
                         <div class="card">
                             <div class="card-header form-heading-background">Add Payment Method</div>
@@ -889,7 +904,7 @@
                             </div>
                         </div>
                     </div>
-                @endif
+                {{-- @endif --}}
 
                 <div class="col-md-8">
                     <div class="card">
@@ -909,7 +924,7 @@
                                         <tr>
                                             <td>{{ $method->id }}</td>
                                             <td>
-                                                @if (in_array($editPayrollPermission, ['all', 'added']))
+                                                {{-- @if (in_array($editPayrollPermission, ['all', 'added'])) --}}
                                                     <form method="POST" action="{{ route('payroll.payment-methods.update', $method->id) }}" class="d-flex align-items-center">
                                                         @csrf
                                                         @method('PUT')
@@ -918,19 +933,19 @@
                                                         <label class="mb-0 mr-1">Default</label>
                                                         <button type="submit" class="btn btn-sm btn-secondary">Update</button>
                                                     </form>
-                                                @else
+                                                {{-- @else
                                                     {{ $method->payment_method }}
-                                                @endif
+                                                @endif --}}
                                             </td>
                                             <td>{{ $method->default ? 'Yes' : 'No' }}</td>
                                             <td>
-                                                @if ($deletePayrollPermission != 'none' && $deletePayrollPermission != 5)
+                                                {{-- @if ($deletePayrollPermission != 'none' && $deletePayrollPermission != 5) --}}
                                                     <form method="POST" action="{{ route('payroll.payment-methods.destroy', $method->id) }}" onsubmit="return confirm('Delete this payment method?');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                                     </form>
-                                                @endif
+                                                {{-- @endif --}}
                                             </td>
                                         </tr>
                                     @empty
@@ -990,9 +1005,9 @@
                             </div>
                         </div>
 
-                        @if (in_array($editPayrollPermission, ['all', 'added']))
+                        {{-- @if (in_array($editPayrollPermission, ['all', 'added'])) --}}
                             <button type="submit" class="btn btn-primary mt-2">Update Settings</button>
-                        @endif
+                        {{-- @endif --}}
                     </form>
                 </div>
             </div>

@@ -83,8 +83,6 @@ class EmployeeController extends AccountBaseController
     public function index(EmployeesDataTable $dataTable)
     {
 
-        $this->assignRole = user()->roles->pluck('name')->toArray();
-
         $viewPermission = user()->permission('view_employees');
 
         abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
@@ -97,7 +95,6 @@ class EmployeeController extends AccountBaseController
             $this->totalEmployees = count($this->employees);
             $this->roles = Role::where('name', '<>', 'client')
                 ->orderBy('id')->get();
-            $this->assignRole = user()->roles->pluck('name')->toArray();
         }
 
         return $dataTable->render('employees.index', $this->data);
@@ -114,10 +111,6 @@ class EmployeeController extends AccountBaseController
 
         $addPermission = user()->permission('add_employees');
         abort_403(!in_array($addPermission, ['all', 'added']));
-
-        $this->assignRole = user()->roles->pluck('name')->toArray();
-        abort_403(!in_array('admin', $this->assignRole));
-
 
         $this->teams = Team::all();
         $this->designations = Designation::allDesignations();
@@ -215,6 +208,7 @@ class EmployeeController extends AccountBaseController
             $user->gender = $request->gender;
             $user->locale = $request->locale;
             $user->user_auth_id = $userAuth->id;
+            $user->dark_theme       = 1;
 
             if ($request->has('login')) {
                 $user->login = $request->login;
@@ -392,11 +386,6 @@ class EmployeeController extends AccountBaseController
      */
     public function edit($id)
     {
-        $this->assignRole = user()->roles->pluck('name')->toArray();
-
-        if (!in_array('admin', $this->assignRole) && (int)$id !== user()->id) {
-            abort_403(true);
-        }
 
         $this->employee = User::withoutGlobalScope(ActiveScope::class)->with('employeeDetail', 'reportingTeam')->findOrFail($id);
         $this->emailCountInCompanies = User::withoutGlobalScopes([ActiveScope::class, CompanyScope::class])

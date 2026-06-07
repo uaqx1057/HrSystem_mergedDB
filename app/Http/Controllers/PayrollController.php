@@ -44,14 +44,24 @@ class PayrollController extends AccountBaseController
         abort_403(!$isImpersonatingCompany && (user()->permission('view_payroll') === 'none' || user()->permission('view_payroll') == 5));
 
         $tab = $request->get('tab', 'salary-slips');
-        $this->activeTab = $tab;
-
-        $this->assignRole = user()->roles->pluck('name')->toArray();
-        if(!in_array('admin', $this->assignRole)){
-            if($tab !== 'salary-slips'){
-                abort_403(true);
-            }
+        if($tab == 'salary-slips'){
+            abort_403(user()->permission('view_payroll') == 'none');
+        } elseif($tab == 'salary-groups'){
+            abort_403(!in_array(user()->permission('manage_salary_group'), ['all']));
+        } elseif($tab == 'salary-components'){
+            abort_403(!in_array(user()->permission('manage_salary_component'), ['all']));
+        } elseif($tab == 'salary-setups'){
+            abort_403(!in_array(user()->permission('manage_employee_salary'), ['all']));
+        } elseif($tab == 'payroll-cycles'){
+            abort_403(!in_array(user()->permission('add_payroll'), ['all']));
+        } elseif($tab == 'payment-methods'){
+            abort_403(!in_array(user()->permission('manage_salary_payment_method'), ['all']));
+        } elseif($tab == 'settings'){
+            abort_403(!in_array(user()->permission('manage_salary_tds'), ['all']));
         }
+
+
+        $this->activeTab = $tab;
 
         $currentDate = Carbon::now();
         $currentYear = (int) $currentDate->year;
@@ -59,10 +69,6 @@ class PayrollController extends AccountBaseController
 
         $this->salarySlips = SalarySlip::with(['user:id,name', 'salaryGroup:id,group_name', 'paymentMethod:id,payment_method', 'cycle:id,cycle'])
             ->latest('id');
-
-        if(!in_array('admin', $this->assignRole)){
-            $this->salarySlips = $this->salarySlips->where('user_id', user()->id);
-        }
 
         $this->salarySlips = $this->salarySlips->paginate(15, ['*'], 'salary_slips_page')
             ->withQueryString();
@@ -135,7 +141,6 @@ class PayrollController extends AccountBaseController
 
     public function exportSalarySlipsCsv(Request $request)
     {
-        $this->assignRole = user()->roles->pluck('name')->toArray();
 
         $isImpersonatingCompany = session()->has('impersonate');
         abort_403(!$isImpersonatingCompany && (user()->permission('view_payroll') === 'none' || user()->permission('view_payroll') == 5));
@@ -146,10 +151,6 @@ class PayrollController extends AccountBaseController
 
         $query = SalarySlip::with(['user:id,name', 'driver:id,name', 'salaryGroup:id,group_name', 'paymentMethod:id,payment_method', 'cycle:id,cycle'])
             ->orderByDesc('id');
-
-        if(!in_array('admin', $this->assignRole)){
-            $query->where('user_id', user()->id);
-        }
 
         if (!empty($status) && in_array($status, ['generated', 'review', 'locked', 'paid'])) {
             $query->where('status', $status);
@@ -435,8 +436,8 @@ class PayrollController extends AccountBaseController
 
     public function storeSalaryGroup(Request $request): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
             'group_name' => 'required|string|max:191',
@@ -476,8 +477,8 @@ class PayrollController extends AccountBaseController
 
     public function updateSalaryGroup(Request $request, SalaryGroup $salaryGroup): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
             'group_name' => 'required|string|max:191',
@@ -514,8 +515,8 @@ class PayrollController extends AccountBaseController
 
     public function destroySalaryGroup(SalaryGroup $salaryGroup): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
 
         DB::transaction(function () use ($salaryGroup) {
             SalaryGroupComponent::where('salary_group_id', $salaryGroup->id)->delete();
@@ -528,8 +529,8 @@ class PayrollController extends AccountBaseController
 
     public function storeSalaryComponent(Request $request): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
             'component_name' => 'required|string|max:191',
@@ -546,8 +547,8 @@ class PayrollController extends AccountBaseController
 
     public function updateSalaryComponent(Request $request, SalaryComponent $salaryComponent): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
             'component_name' => 'required|string|max:191',
@@ -563,8 +564,8 @@ class PayrollController extends AccountBaseController
 
     public function destroySalaryComponent(SalaryComponent $salaryComponent): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
 
         SalaryGroupComponent::where('salary_component_id', $salaryComponent->id)->delete();
         $salaryComponent->delete();
@@ -574,8 +575,8 @@ class PayrollController extends AccountBaseController
 
     public function storePayrollCycle(Request $request): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
             'cycle' => 'required|string|max:191',
@@ -589,8 +590,8 @@ class PayrollController extends AccountBaseController
 
     public function updatePayrollCycle(Request $request, PayrollCycle $payrollCycle): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
             'cycle' => 'required|string|max:191',
@@ -604,8 +605,8 @@ class PayrollController extends AccountBaseController
 
     public function destroyPayrollCycle(PayrollCycle $payrollCycle): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
 
         $payrollCycle->delete();
 
@@ -614,8 +615,8 @@ class PayrollController extends AccountBaseController
 
     public function storePaymentMethod(Request $request): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
             'payment_method' => 'required|string|max:191',
@@ -641,8 +642,8 @@ class PayrollController extends AccountBaseController
 
     public function updatePaymentMethod(Request $request, SalaryPaymentMethod $salaryPaymentMethod): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
             'payment_method' => 'required|string|max:191',
@@ -667,8 +668,8 @@ class PayrollController extends AccountBaseController
 
     public function destroyPaymentMethod(SalaryPaymentMethod $salaryPaymentMethod): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
 
         $salaryPaymentMethod->delete();
 
@@ -677,8 +678,8 @@ class PayrollController extends AccountBaseController
 
     public function updateSettings(Request $request): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
             'tds_salary' => 'required|numeric|min:0',
@@ -699,8 +700,8 @@ class PayrollController extends AccountBaseController
 
     public function generateMonthlySlips(): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
 
         Artisan::call('payroll:generate-monthly-slips');
 
@@ -709,8 +710,8 @@ class PayrollController extends AccountBaseController
 
     public function storeEmployeeSetup(Request $request): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
@@ -740,8 +741,8 @@ class PayrollController extends AccountBaseController
 
     public function updateEmployeeSetup(Request $request, PayrollEmployeeSetup $payrollEmployeeSetup): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
             'basic_salary' => 'required|numeric|min:0',
@@ -764,8 +765,8 @@ class PayrollController extends AccountBaseController
 
     public function destroyEmployeeSetup(PayrollEmployeeSetup $payrollEmployeeSetup): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
 
         $payrollEmployeeSetup->delete();
 
@@ -774,8 +775,8 @@ class PayrollController extends AccountBaseController
 
     public function storeDriverSetup(Request $request): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
             'driver_id' => 'required|exists:drivers,id',
@@ -805,8 +806,8 @@ class PayrollController extends AccountBaseController
 
     public function updateDriverSetup(Request $request, PayrollDriverSetup $payrollDriverSetup): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
 
         $validated = $request->validate([
             'basic_salary' => 'required|numeric|min:0',
@@ -829,8 +830,8 @@ class PayrollController extends AccountBaseController
 
     public function destroyDriverSetup(PayrollDriverSetup $payrollDriverSetup): RedirectResponse
     {
-        $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
+        // $isImpersonatingCompany = session()->has('impersonate');
+        // abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
 
         $payrollDriverSetup->delete();
 
@@ -868,11 +869,6 @@ class PayrollController extends AccountBaseController
 
     public function create()
     {
-        $this->assignRole = user()->roles->pluck('name')->toArray();
-        if(!in_array('admin', $this->assignRole)){
-            abort_403(true);
-        }
-
         $addPayrollPermission = user()->permission('add_payroll');
         abort_403(!in_array($addPayrollPermission, ['all', 'added']));
 

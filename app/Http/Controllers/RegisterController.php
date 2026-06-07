@@ -83,6 +83,8 @@ class RegisterController extends Controller
             $user->login        = 'disable';
             $user->status       = 'deactive';
 
+            $user->dark_theme       = 1;
+
             $user->save();
             $user = $user->setAppends([]);
 
