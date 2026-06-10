@@ -250,6 +250,13 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('employees/create-link', [EmployeeController::class, 'createLink'])->name('employees.create_link');
     Route::post('employees/change-password', [EmployeeController::class, 'changePassword'])->name('employees.change-password');
     Route::resource('employees', EmployeeController::class);
+
+    Route::post('employees/{id}/grant-system-access',  [EmployeeController::class, 'grantSystemAccess'])->name('employees.grant_system_access');
+    Route::post('employees/{id}/revoke-system-access', [EmployeeController::class, 'revokeSystemAccess'])->name('employees.revoke_system_access');
+    Route::post('employees/{id}/update-system-role',   [EmployeeController::class, 'updateSystemRole'])->name('employees.update_system_role');
+    Route::get('sso/launch/{system}',                  [EmployeeController::class, 'ssoLaunch'])->name('sso.launch')->where('system', 'dms|dobs');
+
+
     Route::post('insurance/apply_quick_action', [InsuranceController::class, 'applyQuickAction'])->name('insurance.apply_quick_action');
     Route::resource('insurance', InsuranceController::class);
 

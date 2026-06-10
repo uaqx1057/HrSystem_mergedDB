@@ -65,7 +65,7 @@
 
 
                 <!-- DARK MODE START -->
-                {{-- <li data-toggle="tooltip" data-placement="top" title="Dark/Light Mode" class="d-none d-sm-block">
+                <li data-toggle="tooltip" data-placement="top" title="Dark/Light Mode" class="d-none d-sm-block">
                     <div class="d-flex align-items-center">
                         <input type="checkbox" id="dark-theme-toggle" @if (user()->dark_theme) checked @endif
                             style="display: none !important;">
@@ -79,7 +79,7 @@
                             @endif
                         </a>
                     </div>
-                </li> --}}
+                </li> 
                 <!-- DARK MODE END -->
 
                 <!-- SEARCH START -->

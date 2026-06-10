@@ -119,7 +119,7 @@ return [
     |
     */
 
-    'timezone' => env('DB_TIMEZONE', 'UTC'),
+    'timezone' => env('APP_TIMEZONE', 'Asia/Riyadh'),
     'cron_timezone' => env('CRON_TIMEZONE', 'UTC'),
 
     /*

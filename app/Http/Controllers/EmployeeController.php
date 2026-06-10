@@ -766,6 +766,14 @@ class EmployeeController extends AccountBaseController
         $viewImmigrationPermission = user()->permission('view_immigration');
 
         switch ($tab) {
+            case 'system-access':
+                abort_403(!in_array('admin', user_roles()));
+                $this->systemAccessDms  = \App\Models\EmployeeSystemAccess::where('employee_id', $id)->where('system', 'dms')->first();
+                $this->systemAccessDobs = \App\Models\EmployeeSystemAccess::where('employee_id', $id)->where('system', 'dobs')->first();
+                $this->dmsRoles  = DB::table('roles')->where('name', '!=', 'client')->pluck('name', 'id');
+                $this->dobsRoles = ['FleetManager', 'FinanceManager', 'HR', 'OpsManager', 'OpsSupervisor', 'SuperAdmin'];
+                $this->view = 'employees.ajax.system-access';
+                break;
             case 'tickets':
                 return $this->tickets();
             case 'projects':
@@ -1324,6 +1332,158 @@ class EmployeeController extends AccountBaseController
         $userAuth->save();
         return Reply::successWithData(__('messages.passwordChanged'), ['html' => '', 'add_more' => true]);
 
+    }
+    public function grantSystemAccess(Request $request, $id)
+    {
+        abort_403(!in_array('admin', user_roles()));
+
+        $request->validate([
+            'system' => 'required|in:dms,dobs',
+            'role'   => 'required|string',
+        ]);
+
+        $hrUser = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
+        $system = $request->system;
+
+        DB::transaction(function () use ($hrUser, $system, $request, $id) {
+
+            if ($system === 'dms') {
+                // DMS users table uses role_id + is_login_allowed
+                $roleId = DB::table('roles')->where('name', $request->role)->value('id');
+
+                $dmsUser = DB::table('users')
+                    ->where('email', $hrUser->email)
+                    ->whereNotNull('role_id')
+                    ->first();
+
+                if ($dmsUser) {
+                    DB::table('users')->where('id', $dmsUser->id)->update([
+                        'role_id'          => $roleId,
+                        'is_login_allowed' => 1,
+                        'updated_at'       => now(),
+                    ]);
+                    $systemUserId = $dmsUser->id;
+                } else {
+                    $systemUserId = DB::table('users')->insertGetId([
+                        'name'             => $hrUser->name,
+                        'email'            => $hrUser->email,
+                        'password'         => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(16)),
+                        'role_id'          => $roleId,
+                        'is_login_allowed' => 1,
+                        'created_at'       => now(),
+                        'updated_at'       => now(),
+                    ]);
+                }
+            } else {
+                // DOBS users table uses role string + active bool
+                $dobsUser = DB::table('user')->where('email', $hrUser->email)->first();
+
+                if ($dobsUser) {
+                    DB::table('user')->where('id', $dobsUser->id)->update([
+                        'role'       => $request->role,
+                        'active'     => 1,
+                        'updated_at' => now(),
+                    ]);
+                    $systemUserId = $dobsUser->id;
+                } else {
+                    $systemUserId = DB::table('user')->insertGetId([
+                        'name'       => $hrUser->name,
+                        'email'      => $hrUser->email,
+                        'password'   => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(16)),
+                        'role'       => $request->role,
+                        'active'     => 1,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            \App\Models\EmployeeSystemAccess::updateOrCreate(
+                ['employee_id' => $id, 'system' => $system],
+                [
+                    'system_user_id' => $systemUserId,
+                    'role'           => $request->role,
+                    'is_active'      => true,
+                    'provisioned_at' => now(),
+                ]
+            );
+        });
+
+        return Reply::success('Access granted successfully.');
+    }
+
+    public function revokeSystemAccess(Request $request, $id)
+    {
+        abort_403(!in_array('admin', user_roles()));
+
+        $request->validate(['system' => 'required|in:dms,dobs']);
+
+        $access = \App\Models\EmployeeSystemAccess::where('employee_id', $id)
+            ->where('system', $request->system)
+            ->firstOrFail();
+
+        $access->update(['is_active' => false]);
+
+        if ($request->system === 'dms') {
+            DB::table('users')->where('id', $access->system_user_id)
+                ->update(['is_login_allowed' => 0]);
+        } else {
+            DB::table('user')->where('id', $access->system_user_id)
+                ->update(['active' => 0]);
+        }
+
+        return Reply::success('Access revoked.');
+    }
+
+    public function updateSystemRole(Request $request, $id)
+    {
+        abort_403(!in_array('admin', user_roles()));
+
+        $request->validate([
+            'system' => 'required|in:dms,dobs',
+            'role'   => 'required|string',
+        ]);
+
+        $access = \App\Models\EmployeeSystemAccess::where('employee_id', $id)
+            ->where('system', $request->system)
+            ->firstOrFail();
+
+        if ($request->system === 'dms') {
+            $roleId = DB::table('roles')->where('name', $request->role)->value('id');
+            DB::table('users')->where('id', $access->system_user_id)
+                ->update(['role_id' => $roleId]);
+        } else {
+            DB::table('user')->where('id', $access->system_user_id)
+                ->update(['role' => $request->role]);
+        }
+
+        $access->update(['role' => $request->role]);
+
+        return Reply::success('Role updated.');
+    }
+    public function ssoLaunch($system)
+    {
+        $hrUser = user();
+
+        $access = \App\Models\EmployeeSystemAccess::where('employee_id', $hrUser->id)
+            ->where('system', $system)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $token = \App\Models\SsoToken::create([
+            'token'          => \Illuminate\Support\Str::random(64),
+            'employee_id'    => $hrUser->id,
+            'target_system'  => $system,
+            'system_user_id' => $access->system_user_id,
+            'expires_at'     => now()->addSeconds(60),
+        ]);
+
+        $urls = [
+            'dms'  => env('DMS_URL', 'http://dms.local'),
+            'dobs' => env('DOBS_URL', 'https://dobs.example.com'),
+        ];
+
+        return redirect($urls[$system] . '/sso/login?token=' . $token->token);
     }
 
 }

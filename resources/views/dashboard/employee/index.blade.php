@@ -90,7 +90,12 @@
                         <i class="icons icon-logout mr-2"></i>@lang('modules.attendance.clock_out')
                     </button>
                 @endif
+                @php
+                    $mySystemAccess = \App\Models\EmployeeSystemAccess::where('employee_id', user()->id)
+                        ->where('is_active', true)->get();
+                @endphp
 
+               
                 {{-- @if (in_array('admin', user_roles()))
                     <div class="private-dash-settings ml-3">
                         <x-form id="privateDashboardWidgetForm" method="POST">
@@ -131,7 +136,24 @@
                 @endif --}}
             </div>
         </div>
-
+            @if($mySystemAccess->count())
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0 f-16"><i class="fa fa-th-large mr-2"></i>My Applications</h5>
+                        </div>
+                        <div class="card-body d-flex flex-wrap gap-3">
+                            @foreach($mySystemAccess as $access)
+                                <a href="{{ route('sso.launch', $access->system) }}"
+                                class="btn btn-outline-primary" target="_blank">
+                                    <i class="fa fa-external-link-alt mr-1"></i>
+                                    {{ strtoupper($access->system) }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
         <!-- WELOCOME END -->
         <!-- EMPLOYEE DASHBOARD DETAIL START -->
         <div class="row emp-dash-detail">

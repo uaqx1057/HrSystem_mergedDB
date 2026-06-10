@@ -50,7 +50,13 @@ if ($viewPermission == 'all'
                     <li>
                         <x-tab :href="route('employees.show', $employee->id)" :text="__('modules.employees.profile')" class="profile" />
                     </li>
-
+                    @if(in_array('admin', user_roles()) || user_can('view_system_access'))
+                        <li>
+                            <x-tab :href="route('employees.show', [$employee->id, 'tab' => 'system-access'])"
+                                :text="'System Access'"
+                                class="system-access"  ajax="false" />
+                        </li>
+                    @endif
                     @if ($viewEmployeeProjects == 'all' && in_array('projects', user_modules()))
                         <li>
                             <x-tab :href="route('employees.show', $employee->id) . '?tab=projects'" :text="__('app.menu.projects')" ajax="false" class="projects" />
