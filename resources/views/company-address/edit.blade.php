@@ -148,7 +148,7 @@
                                       fieldName="longitude" fieldId="longitude"
                                       :fieldValue="$companyAddress->longitude"/>
                     </div>
-
+                {{--
                 @if(!is_null(global_setting()->google_map_key))
                     <div class="col-lg-12">
                         <h4 class="f-16 font-weight-500 text-capitalize">
@@ -208,6 +208,7 @@
                         </div>
                     @endif
                 @endif
+                --}}
             </div>
         </div>
     </div>
