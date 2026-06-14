@@ -249,6 +249,11 @@ class EmployeeController extends AccountBaseController
                 $employee->user_id = $user->id;
                 $this->employeeData($request, $employee);
                 $employee->save();
+                try {
+                    app(\App\Services\BioTimeService::class)->createEmployee($user, $employee);
+                } catch (\Exception $e) {
+                    \Log::error('BioTime sync failed: ' . $e->getMessage());
+                }
                 $this->saveDependants($request, $employee);
                 $this->saveAllowances($request, $employee);
 
@@ -561,6 +566,11 @@ class EmployeeController extends AccountBaseController
         }
 
         $employee->save();
+        try {
+            app(\App\Services\BioTimeService::class)->createEmployee($user, $employee);
+        } catch (\Exception $e) {
+            \Log::error('BioTime sync failed: ' . $e->getMessage());
+        }
         $this->saveDependants($request, $employee);
         $this->saveAllowances($request, $employee);
 
