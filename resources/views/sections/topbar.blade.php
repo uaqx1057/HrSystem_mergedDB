@@ -200,6 +200,54 @@
                     <!-- ADD END -->
                 @endif
 
+                @php
+                    $mySystemApps = \App\Models\EmployeeSystemAccess::where('employee_id', user()->id)
+                        ->where('is_active', true)->get();
+                @endphp
+                @if($mySystemApps->count() > 0)
+                <!-- MY APPS START -->
+                <li data-toggle="tooltip" data-placement="top" title="My Applications">
+                    <div class="add_box dropdown">
+                        <a class="d-block dropdown-toggle header-icon-box" type="link" data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                            <i class="fa fa-th f-16 text-dark-grey"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right p-3" style="min-width:260px" aria-labelledby="myAppsDropdown">
+                            <p class="f-12 text-dark-grey text-uppercase f-w-500 mb-2">My Applications</p>
+                            @foreach($mySystemApps as $app)
+                            <a href="{{ route('sso.launch', $app->system) }}"
+                               target="_blank"
+                               class="d-flex align-items-center gap-2 p-2 mb-1 rounded text-dark"
+                               style="background:#f8f9fa;text-decoration:none"
+                               onmouseover="this.style.background='#e9ecef'" onmouseout="this.style.background='#f8f9fa'">
+                                @if($app->system === 'dms')
+                                    <span class="d-flex align-items-center justify-content-center rounded"
+                                          style="width:32px;height:32px;background:#4e73df;flex-shrink:0">
+                                        <i class="fa fa-car f-13 text-white"></i>
+                                    </span>
+                                    <div>
+                                        <div class="f-14 f-w-500">Driver Management</div>
+                                        <div class="f-11 text-dark-grey">{{ ucfirst($app->role) }}</div>
+                                    </div>
+                                @else
+                                    <span class="d-flex align-items-center justify-content-center rounded"
+                                          style="width:32px;height:32px;background:#1cc88a;flex-shrink:0">
+                                        <i class="fa fa-users f-13 text-white"></i>
+                                    </span>
+                                    <div>
+                                        <div class="f-14 f-w-500">Driver Onboarding</div>
+                                        <div class="f-11 text-dark-grey">{{ ucfirst($app->role) }}</div>
+                                    </div>
+                                @endif
+                                <i class="fa fa-external-link-alt f-11 text-dark-grey ml-auto"></i>
+                            </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </li>
+                <!-- MY APPS END -->
+                @endif
+
                 <!-- NOTIFICATIONS START -->
                 <li title="{{ __('app.newNotifications') }}">
                     <div class="notification_box dropdown">

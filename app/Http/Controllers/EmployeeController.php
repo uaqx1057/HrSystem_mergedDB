@@ -1375,25 +1375,31 @@ class EmployeeController extends AccountBaseController
                     ]);
                 }
             } else {
-                // DOBS users table uses role string + active bool
-                $dobsUser = DB::table('user')->where('email', $hrUser->email)->first();
+                // DOBS uses a separate DB (dobsykjq_dms) and table dobs_user
+                // Role must be lowercase to match DOBS role_redirects map
+                $dobsRole = strtolower($request->role);
+                $dobsDb   = DB::connection('mysql'); // dobs_user is in the same shared DB
+
+                $dobsUser = $dobsDb->table('dobs_user')->where('email', $hrUser->email)->first();
 
                 if ($dobsUser) {
-                    DB::table('user')->where('id', $dobsUser->id)->update([
-                        'role'       => $request->role,
-                        'active'     => 1,
-                        'updated_at' => now(),
+                    $dobsDb->table('dobs_user')->where('id', $dobsUser->id)->update([
+                        'role' => $dobsRole,
                     ]);
                     $systemUserId = $dobsUser->id;
                 } else {
-                    $systemUserId = DB::table('user')->insertGetId([
-                        'name'       => $hrUser->name,
-                        'email'      => $hrUser->email,
-                        'password'   => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(16)),
-                        'role'       => $request->role,
-                        'active'     => 1,
-                        'created_at' => now(),
-                        'updated_at' => now(),
+                    // username is required and unique in dobs_user; use email as username
+                    $username = $hrUser->email;
+                    // If email is taken as username already (different user), append id
+                    if ($dobsDb->table('dobs_user')->where('username', $username)->exists()) {
+                        $username = $hrUser->email . '_' . $hrUser->id;
+                    }
+                    $systemUserId = $dobsDb->table('dobs_user')->insertGetId([
+                        'name'     => $hrUser->name,
+                        'email'    => $hrUser->email,
+                        'username' => $username,
+                        'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(16)),
+                        'role'     => $dobsRole,
                     ]);
                 }
             }
@@ -1427,10 +1433,15 @@ class EmployeeController extends AccountBaseController
         if ($request->system === 'dms') {
             DB::table('users')->where('id', $access->system_user_id)
                 ->update(['is_login_allowed' => 0]);
-        } else {
-            DB::table('user')->where('id', $access->system_user_id)
-                ->update(['active' => 0]);
         }
+        // DOBS has no active flag; blocking SSO is enough (is_active=false prevents token generation)
+
+        // Invalidate any pending SSO tokens for this employee+system
+        DB::table('sso_tokens')
+            ->where('employee_id', $id)
+            ->where('target_system', $request->system)
+            ->whereNull('used_at')
+            ->update(['used_at' => now()]);
 
         return Reply::success('Access revoked.');
     }
@@ -1453,8 +1464,9 @@ class EmployeeController extends AccountBaseController
             DB::table('users')->where('id', $access->system_user_id)
                 ->update(['role_id' => $roleId]);
         } else {
-            DB::table('user')->where('id', $access->system_user_id)
-                ->update(['role' => $request->role]);
+            DB::table('dobs_user')
+                ->where('id', $access->system_user_id)
+                ->update(['role' => strtolower($request->role)]);
         }
 
         $access->update(['role' => $request->role]);
@@ -1470,20 +1482,25 @@ class EmployeeController extends AccountBaseController
             ->where('is_active', true)
             ->firstOrFail();
 
-        $token = \App\Models\SsoToken::create([
-            'token'          => \Illuminate\Support\Str::random(64),
+        $tokenStr = bin2hex(random_bytes(32)); // 64-char cryptographically secure hex
+
+        // Use UTC_TIMESTAMP() to avoid PHP↔MySQL timezone conversion on TIMESTAMP columns
+        DB::table('sso_tokens')->insert([
+            'token'          => $tokenStr,
             'employee_id'    => $hrUser->id,
             'target_system'  => $system,
             'system_user_id' => $access->system_user_id,
-            'expires_at'     => now()->addSeconds(60),
+            'expires_at'     => DB::raw('UTC_TIMESTAMP() + INTERVAL 5 MINUTE'),
+            'created_at'     => DB::raw('UTC_TIMESTAMP()'),
+            'updated_at'     => DB::raw('UTC_TIMESTAMP()'),
         ]);
 
         $urls = [
-            'dms'  => env('DMS_URL', 'http://dms.local'),
-            'dobs' => env('DOBS_URL', 'https://dobs.example.com'),
+            'dms'  => config('services.sso.dms_url', 'https://dms.speedlogi.sa'),
+            'dobs' => config('services.sso.dobs_url', 'https://dobs.speedlogi.sa'),
         ];
 
-        return redirect($urls[$system] . '/sso/login?token=' . $token->token);
+        return redirect($urls[$system] . '/sso/login?token=' . $tokenStr);
     }
 
 }
