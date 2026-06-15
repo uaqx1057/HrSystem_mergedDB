@@ -1500,7 +1500,7 @@ class EmployeeController extends AccountBaseController
             'employee_id'    => $hrUser->id,
             'target_system'  => $system,
             'system_user_id' => $access->system_user_id,
-            'expires_at'     => DB::raw('UTC_TIMESTAMP() + INTERVAL 5 MINUTE'),
+            'expires_at'     => DB::raw('UTC_TIMESTAMP() + INTERVAL 15 MINUTE'),
             'created_at'     => DB::raw('UTC_TIMESTAMP()'),
             'updated_at'     => DB::raw('UTC_TIMESTAMP()'),
         ]);
