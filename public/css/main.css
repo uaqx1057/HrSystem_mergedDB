@@ -25892,6 +25892,14 @@ table.dataTable {
     margin-top: 0px !important;
 }
 
+table.dataTable thead th {
+        white-space: nowrap !important;
+    }
+
+.col-sm-12{
+ overflow: auto !important;
+}
+
 @media (max-width: 767.98px) {
     table.dataTable {
         width: 862px;

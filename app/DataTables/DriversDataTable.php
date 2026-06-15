@@ -25,6 +25,11 @@ class DriversDataTable extends DataTable
             ->addColumn('name', 'drivers.datatable.name-with-image')
             ->addColumn('action', 'drivers.datatable.action')
             ->addColumn('status', 'drivers.datatable.status')
+            ->editColumn('iqaama_expiry', function ($row) {
+            return $row->iqaama_expiry
+                ? \Carbon\Carbon::parse($row->iqaama_expiry)->format('d-m-Y')
+                : null;
+        })
             ->addColumn('onboarding_status', function ($row) {
                 $onboardingStatus = $this->resolveOnboardingStatus($row);
 
@@ -51,8 +56,11 @@ class DriversDataTable extends DataTable
                 'name',
                 'iqaama_number',
                 'work_mobile_no',
+                'iqaama_expiry',
                 'status',
                 'onboarding_stage',
+                'sponsorship',
+                'sponsorship_id',
                 'offboard_request',
                 'offboarding_stage',
                 'image',
@@ -150,6 +158,9 @@ class DriversDataTable extends DataTable
             Column::make('driver_id'),
             Column::make('name'),
             Column::make('iqaama_number'),
+            Column::make('iqaama_expiry'),
+            Column::make('sponsorship'),
+            Column::make('sponsorship_id'),
             Column::make('work_mobile_no'),
             Column::make('status'),
             Column::computed('onboarding_status')->title('Onboarding Status'),

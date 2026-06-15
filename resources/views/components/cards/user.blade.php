@@ -1,4 +1,4 @@
-<div class="card border-0 b-shadow-4">
+<div class="card border-0 b-shadow-4 form-heading-background">
     <div class="card-horizontal align-items-center">
         <div class="card-img">
             <img class="" src="{{ $image }}" alt="">

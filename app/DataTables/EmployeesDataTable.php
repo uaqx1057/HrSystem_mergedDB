@@ -64,6 +64,13 @@ class EmployeesDataTable extends BaseDataTable
 
             return $row->current_role_name;
         });
+
+        $datatables->editColumn('iqama_expiry_date', function ($row) {
+            return $row->iqama_expiry_date
+                ? Carbon::parse($row->iqama_expiry_date)->format('d-m-Y')
+                : '--';
+        });
+
         $datatables->addColumn('role', function ($row) use ($roles) {
             $userRole = $row->roles->pluck('name')->toArray();
 
@@ -217,7 +224,7 @@ class EmployeesDataTable extends BaseDataTable
             ->leftJoin('employee_details', 'employee_details.user_id', '=', 'users.id')
             ->leftJoin('designations', 'employee_details.designation_id', '=', 'designations.id')
             ->join('roles', 'roles.id', '=', 'role_user.role_id')
-            ->select('users.id', 'employee_details.added_by', 'users.salutation', 'users.name', 'users.email', 'users.created_at', 'roles.name as roleName', 'roles.id as roleId', 'users.image', 'users.gender', 'users.status', DB::raw('(select user_roles.role_id from role_user as user_roles where user_roles.user_id = users.id ORDER BY user_roles.role_id DESC limit 1) as `current_role`'), DB::raw('(select roles.name from roles as roles where roles.id = current_role limit 1) as `current_role_name`'), 'designations.name as designation_name', 'employee_details.employee_id', 'employee_details.joining_date')
+            ->select('users.id', 'employee_details.added_by', 'users.salutation', 'users.name', 'users.email', 'users.created_at', 'roles.name as roleName', 'roles.id as roleId', 'users.image', 'users.gender', 'users.status', DB::raw('(select user_roles.role_id from role_user as user_roles where user_roles.user_id = users.id ORDER BY user_roles.role_id DESC limit 1) as `current_role`'), DB::raw('(select roles.name from roles as roles where roles.id = current_role limit 1) as `current_role_name`'), 'designations.name as designation_name', 'employee_details.employee_id', 'employee_details.joining_date','employee_details.iqama_no','employee_details.iqama_expiry_date','employee_details.sponsor_kafala')
             ->onlyEmployee();
 
 
@@ -351,6 +358,23 @@ class EmployeesDataTable extends BaseDataTable
             __('app.name') => ['data' => 'name', 'name' => 'name', 'exportable' => false, 'title' => __('app.name')],
             __('app.employee') => ['data' => 'employee_name', 'name' => 'name', 'visible' => false, 'title' => __('app.employee')],
             __('app.email') => ['data' => 'email', 'name' => 'email', 'title' => __('app.email')],
+            __('Iqama Number') => [
+                'data' => 'iqama_no',
+                'name' => 'iqama_no',
+                'title' => 'Iqama Number'
+            ],
+
+            __('Iqama Expiry') => [
+                'data' => 'iqama_expiry_date',
+                'name' => 'iqama_expiry_date',
+                'title' => 'Iqama Expiry'
+            ],
+
+            __('Sponsor') => [
+                'data' => 'sponsor_kafala',
+                'name' => 'sponsor_kafala',
+                'title' => 'Sponsor'
+            ],
             __('app.role') => ['data' => 'role', 'name' => 'role', 'width' => '20%', 'orderable' => false, 'exportable' => false, 'title' => __('app.role'), 'visible' => ($this->changeEmployeeRolePermission == 'all')],
             __('modules.employees.role') => ['data' => 'current_role_name', 'name' => 'current_role_name', 'visible' => false, 'title' => __('modules.employees.role')],
             __('modules.employees.joiningDate') => ['data' => 'joining_date', 'name' => 'joining_date', 'visible' => false, 'title' => __('modules.employees.joiningDate')],

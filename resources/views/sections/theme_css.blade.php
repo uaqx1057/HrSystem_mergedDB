@@ -112,9 +112,13 @@
 
     background: @if (!user()->dark_theme)
         #246A45;
-        
+
     @else
         /* ڈارک موڈ کی سیٹنگز اگر ہیں */
     @endif
+
+    .light-theme-white-color {
+        color: {{ !user()->dark_theme ? 'white' : '' }};
+    }
 }
 </style>

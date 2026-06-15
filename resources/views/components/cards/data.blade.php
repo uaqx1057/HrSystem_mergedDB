@@ -23,7 +23,7 @@
         </div>
     @else
         <div @class([
-            'card-body', 'pt-2' => ($title),
+            'card-body', 'text-darkest-white' => !user()->dark_theme, 'pt-2' => ($title),
             $otherClasses
         ])>
             {{ $slot }}

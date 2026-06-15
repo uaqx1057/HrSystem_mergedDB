@@ -57,7 +57,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                         <x-cards.user :image="$employee->image_url">
                             <div class="row">
                                 <div class="col-10">
-                                    <h4 class="card-title f-15 f-w-500 text-darkest-grey mb-0">
+                                    <h4 class="card-title f-15 f-w-500 light-theme-white-color  mb-0">
                                         {{ ($employee->salutation ? $employee->salutation->label() . ' ' : '') . $employee->name }}
                                         @isset($employee->country)
                                             <x-flag :country="$employee->country" />
@@ -67,7 +67,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 @if ($editEmployeePermission == 'all' || ($editEmployeePermission == 'added' && $employee->employeeDetail->added_by == user()->id))
                                     <div class="col-2 text-right">
                                         <div class="dropdown">
-                                            <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle"
+                                            <button class="btn f-14 px-0 py-0 text-darkest-white dropdown-toggle"
                                                 type="button" data-toggle="dropdown" aria-haspopup="true"
                                                 aria-expanded="false">
                                                 <i class="fa fa-ellipsis-h"></i>
@@ -82,14 +82,14 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 @endif
                             </div>
 
-                            <p class="f-12 font-weight-normal text-dark-grey mb-0">
+                            <p class="f-12 font-weight-normal light-theme-white-color mb-0">
                                 {{ !is_null($employee->employeeDetail) && !is_null($employee->employeeDetail->designation) ? $employee->employeeDetail->designation->name : '' }}
                                 &bull;
                                 {{ isset($employee->employeeDetail) && !is_null($employee->employeeDetail->department) ? $employee->employeeDetail->department->team_name : '' }}
                             </p>
 
                             @if ($employee->status == 'Active')
-                                <p class="card-text f-11 text-lightest">@lang('app.lastLogin')
+                                <p class="card-text f-11 light-theme-white-color">@lang('app.lastLogin')
                                     @if (!is_null($employee->last_login))
                                         {{ $employee->last_login->timezone(company()->timezone)->translatedFormat(company()->date_format . ' ' . company()->time_format) }}
                                     @else
@@ -97,28 +97,28 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                     @endif
                                 </p>
                             @else
-                                <p class="card-text f-12 text-lightest">
+                                <p class="card-text f-12 light-theme-white-color">
                                     <x-status :value="__('app.inactive')" color="red" />
                                 </p>
                             @endif
 
                             @if ($showFullProfile)
-                                <div class="card-footer bg-white border-top-grey pl-0">
+                                <div class="card-footer bg-white border-top-grey form-heading-background pl-0">
                                     <div class="d-flex flex-wrap justify-content-between">
                                         <span>
-                                            <label class="f-11 text-dark-grey mb-12 text-capitalize" for="usr">@lang('app.openTasks')</label>
+                                            <label class="f-11 light-theme-white-color mb-12 text-capitalize" for="usr">@lang('app.openTasks')</label>
                                             <p class="mb-0 f-18 f-w-500">{{ $employee->open_tasks_count }}</p>
                                         </span>
                                         <span>
-                                            <label class="f-11 text-dark-grey mb-12 text-capitalize" for="usr">@lang('app.menu.projects')</label>
+                                            <label class="f-11 light-theme-white-color mb-12 text-capitalize" for="usr">@lang('app.menu.projects')</label>
                                             <p class="mb-0 f-18 f-w-500">{{ $employee->member_count }}</p>
                                         </span>
                                         <span>
-                                            <label class="f-11 text-dark-grey mb-12 text-capitalize" for="usr">@lang('modules.employees.hoursLogged')</label>
+                                            <label class="f-11 light-theme-white-color mb-12 text-capitalize" for="usr">@lang('modules.employees.hoursLogged')</label>
                                             <p class="mb-0 f-18 f-w-500">{{ $hoursLogged }}</p>
                                         </span>
                                         <span>
-                                            <label class="f-11 text-dark-grey mb-12 text-capitalize" for="usr">@lang('app.menu.tickets')</label>
+                                            <label class="f-11 light-theme-white-color mb-12 text-capitalize" for="usr">@lang('app.menu.tickets')</label>
                                             <p class="mb-0 f-18 f-w-500">{{ $employee->agents_count }}</p>
                                         </span>
                                     </div>
@@ -134,25 +134,20 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
 
                         {{-- ── PROFILE INFO ──────────────────────────────────────── --}}
                         <x-cards.data :title="__('modules.client.profileInfo')" class="mt-4">
-                            <x-cards.data-row :label="__('modules.employees.employeeId')"
+                            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.employeeId')"
                                 :value="$employee->employeeDetail->employee_id ?? '--'" />
 
-                            <x-cards.data-row :label="__('modules.employees.fullName')"
+                            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.fullName')"
                                 :value="$employee->name" />
 
-                            <x-cards.data-row :label="__('app.designation')"
+                            <x-cards.data-row :background="'text-darkest-white'" :label="__('app.designation')"
                                 :value="$employee->employeeDetail->designation->name ?? '--'" />
 
-                            <x-cards.data-row :label="__('app.department')"
+                            <x-cards.data-row :background="'text-darkest-white'" :label="__('app.department')"
                                 :value="$employee->employeeDetail->department->team_name ?? '--'" />
 
-                            <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
-                                <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
-                                    @lang('modules.employees.gender')</p>
-                                <p class="mb-0 text-dark-grey f-14 w-70">
-                                    <x-gender :gender='$employee->gender' />
-                                </p>
-                            </div>
+                            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.gender')"
+                                :value="$employee->gender ?? '--'" />
 
                             @php
                                 $currentyearJoiningDate = \Carbon\Carbon::parse(now(company()->timezone)->year.'-'.$employee->employeeDetail->joining_date->translatedFormat('m-d'));
@@ -162,81 +157,81 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 $diffInHoursJoiningDate = now(company()->timezone)->floatDiffInHours($currentyearJoiningDate, false);
                             @endphp
 
-                            <x-cards.data-row :label="__('modules.employees.workAnniversary')"
+                            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.workAnniversary')"
                                 :value="(!is_null($employee->employeeDetail) && !is_null($employee->employeeDetail->joining_date))
                                     ? (($diffInHoursJoiningDate > -23 && $diffInHoursJoiningDate <= 0) ? __('app.today') : $currentyearJoiningDate->longRelativeToNowDiffForHumans())
                                     : '--'" />
 
-                            <x-cards.data-row :label="__('modules.employees.dateOfBirth')"
+                            <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.dateOfBirth')"
                                 :value="$employee->employeeDetail->date_of_birth
                                     ? $employee->employeeDetail->date_of_birth->translatedFormat('d F')
                                     : '--'" />
 
                             @if ($showFullProfile)
-                                <x-cards.data-row :label="__('app.email')" :value="$employee->email" />
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('app.email')" :value="$employee->email" />
 
-                                <x-cards.data-row :label="__('app.mobile')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('app.mobile')"
                                     :value="$employee->mobile_with_phonecode" />
 
-                                <x-cards.data-row :label="__('modules.employees.linkedinUsername')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.linkedinUsername')"
                                     :value="$employee->employeeDetail->slack_username
                                         ? '@'.$employee->employeeDetail->slack_username
                                         : '--'" />
 
-                                <x-cards.data-row :label="__('modules.employees.hourlyRate')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.hourlyRate')"
                                     :value="company()->currency->currency_symbol . ($employee->employeeDetail->hourly_rate ?? '0')" />
 
-                                <x-cards.data-row :label="__('app.address')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('app.address')"
                                     :value="$employee->employeeDetail->address ?? '--'" />
 
-                                <x-cards.data-row :label="__('app.language')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('app.language')"
                                     :value="$employeeLanguage->language_name ?? '--'" />
 
-                                <x-cards.data-row :label="__('modules.employees.joiningDate')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.joiningDate')"
                                     :value="$employee->employeeDetail->joining_date
                                         ? $employee->employeeDetail->joining_date->translatedFormat(company()->date_format)
                                         : '--'" />
 
-                                <x-cards.data-row :label="__('modules.employees.probationEndDate')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.probationEndDate')"
                                     :value="$employee->employeeDetail->probation_end_date
                                         ? \Carbon\Carbon::parse($employee->employeeDetail->probation_end_date)->translatedFormat(company()->date_format)
                                         : '--'" />
 
-                                <x-cards.data-row :label="__('modules.employees.noticePeriodStartDate')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.noticePeriodStartDate')"
                                     :value="$employee->employeeDetail->notice_period_start_date
                                         ? \Carbon\Carbon::parse($employee->employeeDetail->notice_period_start_date)->translatedFormat(company()->date_format)
                                         : '--'" />
 
-                                <x-cards.data-row :label="__('modules.employees.noticePeriodEndDate')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.noticePeriodEndDate')"
                                     :value="$employee->employeeDetail->notice_period_end_date
                                         ? \Carbon\Carbon::parse($employee->employeeDetail->notice_period_end_date)->translatedFormat(company()->date_format)
                                         : '--'" />
 
-                                <x-cards.data-row :label="__('modules.employees.maritalStatus')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.maritalStatus')"
                                     :value="$storedMaritalStatus ? ucfirst($storedMaritalStatus) : '--'" />
 
-                                <x-cards.data-row :label="__('modules.employees.employmentType')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.employmentType')"
                                     :value="$employee->employeeDetail->employment_type
                                         ? __('modules.employees.' . $employee->employeeDetail->employment_type)
                                         : '--'" />
-                                <x-cards.data-row :label="__('modules.employees.basic_salary')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.basic_salary')"
                                     :value="$employee->employeeDetail->basic_salary
                                         ? __($employee->employeeDetail->basic_salary)
                                         : '--'" />
-                                <x-cards.data-row :label="__('modules.employees.vehicle_allocation')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.vehicle_allocation')"
                                     :value="$employee->employeeDetail->vehicle_allocation
                                         ? __($employee->employeeDetail->vehicle_allocation)
                                         : '--'" />
 
                                 @if($employee->employeeDetail->employment_type == 'internship')
-                                    <x-cards.data-row :label="__('modules.employees.internshipEndDate')"
+                                    <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.internshipEndDate')"
                                         :value="$employee->employeeDetail->internship_end_date
                                             ? \Carbon\Carbon::parse($employee->employeeDetail->internship_end_date)->translatedFormat(company()->date_format)
                                             : '--'" />
                                 @endif
 
                                 @if($employee->employeeDetail->employment_type == 'on_contract')
-                                    <x-cards.data-row :label="__('modules.employees.contractEndDate')"
+                                    <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.contractEndDate')"
                                         :value="$employee->employeeDetail->contract_end_date
                                             ? \Carbon\Carbon::parse($employee->employeeDetail->contract_end_date)->translatedFormat(company()->date_format)
                                             : '--'" />
@@ -275,14 +270,14 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                             <x-cards.data :title="__('modules.employees.iqamaPassportInfo')" class="mt-4">
 
                                 {{-- IQAMA --}}
-                                <x-cards.data-row :label="__('modules.employees.Iqama No')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.Iqama No')"
                                     :value="$employee->employeeDetail->iqama_no ?? '--'" />
 
 
-                                <x-cards.data-row :label="__('modules.employees.iqama_profession')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.iqama_profession')"
                                     :value="$employee->employeeDetail->iqama_profession ?? '--'" />
 
-                                <x-cards.data-row :label="__('modules.employees.iqama_expiry_date')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.iqama_expiry_date')"
                                     :value="$employee->employeeDetail->iqama_expiry_date
                                         ? \Carbon\Carbon::parse($employee->employeeDetail->iqama_expiry_date)->translatedFormat(company()->date_format)
                                         : '--'" />
@@ -302,10 +297,10 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 @endif
 
                                 {{-- PASSPORT --}}
-                                <x-cards.data-row :label="__('modules.employees.passport_no')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.passport_no')"
                                     :value="$employee->employeeDetail->passport_no ?? '--'" />
 
-                                <x-cards.data-row :label="__('modules.employees.passport_expiry_date')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.passport_expiry_date')"
                                     :value="$employee->employeeDetail->passport_expiry_date
                                         ? \Carbon\Carbon::parse($employee->employeeDetail->passport_expiry_date)->translatedFormat(company()->date_format)
                                         : '--'" />
@@ -325,10 +320,10 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 @endif
 
                                 {{-- SPONSOR --}}
-                                <x-cards.data-row :label="__('modules.employees.Sponsor / kafala')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.Sponsor / kafala')"
                                     :value="$employee->employeeDetail->sponsor_kafala ?? '--'" />
 
-                                <x-cards.data-row :label="__('modules.employees.sponsorship_transfer_date')"
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.sponsorship_transfer_date')"
                                     :value="$employee->employeeDetail->sponsorship_transfer_date
                                         ? \Carbon\Carbon::parse($employee->employeeDetail->sponsorship_transfer_date)->translatedFormat(company()->date_format)
                                         : '--'" />
@@ -390,7 +385,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                         <x-cards.data class="mb-4">
                             <div class="d-flex justify-content-between">
                                 <div class="col-6">
-                                    <p class="f-14 text-dark-grey">@lang('modules.employees.reportingTo')</p>
+                                    <p class="f-14 text-darkest-white">@lang('modules.employees.reportingTo')</p>
                                     @if ($employee->employeeDetail->reportingTo)
                                         <x-employee :user="$employee->employeeDetail->reportingTo" />
                                     @else
@@ -399,7 +394,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 </div>
                                 @if ($employee->reportingTeam)
                                     <div class="col-6">
-                                        <p class="f-14 text-dark-grey">@lang('modules.employees.reportingTeam')</p>
+                                        <p class="f-14 text-darkest-white">@lang('modules.employees.reportingTeam')</p>
                                         @if (count($employee->reportingTeam) > 0)
                                             @if (count($employee->reportingTeam) > 1)
                                                 @foreach ($employee->reportingTeam as $item)
@@ -453,11 +448,11 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                             {{-- Summary row --}}
                                             <div class="row f-13 mb-3 px-2">
 
-                                                <div class="col-4">
+                                                <div class="col-4 text-darkest-white">
                                                     <strong>Total Earned:</strong> <p>{{ number_format($totalEarned, 1) }} days</p>
                                                 </div>
 
-                                                <div class="col-4">
+                                                <div class="col-4 text-darkest-white">
                                                     <strong>Total Taken:</strong><p>{{ number_format($totalTaken, 1) }} days</p>
                                                 </div>
 
