@@ -91,6 +91,20 @@ return [
             'schema' => 'public',
             'sslmode' => 'prefer',
         ],
+       'biotime' => [
+            'driver'   => 'pgsql',
+            'host'     => env('BIOTIME_DB_HOST'),
+            'port'     => env('BIOTIME_DB_PORT', '5432'),
+            'database' => env('BIOTIME_DB_DATABASE'),
+            'username' => env('BIOTIME_DB_USERNAME'),
+            'password' => env('BIOTIME_DB_PASSWORD'),
+            'charset'  => 'utf8',
+            'schema'   => 'public',
+            'sslmode'  => 'disable',
+            'options'  => [
+                \PDO::ATTR_EMULATE_PREPARES => true,
+            ],
+        ],
 
         'sqlsrv' => [
             'driver' => 'sqlsrv',
