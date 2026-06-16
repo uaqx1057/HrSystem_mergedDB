@@ -2,9 +2,12 @@
 
 namespace App\Providers;
 
+use App\Mail\Transport\FallbackSmtpTransport;
 use App\Models\Company;
 use Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider;
 use Carbon\CarbonInterval;
+use Illuminate\Mail\MailManager;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
@@ -52,6 +55,17 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return static::minutes($totalMinutes)->cascade()->forHumans(['short' => true, 'options' => 0]); /** @phpstan-ignore-line */
+        });
+
+        Mail::extend('fallback_smtp', function (array $config) {
+            $mailManager = $this->app->make(MailManager::class);
+
+            return new FallbackSmtpTransport(
+                $mailManager->createSymfonyTransport($config['primary']),
+                $mailManager->createSymfonyTransport($config['backup']),
+                $config['backup_from'] ?? [],
+                $this->app['log']
+            );
         });
 
     }

@@ -15,12 +15,10 @@
 
         <!-- SIDEBAR MENU START -->
         <div class="sidebar-menu {{ user()->dark_theme ? 'bg-dark' : '' }}" id="sideMenuScroll">
-            <!-- WORKSUITESAAS -->
-            @if(user()->is_superadmin)
+            @if(user()->is_superadmin && !session('impersonate'))
                 @include('super-admin.sections.super-admin-menu')
-            @else()
-                @include('sections.menu')
             @endif
+            @include('sections.menu')
         </div>
         <!-- SIDEBAR MENU END -->
     </div>

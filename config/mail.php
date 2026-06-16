@@ -48,6 +48,39 @@ return [
             'local_domain' => env('MAIL_EHLO_DOMAIN') ?: null,
         ],
 
+        'fallback_smtp' => [
+            'transport' => 'fallback_smtp',
+            'from' => [
+                'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+                'name'    => env('MAIL_FROM_NAME', 'Example'),
+            ],
+            'primary' => [
+                'transport'    => 'smtp',
+                'host'         => env('MAIL_HOST', 'smtp.mailgun.org'),
+                'port'         => env('MAIL_PORT', 587),
+                'encryption'   => env('MAIL_ENCRYPTION', 'tls'),
+                'username'     => env('MAIL_USERNAME'),
+                'password'     => env('MAIL_PASSWORD'),
+                'timeout'      => null,
+                'verify_peer'  => false,
+                'local_domain' => env('MAIL_EHLO_DOMAIN') ?: null,
+            ],
+            'backup' => [
+                'transport'    => 'smtp',
+                'host'         => env('MAIL_BACKUP_HOST', '127.0.0.1'),
+                'port'         => env('MAIL_BACKUP_PORT', 465),
+                'encryption'   => env('MAIL_BACKUP_ENCRYPTION', 'ssl'),
+                'username'     => env('MAIL_BACKUP_USERNAME'),
+                'password'     => env('MAIL_BACKUP_PASSWORD'),
+                'timeout'      => null,
+                'local_domain' => env('MAIL_EHLO_DOMAIN') ?: null,
+            ],
+            'backup_from' => [
+                'address' => env('MAIL_BACKUP_FROM_ADDRESS', env('MAIL_BACKUP_USERNAME', 'hello@example.com')),
+                'name'    => env('MAIL_BACKUP_FROM_NAME', env('MAIL_FROM_NAME', 'Example')),
+            ],
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],

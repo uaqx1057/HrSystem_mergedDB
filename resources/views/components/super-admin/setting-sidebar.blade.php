@@ -27,7 +27,7 @@
                              :href="route('superadmin.settings.super-admin-profile.index')"
                              :text="__('app.menu.profileSettings')"/>
 
-        @if (user()->permission('manage_superadmin_notification_settings') == 'all')
+        @if (user()->is_superadmin || user()->permission('manage_superadmin_notification_settings') == 'all')
         <x-setting-menu-item :active="$activeMenu" menu="notification_settings" :href="route('notifications.index')"
                              :text="__('app.menu.notificationSettings')"/>
         @endif

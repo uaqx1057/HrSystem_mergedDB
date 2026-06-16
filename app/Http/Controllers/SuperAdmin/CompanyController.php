@@ -540,7 +540,7 @@ class CompanyController extends AccountBaseController
         Auth::loginUsingId($admin->user_auth_id);
 
         return Reply::successWithData(__('superadmin.successfullyLoginAsCompany'), [
-            'redirectUrl' => route('dashboard'),
+            'redirectUrl' => route('dashboard.advanced'),
         ]);
     }
 
