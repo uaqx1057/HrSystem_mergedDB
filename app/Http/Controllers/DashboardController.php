@@ -42,7 +42,7 @@ class DashboardController extends AccountBaseController
         $this->pageTitle = 'app.menu.dashboard';
         $this->middleware(function ($request, $next) {
             // WORKSUITESAAS — allow superadmin when impersonating a company
-            abort_403(user()->is_superadmin && !session('impersonate'));
+            abort_403(user()->is_superadmin);
 
             $this->viewOverviewDashboard = user()->permission('view_overview_dashboard');
             $this->viewProjectDashboard = user()->permission('view_project_dashboard');

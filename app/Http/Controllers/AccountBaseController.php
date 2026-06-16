@@ -57,7 +57,7 @@ class AccountBaseController extends Controller
     {
 
         // WORKSUITESAAS — skip admin setup for superadmin unless they are impersonating a company
-        if (user()->is_superadmin && !session('impersonate')) {
+        if (user()->is_superadmin) {
             return true;
         }
 
@@ -174,7 +174,7 @@ class AccountBaseController extends Controller
     public function superAdminSpecific()
     {
         // WORKSUITESAAS — skip superadmin-specific setup when impersonating a company
-        if (user()->is_superadmin && !session('impersonate')) {
+        if (user()->is_superadmin) {
             $viewTicketPermission = user()->permission('view_superadmin_ticket');
 
             $this->totalPendingOfflineRequests = OfflinePlanChange::where('status', 'pending')->count();
