@@ -47,12 +47,12 @@
                 </x-forms.text>
             </div>
             <div class="col-sm-4">
-                <x-forms.select fieldId="import_from_role" :fieldLabel="__('modules.permission.importFromRole')" fieldName="import_from_role">
+                {{-- <x-forms.select fieldId="import_from_role" :fieldLabel="__('modules.permission.importFromRole')" fieldName="import_from_role">
                     <option value="">--</option>
                     @foreach ($roles as $item)
                         <option value="{{ $item->id }}">{{ $item->display_name }}</option>
                     @endforeach
-                </x-forms.select>
+                </x-forms.select> --}}
             </div>
 
         </div>

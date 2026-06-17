@@ -49,7 +49,7 @@ class SuperadminRolePermissionController extends AccountBaseController
         }])
             ->withoutGlobalScopes([CompanyScope::class])
             ->orderBy('id', 'asc')
-            ->whereNull('company_id')
+            ->whereNull('company_id')->whereNotNull('display_name')
             ->get();
 
         $this->totalPermissions = Permission::select('permissions.*')->join('modules', 'modules.id', 'permissions.module_id')->where('modules.is_superadmin', 1)->count();
@@ -71,7 +71,7 @@ class SuperadminRolePermissionController extends AccountBaseController
             $q->withoutGlobalScopes([CompanyScope::class]);
         }])->with(['roleuser' => function ($q) {
             $q->withoutGlobalScopes([CompanyScope::class]);
-        }])->withoutGlobalScopes([CompanyScope::class])->whereNull('company_id')->get();
+        }])->withoutGlobalScopes([CompanyScope::class])->whereNull('company_id')->whereNotNull('display_name')->get();
 
         return view('super-admin.role-permissions.ajax.create', $this->data);
     }
@@ -111,18 +111,18 @@ class SuperadminRolePermissionController extends AccountBaseController
 
         // Update user permission with the role
         foreach ($role->users as $roleuser) {
-            $userPermission = UserPermission::where('user_permissions.permission_id', $permissionId)
-                ->leftJoin('users', 'users.id', '=', 'user_permissions.user_id')
-                ->where('user_permissions.user_id', $roleuser->id)
-                ->select('users.customised_permissions', 'user_permissions.*')
-                ->firstOrNew();
-
-            if ($userPermission->customised_permissions == 0) {
-                $userPermission->permission_id = $permissionId;
-                $userPermission->user_id = $roleuser->id;
-                $userPermission->permission_type_id = $permissionType;
-                $userPermission->save();
+            // Skip users who have customised their permissions
+            if ($roleuser->customised_permissions == 1) {
+                continue;
             }
+
+            $userPermission = UserPermission::firstOrNew([
+                'permission_id' => $permissionId,
+                'user_id' => $roleuser->id,
+            ]);
+
+            $userPermission->permission_type_id = $permissionType;
+            $userPermission->save();
 
         }
 

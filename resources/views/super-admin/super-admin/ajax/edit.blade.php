@@ -49,21 +49,21 @@
                                 </div>
                             @endif
                             @if($superAdmin->id !== user()->id)
-                            <div class="col-md-3">
-                                <x-forms.select fieldId="status" :fieldLabel="__('app.status')"
-                                                fieldName="status">
-                                    <option @if($superAdmin->status == 'active') selected
-                                            @endif  value="active">@lang('app.active')</option>
-                                    <option @if($superAdmin->status == 'deactive') selected
-                                            @endif   value="deactive">@lang('app.inactive')</option>
-                                </x-forms.select>
-                            </div>
-                        @else
-                            <div class="col-md-3">
-                                <x-forms.label :fieldLabel="__('app.status')" fieldId="status"  class="my-3" />
-                                <div><i class="fa fa-circle mr-1 text-success f-10"></i> {{__('app.'.$superAdmin->status)}}</div>
-                            </div>
-                        @endif
+                                <div class="col-md-3">
+                                    <x-forms.select fieldId="status" :fieldLabel="__('app.status')"
+                                                    fieldName="status">
+                                        <option @if($superAdmin->status == 'active') selected
+                                                @endif  value="active">@lang('app.active')</option>
+                                        <option @if($superAdmin->status == 'deactive') selected
+                                                @endif   value="deactive">@lang('app.inactive')</option>
+                                    </x-forms.select>
+                                </div>
+                            @else
+                                <div class="col-md-3">
+                                    <x-forms.label :fieldLabel="__('app.status')" fieldId="status"  class="" />
+                                    <div><i class="fa fa-circle mr-1 text-success f-10"></i>@lang('app.active')</div>
+                                </div>
+                            @endif
                         </div>
                     </div>
 

@@ -36,7 +36,7 @@ class SuperAdminDataTable extends BaseDataTable
     {
 
         $firstSuperAdmin = User::firstSuperAdmin();
-        $roles = Role::withoutGlobalScopes([CompanyScope::class])->whereNull('company_id')->get();
+        $roles = Role::withoutGlobalScopes([CompanyScope::class])->whereNull('company_id')->whereNotNull('display_name')->get();
 
         return datatables()
             ->eloquent($query)
@@ -77,8 +77,11 @@ class SuperAdminDataTable extends BaseDataTable
                 return $action;
             })
             ->editColumn('status', function ($row) {
-                $status = $row->status == 'active' ? 'text-light-green' : 'text-red';
-                return '<i class="fa fa-circle mr-1 ' . $status . ' f-10"></i>' . __('app.' . $row->status);
+                if ($row->status == 'Active') {
+                    return ' <i class="fa fa-circle mr-1 text-light-green f-10"></i>' . __('app.active');
+                }
+
+                return '<i class="fa fa-circle mr-1 text-red f-10"></i>' . __('app.inactive');
             })
             ->addColumn('role', function ($row) use ($roles) {
                 $userRole = $row->roles->pluck('name')->toArray();

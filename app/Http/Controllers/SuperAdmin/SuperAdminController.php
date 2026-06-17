@@ -56,8 +56,9 @@ class SuperAdminController extends AccountBaseController
 
         $this->pageTitle = __('superadmin.superadmin.create');
         $this->view = 'super-admin.super-admin.ajax.create';
-        $this->roles = Role::with('users', 'users.role')->withoutGlobalScopes()->whereNull('company_id')->get();
+        $this->roles = Role::with('users', 'users.role')->withoutGlobalScopes()->whereNull('company_id')->whereNotNull('display_name')->get();
 
+        // dd($this->roles);
         // SuperAdmin Roles
         $this->userRoles = user()->roles->pluck('name')->toArray();
 
@@ -92,6 +93,7 @@ class SuperAdminController extends AccountBaseController
         $superAdmin->user_auth_id = $userAuth->id;
         $superAdmin->login = 'enable';
         $superAdmin->status = 'active';
+        $superAdmin->dark_theme       = 1;
 
         if ($request->hasFile('image')) {
             Files::deleteFile($superAdmin->image, 'avatar');
@@ -135,7 +137,7 @@ class SuperAdminController extends AccountBaseController
         abort_if(($this->superAdmin->id == $firstSuperAdmin->id && $this->user->id != $firstSuperAdmin->id), 403);
 
         // Roles Select For New User Start
-        $this->roles = Role::with('users', 'users.role')->withoutGlobalScopes()->whereNull('company_id')->get();
+        $this->roles = Role::with('users', 'users.role')->withoutGlobalScopes()->whereNull('company_id')->whereNotNull('display_name')->get();
         $this->userRoles = $this->superAdmin->roles->pluck('name')->toArray();
         // Roles Select For New User End
 
