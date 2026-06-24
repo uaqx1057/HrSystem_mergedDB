@@ -4,6 +4,7 @@ use App\Http\Controllers\AirTicketController;
 use App\Http\Controllers\AdvanceSalaryController;
 use App\Http\Controllers\CompanyAssetController;
 use App\Http\Controllers\CronJobsController;
+use App\Http\Controllers\DriverDocumentController;
 use App\Http\Controllers\InsuranceController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GdprController;
@@ -217,6 +218,12 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::get('get-driver-type', [DriverController::class, 'getDriverType'])->name('drivers.get-driver-type');
     Route::resource('activity-log', ActivityLogController::class);
     Route::resource('drivers', DriverController::class);
+    Route::resource('driver-documents', DriverDocumentController::class);
+    Route::get(
+        'driver-documents/{id}/preview',
+        [DriverDocumentController::class, 'preview']
+    )->name('driver-documents.preview');
+    
     Route::resource('drivers.businesses', BusinessDriverController::class);
     Route::get('business-ajax', [BusinessController::class, 'ajaxLoadBusiness'])->name('get.business-ajax');
     Route::get('driver-ajax', [DriverController::class, 'ajaxLoadDriver'])->name('get.driver-ajax');

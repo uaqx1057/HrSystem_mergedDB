@@ -7,12 +7,14 @@ use App\DataTables\DriversDataTable;
 use App\DataTables\InsuranceDataTable;
 use App\Helper\Reply;
 use App\Http\Requests\Admin\Driver\StoreRequest;
-use App\Models\{Driver, DriverType, User};
+use App\Models\{Driver, DriverDocument, DriverType, User};
 use App\Traits\ImportExcel;
 use Illuminate\Http\Request;
 use App\Helper\Files;
 use App\Http\Requests\Admin\Driver\UpdateRequest;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
 class DriverController extends AccountBaseController
@@ -209,6 +211,13 @@ class DriverController extends AccountBaseController
 
         $this->driver = Driver::withoutGlobalScopes()->findOrFail($id);
 
+        $this->driver_iqama = DriverDocument::where('driver_id', $id)->where('document_type', 'iqama')->first();
+        $this->driver_license = DriverDocument::where('driver_id', $id)->where('document_type', 'license')->first();
+        $this->driver_medical = DriverDocument::where('driver_id', $id)->where('document_type', 'medical')->first();
+        $this->driver_contract = DriverDocument::where('driver_id', $id)->where('document_type', 'contract')->first();
+        $this->driver_mobile = DriverDocument::where('driver_id', $id)->where('document_type', 'mobile')->first();
+        $this->driver_other = DriverDocument::where('driver_id', $id)->where('document_type', 'other')->first();
+
         $tab = request('tab');
 
         $this->pageTitle = $this->driver->name;
@@ -263,6 +272,13 @@ class DriverController extends AccountBaseController
         $this->driver = Driver::withoutGlobalScopes()->findOrFail($id);
         $this->driver_types = DriverType::all();
 
+        $this->driver_iqama = DriverDocument::where('driver_id', $id)->where('document_type', 'iqama')->first();
+        $this->driver_license = DriverDocument::where('driver_id', $id)->where('document_type', 'license')->first();
+        $this->driver_medical = DriverDocument::where('driver_id', $id)->where('document_type', 'medical')->first();
+        $this->driver_contract = DriverDocument::where('driver_id', $id)->where('document_type', 'contract')->first();
+        $this->driver_mobile = DriverDocument::where('driver_id', $id)->where('document_type', 'mobile')->first();
+        $this->driver_other = DriverDocument::where('driver_id', $id)->where('document_type', 'other')->first();
+
         $tab = request('tab');
 
         switch($tab) {
@@ -313,11 +329,11 @@ class DriverController extends AccountBaseController
 
         $validated = $request->validated();
 
-        $validated['insurance_expiry_date'] = $request->insurance_expiry_date ? Carbon::createFromFormat($this->company->date_format, $request->insurance_expiry_date)->format('Y-m-d') : null;
-        $validated['license_expiry_date'] = $request->license_expiry_date ? Carbon::createFromFormat($this->company->date_format, $request->license_expiry_date)->format('Y-m-d') : null;
-        $validated['iqaama_expiry_date'] = $request->iqaama_expiry_date ? Carbon::createFromFormat($this->company->date_format, $request->iqaama_expiry_date)->format('Y-m-d') : null;
-        $validated['date_of_birth'] = $request->date_of_birth ? Carbon::createFromFormat($this->company->date_format, $request->date_of_birth)->format('Y-m-d') : null;
-        $validated['joining_date'] = $request->joining_date ? Carbon::createFromFormat($this->company->date_format, $request->joining_date)->format('Y-m-d') : null;
+        $validated['insurance_expiry_date'] = $request->insurance_expiry_date ? Carbon::createFromFormat($this->company->date_format, $request->insurance_expiry_date)->format('Y-m-d') : $driver->insurance_expiry_date;
+        $validated['license_expiry_date'] = $request->license_expiry_date ? Carbon::createFromFormat($this->company->date_format, $request->license_expiry_date)->format('Y-m-d') : $driver->license_expiry_date;
+        $validated['iqaama_expiry_date'] = $request->iqaama_expiry_date ? Carbon::createFromFormat($this->company->date_format, $request->iqaama_expiry_date)->format('Y-m-d') : $driver->iqaama_expiry_date;
+        $validated['date_of_birth'] = $request->date_of_birth ? Carbon::createFromFormat($this->company->date_format, $request->date_of_birth)->format('Y-m-d') : $driver->date_of_birth;
+        $validated['joining_date'] = $request->joining_date ? Carbon::createFromFormat($this->company->date_format, $request->joining_date)->format('Y-m-d') : $driver->joining_date;
 
         if ($request->iqama_delete == 'yes') {
             Files::deleteFile($driver->iqama, 'iqama');
@@ -325,8 +341,73 @@ class DriverController extends AccountBaseController
             $validated['iqaama_expiry_date'] = null;
         }
 
-        if ($request->hasFile('iqama'))
-            $validated['iqama'] = Files::uploadLocalOrS3($request->iqama, 'iqama', 300);
+        $driver_iqama = DriverDocument::where('driver_id', $id)->where('document_type', 'iqama')->first();
+        if ($request->hasFile('iqama')){
+
+            if($driver_iqama){
+                if ($driver_iqama->file_path && Storage::disk('driver_documents')->exists($driver_iqama->file_path)) {
+                    Storage::disk('driver_documents')->delete($driver_iqama->file_path);
+                }
+                $file      = $request->file('iqama');
+                $extension = $file->extension();
+                $timestamp = now()->format('YmdHis');
+
+                $namePart = Str::slug($driver->name, '_');
+                $idPart   = $driver->iqaama_number;
+                $typePart = 'iqama';
+
+                $customName = "{$namePart}_{$idPart}_{$typePart}_{$timestamp}.{$extension}";
+                $folder   = $driver->id;
+                $relativePath = $file->storeAs($folder, $customName, 'driver_documents');
+
+                DriverDocument::where('id',$driver_iqama->id)->update([
+                    'driver_id'      => $driver->id,
+                    'document_type'  => 'iqama',
+                    'file_path'      => $relativePath,
+                    'original_name'  => $customName,
+                    'file_size'      => $file->getSize(),
+                    'uploaded_from'  => 'hr',
+                    'uploaded_by'    => user()->id,
+                    'notes'          => $request->iqama_notes,
+                    'expires_at'     => $validated['iqaama_expiry_date'] ?? null,
+                ]);
+
+
+            } else{
+                $file      = $request->file('iqama');
+                $extension = $file->extension();
+                $timestamp = now()->format('YmdHis');
+
+                $namePart = Str::slug($driver->name, '_');
+                $idPart   = $driver->iqaama_number;
+                $typePart = 'iqama';
+
+                $customName = "{$namePart}_{$idPart}_{$typePart}_{$timestamp}.{$extension}";
+                $folder   = $driver->id;
+                $relativePath = $file->storeAs($folder, $customName, 'driver_documents');
+
+                DriverDocument::create([
+                    'driver_id'      => $driver->id,
+                    'document_type'  => 'iqama',
+                    'file_path'      => $relativePath,
+                    'original_name'  => $customName,
+                    'file_size'      => $file->getSize(),
+                    'uploaded_from'  => 'hr',
+                    'uploaded_by'    => user()->id,
+                    'notes'          => $request->iqama_notes,
+                    'expires_at'     => $validated['iqaama_expiry_date'] ?? null,
+                ]);
+            }
+            Files::deleteFile($driver->iqama, 'iqama');
+            $validated['iqama'] = null;
+        }
+
+        if($driver_iqama){
+            DriverDocument::where('id',$driver_iqama->id)->update([
+                'expires_at'     => $validated['iqaama_expiry_date'] ?? $driver_iqama->expires_at,
+                'notes'          => $request->iqama_notes ? $request->iqama_notes : $driver_iqama->notes,
+            ]);
+        }
 
         if ($request->hasFile('image'))
             $validated['image'] = Files::uploadLocalOrS3($request->image, 'image', 300);
@@ -337,40 +418,358 @@ class DriverController extends AccountBaseController
             $validated['license_expiry_date'] = null;
         }
 
-        if ($request->hasFile('license'))
-            $validated['license'] = Files::uploadLocalOrS3($request->license, 'license', 300);
+        $driver_license = DriverDocument::where('driver_id', $id)->where('document_type', 'license')->first();
+        if ($request->hasFile('license')){
+            if($driver_license){
+                if ($driver_license->file_path && Storage::disk('driver_documents')->exists($driver_license->file_path)) {
+                    Storage::disk('driver_documents')->delete($driver_license->file_path);
+                }
+                $file      = $request->file('license');
+                $extension = $file->extension();
+                $timestamp = now()->format('YmdHis');
+
+                $namePart = Str::slug($driver->name, '_');
+                $idPart   = $driver->iqaama_number;
+                $typePart = 'license';
+
+                $customName = "{$namePart}_{$idPart}_{$typePart}_{$timestamp}.{$extension}";
+                $folder   = $driver->id;
+                $relativePath = $file->storeAs($folder, $customName, 'driver_documents');
+
+                DriverDocument::where('id',$driver_license->id)->update([
+                    'driver_id'      => $driver->id,
+                    'document_type'  => 'license',
+                    'file_path'      => $relativePath,
+                    'original_name'  => $customName,
+                    'file_size'      => $file->getSize(),
+                    'uploaded_from'  => 'hr',
+                    'uploaded_by'    => user()->id,
+                    'notes'          => $request->license_notes,
+                    'expires_at'     => $validated['license_expiry_date'] ?? null,
+                ]);
+
+
+            } else{
+                $file      = $request->file('license');
+                $extension = $file->extension();
+                $timestamp = now()->format('YmdHis');
+
+                $namePart = Str::slug($driver->name, '_');
+                $idPart   = $driver->iqaama_number;
+                $typePart = 'license';
+
+                $customName = "{$namePart}_{$idPart}_{$typePart}_{$timestamp}.{$extension}";
+                $folder   = $driver->id;
+                $relativePath = $file->storeAs($folder, $customName, 'driver_documents');
+
+                DriverDocument::create([
+                    'driver_id'      => $driver->id,
+                    'document_type'  => 'license',
+                    'file_path'      => $relativePath,
+                    'original_name'  => $customName,
+                    'file_size'      => $file->getSize(),
+                    'uploaded_from'  => 'hr',
+                    'uploaded_by'    => user()->id,
+                    'notes'          => $request->license_notes,
+                    'expires_at'     => $validated['license_expiry_date'] ?? null,
+                ]);
+            }
+            Files::deleteFile($driver->license, 'license');
+            $validated['license'] = null;
+        }
+
+        if($driver_license){
+            DriverDocument::where('id',$driver_license->id)->update([
+                'expires_at'     => $validated['license_expiry_date'] ?? $driver_license->expires_at,
+                'notes'          => $request->license_notes ? $request->license_notes : $driver_license->notes,
+            ]);
+        }
 
         if ($request->mobile_form_delete == 'yes') {
             Files::deleteFile($driver->mobile_form, 'mobile_form');
             $driver->mobile_form = null;
         }
 
+        $driver_mobile = DriverDocument::where('driver_id', $id)->where('document_type', 'mobile')->first();
         if ($request->hasFile('mobile_form'))
-            $validated['mobile_form'] = Files::uploadLocalOrS3($request->mobile_form, 'mobile_form', 300);
+        {
+            if($driver_mobile){
+                if ($driver_mobile->file_path && Storage::disk('driver_documents')->exists($driver_mobile->file_path)) {
+                    Storage::disk('driver_documents')->delete($driver_mobile->file_path);
+                }
+                $file      = $request->file('mobile_form');
+                $extension = $file->extension();
+                $timestamp = now()->format('YmdHis');
+
+                $namePart = Str::slug($driver->name, '_');
+                $idPart   = $driver->iqaama_number;
+                $typePart = 'mobile';
+
+                $customName = "{$namePart}_{$idPart}_{$typePart}_{$timestamp}.{$extension}";
+                $folder   = $driver->id;
+                $relativePath = $file->storeAs($folder, $customName, 'driver_documents');
+
+                DriverDocument::where('id',$driver_mobile->id)->update([
+                    'driver_id'      => $driver->id,
+                    'document_type'  => 'mobile',
+                    'file_path'      => $relativePath,
+                    'original_name'  => $customName,
+                    'file_size'      => $file->getSize(),
+                    'uploaded_from'  => 'hr',
+                    'uploaded_by'    => user()->id,
+                    'notes'          => $request->mobile_notes,
+                    'expires_at'     => null,
+                ]);
+
+
+            } else{
+                $file      = $request->file('mobile_form');
+                $extension = $file->extension();
+                $timestamp = now()->format('YmdHis');
+
+                $namePart = Str::slug($driver->name, '_');
+                $idPart   = $driver->iqaama_number;
+                $typePart = 'mobile';
+
+                $customName = "{$namePart}_{$idPart}_{$typePart}_{$timestamp}.{$extension}";
+                $folder   = $driver->id;
+                $relativePath = $file->storeAs($folder, $customName, 'driver_documents');
+
+                DriverDocument::create([
+                    'driver_id'      => $driver->id,
+                    'document_type'  => 'mobile',
+                    'file_path'      => $relativePath,
+                    'original_name'  => $customName,
+                    'file_size'      => $file->getSize(),
+                    'uploaded_from'  => 'hr',
+                    'uploaded_by'    => user()->id,
+                    'notes'          => $request->mobile_notes,
+                    'expires_at'     => null,
+                ]);
+            }
+            Files::deleteFile($driver->mobile_form, 'mobile_form');
+            $validated['mobile_form'] = null;
+        }
+
+        if($driver_mobile){
+            DriverDocument::where('id',$driver_mobile->id)->update([
+                'notes'          => $request->mobile_notes ? $request->mobile_notes : $driver_mobile->notes,
+            ]);
+        }
 
         if ($request->sim_form_delete == 'yes') {
             Files::deleteFile($driver->sim_form, 'sim_form');
             $driver->sim_form = null;
         }
 
-        if ($request->hasFile('sim_form'))
-            $validated['sim_form'] = Files::uploadLocalOrS3($request->sim_form, 'sim_form', 300);
+        $driver_contract = DriverDocument::where('driver_id', $id)->where('document_type', 'contract')->first();
+        if ($request->hasFile('sim_form')){
+            if($driver_contract){
+                if ($driver_contract->file_path && Storage::disk('driver_documents')->exists($driver_contract->file_path)) {
+                    Storage::disk('driver_documents')->delete($driver_contract->file_path);
+                }
+                $file      = $request->file('sim_form');
+                $extension = $file->extension();
+                $timestamp = now()->format('YmdHis');
+
+                $namePart = Str::slug($driver->name, '_');
+                $idPart   = $driver->iqaama_number;
+                $typePart = 'contract';
+
+                $customName = "{$namePart}_{$idPart}_{$typePart}_{$timestamp}.{$extension}";
+                $folder   = $driver->id;
+                $relativePath = $file->storeAs($folder, $customName, 'driver_documents');
+
+                DriverDocument::where('id',$driver_contract->id)->update([
+                    'driver_id'      => $driver->id,
+                    'document_type'  => 'contract',
+                    'file_path'      => $relativePath,
+                    'original_name'  => $customName,
+                    'file_size'      => $file->getSize(),
+                    'uploaded_from'  => 'hr',
+                    'uploaded_by'    => user()->id,
+                    'notes'          => $request->sim_notes,
+                    'expires_at'     => null,
+                ]);
+
+
+            } else{
+                $file      = $request->file('sim_form');
+                $extension = $file->extension();
+                $timestamp = now()->format('YmdHis');
+
+                $namePart = Str::slug($driver->name, '_');
+                $idPart   = $driver->iqaama_number;
+                $typePart = 'contract';
+
+                $customName = "{$namePart}_{$idPart}_{$typePart}_{$timestamp}.{$extension}";
+                $folder   = $driver->id;
+                $relativePath = $file->storeAs($folder, $customName, 'driver_documents');
+
+                DriverDocument::create([
+                    'driver_id'      => $driver->id,
+                    'document_type'  => 'contract',
+                    'file_path'      => $relativePath,
+                    'original_name'  => $customName,
+                    'file_size'      => $file->getSize(),
+                    'uploaded_from'  => 'hr',
+                    'uploaded_by'    => user()->id,
+                    'notes'          => $request->sim_notes,
+                    'expires_at'     => null,
+                ]);
+            }
+            Files::deleteFile($driver->sim_form, 'sim_form');
+            $validated['sim_form'] = null;
+        }
+
+        if($driver_contract){
+            DriverDocument::where('id',$driver_contract->id)->update([
+                'notes'          => $request->sim_notes ? $request->sim_notes : $driver_contract->notes,
+            ]);
+        }
 
         if ($request->medical_delete == 'yes') {
             Files::deleteFile($driver->medical, 'medical');
             $driver->medical = null;
         }
 
+        $driver_medical = DriverDocument::where('driver_id', $id)->where('document_type', 'medical')->first();
         if ($request->hasFile('medical'))
-            $validated['medical'] = Files::uploadLocalOrS3($request->medical, 'medical', 300);
+        {
+            if($driver_medical){
+                if ($driver_medical->file_path && Storage::disk('driver_documents')->exists($driver_medical->file_path)) {
+                    Storage::disk('driver_documents')->delete($driver_medical->file_path);
+                }
+                $file      = $request->file('medical');
+                $extension = $file->extension();
+                $timestamp = now()->format('YmdHis');
+
+                $namePart = Str::slug($driver->name, '_');
+                $idPart   = $driver->iqaama_number;
+                $typePart = 'medical';
+
+                $customName = "{$namePart}_{$idPart}_{$typePart}_{$timestamp}.{$extension}";
+                $folder   = $driver->id;
+                $relativePath = $file->storeAs($folder, $customName, 'driver_documents');
+
+                DriverDocument::where('id',$driver_medical->id)->update([
+                    'driver_id'      => $driver->id,
+                    'document_type'  => 'medical',
+                    'file_path'      => $relativePath,
+                    'original_name'  => $customName,
+                    'file_size'      => $file->getSize(),
+                    'uploaded_from'  => 'hr',
+                    'uploaded_by'    => user()->id,
+                    'notes'          => $request->medical_notes,
+                    'expires_at'     => null,
+                ]);
+
+
+            } else{
+                $file      = $request->file('medical');
+                $extension = $file->extension();
+                $timestamp = now()->format('YmdHis');
+
+                $namePart = Str::slug($driver->name, '_');
+                $idPart   = $driver->iqaama_number;
+                $typePart = 'medical';
+
+                $customName = "{$namePart}_{$idPart}_{$typePart}_{$timestamp}.{$extension}";
+                $folder   = $driver->id;
+                $relativePath = $file->storeAs($folder, $customName, 'driver_documents');
+
+                DriverDocument::create([
+                    'driver_id'      => $driver->id,
+                    'document_type'  => 'medical',
+                    'file_path'      => $relativePath,
+                    'original_name'  => $customName,
+                    'file_size'      => $file->getSize(),
+                    'uploaded_from'  => 'hr',
+                    'uploaded_by'    => user()->id,
+                    'notes'          => $request->medical_notes,
+                    'expires_at'     => null,
+                ]);
+            }
+            Files::deleteFile($driver->medical, 'medical');
+            $validated['medical'] = null;
+        }
+
+        if($driver_medical){
+            DriverDocument::where('id',$driver_medical->id)->update([
+                'notes'          => $request->medical_notes ? $request->medical_notes : $driver_medical->notes,
+            ]);
+        }
 
         if ($request->other_document_delete == 'yes') {
             Files::deleteFile($driver->other_document, 'other_document');
             $driver->other_document = null;
         }
 
-        if ($request->hasFile('other_document'))
-            $validated['other_document'] = Files::uploadLocalOrS3($request->other_document, 'other_document', 300);
+        $driver_other = DriverDocument::where('driver_id', $id)->where('document_type', 'other')->first();
+        if ($request->hasFile('other_document')){
+            if($driver_other){
+                if ($driver_other->file_path && Storage::disk('driver_documents')->exists($driver_other->file_path)) {
+                    Storage::disk('driver_documents')->delete($driver_other->file_path);
+                }
+                $file      = $request->file('other_document');
+                $extension = $file->extension();
+                $timestamp = now()->format('YmdHis');
+
+                $namePart = Str::slug($driver->name, '_');
+                $idPart   = $driver->iqaama_number;
+                $typePart = 'other';
+
+                $customName = "{$namePart}_{$idPart}_{$typePart}_{$timestamp}.{$extension}";
+                $folder   = $driver->id;
+                $relativePath = $file->storeAs($folder, $customName, 'driver_documents');
+
+                DriverDocument::where('id',$driver_other->id)->update([
+                    'driver_id'      => $driver->id,
+                    'document_type'  => 'other',
+                    'file_path'      => $relativePath,
+                    'original_name'  => $customName,
+                    'file_size'      => $file->getSize(),
+                    'uploaded_from'  => 'hr',
+                    'uploaded_by'    => user()->id,
+                    'notes'          => $request->other_notes,
+                    'expires_at'     => null,
+                ]);
+
+
+            } else{
+                $file      = $request->file('other_document');
+                $extension = $file->extension();
+                $timestamp = now()->format('YmdHis');
+
+                $namePart = Str::slug($driver->name, '_');
+                $idPart   = $driver->iqaama_number;
+                $typePart = 'other';
+
+                $customName = "{$namePart}_{$idPart}_{$typePart}_{$timestamp}.{$extension}";
+                $folder   = $driver->id;
+                $relativePath = $file->storeAs($folder, $customName, 'driver_documents');
+
+                DriverDocument::create([
+                    'driver_id'      => $driver->id,
+                    'document_type'  => 'other',
+                    'file_path'      => $relativePath,
+                    'original_name'  => $customName,
+                    'file_size'      => $file->getSize(),
+                    'uploaded_from'  => 'hr',
+                    'uploaded_by'    => user()->id,
+                    'notes'          => $request->other_notes,
+                    'expires_at'     => null,
+                ]);
+            }
+            Files::deleteFile($driver->other_document, 'other_document');
+            $validated['other_document'] = null;
+        }
+
+        if($driver_other){
+            DriverDocument::where('id',$driver_other->id)->update([
+                'notes'          => $request->other_notes ? $request->other_notes : $driver_other->notes,
+            ]);
+        }
 
         $driver->update($validated);
         return Reply::success(__('messages.updateSuccess'));

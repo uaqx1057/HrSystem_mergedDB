@@ -15,13 +15,28 @@
                                         :fieldValue="$driver->iqaama_expiry_date ? $driver->iqaama_expiry_date->format(company()->date_format) : \Carbon\Carbon::now(company()->timezone)->format(company()->date_format)"
                                         :fieldPlaceholder="__('placeholders.date')"/>
                 </div>
-
+                @if ($driver_iqama)
+                    <div class="col-lg-12">
+                        <label for="">Current Document: </label>
+                        <br>
+                        <a href="{{ route('driver-documents.preview', $driver_iqama->id) }}" target="_blank"
+                                            rel="noopener noreferrer">
+                                            {{ $driver_iqama->original_name }}
+                                        </a>
+                    </div>
+                @endif
                 <div class="col-lg-12">
                     <x-forms.file allowedFileExtensions="png jpg jpeg svg pdf doc docx" class="mr-0 mr-lg-2 mr-md-2"
                         :fieldLabel="__('modules.drivers.iqama')" fieldName="iqama"
-                        :fieldValue="$driver->iqama ? $driver->iqama_url : '' "
                         fieldId="file">
                     </x-forms.file>
+                </div>
+
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="f-14 f-w-500">Note</label>
+                        <textarea name="iqama_notes" rows="3" class="form-control" placeholder="Enter note">{{ $driver_iqama ? $driver_iqama->notes : '' }}</textarea>
+                    </div>
                 </div>
 
 
@@ -42,7 +57,22 @@
         ...datepickerConfig
     });
 
+
     $('#save-iqama-form').click(function(){
+        let hasExistingFile = {{ $driver_iqama ? 'true' : 'false' }};
+        if($('#file').val().trim() === '' && !hasExistingFile){
+            Swal.fire({
+                icon: 'error',
+                text: 'iqama is required.',
+                toast: true,
+                position: 'top-end',
+                timer: 3000,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                showClass: { popup: 'swal2-noanimation', backdrop: 'swal2-noanimation' },
+            });
+            return;
+        }
         $.easyAjax({
                     url: "{{ route('drivers.update', $driver->id) }}",
                     container: '#save-iqama-data-form',

@@ -9,12 +9,27 @@
     <div class="portlet-body">
         <x-form id="save-mobile-form-data-form" method="PUT" class="ajax-form">
             <div class="row">
+                @if ($driver_mobile)
+                    <div class="col-lg-12">
+                        <label for="">Current Document: </label>
+                        <br>
+                        <a href="{{ route('driver-documents.preview', $driver_mobile->id) }}" target="_blank"
+                                            rel="noopener noreferrer">
+                                            {{ $driver_mobile->original_name }}
+                                        </a>
+                    </div>
+                @endif
                 <div class="col-lg-12">
                     <x-forms.file allowedFileExtensions="png jpg jpeg svg pdf doc docx" class="mr-0 mr-lg-2 mr-md-2"
                         :fieldLabel="__('modules.drivers.mobileForm')" fieldName="mobile_form"
-                        :fieldValue="$driver->mobile_form ? $driver->mobile_form_url : '' "
                         fieldId="file">
                     </x-forms.file>
+                </div>
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="f-14 f-w-500">Note</label>
+                        <textarea name="mobile_notes" rows="3" class="form-control" placeholder="Enter note">{{ $driver_mobile ? $driver_mobile->notes : '' }}</textarea>
+                    </div>
                 </div>
             </div>
         </x-form>
@@ -28,6 +43,20 @@
 <script>
 
     $('#save-mobile-form').click(function(){
+        let hasExistingFile = {{ $driver_mobile ? 'true' : 'false' }};
+        if($('#file').val().trim() === '' && !hasExistingFile){
+            Swal.fire({
+                icon: 'error',
+                text: 'mobile is required.',
+                toast: true,
+                position: 'top-end',
+                timer: 3000,
+                timerProgressBar: true,
+                showConfirmButton: false,
+                showClass: { popup: 'swal2-noanimation', backdrop: 'swal2-noanimation' },
+            });
+            return;
+        }
         $.easyAjax({
                 url: "{{ route('drivers.update', $driver->id) }}",
                 container: '#save-mobile-form-data-form',

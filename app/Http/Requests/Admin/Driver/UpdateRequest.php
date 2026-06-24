@@ -61,9 +61,10 @@ class UpdateRequest extends CoreRequest
             'image' => 'nullable|image',
             'name' => 'nullable',
             'iqaama_number' => [
-                'sometimes',
-                Rule::unique('drivers', 'iqaama_number')->ignore($this->driver->id),
-            ],
+    'sometimes',
+    Rule::unique('drivers', 'iqaama_number')
+        ->ignore($this->route('driver')),
+],
             'absher_number' => 'nullable',
             'sponsorship' => 'nullable',
             'sponsorship_id' => 'nullable',

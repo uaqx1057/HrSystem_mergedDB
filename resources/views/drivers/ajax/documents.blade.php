@@ -2,14 +2,14 @@
 <div class="row">
     <!--  USER CARDS START -->
     <div class="col-xl-12 col-lg-12 col-md-12 mb-4 mb-xl-0 mb-lg-4 mb-md-0 mt-5">
-        @if(is_null($driver->iqama))
+        @if(is_null($driver_iqama))
              <x-forms.button-primary class="mr-3 add-document mb-3" icon="plus"  data-tab="iqama">
                 @lang('modules.drivers.addIqama')
             </x-forms.button-primary>
         @endif
         <x-cards.data :title="__('modules.drivers.iqamaDetails')">
 
-            @if($driver->iqama)
+            @if($driver_iqama)
                 <x-slot name="action">
                     <div class="dropdown">
                         <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
@@ -26,14 +26,17 @@
                     </div>
                 </x-slot>
 
-                <x-cards.data-row :label="__('modules.drivers.expiryDate')" :value=" $driver->iqaama_expiry_date  ? $driver->iqaama_expiry_date->format(company()->date_format) : '--'" />
+                <x-cards.data-row :label="__('modules.drivers.expiryDate')" :value=" $driver_iqama->expires_at  ? $driver_iqama->expires_at->format(company()->date_format) : '--'" />
                 <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
                     <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
                         @lang('modules.employees.scanCopy')</p>
                     <p class="mb-0 text-dark-grey f-14 w-70">
-                        @if($driver->iqama)
+                        @if($driver_iqama->original_name)
+                            @php
+                                $file_url =  route('driver-documents.preview', $driver_iqama->id);
+                            @endphp
                             <a target="_blank" class="text-dark-grey"
-                                href="{{ $driver->iqama_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
+                                href="{{ $file_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
                         @else
                         --
                         @endif
@@ -54,14 +57,14 @@
 <div class="row">
     <!--  USER CARDS START -->
     <div class="col-xl-12 col-lg-12 col-md-12 mb-4 mb-xl-0 mb-lg-4 mb-md-0 mt-5">
-        @if(is_null($driver->license))
+        @if(is_null($driver_license))
              <x-forms.button-primary class="mr-3 add-document mb-3" icon="plus"  data-tab="license">
                 @lang('modules.drivers.addLicense')
             </x-forms.button-primary>
         @endif
         <x-cards.data :title="__('modules.drivers.licenseDetails')">
 
-            @if($driver->license)
+            @if($driver_license)
                 <x-slot name="action">
                     <div class="dropdown">
                         <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
@@ -78,14 +81,17 @@
                     </div>
                 </x-slot>
 
-                <x-cards.data-row :label="__('modules.drivers.expiryDate')" :value=" $driver->license_expiry_date  ? $driver->license_expiry_date->format(company()->date_format) : '--'" />
+                <x-cards.data-row :label="__('modules.drivers.expiryDate')" :value=" $driver_license->expires_at  ? $driver_license->expires_at->format(company()->date_format) : '--'" />
                 <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
                     <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
                         @lang('modules.employees.scanCopy')</p>
                     <p class="mb-0 text-dark-grey f-14 w-70">
-                        @if($driver->license)
+                        @if($driver_license->original_name)
+                            @php
+                                $file_url =  route('driver-documents.preview', $driver_license->id);
+                            @endphp
                             <a target="_blank" class="text-dark-grey"
-                                href="{{ $driver->license_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
+                                href="{{ $file_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
                         @else
                         --
                         @endif
@@ -106,14 +112,14 @@
 <div class="row">
     <!--  USER CARDS START -->
     <div class="col-xl-12 col-lg-12 col-md-12 mb-4 mb-xl-0 mb-lg-4 mb-md-0 mt-5">
-        @if(is_null($driver->medical))
+        @if(is_null($driver_medical))
              <x-forms.button-primary class="mr-3 add-document mb-3" icon="plus"  data-tab="medical">
                 @lang('modules.drivers.addMedical')
             </x-forms.button-primary>
         @endif
         <x-cards.data :title="__('modules.drivers.medicalDetails')">
 
-            @if($driver->medical)
+            @if($driver_medical)
                 <x-slot name="action">
                     <div class="dropdown">
                         <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
@@ -134,9 +140,12 @@
                     <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
                         @lang('modules.employees.scanCopy')</p>
                     <p class="mb-0 text-dark-grey f-14 w-70">
-                        @if($driver->medical)
+                        @if($driver_medical->original_name)
+                            @php
+                                $file_url =  route('driver-documents.preview', $driver_medical->id);
+                            @endphp
                             <a target="_blank" class="text-dark-grey"
-                                href="{{ $driver->medical_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
+                                href="{{ $file_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
                         @else
                         --
                         @endif
@@ -157,14 +166,14 @@
 <div class="row">
     <!--  USER CARDS START -->
     <div class="col-xl-12 col-lg-12 col-md-12 mb-4 mb-xl-0 mb-lg-4 mb-md-0 mt-5">
-        @if(is_null($driver->sim_form))
+        @if(is_null($driver_contract))
              <x-forms.button-primary class="mr-3 add-document mb-3" icon="plus"  data-tab="sim-form">
                 @lang('modules.drivers.addSimForm')
             </x-forms.button-primary>
         @endif
         <x-cards.data :title="__('modules.drivers.simFormDetails')">
 
-            @if($driver->sim_form)
+            @if($driver_contract)
                 <x-slot name="action">
                     <div class="dropdown">
                         <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
@@ -185,9 +194,12 @@
                     <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
                         @lang('modules.employees.scanCopy')</p>
                     <p class="mb-0 text-dark-grey f-14 w-70">
-                        @if($driver->sim_form)
+                        @if($driver_contract->original_name)
+                            @php
+                                $file_url =  route('driver-documents.preview', $driver_contract->id);
+                            @endphp
                             <a target="_blank" class="text-dark-grey"
-                                href="{{ $driver->sim_form_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
+                                href="{{ $file_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
                         @else
                         --
                         @endif
@@ -208,14 +220,14 @@
 <div class="row">
     <!--  USER CARDS START -->
     <div class="col-xl-12 col-lg-12 col-md-12 mb-4 mb-xl-0 mb-lg-4 mb-md-0 mt-5">
-        @if(is_null($driver->mobile_form))
+        @if(is_null($driver_mobile))
              <x-forms.button-primary class="mr-3 add-document mb-3" icon="plus"  data-tab="mobile-form">
                 @lang('modules.drivers.addMobileForm')
             </x-forms.button-primary>
         @endif
         <x-cards.data :title="__('modules.drivers.mobileFormDetails')">
 
-            @if($driver->mobile_form)
+            @if($driver_mobile)
                 <x-slot name="action">
                     <div class="dropdown">
                         <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
@@ -236,9 +248,12 @@
                     <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
                         @lang('modules.employees.scanCopy')</p>
                     <p class="mb-0 text-dark-grey f-14 w-70">
-                        @if($driver->mobile_form)
+                        @if($driver_mobile->original_name)
+                            @php
+                                $file_url =  route('driver-documents.preview', $driver_mobile->id);
+                            @endphp
                             <a target="_blank" class="text-dark-grey"
-                                href="{{ $driver->mobile_form_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
+                                href="{{ $file_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
                         @else
                         --
                         @endif
@@ -259,14 +274,14 @@
 <div class="row">
     <!--  USER CARDS START -->
     <div class="col-xl-12 col-lg-12 col-md-12 mb-4 mb-xl-0 mb-lg-4 mb-md-0 mt-5">
-        @if(is_null($driver->other_document))
+        @if(is_null($driver_other))
              <x-forms.button-primary class="mr-3 add-document mb-3" icon="plus"  data-tab="other-document">
                 @lang('modules.drivers.addOtherDocument')
             </x-forms.button-primary>
         @endif
         <x-cards.data :title="__('modules.drivers.otherDocumentDetails')">
 
-            @if($driver->other_document)
+            @if($driver_other)
                 <x-slot name="action">
                     <div class="dropdown">
                         <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
@@ -287,9 +302,12 @@
                     <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
                         @lang('modules.employees.scanCopy')</p>
                     <p class="mb-0 text-dark-grey f-14 w-70">
-                        @if($driver->other_document)
+                        @if($driver_other->original_name)
+                            @php
+                                $file_url =  route('driver-documents.preview', $driver_other->id);
+                            @endphp
                             <a target="_blank" class="text-dark-grey"
-                                href="{{ $driver->other_document_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
+                                href="{{ $file_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
                         @else
                         --
                         @endif

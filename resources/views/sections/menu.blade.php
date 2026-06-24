@@ -90,6 +90,8 @@
                     <x-sub-menu-item :link="route('drivers.index')" :text="__('app.menu.drivers')" />
                 @endif
 
+                <x-sub-menu-item :link="route('driver-documents.index')" text="Driver Documents" />
+
                 @if (in_array('leaves', user_modules()) && in_array(user()->permission('view_leave'), ['all', 'added', 'owned', 'both']))
                     <x-sub-menu-item :link="route('leaves.index')" :text="__('app.menu.leaves')" />
                 @endif

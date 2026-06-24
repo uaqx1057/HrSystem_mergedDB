@@ -116,6 +116,13 @@ return [
             'root' => storage_path(''),
         ],
 
+        'driver_documents' => [
+            'driver' => 'local',
+            'root' => env('DRIVER_DOCUMENT_PATH'),
+            'visibility' => 'private',
+            'throw' => false,
+        ],
+
     ],
 
     /*
