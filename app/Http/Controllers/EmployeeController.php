@@ -1425,6 +1425,16 @@ class EmployeeController extends AccountBaseController
             );
         });
 
+        $systemUrl = $system === 'dms'
+            ? env('DMS_URL', 'https://dms.speedlogi.sa')
+            : env('DOBS_URL', 'https://dobs.speedlogi.sa');
+
+        try {
+            $hrUser->notify(new \App\Notifications\SystemAccessGranted($system, $request->role, $systemUrl));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('SystemAccessGranted email failed for ' . $hrUser->email . ': ' . $e->getMessage());
+        }
+
         return Reply::success('Access granted successfully.');
     }
 
