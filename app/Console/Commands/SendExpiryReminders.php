@@ -8,10 +8,10 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\DocumentExpiryMail;
+use App\Mail\DocumentExpirySummaryMail;
 
 class SendExpiryReminders extends Command
 {
-    // The name and signature of the console command
     protected $signature = 'send:expiry-reminders';
 
     protected $description = 'Send email reminders to employees whose Iqama or Passport expires in 7 days';
@@ -27,13 +27,24 @@ class SendExpiryReminders extends Command
             })
             ->get();
 
+        $admins = User::allAdmins();
+
+        // Collect all expiring items here, to build the admin summary later
+        $expiringSummary = [];
+
         foreach ($employees as $employee) {
             $detail = $employee->employeeDetail;
-            $insurance = Insurance::whereDate('expiry_date', $targetDay)->where('employee_id', $employee->id)->orderBy('id', 'desc')->first();
-            $insurance_expiry = Carbon::parse($insurance->expiry_date)->format('Y-m-d');
+
+            $insurance = Insurance::whereDate('expiry_date', $targetDay)
+                ->where('employee_id', $employee->id)
+                ->orderBy('id', 'desc')
+                ->first();
+
+            // Fix: guard against no matching insurance record
+            $insurance_expiry = $insurance ? Carbon::parse($insurance->expiry_date)->format('Y-m-d') : null;
 
             $data = [
-                'name'  => $employee->name,
+                'name' => $employee->name,
                 'email' => $employee->email,
             ];
 
@@ -51,17 +62,26 @@ class SendExpiryReminders extends Command
                 $sendEmail = true;
             }
 
-            // Check if Insurance is the one expiring
-            if ($insurance_expiry == $targetDay) {
+            if ($insurance_expiry === $targetDay) {
                 $data['insurance_expiry'] = $insurance_expiry;
                 $sendEmail = true;
             }
 
             if ($sendEmail) {
-                // Send email to the employee
                 Mail::to($employee->email)->send(new DocumentExpiryMail($data));
                 $this->info('Email sent to: ' . $employee->email);
+
+                // Add to the list that admins will see
+                $expiringSummary[] = $data;
             }
+        }
+
+        // Send one summary email to all admins, only if there's something to report
+        if (!empty($expiringSummary) && $admins->isNotEmpty()) {
+            foreach ($admins as $admin) {
+                Mail::to($admin->email)->send(new DocumentExpirySummaryMail($expiringSummary, $targetDay));
+            }
+            $this->info('Summary email sent to ' . $admins->count() . ' admin(s).');
         }
     }
 }
