@@ -3,7 +3,7 @@
         <div class='input-group'>
             <div class="input-group-prepend">
                 <button id="week-start-date" data-date="{{ $weekStartDate->copy()->subDay()->toDateString() }}" type="button"
-                    class="btn btn-outline-secondary border-grey height-35"><i class="fa fa-chevron-left"></i>
+                    class="btn border-grey height-35" style="color: white !important"><i class="fa fa-chevron-left"></i>
                 </button>
             </div>
 
@@ -11,7 +11,7 @@
 
             <div class="input-group-append">
                 <button id="week-end-date" data-date="{{ $weekEndDate->copy()->addDay()->toDateString() }}" type="button"
-                    class="btn btn-outline-secondary border-grey height-35"><i class="fa fa-chevron-right"></i>
+                    class="btn  border-grey height-35" style="color: white !important"><i class="fa fa-chevron-right"></i>
                 </button>
             </div>
         </div>

@@ -7,6 +7,7 @@ use App\Models\Company;
 use Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider;
 use Carbon\CarbonInterval;
 use Illuminate\Mail\MailManager;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
@@ -35,6 +36,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        Paginator::useBootstrap();
+
         Cashier::useCustomerModel(Company::class);
 
                // Force HTTPS scheme for URLs in non-local environments

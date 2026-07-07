@@ -151,7 +151,8 @@ class EmployeeShiftScheduleController extends AccountBaseController
             }
 
             $employeeName = view('components.employee', [
-                'user' => $employee
+                'user' => $employee,
+                'background' => 'text-darkest-white'
             ]);
 
             $final[$employee->id . '#' . $employee->name][] = $employeeName;
@@ -267,7 +268,8 @@ class EmployeeShiftScheduleController extends AccountBaseController
             }
 
             $emplolyeeName = view('components.employee', [
-                'user' => $employee
+                'user' => $employee,
+                'background' => 'text-darkest-white'
             ]);
 
             $final[$employee->id . '#' . $employee->name][] = $emplolyeeName;

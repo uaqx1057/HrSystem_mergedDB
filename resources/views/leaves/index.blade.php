@@ -254,7 +254,7 @@ function renderSummary(data) {
             <tr>
                 <td class="pl-4">
                     <div class="d-flex align-items-center">
-                        <a href="/employees/${emp.id}/profile" class="text-dark f-14 f-w-500">${emp.name}</a>
+                        <a href="/account/employees/${emp.id}" class="text-dark f-14 f-w-500">${emp.name}</a>
                     </div>
                 </td>
                 <td class="text-center f-14 f-w-500">${emp.given}</td>

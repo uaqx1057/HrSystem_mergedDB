@@ -18273,7 +18273,7 @@ a {
 }
 
 a:hover {
-    color: black !important;
+    /* color: black !important; */
     outline: 0 none;
     text-decoration: none;
 }
@@ -25896,7 +25896,7 @@ table.dataTable thead th {
         white-space: nowrap !important;
     }
 
-.col-sm-12{
+.dataTables_wrapper .col-sm-12{
  overflow: auto !important;
 }
 

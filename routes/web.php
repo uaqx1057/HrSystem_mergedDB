@@ -223,7 +223,7 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
         'driver-documents/{id}/preview',
         [DriverDocumentController::class, 'preview']
     )->name('driver-documents.preview');
-    
+
     Route::resource('drivers.businesses', BusinessDriverController::class);
     Route::get('business-ajax', [BusinessController::class, 'ajaxLoadBusiness'])->name('get.business-ajax');
     Route::get('driver-ajax', [DriverController::class, 'ajaxLoadDriver'])->name('get.driver-ajax');
@@ -231,10 +231,10 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::get('linked-driver-ajax', [DriverController::class, 'ajaxLoadLinkedDriver'])->name('get.linked-driver-ajax');
     Route::resource('businesses', BusinessController::class);
 
-    Route::get('coordinator-report/import-view', [CoordinatorReportController::class, 'importReportView'])->name('coordinator-report.import-view');
-    Route::post('coordinator-report/import', [CoordinatorReportController::class, 'importStore'])->name('coordinator-report.import');
-    Route::post('coordinator-report/import/process', [CoordinatorReportController::class, 'importProcess'])->name('coordinator-report.import.process');
-    Route::resource('coordinator-report', CoordinatorReportController::class);
+    // Route::get('coordinator-report/import-view', [CoordinatorReportController::class, 'importReportView'])->name('coordinator-report.import-view');
+    // Route::post('coordinator-report/import', [CoordinatorReportController::class, 'importStore'])->name('coordinator-report.import');
+    // Route::post('coordinator-report/import/process', [CoordinatorReportController::class, 'importProcess'])->name('coordinator-report.import.process');
+    // Route::resource('coordinator-report', CoordinatorReportController::class);
 
     Route::group([ 'prefix' => 'dms', 'as' => 'dms.' ], function() {
         Route::resource('payroll', DriverPayrollController::class);
@@ -412,16 +412,16 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::get('products/cart', [ProductController::class, 'cart'])->name('products.cart');
     Route::get('products/empty-cart', [ProductController::class, 'emptyCart'])->name('products.empty_cart');
 
-    Route::resource('products', ProductController::class);
-    Route::resource('productCategory', ProductCategoryController::class);
-    Route::get('getProductSubCategories/{id}', [ProductSubCategoryController::class, 'getSubCategories'])->name('get_product_sub_categories');
-    Route::resource('productSubCategory', ProductSubCategoryController::class);
+    // Route::resource('products', ProductController::class);
+    // Route::resource('productCategory', ProductCategoryController::class);
+    // Route::get('getProductSubCategories/{id}', [ProductSubCategoryController::class, 'getSubCategories'])->name('get_product_sub_categories');
+    // Route::resource('productSubCategory', ProductSubCategoryController::class);
 
-    /* PRODUCT FILES */
-    Route::get('product-files/download/{id}', [ProductFileController::class, 'download'])->name('product-files.download');
-    Route::post('product-files/delete-image/{id}', [ProductFileController::class, 'deleteImage'])->name('product-files.delete_image');
-    Route::post('product-files/update-images', [ProductFileController::class, 'updateImages'])->name('product-files.update_images');
-    Route::resource('product-files', ProductFileController::class);
+    // /* PRODUCT FILES */
+    // Route::get('product-files/download/{id}', [ProductFileController::class, 'download'])->name('product-files.download');
+    // Route::post('product-files/delete-image/{id}', [ProductFileController::class, 'deleteImage'])->name('product-files.delete_image');
+    // Route::post('product-files/update-images', [ProductFileController::class, 'updateImages'])->name('product-files.update_images');
+    // Route::resource('product-files', ProductFileController::class);
 
     /* INVOICE FILES */
     Route::get('invoice-files/download/{id}', [InvoiceFilesController::class, 'download'])->name('invoice-files.download');
@@ -443,7 +443,7 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
 
 
     /* Orders */
-    Route::resource('orders', OrderController::class);
+    // Route::resource('orders', OrderController::class);
 
 
     /* NOTICE */
@@ -464,16 +464,16 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::resource('appreciations', AppreciationController::class);
 
     /* KnowledgeBase */
-    Route::get('knowledgebase/create/{id?}', [KnowledgeBaseController::class, 'create'])->name('knowledgebase.create');
-    Route::post('knowledgebase/apply-quick-action', [KnowledgeBaseController::class, 'applyQuickAction'])->name('knowledgebase.apply_quick_action');
-    Route::get('knowledgebase/searchquery/{query?}', [KnowledgeBaseController::class, 'searchQuery'])->name('knowledgebase.searchQuery');
-    Route::resource('knowledgebase', KnowledgeBaseController::class)->except(['create']);
+    // Route::get('knowledgebase/create/{id?}', [KnowledgeBaseController::class, 'create'])->name('knowledgebase.create');
+    // Route::post('knowledgebase/apply-quick-action', [KnowledgeBaseController::class, 'applyQuickAction'])->name('knowledgebase.apply_quick_action');
+    // Route::get('knowledgebase/searchquery/{query?}', [KnowledgeBaseController::class, 'searchQuery'])->name('knowledgebase.searchQuery');
+    // Route::resource('knowledgebase', KnowledgeBaseController::class)->except(['create']);
 
-    Route::get('knowledgebase-files/download/{id}', [KnowledgeBaseFileController::class, 'download'])->name('knowledgebase-files.download');
-    Route::resource('knowledgebase-files', KnowledgeBaseFileController::class);
+    // Route::get('knowledgebase-files/download/{id}', [KnowledgeBaseFileController::class, 'download'])->name('knowledgebase-files.download');
+    // Route::resource('knowledgebase-files', KnowledgeBaseFileController::class);
 
-    /* KnowledgeBase category */
-    Route::resource('knowledgebasecategory', KnowledgeBaseCategoryController::class);
+    // /* KnowledgeBase category */
+    // Route::resource('knowledgebasecategory', KnowledgeBaseCategoryController::class);
 
     /* EVENTS */
     Route::post('event-monthly-on', [EventCalendarController::class, 'monthlyOn'])->name('events.monthly_on');

@@ -24,7 +24,7 @@
                     </div>
 
                     <div class="col-md-9">
-                        <div class="form-group my-3">
+                        <div class="form-group">
                             <x-forms.label fieldId="selectEmployee" :fieldLabel="__('app.menu.employees')" fieldRequired="true">
                             </x-forms.label>
                             <x-forms.input-group>
@@ -52,7 +52,7 @@
                     </div>
 
                     <div class="col-lg-3 col-md-6">
-                        <div class="form-group my-3">
+                        <div class="form-group">
                             <x-forms.label fieldId="mark_attendance_by_month" :fieldLabel="__('modules.attendance.assignShift') . ' ' . __('app.by')">
                             </x-forms.label>
                             <div class="d-flex">
