@@ -22,6 +22,20 @@
                         </x-forms.input-group>
                     </div>
                     <div class="col-md-6">
+                        <x-forms.label class="my-3" fieldId="branch_id"
+                            :fieldLabel="__('app.branchName')" fieldRequired="true">
+                        </x-forms.label>
+                        <x-forms.input-group>
+                            <select class="form-control select-picker" name="branch_id"
+                                id="branch_id" data-live-search="true">
+                                <option value="">--</option>
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                        </x-forms.input-group>
+                    </div>
+                    <div class="col-md-6">
                         <x-forms.label class="my-3" fieldId="status"
                             :fieldLabel="__('app.status')" fieldRequired="true">
                         </x-forms.label>

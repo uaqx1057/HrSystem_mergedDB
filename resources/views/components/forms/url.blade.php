@@ -1,4 +1,4 @@
-<div {{ $attributes->merge(['class' => 'form-group my-3']) }}>
+<div {{ $attributes->merge(['class' => 'form-group ']) }}>
     <x-forms.label :fieldId="$fieldId" :fieldLabel="$fieldLabel" :fieldRequired="$fieldRequired" :popover="$popover"></x-forms.label>
 
     <input type="url" class="form-control height-35 f-14" placeholder="{{ $fieldPlaceholder }}"

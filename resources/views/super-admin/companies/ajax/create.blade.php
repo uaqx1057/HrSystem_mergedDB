@@ -71,7 +71,7 @@
                     </div>
 
                     <div class="col-md-3">
-                        <x-forms.label class="mt-3" fieldId="category"
+                        <x-forms.label class="" fieldId="category"
                                        :fieldLabel="__('modules.accountSettings.language')">
                         </x-forms.label>
                         <x-forms.input-group>
@@ -95,7 +95,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <div class="form-group my-3">
+                        <div class="form-group ">
                             <x-forms.textarea class="mr-0 mr-lg-2 mr-md-2"
                                               :fieldLabel="__('modules.accountSettings.companyAddress')"
                                               fieldName="address"

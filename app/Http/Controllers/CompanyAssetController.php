@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CompanyAsset\StoreAssignRequest;
 use App\Models\AssetAssignment;
+use App\Models\Branch;
 use App\Models\CompanyAsset;
 use App\Helper\Reply;
 use App\Http\Controllers\Controller;
@@ -165,7 +166,7 @@ class CompanyAssetController extends AccountBaseController
     {
         $viewPermission = user()->permission('delete_company_assets');
         abort_403(!in_array($viewPermission, ['all']));
-        
+
         if ($request->action_type === 'delete') {
             $this->deleteRecords($request);
             return Reply::success(__('messages.deleteSuccess'));
@@ -193,6 +194,8 @@ class CompanyAssetController extends AccountBaseController
 
     public function assignAsset($id)
     {
+        $this->branches = Branch::latest()->get();
+        // dd($this->branches);
         $this->company_asset_id = $id;
         $this->asset = CompanyAsset::findOrFail($id);
         $this->employees = User::allEmployees();
@@ -212,6 +215,7 @@ class CompanyAssetController extends AccountBaseController
         $assign->employee_id = $request->employee;
         $assign->company_asset_id = $request->company_asset_id;
         $assign->status = $request->status;
+        $assign->branch_id = $request->branch_id;
         $assign->save();
 
         $redirectUrl = urldecode($request->redirect_url);
@@ -227,6 +231,7 @@ class CompanyAssetController extends AccountBaseController
     {
         $asset = CompanyAsset::findOrFail($id);
         $assignment = $asset->assignments()->first();
+        $this->branches = Branch::latest()->get();
         $this->asset = $asset;
         $this->assignment = $assignment;
         $this->employees = User::allEmployees();
@@ -245,6 +250,7 @@ class CompanyAssetController extends AccountBaseController
         $assignment = AssetAssignment::where('company_asset_id', $id)->firstOrFail();
         $assignment->employee_id = $request->employee;
         $assignment->status = $request->status;
+        $assignment->branch_id = $request->branch_id;
         $assignment->save();
 
         $redirectUrl = route('company-assets.index');

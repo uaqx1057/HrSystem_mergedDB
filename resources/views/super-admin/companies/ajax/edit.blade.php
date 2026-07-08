@@ -74,7 +74,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <x-forms.label class="mt-3" fieldId="category"
+                        <x-forms.label class="" fieldId="category"
                                        :fieldLabel="__('modules.accountSettings.language')">
                         </x-forms.label>
                         <x-forms.input-group>

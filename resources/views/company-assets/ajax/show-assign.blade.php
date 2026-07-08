@@ -42,6 +42,7 @@
                     <x-cards.data-row :label="__('Brand')" :value="$asset->brand" />
                     <h4>Assignment Details</h4>
                     <x-cards.data-row :label="__('Employee')" :value="$assignment->employee->name ?? 'N/A'" />
+                        <x-cards.data-row :label="__('Branch')" :value="$assignment->branch->name ?? 'N/A'" />
                     <x-cards.data-row :label="__('Status')" :value="$assignment->status ?? 'N/A'" />
                     <div class="col-12 px-0 pb-3 d-lg-flex d-md-flex d-block">
                         <p class="mb-0 text-lightest f-14 w-30 text-capitalize">Signature</p>

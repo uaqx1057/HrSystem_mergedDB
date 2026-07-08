@@ -469,6 +469,7 @@ return array(
     'inactive' => 'Inactive',
     'admin' => 'Admin',
     'employee' => 'Employee',
+    'branchName' => 'Branch',
     'dms' => 'DMS',
     'complete' => 'Complete',
     'approved' => 'Approved',

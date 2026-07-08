@@ -15,6 +15,7 @@ class AssetAssignment extends Model
         'document_path',
         'signed_document',
         'status',
+        'branch_id',
     ];
 
     public function employee()
@@ -25,5 +26,10 @@ class AssetAssignment extends Model
     public function asset()
     {
         return $this->belongsTo(CompanyAsset::class, 'company_asset_id');
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 }

@@ -25898,6 +25898,7 @@ table.dataTable thead th {
 
 .dataTables_wrapper .col-sm-12{
  overflow: auto !important;
+ min-height: 150px !important;
 }
 
 @media (max-width: 767.98px) {

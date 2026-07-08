@@ -130,16 +130,18 @@
             <tr>
                 <th>Employee Name</th>
                 <td>{{ $assignment->employee->name ?? 'N/A' }}</td>
+                <th>Branch</th>
+                <td>{{ $assignment->branch->name ?? 'N/A' }}</td>
+            </tr>
+            <tr>
                 <th>Status</th>
                 <td><span style="color: green;">{{ strtoupper($assignment->status) }}</span></td>
-            </tr>
-            <tr>
                 <th>Iqama / National ID</th>
                 <td>{{ $assignment->employee->employeeDetail->iqama_no ?? 'N/A' }}</td>
-                <th>Iqama Expiry</th>
-                <td>{{ $assignment->employee->employeeDetail->iqama_expiry_date ?? 'N/A' }}</td>
             </tr>
             <tr>
+                <th>Iqama Expiry</th>
+                <td>{{ $assignment->employee->employeeDetail->iqama_expiry_date ?? 'N/A' }}</td>
                 <th>Passport Number</th>
                 <td>{{ $assignment->employee->employeeDetail->passport_no ?? 'N/A' }}</td>
                 {{-- <th>Assignment Date</th>

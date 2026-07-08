@@ -27,6 +27,7 @@ class StoreAssignRequest extends CoreRequest
         return [
             'employee' => 'required',
             'status' => 'required',
+            'branch_id' => 'required',
         ];
     }
 }

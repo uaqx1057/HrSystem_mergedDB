@@ -4,13 +4,136 @@
 
 @push('styles')
     <style>
-        .message-action {
-            visibility: hidden;
+        :root {
+            --chat-theme: #246A45;
+            --chat-theme-light: #DCF3E6;
         }
 
-        .message_wrapper .msg-content-right .chat-box .card:hover .message-action {
+        .chat-box {
+            background-color: #F2F4F7; /* whatsapp-like backdrop, change/remove if you prefer white */
+            padding: 15px;
+        }
+
+        #chatBox{
+            height: calc(100vh - 345px) !important;
+        }
+
+        .message-row {
+            width: 100%;
+        }
+
+        .message-bubble-wrapper {
+            max-width: 65%;
+            position: relative;
+        }
+
+        .message-bubble-wrapper.sent {
+            margin-left: auto;
+        }
+
+        .message-bubble-wrapper.received {
+            margin-right: auto;
+        }
+
+        .message-bubble {
+            position: relative;
+            padding: 8px 30px 8px 12px; /* extra right padding reserves room for the ⋮ button */
+            border-radius: 10px;
+            word-wrap: break-word;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.08);
+            min-width: 90px; /* prevents short messages from squeezing the ⋮ button/menu */
+            overflow: visible; /* don't clip the dropdown menu */
+        }
+
+        /* Sent messages - right side, theme color */
+        .message-bubble-wrapper.sent .message-bubble {
+            background-color: var(--chat-theme);
+            color: #fff;
+            border-top-right-radius: 2px;
+        }
+
+        .message-bubble-wrapper.sent .message-text,
+        .message-bubble-wrapper.sent .message-time {
+            color: #fff;
+        }
+
+        /* Received messages - left side, light bubble */
+        .message-bubble-wrapper.received .message-bubble {
+            background-color: #fff;
+            color: #303030;
+            border-top-left-radius: 2px;
+        }
+
+        .message-bubble-wrapper.received .message-text,
+        .message-bubble-wrapper.received .message-time {
+            color: #303030;
+        }
+
+        .message-text {
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 2px;
+        }
+
+        .message-text p {
+            margin-bottom: 0 !important;
+        }
+
+        .message-time {
+            font-size: 10px;
+            text-align: right;
+            opacity: 0.75;
+            margin-top: 2px;
+            white-space: nowrap;
+        }
+
+        /* Action (⋮) button - always top-right corner of the bubble itself */
+        .message-action {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            visibility: hidden;
+            z-index: 2;
+        }
+
+        .message-bubble:hover .message-action {
             visibility: visible;
         }
+
+        .message-action .dropdown-menu {
+            min-width: 110px;
+            z-index: 1060 !important; /* always render above other bubbles */
+            margin-top: 4px !important;
+        }
+
+        .message-bubble-wrapper.sent .message-action .btn {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .message-bubble-wrapper.received .message-action .btn {
+            color: #6c757d;
+        }
+
+        .message-files {
+            margin-top: 6px;
+        }
+
+        /* Send button / active states using theme color */
+        /* .btn-primary,
+        #sendMessage {
+            background-color: var(--chat-theme) !important;
+            border-color: var(--chat-theme) !important;
+        } */
+
+        /* .show-user-messages.active,
+        .show-user-messages:hover {
+            background-color: var(--chat-theme-light);
+        } */
+
+        .unread-count {
+            background-color: var(--chat-theme) !important;
+        }
+
         #submitTexts {
             border-top: 1px solid;
         }
