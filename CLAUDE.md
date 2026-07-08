@@ -1,0 +1,12 @@
+
+<!-- graphify-tool:routing:start -->
+## Tool routing (token efficiency)
+- Codebase questions (architecture, "what calls X", impact analysis): run `graphify query "<question>"` FIRST. Do NOT grep or read files across the repo - the knowledge graph at graphify-out/graph.json already has the answer for ~2k tokens.
+- Library/framework documentation (Flutter, Laravel, Django, Node, etc.): use the Context7 MCP server (resolve-library-id + query-docs) instead of guessing APIs from memory.
+- File access: after a graphify query identifies the relevant files, read ONLY those specific files. Avoid directory-wide listing/exploration.
+- Answer reuse: before querying, check graphify-out/memory/ for a saved answer to the same question. After answering a non-trivial question well, save it with `graphify save-result --question "<question>"`.
+- Quiet output: run tests/builds with filtered or quiet flags (e.g. `--compact`, `2>&1 | tail -20`). Never dump full verbose logs into the conversation - quote only the failing lines.
+- Cost discipline: prefer minimal diffs/patches over full-file rewrites; batch related edits and questions into ONE request instead of many small ones; use the cheapest capable model for routine work and reserve premium / high-reasoning models for genuinely hard problems; prefer `/compact` over `/clear` to keep the prompt cache warm.
+- Checkpoints: after each working state, make a git commit. If a change breaks things, revert to the last commit instead of debugging your own regressions from scratch.
+- Self-updating docs: when you discover a non-obvious fact about this codebase (convention, gotcha, build quirk), append it to this file so future sessions never re-discover it.
+<!-- graphify-tool:routing:end -->
