@@ -4,6 +4,15 @@
     @include('sections.datatable_css')
 @endpush
 
+@push('styles')
+<style>
+    .dataTables_wrapper .col-sm-12{
+        overflow: auto !important;
+        min-height: 0 !important;
+    }
+</style>
+@endpush
+
 @section('filter-section')
 
     <x-filters.filter-box>
@@ -135,7 +144,7 @@
             }, 900);
         }
 
-        $('#event').on('change', function() { 
+        $('#event').on('change', function() {
             if ($(this).val() !== 'all')
                 $('#reset-filters').removeClass('d-none');
 

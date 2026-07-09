@@ -35,7 +35,7 @@ class EventInvite extends BaseNotification
     {
         $via = ['database'];
 
-        if ($notifiable->email_notifications && $notifiable->email != '') {
+        if ($this->emailSetting->send_email == 'yes' && $notifiable->email_notifications && $notifiable->email != '') {
             array_push($via, 'mail');
         }
 

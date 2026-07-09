@@ -34,9 +34,9 @@ class NewUserViaLink extends BaseNotification
     {
         $via = ['database'];
 
-        // if ($this->emailSetting->send_email == 'yes' && $notifiable->email_notifications && $notifiable->email != '') {
+        if ($this->emailSetting->send_email == 'yes' && $notifiable->email_notifications && $notifiable->email != '') {
             array_push($via, 'mail');
-        // }
+        }
 
         if ($this->emailSetting->send_slack == 'yes' && $this->company->slackSetting->status == 'active') {
             array_push($via, 'slack');

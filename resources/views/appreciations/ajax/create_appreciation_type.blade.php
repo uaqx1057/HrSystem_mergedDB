@@ -17,7 +17,7 @@
                         </x-forms.text>
                     </div>
                     <div class="col-lg-6 col-md-6">
-                        <x-forms.label class="mt-3" fieldId="icon"
+                        <x-forms.label class="" fieldId="icon"
                                        :fieldLabel="__('modules.appreciations.chooseIcon')" fieldRequired="true">
                         </x-forms.label>
                         <x-forms.input-group>

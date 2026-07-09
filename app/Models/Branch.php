@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Branch extends Model
 {
-    use HasFactory;
-
-    protected $fillable = [ 
+    use HasFactory, SoftDeletes;
+    protected $fillable = [
         'name',
         'registration_date',
         'is_active'
@@ -19,7 +19,7 @@ class Branch extends Model
     protected $casts = [
         'registration_date' => 'datetime'
     ];
-    
+
     public function drivers(): HasMany
     {
         return $this->hasMany(Driver::class);

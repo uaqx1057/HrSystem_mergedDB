@@ -23,13 +23,13 @@
                                 aria-selected="true">@lang('app.email')
                             </a>
                             {{-- WORKSUITESAAS --}}
-                            @if (!user()->is_superadmin)
+                            {{-- @if (!user()->is_superadmin)
                                 <a class="nav-item nav-link f-15 slack-setting"
                                     href="{{ route('notifications.index') }}?tab=slack-setting" role="tab"
                                     aria-controls="nav-ticketTypes" aria-selected="true" ajax="false">@lang('app.slack') <i
                                     class="fa fa-circle ml-1 {{ $slackSettings->status == 'active' ? 'text-light-green' : 'text-red' }}"></i>
                                 </a>
-                            @endif
+                            @endif --}}
                             <a class="nav-item nav-link f-15 push-notification-setting"
                                 href="{{ route('notifications.index') }}?tab=push-notification-setting" role="tab"
                                 aria-controls="nav-ticketTypes" aria-selected="true"
