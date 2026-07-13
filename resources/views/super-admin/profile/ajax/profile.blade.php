@@ -24,7 +24,7 @@
         </div>
 
         <div class="col-lg-4">
-            <x-forms.label class="mt-3" fieldId="password"
+            <x-forms.label class="" fieldId="password"
                 :fieldLabel="__('modules.profile.yourPassword')">
             </x-forms.label>
             <x-forms.input-group>
@@ -77,7 +77,7 @@
             </div>
         </div>
 
-        <div class="col-lg-4">
+        {{-- <div class="col-lg-4">
             <x-forms.select fieldId="locale" :fieldLabel="__('modules.accountSettings.language')"
                 fieldName="locale" search="true">
                 @foreach ($languageSettings as $language)
@@ -86,7 +86,7 @@
                     value="{{ $language->language_code }}">{{ $language->language_name }}</option>
                 @endforeach
             </x-forms.select>
-        </div>
+        </div> --}}
         @if (function_exists('sms_setting') && sms_setting()->telegram_status)
             <div class="col-md-4">
                 <x-forms.number fieldName="telegram_user_id" fieldId="telegram_user_id"

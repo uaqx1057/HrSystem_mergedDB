@@ -136,7 +136,7 @@
             </x-forms.input-group>
         </div>
 
-        <div class="col-lg-4">
+        {{-- <div class="col-lg-4">
             <x-forms.select fieldId="locale" :fieldLabel="__('modules.accountSettings.changeLanguage')"
                             fieldName="locale" search="true">
                 @foreach ($languageSettings as $language)
@@ -145,13 +145,13 @@
                             value="{{ $language->language_code }}">{{ $language->language_name }}</option>
                 @endforeach
             </x-forms.select>
-        </div>
+        </div> --}}
 
         <div class="col-md-4">
             <x-forms.select fieldId="gender" :fieldLabel="__('modules.employees.gender')" fieldName="gender">
-                <option @selected($user->gender == 'male') value="male">@lang('app.male')</option>
-                <option @selected($user->gender == 'female') value="female">@lang('app.female')</option>
-                <option @selected($user->gender == 'others') value="others">@lang('app.others')</option>
+                <option @selected($user->gender == 'Male') value="male">@lang('app.male')</option>
+                <option @selected($user->gender == 'Female') value="female">@lang('app.female')</option>
+                <option @selected($user->gender == 'Others') value="others">@lang('app.others')</option>
             </x-forms.select>
         </div>
 

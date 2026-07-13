@@ -159,7 +159,7 @@
             </li>
             <!-- NOTIFICATIONS END -->
             <!-- LOGOUT START -->
-            <li data-toggle="tooltip" data-placement="top" title="{{ __('app.logout') }}">
+            <li data-toggle="tooltip" data-placement="top" title="{{ __('app.logout') }}" class="mr-2">
                 <div class="logout_box">
                     <a class="d-block header-icon-box" href="javascript:;"
                         onclick="event.preventDefault();
@@ -170,8 +170,37 @@
             </li>
             <!-- LOGOUT END -->
 
+            <!-- LOGOUT END -->
+
+            <!-- GOOGLE TRANSLATE START -->
+            <li data-toggle="tooltip" data-placement="top" title="{{ __('app.language') ?? 'Language' }}">
+                <div class="translate_box dropdown">
+                    <a class="d-block dropdown-toggle header-icon-box" type="link" data-toggle="dropdown"
+                        aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-globe f-16 text-dark-grey"></i>
+                    </a>
+                    <!-- DROPDOWN - LANGUAGE -->
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink" tabindex="0">
+                        <a class="dropdown-item f-14 text-dark d-flex align-items-center gtranslate-btn"
+                            href="javascript:;" data-lang="en">
+                            <span class="mr-2">🇬🇧</span> English
+                        </a>
+                        <a class="dropdown-item f-14 text-dark d-flex align-items-center gtranslate-btn"
+                            href="javascript:;" data-lang="ar">
+                            <span class="mr-2">🇸🇦</span> العربية
+                        </a>
+                    </div>
+                </div>
+            </li>
+            <!-- GOOGLE TRANSLATE END -->
+
+            <!-- Hidden Google Translate mount point -->
+            <div id="google_translate_element" style="display:none;"></div>
+
+
+
             <!-- PROFILE DROPDOWN START -->
-            <li data-toggle="tooltip" data-placement="top" title="{{ user()->name }}" class="ml-2">
+            <li data-toggle="tooltip" data-placement="top" title="{{ user()->name }}" class="">
                 <div class="profile_box dropdown">
 
                     <a class="d-flex align-items-center dropdown-toggle header-icon-box" type="link"
@@ -349,3 +378,71 @@
 
     });
 </script>
+
+<!-- GOOGLE TRANSLATE SCRIPT START -->
+<script type="text/javascript">
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: 'en,ar',
+            autoDisplay: false,
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+        }, 'google_translate_element');
+    }
+
+    function setGoogleTranslateLanguage(lang) {
+        const cookieValue = '/en/' + lang;
+        document.cookie = 'googtrans=' + cookieValue + ';path=/';
+        document.cookie = 'googtrans=' + cookieValue + ';path=/;domain=' + window.location.hostname;
+
+        const combo = document.querySelector('#google_translate_element select.goog-te-combo');
+        if (combo) {
+            combo.value = lang;
+            combo.dispatchEvent(new Event('change'));
+        } else {
+            window.location.reload();
+        }
+    }
+
+    $(document).ready(function () {
+        $('body').on('click', '.gtranslate-btn', function (e) {
+            e.preventDefault();
+            const lang = $(this).data('lang');
+            setGoogleTranslateLanguage(lang === 'en' ? 'en' : lang);
+        });
+    });
+
+    // Continuously strip Google Translate's injected UI, no matter when it appears
+    function removeGoogleTranslateArtifacts() {
+        const selectors = [
+            '.goog-te-spinner-pos',
+            '.goog-te-banner-frame',
+            '#goog-gt-tt',
+            '.goog-te-balloon-frame'
+        ];
+        selectors.forEach(sel => {
+            document.querySelectorAll(sel).forEach(el => el.remove());
+        });
+
+        // Reset body offset Google keeps re-adding
+        document.body.style.top = '0px';
+        document.body.classList.remove('translated-ltr', 'translated-rtl');
+    }
+
+    // Watch the whole document for any new nodes Google injects (spinner, banner, tooltip)
+    const gtObserver = new MutationObserver(function (mutations) {
+        removeGoogleTranslateArtifacts();
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        removeGoogleTranslateArtifacts();
+        gtObserver.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    });
+</script>
+
+<script type="text/javascript"
+    src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<!-- GOOGLE TRANSLATE SCRIPT END -->

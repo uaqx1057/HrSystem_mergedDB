@@ -29017,3 +29017,40 @@ body:not(.dark-theme) .e-d-info-notices {
 body:not(.dark-theme) .e-d-tasks-projects-events {
     animation: fadeUp .38s .10s cubic-bezier(.22, 1, .36, 1) both !important;
 }
+
+
+/* Hide Google Translate top banner, tooltip, spinner, and any injected UI */
+.goog-te-banner-frame.skiptranslate,
+.goog-te-spinner-pos,
+.goog-te-spinner-animation,
+#goog-gt-tt,
+.goog-tooltip,
+.goog-tooltip:hover,
+.goog-text-highlight,
+.goog-te-balloon-frame,
+.goog-te-gadget-icon {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+}
+
+/* Prevent Google from pushing page content down when banner briefly loads */
+body {
+    top: 0 !important;
+    position: static !important;
+}
+
+/* Hide any Google-injected iframe(s), including the spinner iframe */
+.skiptranslate iframe,
+iframe.goog-te-menu-frame,
+iframe[id^="\:"] {
+    display: none !important;
+    visibility: hidden !important;
+}
+
+/* Hide the actual dropdown widget box itself (keep only your custom button) */
+#google_translate_element {
+    display: none !important;
+}

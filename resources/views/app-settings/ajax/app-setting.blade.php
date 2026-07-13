@@ -26,7 +26,7 @@
                 </option>
             </x-forms.select>
         </div>
-        <div class="col-lg-2">
+        <div class="col-lg-3">
             <x-forms.select fieldId="timezone" :fieldLabel="__('modules.accountSettings.defaultTimezone')"
                             fieldName="timezone" search="true">
                 @foreach ($timezones as $tz)
@@ -34,7 +34,7 @@
                 @endforeach
             </x-forms.select>
         </div>
-        <div class="col-lg-2">
+        <div class="col-lg-3">
             <x-forms.select fieldId="currency_id"
                             :fieldLabel="__('modules.accountSettings.defaultCurrency')"
                             fieldName="currency_id" search="true" :popover="__('modules.accountSettings.appCurrencyInfo')">
@@ -47,7 +47,7 @@
                 @endforeach
             </x-forms.select>
         </div>
-        <div class="col-lg-2">
+        {{-- <div class="col-lg-2">
             <x-forms.select fieldId="locale" :fieldLabel="__('modules.accountSettings.language')"
                             fieldName="locale" search="true" :popover="__('modules.accountSettings.appLanguageInfo')">
                 @foreach ($languageSettings as $language)
@@ -56,7 +56,7 @@
                             value="{{ $language->language_code }}">{{ $language->language_name }}</option>
                 @endforeach
             </x-forms.select>
-        </div>
+        </div> --}}
         <div class="col-lg-3">
             <x-forms.select fieldId="datatable_row_limit" :fieldLabel="__('modules.accountSettings.datatableRowLimit')"
                             fieldName="datatable_row_limit"  :popover="__('modules.accountSettings.datatableRowLimitPopover')">
@@ -67,7 +67,7 @@
             </x-forms.select>
         </div>
         @if (company())
-            <div class="col-lg-3 mt-lg-5">
+            <div class="col-lg-3 mt-lg-4">
                 <x-forms.checkbox :checked="company()->employee_can_export_data"
                                 :fieldLabel="__('app.employeeCanExportData')"
                                 fieldName="employee_can_export_data"
@@ -90,13 +90,13 @@
                         @lang('modules.accountSettings.deleteSessions')</a></small>
             @endif
         </div>
-        <div class="col-lg-3 mt-lg-5">
+        <div class="col-lg-3 mt-lg-4">
             <x-forms.checkbox :checked="global_setting()->app_debug"
                               :fieldLabel="__('modules.accountSettings.appDebug')"
                               fieldName="app_debug" :popover="__('modules.accountSettings.appDebugInfo')"
                               fieldId="app_debug"/>
         </div>
-        <div class="col-lg-3 mt-lg-5">
+        <div class="col-lg-3 mt-lg-3">
             <x-forms.checkbox :checked="global_setting()->system_update"
                               :fieldLabel="__('modules.accountSettings.updateEnableDisable')"
                               fieldName="system_update"
