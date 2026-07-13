@@ -5,14 +5,34 @@ $updateLeaveQuotaPermission = user()->permission('update_leaves_quota');
 <!-- TAB CONTENT START -->
 <div class="tab-pane fade show active mt-5" role="tabpanel" aria-labelledby="nav-email-tab">
 
-    <div class="row mb-4">
+    {{-- <div class="row mb-4">
         <div class="col-lg-4">
             <x-cards.widget icon="sign-out-alt" :title="__('modules.leaves.remainingLeaves')" :value="($allowedLeaves - $leavesTakenByUser)" />
+        </div>
+    </div> --}}
+
+    <div class="row mb-4">
+        @php
+            $totalEarned  = collect($leaveHistory)->sum('earned');
+            $totalTaken   = collect($leaveHistory)->sum('taken');
+            $totalBalance = $totalEarned - $totalTaken;
+        @endphp
+        <div class="col-lg-4">
+            <x-cards.widget icon="calendar-plus" :title="__('Total Earn Leaves')" :value="($totalEarned)" />
+        </div>
+
+        <div class="col-lg-4">
+            <x-cards.widget icon="calendar-check" :title="__('Total Taken Leaves')" :value="($totalTaken)" />
+        </div>
+
+        <div class="col-lg-4">
+            <x-cards.widget icon="hourglass-half" :title="__('Total Remaining Leaves')" :value="($totalBalance)" />
         </div>
     </div>
 
 
-    <x-cards.data :title="__('app.menu.leavesQuota')">
+
+    {{-- <x-cards.data :title="__('app.menu.leavesQuota')">
         @if ($updateLeaveQuotaPermission == 'all')
 
             <div class="row">
@@ -70,7 +90,7 @@ $updateLeaveQuotaPermission = user()->permission('update_leaves_quota');
             @include('employees.leaves_quota')
         </div>
 
-    </x-cards.data>
+    </x-cards.data> --}}
 </div>
 <!-- TAB CONTENT END -->
 

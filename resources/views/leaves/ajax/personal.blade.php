@@ -20,7 +20,7 @@
             <x-cards.user :image="$employee->image_url">
                 <div class="row">
                     <div class="col-10">
-                        <h4 class="card-title f-15 f-w-500 text-darkest-grey mb-0">
+                        <h4 class="card-title f-15 f-w-500 text-darkest-white mb-0">
                             {{ ($employee->salutation ? $employee->salutation->label() . ' ' : '') . $employee->name }}
                             @isset($employee->country)
                                 <x-flag :country="$employee->country" />
