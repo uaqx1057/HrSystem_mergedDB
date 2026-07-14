@@ -7,10 +7,10 @@
 
             <x-slot name="action">
                 <div class="dropdown">
-                    <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
+                    {{-- <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="fa fa-ellipsis-h"></i>
-                    </button>
+                    </button> --}}
 
                     <div class="dropdown-menu dropdown-menu-right border-grey rounded b-shadow-4 p-0"
                         aria-labelledby="dropdownMenuLink" tabindex="0">
@@ -41,11 +41,11 @@
             <x-cards.data-row :label="__('modules.lead.companyName')" :value="!empty($deal->contact->company_name) ? $deal->contact->company_name : '--'" />
 
             <div class="col-12 px-0 pb-3 d-flex">
-                <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                <p class="mb-0 text-darkest-white f-14 w-30 d-inline-block text-capitalize">
                     @lang('modules.deal.dealAgent')</p>
                 <p class="mb-0 text-dark-grey f-14">
                     @if (!is_null($deal->leadAgent))
-                        <x-employee :user="$deal->leadAgent->user" />
+                        <x-employee background="text-darkest-white" :user="$deal->leadAgent->user" :user="$deal->leadAgent->user" />
                     @else
                         --
                     @endif

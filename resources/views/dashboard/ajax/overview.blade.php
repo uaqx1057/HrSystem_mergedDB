@@ -166,12 +166,12 @@
                                 </div>
                             </td>
                             <td><a href="{{ route('tickets.show', $item->ticket_number) }}"
-                                    class="text-darkest-grey">{{ $item->subject }}</a>
+                                    class="text-darkest-white">{{ $item->subject }}</a>
                                 <br />
                                 <span class="f-10 text-lightest mt-1">{{ $item->requester->name }}</span>
                             </td>
-                            <td class="text-darkest-grey" width="15%">{{ $item->updated_at->translatedFormat(company()->date_format) }}</td>
-                            <td class="f-14 pr-20 text-right" width="20%">
+                            <td class="text-darkest-white" width="15%">{{ $item->updated_at->translatedFormat(company()->date_format) }}</td>
+                            <td class="f-14 pr-20 text-right text-darkest-white" width="20%">
                                 @php
                                     if ($item->priority == 'low') {
                                         $priority = 'dark-green';
@@ -339,7 +339,7 @@
                 @endforelse
             </x-cards.data>
         </div>
-    @endif 
+    @endif
 --}}
 </div>
 

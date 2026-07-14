@@ -6,7 +6,7 @@
                 <h4 class="mb-0 p-3 f-21 font-weight-normal text-capitalize border-bottom-grey">
                     @lang('app.edit') {{$faq->title}}</h4>
                 <div class="row px-3">
-                    <div class="col-lg-6 col-md-6">
+                    <div class="col-lg-6 col-md-6 mt-3">
                         <x-forms.text :fieldLabel="__('app.title')" fieldName="title" fieldRequired="true" fieldId="title" :fieldValue="$faq->title" />
                     </div>
 

@@ -11,7 +11,7 @@ $addProductPermission = user()->permission('add_product');
 <!-- CREATE INVOICE START -->
 <div class="bg-white rounded b-shadow-4 create-inv">
     <!-- HEADING START -->
-    <div class="px-lg-4 px-md-4 px-3 py-3">
+    <div class="px-lg-4 px-md-4 px-3 py-3 form-heading-background">
         <h4 class="mb-0 f-21 form-heading-background font-weight-normal text-capitalize">@lang('app.estimateDetails')</h4>
     </div>
     <!-- HEADING END -->

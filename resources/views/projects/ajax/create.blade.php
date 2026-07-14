@@ -97,7 +97,7 @@
 
                     <div class="col-md-4 @if (!isset($client) && is_null($client)) @endif">
                         @if (isset($client) && !is_null($client))
-                            <x-forms.label class="my-3" fieldId="client_id" :fieldLabel="__('app.client')">
+                            <x-forms.label class="" fieldId="client_id" :fieldLabel="__('app.client')">
                             </x-forms.label>
 
                             <input type="hidden" name="client_id" id="client_id" value="{{ $client->id }}">

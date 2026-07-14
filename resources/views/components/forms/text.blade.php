@@ -3,6 +3,7 @@
     'fieldLabel',
     'fieldRequired' => false,
     'popover' => null,
+    'textColor' => null,
     'fieldPlaceholder' => '',
     'fieldValue' => '',
     'fieldName',
@@ -13,7 +14,7 @@
 
 <div {{ $attributes->merge(['class' => 'form-group']) }}>
     <div class="d-flex justify-content-between align-items-center">
-        <x-forms.label :fieldId="$fieldId" :fieldLabel="$fieldLabel" :fieldRequired="$fieldRequired" :popover="$popover" class=""></x-forms.label>
+        <x-forms.label :textColor="$textColor" :fieldId="$fieldId" :fieldLabel="$fieldLabel" :fieldRequired="$fieldRequired" :popover="$popover" class=""></x-forms.label>
     </div>
 
     <div class="input-group">

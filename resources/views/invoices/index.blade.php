@@ -4,6 +4,15 @@
     @include('sections.datatable_css')
 @endpush
 
+@push('styles')
+<style>
+    .dataTables_wrapper .col-sm-12{
+        overflow: auto !important;
+        min-height: 0 !important;
+    }
+</style>
+@endpush
+
 @section('filter-section')
 
     <x-filters.filter-box>

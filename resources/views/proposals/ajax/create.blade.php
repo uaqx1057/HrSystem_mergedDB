@@ -6,8 +6,8 @@
     <!-- CREATE INVOICE START -->
 <div class="bg-white rounded b-shadow-4 create-inv">
     <!-- HEADING START -->
-    <div class="px-lg-4 px-md-4 px-3 py-3">
-        <h4 class="mb-0 f-21 form-heading-background font-weight-normal text-capitalize">@lang('app.proposalDetails')
+    <div class="px-lg-4 px-md-4 px-3 py-3 form-heading-background">
+        <h4 class="mb-0 f-21 font-weight-normal text-capitalize">@lang('app.proposalDetails')
         </h4>
     </div>
     <!-- HEADING END -->
@@ -20,6 +20,7 @@
             <input type="hidden" name="template_id" value="{{ $proposalTemplate->id ?? '' }}">
             @if (isset($deal) && !is_null($deal))
                 <div class="col-md-6 col-lg-3">
+                    <input type="hidden" name="deal_id" value="{{ $deal->id ?? '' }}">
                     <x-forms.label fieldId="client_id" :fieldLabel="__('modules.deal.title')" fieldRequired="true"
                                    class="mt-3"/>
                     <x-forms.input-group>
@@ -32,7 +33,7 @@
                 </div>
                 <!-- CLIENT END -->
             @else
-                <div class="col-lg-4 ">
+                <div class="col-lg-4 mt-3">
                     <x-forms.select fieldId="lead_contact" :fieldLabel="__('modules.leadContact.leadContacts')"
                                     fieldName="lead_contact" fieldRequired="true">
                         <option value="">--</option>
@@ -73,7 +74,7 @@
             <!-- INVOICE DATE END -->
 
             <!-- FREQUENCY START -->
-            <div class="col-md-6 col-lg-3">
+            <div class="col-md-6 col-lg-3 mt-3">
                 <x-forms.select :fieldLabel="__('modules.invoices.currency')" fieldName="currency_id"
                                 field_id="currency_id">
                     @foreach ($currencies as $currency)

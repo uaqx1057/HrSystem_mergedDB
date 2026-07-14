@@ -31,7 +31,7 @@
                 <x-cards.user :image="$client->image_url">
                     <div class="row">
                         <div class="col-10">
-                            <h4 class="card-title f-15 f-w-500 text-darkest-grey mb-0">
+                            <h4 class="card-title f-15 f-w-500 text-darkest-white mb-0">
                                 {{ ($client->salutation ? $client->salutation->label() . ' ' : '') . $client->name }}
                                 @isset($client->country)
                                     <x-flag :country="$client->country" />
@@ -40,10 +40,10 @@
                         </div>
                         <div class="col-2 text-right">
                             <div class="dropdown">
-                                <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
+                                {{-- <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
                                     data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     <i class="fa fa-ellipsis-h"></i>
-                                </button>
+                                </button> --}}
 
                                 <div class="dropdown-menu dropdown-menu-right border-grey rounded b-shadow-4 p-0"
                                     aria-labelledby="dropdownMenuLink" tabindex="0">
@@ -86,10 +86,10 @@
                     :value="$earningTotal" icon="coins" />
             </div>
 
-            <div class="col-lg-6 col-md-6 col-sm-12">
+            {{-- <div class="col-lg-6 col-md-6 col-sm-12">
                 <x-cards.widget :title="__('modules.dashboard.totalUnpaidInvoices')"
                     :value="$clientStats->totalUnpaidInvoices" icon="file-invoice-dollar" />
-            </div>
+            </div> --}}
         </div>
     </div>
     <!--  WIDGETS END -->
@@ -108,9 +108,9 @@
                 :value="$client->clientDetails->company_name ?? '--'" />
 
             <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
-                <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                <p class="mb-0 text-darkest-white f-14 w-30 d-inline-block text-capitalize">
                     @lang('modules.profile.companyLogo')</p>
-                <p class="mb-0 text-dark-grey f-14 w-70">
+                <p class="mb-0 text-darkest-white f-14 w-70">
                     @if ($client->clientDetails->company_logo)
                         <img data-toggle="tooltip" style="height:50px;"
                     src="{{ $client->clientDetails->image_url }}">
@@ -124,9 +124,9 @@
                 :value="($client->mobile) ? ((!is_null($client->country_id) ? '+'.$client->country->phonecode.' ' : '') . $client->mobile) : '--'" />
 
             <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
-                <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                <p class="mb-0 text-darkest-white f-14 w-30 d-inline-block text-capitalize">
                     @lang('modules.employees.gender')</p>
-                <p class="mb-0 text-dark-grey f-14 w-70">
+                <p class="mb-0 text-darkest-white f-14 w-70">
                     <x-gender :gender='$client->gender' />
                 </p>
             </div>
@@ -154,10 +154,10 @@
 
             @if(!is_null($client->clientDetails->added_by))
                 <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
-                    <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                    <p class="mb-0 text-darkest-white f-14 w-30 d-inline-block text-capitalize">
                         @lang('app.addedBy')</p>
                     <p class="mb-0 text-dark-grey f-14 ">
-                        <x-employee :user="$client->clientDetails->addedBy" />
+                        <x-employee background="text-darkest-white" :user="$client->clientDetails->addedBy" />
                     </p>
                 </div>
             @endif

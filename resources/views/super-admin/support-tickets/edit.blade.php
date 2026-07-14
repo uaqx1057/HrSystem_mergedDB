@@ -245,7 +245,7 @@
                                     </x-forms.select>
                                 </div>
                                 <div class="more-filter-items mb-4">
-                                    <x-forms.label class="my-3" fieldId="ticket_type_id"
+                                    <x-forms.label class="" fieldId="ticket_type_id"
                                                    :fieldLabel="__('modules.invoices.type')">
                                     </x-forms.label>
                                     <x-forms.input-group>

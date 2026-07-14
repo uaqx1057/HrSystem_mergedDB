@@ -1,5 +1,5 @@
 <div {{ $attributes->merge(['class' => 'form-group']) }}>
-    <x-forms.label :fieldId="$fieldId" :fieldLabel="$fieldLabel" :fieldRequired="$fieldRequired" :popover="$popover">
+    <x-forms.label :textColor="$textColor" :fieldId="$fieldId" :fieldLabel="$fieldLabel" :fieldRequired="$fieldRequired" :popover="$popover">
     </x-forms.label>
     <input type="file" class="dropify" id="{{ $fieldId }}" name="{{ $fieldName }}"
            data-default-file="{{ $fieldValue }}" @if (!is_null($allowedFileExtensions))

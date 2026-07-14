@@ -110,7 +110,7 @@ class DriverController extends AccountBaseController
     {
         $search = $request->search;
 
-        $drivers = Driver::orderby('iqaama_number')
+        $drivers = Driver::withoutGlobalScopes()->orderby('iqaama_number')
             ->select('id', 'iqaama_number')
             ->when($search, function ($query) use ($search) {
                 $query->where('iqaama_number', 'like', '%' . $search . '%');
@@ -118,6 +118,7 @@ class DriverController extends AccountBaseController
             ->take(20)
             ->get();
 
+        // dd($drivers);
         $response = array();
 
         foreach ($drivers as $driver) {

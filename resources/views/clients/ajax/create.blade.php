@@ -53,7 +53,7 @@ $addPermission = user()->permission('add_clients');
                                 </x-forms.select>
                             </div>
                             <div class="col-md-4">
-                                <x-forms.label class="my-3" fieldId="mobile"
+                                <x-forms.label class="" fieldId="mobile"
                                     :fieldLabel="__('app.mobile')"></x-forms.label>
                                 <x-forms.input-group style="margin-top:-4px">
 
@@ -102,7 +102,7 @@ $addPermission = user()->permission('add_clients');
                     </div>
 
                     <div class="col-md-4">
-                        <x-forms.label class="mt-3" fieldId="category"
+                        <x-forms.label class="" fieldId="category"
                             :fieldLabel="__('modules.client.clientCategory')">
                         </x-forms.label>
                         <x-forms.input-group>
@@ -147,7 +147,7 @@ $addPermission = user()->permission('add_clients');
                     </div>
 
                     <div class="col-md-4">
-                        <div class="form-group my-3">
+                        <div class="form-group">
                             <label class="f-14 text-dark-grey mb-12 w-100 mt-3"
                                 for="usr">@lang('modules.client.clientCanLogin')</label>
                             <div class="d-flex">
@@ -160,7 +160,7 @@ $addPermission = user()->permission('add_clients');
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="form-group my-3">
+                        <div class="form-group">
                             <label class="f-14 text-dark-grey mb-12 w-100 mt-3"
                                 for="usr">@lang('modules.emailSettings.emailNotifications')</label>
                             <div class="d-flex">

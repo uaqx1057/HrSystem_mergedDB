@@ -47,7 +47,7 @@ $addClientSubCategoryPermission = user()->permission('manage_client_subcategory'
                             </x-forms.select>
                         </div>
                         <div class="col-md-4">
-                            <x-forms.label class="my-3" fieldId="mobile"
+                            <x-forms.label class="" fieldId="mobile"
                                 :fieldLabel="__('app.mobile')"></x-forms.label>
                             <x-forms.input-group style="margin-top:-4px">
                                 <x-forms.select fieldId="country_phonecode" fieldName="country_phonecode"
@@ -97,7 +97,7 @@ $addClientSubCategoryPermission = user()->permission('manage_client_subcategory'
                     </div>
 
                     <div class="col-md-3">
-                        <x-forms.label class="mt-3" fieldId="category"
+                        <x-forms.label class="" fieldId="category"
                             :fieldLabel="__('modules.client.clientCategory')">
                         </x-forms.label>
                         <x-forms.input-group>
@@ -121,7 +121,7 @@ $addClientSubCategoryPermission = user()->permission('manage_client_subcategory'
                     </div>
 
                     <div class="col-md-3">
-                        <x-forms.label class="mt-3" fieldId="sub_category_id"
+                        <x-forms.label class="" fieldId="sub_category_id"
                             :fieldLabel="__('modules.client.clientSubCategory')"></x-forms.label>
                         <x-forms.input-group>
                             <select class="form-control select-picker" name="sub_category_id" id="sub_category_id"

@@ -88,7 +88,7 @@
                     </div>
 
                     <div class="col-md-6 col-lg-4">
-                        <x-forms.label class="mt-3" fieldId="ticket_type_id"
+                        <x-forms.label class="" fieldId="ticket_type_id"
                                        :fieldLabel="__('modules.invoices.type')">
                         </x-forms.label>
                         <x-forms.input-group>

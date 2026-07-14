@@ -39,13 +39,13 @@ $addProductPermission = user()->permission('add_product');
                             @endforeach
                         </x-forms.select>
                     </div>
-                    <div class="col-lg-4 mt-2">
+                    <div class="col-lg-4">
                         <x-forms.select fieldId="stages" :fieldLabel="__('modules.deal.stages')" fieldName="stage_id" fieldRequired="true">
 
                         </x-forms.select>
                     </div>
                     <div class="col-lg-4 col-md-6">
-                        <x-forms.label class="my-3" fieldId="value" :fieldLabel="__('modules.deal.dealValue')" fieldRequired="true">
+                        <x-forms.label class="" fieldId="value" :fieldLabel="__('modules.deal.dealValue')" fieldRequired="true">
                         </x-forms.label>
                         <x-forms.input-group>
                             <x-slot name="prepend">
@@ -55,7 +55,7 @@ $addProductPermission = user()->permission('add_product');
                             <input type="number" name="value" id="value" class="form-control height-35 f-14" value="0"/>
                         </x-forms.input-group>
                     </div>
-                    <div class="col-md-5 col-lg-3 dueDateBox mt-1">
+                    <div class="col-lg-4 col-md-6 dueDateBox ">
                         <x-forms.datepicker fieldId="close_date" fieldRequired="true" :fieldLabel="__('modules.deal.closeDate')"
                                 fieldName="close_date" :fieldPlaceholder="__('placeholders.date')"
                                 :fieldValue="( \Carbon\Carbon::now(company()->timezone)->addDays(30)->translatedFormat(company()->date_format))"/>
@@ -117,7 +117,7 @@ $addProductPermission = user()->permission('add_product');
                     </x-forms.button-primary>
                     <x-forms.button-secondary class="mr-3" id="save-more-lead-form" icon="check-double">@lang('app.saveAddMore')
                     </x-forms.button-secondary>
-                    <x-forms.button-cancel :link="route('lead-contact.index')" class="border-0">@lang('app.cancel')
+                    <x-forms.button-cancel :link="route('deals.index')" class="border-0">@lang('app.cancel')
                     </x-forms.button-cancel>
                 </x-form-actions>
 

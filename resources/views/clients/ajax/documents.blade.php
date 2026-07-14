@@ -33,11 +33,11 @@ $deleteDocumentPermission = user()->permission('delete_client_document');
                 <input type="hidden" name="user_id" value="{{ $client->id }}">
                 <div class="row">
                     <div class="col-md-12">
-                        <x-forms.text :fieldLabel="__('modules.projects.fileName')" fieldName="name"
+                        <x-forms.text textColor="text-darkest-white" :fieldLabel="__('modules.projects.fileName')" fieldName="name"
                             fieldRequired="true" fieldId="file_name" />
                     </div>
                     <div class="col-md-12">
-                        <x-forms.file :fieldLabel="__('modules.projects.uploadFile')" fieldName="file"
+                        <x-forms.file textColor="text-darkest-white" :fieldLabel="__('modules.projects.uploadFile')" fieldName="file"
                             fieldRequired="true" fieldId="client_file" allowedFileExtensions="txt pdf doc xls xlsx docx rtf png jpg jpeg svg" :popover="__('messages.fileFormat.multipleImageFile')" />
                     </div>
                     <div class="col-md-12">

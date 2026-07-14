@@ -14,7 +14,7 @@
             </div>
 
             <div class="col-sm-12 col-lg-6">
-                <x-forms.label class="mt-3" fieldId="password" :fieldLabel="__('modules.accountSettings.currencyConverterKey')"
+                <x-forms.label class="" fieldId="password" :fieldLabel="__('modules.accountSettings.currencyConverterKey')"
                     fieldRequired="true">
                 </x-forms.label>
                 <x-forms.input-group>

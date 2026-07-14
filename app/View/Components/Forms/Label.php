@@ -11,6 +11,7 @@ class Label extends Component
     public $fieldLabel;
     public $popover;
     public $fieldRequired;
+    public $textColor;
 
     /**
      * Create a new component instance.
@@ -21,13 +22,15 @@ class Label extends Component
         $fieldId,
         $fieldRequired = false,
         $fieldLabel = null,
-        $popover = null
+        $popover = null,
+        $textColor = null
     )
     {
         $this->fieldLabel   = $fieldLabel;
         $this->fieldId = $fieldId;
         $this->popover = $popover;
         $this->fieldRequired = $fieldRequired;
+        $this->textColor = $textColor;
     }
 
     /**

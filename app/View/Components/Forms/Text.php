@@ -17,12 +17,14 @@ class Text extends Component
     public $fieldReadOnly;
     public $popover;
 
+    public $textColor;
+
     /**
      * Create a new component instance.
      *
      * @return void
      */
-    public function __construct($fieldLabel, $fieldName, $fieldId, $fieldRequired = false, $fieldPlaceholder = null, $fieldValue = null, $fieldHelp = null, $fieldReadOnly = false, $popover = null)
+    public function __construct($fieldLabel, $fieldName, $fieldId, $fieldRequired = false, $fieldPlaceholder = null, $fieldValue = null, $fieldHelp = null, $fieldReadOnly = false, $popover = null, $textColor = null)
     {
         $this->fieldLabel = $fieldLabel;
         $this->fieldRequired = $fieldRequired;
@@ -33,6 +35,7 @@ class Text extends Component
         $this->fieldHelp = $fieldHelp;
         $this->fieldReadOnly = $fieldReadOnly;
         $this->popover = $popover;
+        $this->textColor = $textColor;
 
     }
 

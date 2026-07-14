@@ -1,4 +1,4 @@
-<label {{ $attributes->merge(['class' => 'f-14 text-dark-grey']) }} data-label="{{ $fieldRequired }}" for="{{ $fieldId }}">{!!
+<label {{ $attributes->merge(['class' => 'f-14 ' . (isset($textColor) ? $textColor : 'text-dark-grey')]) }} data-label="{{ $fieldRequired }}" for="{{ $fieldId }}">{!!
     $fieldLabel ?? '&nbsp;' !!}
     @if ($fieldRequired == 'true')
         <sup class="f-14 mr-1">*</sup>

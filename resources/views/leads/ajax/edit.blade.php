@@ -87,7 +87,7 @@ $addProductPermission = user()->permission('add_product');
                             <input type="number" name="value" id="value" class="form-control height-35 f-14" value="{{$deal->value}}"/>
                         </x-forms.input-group>
                     </div>
-                    <div class="col-md-5 col-lg-3 dueDateBox mt-1">
+                    <div class="col-md-6 col-lg-4 dueDateBox mt-4">
                         <x-forms.datepicker fieldId="close_date" class="custom-date-picker" fieldRequired="true" :fieldLabel="__('modules.deal.closeDate')"
                                 fieldName="close_date" :fieldPlaceholder="__('placeholders.date')"
                                 :fieldValue="(($deal->close_date) ? $deal->close_date->format(company()->date_format) : '')"/>
@@ -124,7 +124,7 @@ $addProductPermission = user()->permission('add_product');
                 <x-form-actions>
                     <x-forms.button-primary id="save-lead-form" class="mr-3" icon="check">@lang('app.save')
                     </x-forms.button-primary>
-                    <x-forms.button-cancel :link="route('tasks.index')" class="border-0">@lang('app.cancel')
+                    <x-forms.button-cancel :link="route('deals.index')" class="border-0">@lang('app.cancel')
                     </x-forms.button-cancel>
                 </x-form-actions>
 

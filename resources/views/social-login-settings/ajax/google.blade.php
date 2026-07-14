@@ -17,7 +17,7 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="form-group">
-                        <x-forms.label class="mt-3" fieldId="password" fieldRequired="true"
+                        <x-forms.label class="" fieldId="password" fieldRequired="true"
                             :fieldLabel="__('app.socialAuthSettings.googleSecret')">
                         </x-forms.label>
                         <x-forms.input-group>

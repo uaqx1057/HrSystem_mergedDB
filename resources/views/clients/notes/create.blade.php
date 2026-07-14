@@ -9,7 +9,7 @@
 
                 <div class="row px-4">
 
-                    <div class="col-md-6">
+                    <div class="col-md-6 my-3">
                         <x-forms.text fieldId="title" :fieldLabel="__('modules.client.noteTitle')" fieldName="title"
                             fieldRequired="true" :fieldPlaceholder="__('placeholders.note')">
                         </x-forms.text>

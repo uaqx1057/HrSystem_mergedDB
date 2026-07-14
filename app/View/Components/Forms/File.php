@@ -15,13 +15,14 @@ class File extends Component
     public $fieldHeight;
     public $popover;
     public $allowedFileExtensions;
+    public $textColor;
 
     /**
      * Create a new component instance.
      *
      * @return void
      */
-    public function __construct($fieldId, $fieldName, $fieldLabel,  $fieldValue = null,$fieldHelp = null, $fieldRequired = false, $fieldHeight = 100, $popover = null, $allowedFileExtensions = null)
+    public function __construct($fieldId, $fieldName, $fieldLabel,  $fieldValue = null,$fieldHelp = null, $fieldRequired = false, $fieldHeight = 100, $popover = null, $allowedFileExtensions = null, $textColor = null)
     {
         $this->fieldLabel = $fieldLabel;
         $this->fieldValue = $fieldValue;
@@ -32,6 +33,7 @@ class File extends Component
         $this->fieldHeight = $fieldHeight;
         $this->popover = $popover;
         $this->allowedFileExtensions = $allowedFileExtensions;
+        $this->textColor = $textColor;
     }
 
     /**
