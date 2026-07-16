@@ -421,6 +421,7 @@ return array(
         'advanced' => 'Advanced',
         'miroboard' => 'Miroboard',
         'bankaccount' => 'Bank Account',
+        'employeebankaccount' => 'Employee Bank Account',
         'award' => 'Award',
         'appreciation' => 'Appreciation',
         'consentSettings' => 'Consent Settings',
@@ -1283,6 +1284,10 @@ return array(
     ),
     'sku' => 'SKU',
     'taxName' => 'Tax Name',
-    'addBranch' => 'Add Branch'
+    'bankName' => 'Bank Name',
+    'ibanNumber' => 'Iban Number',
+    'accountNumber' => 'Account Number',
+    'swiftCode' => 'Swift Code',
+    'mainAccount' => 'Main Account',
 );
 

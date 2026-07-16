@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\DataTables\BranchEmployeeDataTable;
+use App\DataTables\EmployeeBankAccountDataTable;
 use App\DataTables\EmployeesDataTable;
 use App\DataTables\InsuranceDataTable;
 use App\DataTables\LeaveDataTable;
@@ -790,6 +791,8 @@ class EmployeeController extends AccountBaseController
                 return $this->projects();
             case 'insurance':
                 return $this->insurance($id);
+            case 'employee-bank-account':
+                return $this->employeeBankAccounts($id);
 
             case 'tasks':
                 return $this->tasks();
@@ -1021,6 +1024,20 @@ class EmployeeController extends AccountBaseController
 
         return $dataTable->render('employees.show', $this->data);
 
+    }
+
+    public function employeeBankAccounts($employeeId)
+    {
+        $viewPermission = user()->permission('view_employee_bank_account');
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
+
+        $tab = request('tab');
+        $this->activeTab = $tab ?: 'profile';
+        $this->view = 'employees.ajax.employee-bank-account';
+
+        $dataTable = new EmployeeBankAccountDataTable($employeeId);
+
+        return $dataTable->render('employees.show', $this->data);
     }
 
     public function tickets()

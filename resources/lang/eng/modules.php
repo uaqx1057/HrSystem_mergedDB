@@ -1933,6 +1933,7 @@ return array(
         'insurance' => 'Insurance',
         'advance_salary' => 'Advance Salary',
         'company_assets' => 'Company Assets',
+        'employeebankaccount' => 'Employee Bank Account',
     ),
     'projectSettings' => array(
         'sendNotificationsTo' => 'Send Reminder To',

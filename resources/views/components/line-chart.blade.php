@@ -1,3 +1,13 @@
+<style>
+    .chart-container .legend-dataset-text {
+        fill: white;
+        font-weight: 600;
+    }
+
+    .chart-container .axis, .chart-container .chart-label {
+        fill: white;
+    }
+</style>
 @if ($multiple)
     <div {{ $attributes }}></div>
     <script>

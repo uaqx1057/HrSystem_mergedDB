@@ -2258,6 +2258,34 @@ class Module extends BaseModel
 
             ],
         ],
+        [
+            'module_name' => 'employeebankaccount',
+            'description' => '',
+            'permissions' => [
+                [
+                    'allowed_permissions' => Permission::ALL_4_ADDED_1_NONE_5,
+                    'is_custom' => 0,
+                    'name' => 'add_employee_bank_account',
+                ],
+                [
+                    'allowed_permissions' => Permission::ALL_4_ADDED_1_OWNED_2_BOTH_3_NONE_5,
+                    'is_custom' => 0,
+                    'name' => 'view_employee_bank_account',
+                ],
+                [
+                    'allowed_permissions' => Permission::ALL_4_ADDED_1_OWNED_2_BOTH_3_NONE_5,
+                    'is_custom' => 0,
+                    'name' => 'edit_employee_bank_account',
+                ],
+                [
+                    'allowed_permissions' => Permission::ALL_4_ADDED_1_OWNED_2_BOTH_3_NONE_5,
+                    'is_custom' => 0,
+                    'name' => 'delete_employee_bank_account',
+                ],
+                
+            ]
+
+        ],
     ];
 
     public function permissions(): HasMany

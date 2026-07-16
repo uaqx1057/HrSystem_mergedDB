@@ -63,7 +63,7 @@
                 <p class="mb-0 text-darkest-white f-14 w-30 text-capitalize">
                     @lang('app.employee')</p>
                 <p class="mb-0 text-darkest-white f-14">
-                    <x-employee :user="$expense->user" :background="'text-darkest-white'" />
+                    <x-employee background="text-darkest-white" :user="$expense->user" :background="'text-darkest-white'" />
                 </p>
             </div>
             <x-cards.data-row :background="'text-darkest-white'" :label="__('app.description')"
@@ -89,7 +89,7 @@
                     <p class="mb-0 text-darkest-white f-14 w-30 text-capitalize">
                         @lang('modules.expenses.approvedBy')</p>
                     <p class="mb-0 text-darkest-white f-14">
-                        <x-employee :user="$expense->approver" />
+                        <x-employee background="text-darkest-white" :user="$expense->approver" />
                     </p>
                 </div>
             @endif

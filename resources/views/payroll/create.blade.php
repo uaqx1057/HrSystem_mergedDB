@@ -308,11 +308,23 @@
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Payment Method</label>
                                     <select name="salary_payment_method_id" class="form-control select-picker height-35"
-                                        data-size="8">
+                                        data-size="8" id="salary_payment_method_id">
                                         <option value="">--</option>
                                         @foreach ($allPaymentMethods as $method)
                                             <option value="{{ $method->id }}">{{ $method->payment_method }}</option>
                                         @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="payment_type_name" id="payment_type_name" value="bank">
+                            {{-- NEW: Bank Account field --}}
+                            <div class="col-md-6 mt-2" id="employee_bank">
+                                <div class="form-group">
+                                    <label class="f-14 f-w-500">Bank Account</label>
+                                    <select name="employee_bank_account_id" id="employee_bank_account_id"
+                                        class="form-control select-picker height-35" data-size="8">
+                                        <option value="">-- Select Employee First --</option>
                                     </select>
                                 </div>
                             </div>
@@ -341,6 +353,9 @@
             const salaryYear = $('#salary_year');
             const salaryFrom = $('#salary_from');
             const salaryTo = $('#salary_to');
+
+            const bankAccountSelect = $('#employee_bank_account_id');
+            const bankAccountsUrl = "{{ url('account/payroll/employees') }}"; // base URL, employee id appended below
 
             // 1. Step Navigation logic
             $('.btn-next').click(function() {
@@ -402,7 +417,48 @@
 
             // 2. Sync hidden employee_id
             employeeId.on('change', function() {
-                payeeUserId.val($(this).val());
+                const empId = $(this).val();
+                payeeUserId.val(empId);
+
+                // Reset bank account dropdown
+                bankAccountSelect.empty();
+
+                if (!empId) {
+                    bankAccountSelect.append('<option value="">-- Select Employee First --</option>');
+                    bankAccountSelect.selectpicker('refresh');
+                    return;
+                }
+
+                bankAccountSelect.append('<option value="">-- Loading... --</option>');
+                bankAccountSelect.selectpicker('refresh');
+
+                $.get(`${bankAccountsUrl}/${empId}/bank-accounts`, function(accounts) {
+                    bankAccountSelect.empty();
+
+                    if (!accounts.length) {
+                        bankAccountSelect.append('<option value="">No bank accounts found</option>');
+                    } else {
+                        bankAccountSelect.append('<option value="">--</option>');
+                        accounts.forEach(function(acc) {
+                            let label = acc.bank_name || 'Unnamed Bank';
+                            if (acc.account_number) label += ' - ' + acc.account_number;
+                            if (acc.is_main_account) label += ' (Main)';
+
+                            const opt = $('<option></option>')
+                                .val(acc.id)
+                                .text(label);
+
+                            if (acc.is_main_account) opt.prop('selected', true);
+
+                            bankAccountSelect.append(opt);
+                        });
+                    }
+
+                    bankAccountSelect.selectpicker('refresh');
+                }).fail(function() {
+                    bankAccountSelect.empty().append('<option value="">Failed to load accounts</option>');
+                    bankAccountSelect.selectpicker('refresh');
+                });
             });
 
             // 3. Date Logic (Salary From/To)
@@ -432,6 +488,20 @@
 
             // Run on load
             syncSalaryPeriod();
+
+            $(document).on('change', '#salary_payment_method_id', function () {
+                let paymentMethodId = $(this).val();
+                let paymentMethodName = $(this).find(':selected').text().toLowerCase();
+
+                if(paymentMethodName == 'cash'){
+                    $('#employee_bank').addClass('d-none');
+                } else{
+                    $('#employee_bank').removeClass('d-none');
+                }
+
+                $('#payment_type_name').val(paymentMethodName);
+
+            });
         });
     </script>
 @endpush

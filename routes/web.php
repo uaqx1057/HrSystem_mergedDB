@@ -29,6 +29,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SubTaskController;
 use App\Http\Controllers\TimelogController;
 use App\Http\Controllers\ContractController;
+use App\Http\Controllers\EmployeeBankAccountController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EstimateController;
 use App\Http\Controllers\LeadFileController;
@@ -304,6 +305,8 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
 
     Route::get('employee-docs/download/{id}', [EmployeeDocController::class, 'download'])->name('employee-docs.download');
     Route::resource('employee-docs', EmployeeDocController::class);
+    Route::post('employee-bank-accounts/apply-quick-action', [EmployeeBankAccountController::class, 'applyQuickAction'])->name('employee-bank-accounts.apply_quick_action');
+    Route::resource('employee-bank-accounts', EmployeeBankAccountController::class);
 
     Route::get('employee-leaves/employeeLeaveTypes/{id}', [LeavesQuotaController::class, 'employeeLeaveTypes'])->name('employee-leaves.employee_leave_types');
     Route::resource('employee-leaves', LeavesQuotaController::class);
@@ -745,6 +748,11 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
         Route::post('salary-slips/generate-monthly', [PayrollController::class, 'generateMonthlySlips'])->name('salary-slips.generate-monthly');
         Route::get('salary-slips/export', [PayrollController::class, 'exportSalarySlipsCsv'])->name('salary-slips.export');
         Route::get('add-salary-slips', [PayrollController::class, 'create'])->name('salary-slips.add');
+
+        // New route
+        Route::get('employees/{employee}/bank-accounts', [PayrollController::class, 'getEmployeeBankAccounts'])
+        ->name('employees.bank-accounts');
+
         Route::get('salary-slips/{salarySlip}/print', [PayrollController::class, 'printSalarySlip'])->name('salary-slips.print');
         Route::get('salary-slips/{salarySlip}/pdf', [PayrollController::class, 'downloadSalarySlipPdf'])->name('salary-slips.pdf');
 

@@ -38,6 +38,11 @@ class SalarySlip extends BaseModel
         return $this->belongsTo(SalaryPaymentMethod::class, 'salary_payment_method_id');
     }
 
+    public function bankAccount(): BelongsTo
+    {
+        return $this->belongsTo(EmployeeBankAccount::class, 'employee_bank_account_id');
+    }
+
     public function cycle(): BelongsTo
     {
         return $this->belongsTo(PayrollCycle::class, 'payroll_cycle_id');

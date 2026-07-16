@@ -22,8 +22,8 @@ $addBankWithdrawPermission = user()->permission('add_bank_withdraw');
                     <div class="ml-2">
                         @if ($bankaccount->bank_name != '')
                             <h3 class="heading-h3">{{ $bankaccount->bank_name }}</h3>
-                            <p class="f-12 font-weight-normal text-dark-grey mb-0">
-                                {{ $bankaccount->account_name }} &bull; {{ __('modules.bankaccount.'.$bankaccount->account_type) }} &bull; <span class="text-primary font-weight-semibold">#{{ $bankaccount->account_number }}</span>
+                            <p class="f-12 font-weight-normal text-darkest-white mb-0">
+                                {{ $bankaccount->account_name }} &bull; {{ __('modules.bankaccount.'.$bankaccount->account_type) }} &bull; <span class="text-darkest-white font-weight-semibold">#{{ $bankaccount->account_number }}</span>
                             </p>
                         @else
                            <h3 class="heading-h3">{{ $bankaccount->account_name }}</h3>
@@ -32,13 +32,13 @@ $addBankWithdrawPermission = user()->permission('add_bank_withdraw');
                 </div>
 
                 <div class="text-right">
-                    <div class="f-12 text-dark-grey">@lang('modules.bankaccount.bankBalance')</div>
-                    <h2 class="heading-h2 text-primary mt-2">{{ currency_format($bankaccount->bank_balance, $bankaccount->currency_id) }}</h2>
+                    <div class="f-12 text-darkest-white">@lang('modules.bankaccount.bankBalance')</div>
+                    <h2 class="heading-h2 text-darkest-white mt-2">{{ currency_format($bankaccount->bank_balance, $bankaccount->currency_id) }}</h2>
                 </div>
             </div>
 
 
-            <div class="card-footer bg-white border-top-grey px-0 mt-3">
+            <div class="card-footer border-top-grey px-0 mt-3">
                 <div class="d-flex justify-content-between mt-3">
                     @if ($addBankDepositPermission == 'all')
                         <x-forms.link-secondary class="openRightModal" :link="route('bankaccounts.create_transaction').'?accountId='.$bankaccount->id.'&type=deposit'" icon="plus-circle">
@@ -77,15 +77,16 @@ $addBankWithdrawPermission = user()->permission('add_bank_withdraw');
                 </x-slot>
                 @forelse ($recentTransactions as $key => $item)
                     <tr>
-                        <td class="pl-20">
+                        <td class="pl-20 text-darkest-white">
                             {{ ($key+1) }}
                         </td>
-                        <td>
+                        <td class="text-darkest-white">
                             @lang('modules.bankaccount.'.$item->title)
                         </td>
-                        <td>{{ $item->transaction_date->translatedFormat(company()->date_format) }}</td>
+                        <td class="text-darkest-white">{{ $item->transaction_date->translatedFormat(company()->date_format) }}</td>
                         <td class="pr-20 text-right">
-                            <span @class(['text-success' => $item->type == 'Cr', 'text-danger' => $item->type == 'Dr'])> {{ ($item->type == 'Cr' ? '+' : '-') }} {{ currency_format($item->amount, $bankaccount->currency_id) }}</span>
+                            {{-- <span @class(['text-darkest-white' => $item->type == 'Cr', 'text-danger' => $item->type == 'Dr'])> {{ ($item->type == 'Cr' ? '+' : '-') }} {{ currency_format($item->amount, $bankaccount->currency_id) }}</span> --}}
+                            <span @class(['text-darkest-white' => $item->type])> {{ ($item->type == 'Cr' ? '+' : '-') }} {{ currency_format($item->amount, $bankaccount->currency_id) }}</span>
                         </td>
                     </tr>
                 @empty

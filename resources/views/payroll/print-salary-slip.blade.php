@@ -126,6 +126,14 @@
             <th>Paid On</th>
             <td>{{ optional($salarySlip->paid_on)->format('Y-m-d') ?? '-' }}</td>
         </tr>
+        @if (strtolower(optional($salarySlip->paymentMethod)->payment_method) !== 'cash')
+            <tr>
+                <th>Bank Name</th>
+                <td>{{ optional($salarySlip->bankAccount)->bank_name ?? '-' }}</td>
+                <th>Iban Number</th>
+                <td>{{ optional($salarySlip->bankAccount)->iban_number ?? '-' }}</td>
+            </tr>
+        @endif
     </table>
 </div>
 

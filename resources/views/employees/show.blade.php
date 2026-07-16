@@ -8,6 +8,7 @@
 $viewEmployeeTasks = user()->permission('view_employee_tasks');
 $viewTickets = user()->permission('view_tickets');
 $viewEmployeeProjects = user()->permission('view_employee_projects');
+$viewEmployeeBankAccount = user()->permission('view_employee_bank_account');
 $viewEmployeeTimelogs = user()->permission('view_employee_timelogs');
 $manageEmergencyContact = user()->permission('manage_emergency_contact');
 $manageRolePermissionSetting = user()->permission('manage_role_permission_setting');
@@ -106,6 +107,12 @@ if ($viewPermission == 'all'
                     @if ($showFullProfile && !in_array('client', user_roles()))
                         <li>
                             <x-tab :href="route('employees.show', $employee->id) . '?tab=appreciation'" :text="__('app.menu.appreciation')" class="appreciation" />
+                        </li>
+                    @endif
+
+                    @if ($viewEmployeeBankAccount != 'none')
+                        <li>
+                            <x-tab :href="route('employees.show', $employee->id) . '?tab=employee-bank-account'" :text="__('app.menu.employeebankaccount')" class="employee-bank-account" ajax="false" />
                         </li>
                     @endif
 

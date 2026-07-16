@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Currency;
 use App\Models\Driver;
+use App\Models\EmployeeBankAccount;
 use App\Models\EmployeeSalaryGroup;
 use App\Models\Order;
 use App\Models\PayrollDriverSetup;
@@ -272,6 +273,7 @@ class PayrollController extends AccountBaseController
 
     public function storeSalarySlip(Request $request): RedirectResponse
     {
+        // dd($request->all());
         $isImpersonatingCompany = session()->has('impersonate');
         abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
 
@@ -327,6 +329,8 @@ class PayrollController extends AccountBaseController
         $validated['paid_amount'] = $paidAmount;
         $validated['balance_amount'] = max($netSalary - $paidAmount, 0);
         $validated['payee_type'] = $payeeType;
+
+        $validated['employee_bank_account_id'] = $request->payment_type_name == 'cash' ? null : $request->employee_bank_account_id;
 
         if ($validated['balance_amount'] <= 0 && ($validated['status'] ?? '') !== 'paid') {
             $validated['status'] = 'paid';
@@ -878,5 +882,15 @@ class PayrollController extends AccountBaseController
         $this->allPaymentMethods = SalaryPaymentMethod::orderBy('payment_method')->get(['id', 'payment_method']);
 
         return view('payroll.create', $this->data);
+    }
+
+    public function getEmployeeBankAccounts($employeeId)
+    {
+        $accounts = EmployeeBankAccount::where('employee_id', $employeeId)
+            ->orderByDesc('is_main_account')
+            ->orderBy('bank_name')
+            ->get(['id', 'bank_name', 'account_number', 'iban_number', 'is_main_account']);
+
+        return response()->json($accounts);
     }
 }

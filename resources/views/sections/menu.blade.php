@@ -234,6 +234,10 @@
                 @if (in_array('bankaccount', user_modules()) && user()->permission('view_bankaccount') !== 'none')
                     <x-sub-menu-item :link="route('bankaccounts.index')" :text="__('app.menu.bankaccount')" />
                 @endif
+
+                @if (in_array('employeebankaccount', user_modules()) && user()->permission('view_employee_bank_account') !== 'none')
+                    <x-sub-menu-item :link="route('employee-bank-accounts.index')" :text="__('app.menu.employeebankaccount')" />
+                @endif
                 <!-- NAV ITEM - CUSTOM MODULES  -->
                 @foreach ($worksuitePlugins as $item)
                     @includeIf(strtolower($item) . '::sections.finance.sidebar')
