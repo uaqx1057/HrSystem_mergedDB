@@ -144,5 +144,73 @@
                 }
             });
         });
+
+        $('#quick-action-type').change(function () {
+            const actionValue = $(this).val();
+
+            if (actionValue != '') {
+                $('#quick-action-apply').removeAttr('disabled');
+            } else {
+                $('#quick-action-apply').attr('disabled', true);
+                $('.quick-action-field').addClass('d-none');
+            }
+        });
+
+        $('#quick-action-apply').click(function () {
+            const actionValue = $('#quick-action-type').val();
+            if (actionValue === 'delete') {
+                Swal.fire({
+                    title: "@lang('messages.sweetAlertTitle')",
+                    text: "@lang('messages.recoverRecord')",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    focusConfirm: false,
+                    confirmButtonText: "@lang('messages.confirmDelete')",
+                    cancelButtonText: "@lang('app.cancel')",
+                    customClass: {
+                        confirmButton: 'btn btn-primary mr-3',
+                        cancelButton: 'btn btn-secondary'
+                    },
+                    showClass: {
+                        popup: 'swal2-noanimation',
+                        backdrop: 'swal2-noanimation'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        applyQuickAction();
+                    }
+                });
+
+            } else {
+                applyQuickAction();
+            }
+        });
+
+        const applyQuickAction = () => {
+            // ✅ Fix 8: Changed 'insurances-table' to 'employee-bank-accounts-table' for checkbox selection
+            const rowdIds = $("#employee-bank-accounts-table input:checkbox:checked").map(function () {
+                return $(this).val();
+            }).get();
+
+            const url = "{{ route('employee-bank-accounts.apply_quick_action') }}?row_ids=" + rowdIds;
+
+            $.easyAjax({
+                url: url,
+                container: '#quick-action-form',
+                type: "POST",
+                disableButton: true,
+                buttonSelector: "#quick-action-apply",
+                data: $('#quick-action-form').serialize(),
+                success: function (response) {
+                    if (response.status === 'success') {
+                        showTable();
+                        resetActionButtons();
+                        deSelectAll();
+                        $('#quick-action-form').hide();
+                    }
+                }
+            })
+        };
     </script>
 @endpush

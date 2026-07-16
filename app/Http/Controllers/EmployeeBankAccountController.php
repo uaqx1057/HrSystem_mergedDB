@@ -155,7 +155,7 @@ class EmployeeBankAccountController extends AccountBaseController
     public function destroy($id)
     {
         $deletePermission = user()->permission('delete_employee_bank_account');
-        abort_403(!in_array($deletePermission, ['all', 'added']));
+        abort_403(!in_array($deletePermission, ['all', 'added', 'owned', 'both']));
 
         $account = EmployeeBankAccount::findOrFail($id);
 
@@ -171,7 +171,7 @@ class EmployeeBankAccountController extends AccountBaseController
     public function applyQuickAction(Request $request)
     {
         $deletePermission = user()->permission('delete_employee_bank_account');
-        abort_403(!in_array($deletePermission, ['all', 'added']));
+        abort_403(!in_array($deletePermission, ['all', 'added', 'owned', 'both']));
 
         if ($request->action_type === 'delete') {
             $this->deleteRecords($request);
