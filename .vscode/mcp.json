@@ -1,0 +1,22 @@
+{
+  "servers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "filesystem": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\Usman\\Documents\\GitHub\\HrSystem_mergedDB"
+      ]
+    },
+    "grafel-strict": {
+      "type": "stdio",
+      "command": "${workspaceFolder}/graphify-out/grafel-mcp.cmd",
+      "args": []
+    }
+  }
+}
