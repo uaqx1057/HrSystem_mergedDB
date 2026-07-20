@@ -16,6 +16,7 @@ class AssetAssignment extends Model
         'signed_document',
         'status',
         'branch_id',
+        'qty',
     ];
 
     public function employee()

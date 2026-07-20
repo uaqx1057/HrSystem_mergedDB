@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CompanyAsset\StoreAssignRequest;
 use App\Models\AssetAssignment;
+use App\Models\AssetAssignmentHistory;
 use App\Models\Branch;
 use App\Models\CompanyAsset;
 use App\Helper\Reply;
 use App\Http\Controllers\Controller;
+use App\Models\Department;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf; // This is the Facade
 use Illuminate\Http\Request;
@@ -17,6 +19,7 @@ use App\Http\Requests\CompanyAsset\UpdateRequest;
 use App\Mail\AssetAssignedMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class CompanyAssetController extends AccountBaseController
 {
@@ -53,6 +56,9 @@ class CompanyAssetController extends AccountBaseController
         $viewPermission = user()->permission('add_company_assets');
         abort_403(!in_array($viewPermission, ['all']));
 
+        $this->departments = Department::orderBy('name')->get();
+        $this->branches = Branch::latest()->get();
+
         if (request()->ajax()) {
             $html = view('company-assets.ajax.create', $this->data)->render();
             return Reply::dataOnly(['status' => 'success', 'html' => $html, 'title' => $this->pageTitle]);
@@ -76,6 +82,11 @@ class CompanyAssetController extends AccountBaseController
         $asset->sku_no = $request->sku_no ?? '';
         $asset->type = $request->type ?? '';
         $asset->brand = $request->brand ?? '';
+        $asset->department_id = $request->department_id;
+        $asset->branch_id = $request->branch_id;
+        $asset->qty = $request->qty;
+        $asset->available_qty = $request->qty;
+        $asset->status = 'available';
         $asset->save();
 
         $redirectUrl = urldecode($request->redirect_url);
@@ -115,6 +126,8 @@ class CompanyAssetController extends AccountBaseController
         abort_403(!in_array($viewPermission, ['all']));
 
         $this->asset = CompanyAsset::findOrFail($id);
+        $this->departments = Department::orderBy('name')->get();
+        $this->branches = Branch::latest()->get();
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.edit', $this->data)->render();
@@ -139,6 +152,11 @@ class CompanyAssetController extends AccountBaseController
         $asset->sku_no = $request->sku_no ?? '';
         $asset->type = $request->type ?? '';
         $asset->brand = $request->brand ?? '';
+        $asset->department_id = $request->department_id;
+        $asset->branch_id = $request->branch_id;
+        $asset->qty = $request->qty;
+        $asset->available_qty = $request->qty;
+        $asset->status = 'available';
         $asset->save();
 
         $redirectUrl = route('company-assets.index');
@@ -194,8 +212,6 @@ class CompanyAssetController extends AccountBaseController
 
     public function assignAsset($id)
     {
-        $this->branches = Branch::latest()->get();
-        // dd($this->branches);
         $this->company_asset_id = $id;
         $this->asset = CompanyAsset::findOrFail($id);
         $this->employees = User::allEmployees();
@@ -211,17 +227,47 @@ class CompanyAssetController extends AccountBaseController
 
     public function storeAssignAsset(StoreAssignRequest $request)
     {
-        $assign = new AssetAssignment();
-        $assign->employee_id = $request->employee;
-        $assign->company_asset_id = $request->company_asset_id;
-        $assign->status = $request->status;
-        $assign->branch_id = $request->branch_id;
-        $assign->save();
+        $asset = CompanyAsset::findOrFail($request->company_asset_id);
+
+        $qtyAssigned = (int) $request->qty;
+
+        if ($qtyAssigned > $asset->available_qty) {
+            return Reply::error(__('messages.qtyExceedsAvailable'));
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $assign = new AssetAssignment();
+            $assign->employee_id = $request->employee;
+            $assign->company_asset_id = $request->company_asset_id;
+            $assign->status = 'Pending';
+            $assign->branch_id = $asset->branch_id;
+            $assign->qty = $qtyAssigned;
+            $assign->save();
+
+            // NOTE: available_qty is NOT reduced here. It is only reduced when the
+            // assignment is approved (signature uploaded) in storeSignature().
+
+            AssetAssignmentHistory::create([
+                'company_asset_id' => $asset->id,
+                'employee_id' => $request->employee,
+                'action_type' => 'Pending',
+                'qty' => $qtyAssigned,
+                'asset_assignment_id' => $assign->id,
+                'action_at' => now(),
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Reply::error($e->getMessage());
+        }
 
         $redirectUrl = urldecode($request->redirect_url);
 
         if ($redirectUrl == '') {
-            $redirectUrl = route('company-assets.index');
+            $redirectUrl = route('company-assets.show', $asset->id);
         }
 
         return Reply::successWithData(__('messages.recordSaved'), ['redirectUrl' => $redirectUrl]);
@@ -231,7 +277,6 @@ class CompanyAssetController extends AccountBaseController
     {
         $asset = CompanyAsset::findOrFail($id);
         $assignment = $asset->assignments()->first();
-        $this->branches = Branch::latest()->get();
         $this->asset = $asset;
         $this->assignment = $assignment;
         $this->employees = User::allEmployees();
@@ -247,29 +292,155 @@ class CompanyAssetController extends AccountBaseController
 
     public function updateAssignAsset(StoreAssignRequest $request, $id)
     {
+        $asset = CompanyAsset::findOrFail($id);
         $assignment = AssetAssignment::where('company_asset_id', $id)->firstOrFail();
-        $assignment->employee_id = $request->employee;
-        $assignment->status = $request->status;
-        $assignment->branch_id = $request->branch_id;
-        $assignment->save();
+
+        $newQty = (int) $request->qty;
+        $delta = $newQty - $assignment->qty;
+
+        if ($delta > $asset->available_qty) {
+            return Reply::error(__('messages.qtyExceedsAvailable'));
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $assignment->employee_id = $request->employee;
+            $assignment->qty = $newQty;
+            $assignment->save();
+
+            // Only adjust available_qty if the assignment is already approved/assigned.
+            // While Pending, available_qty is untouched (reduced only on approval).
+            if ($assignment->status === 'Assigned') {
+                $asset->available_qty -= $delta;
+                $asset->status = $asset->available_qty == 0 ? 'Assigned' : 'Available';
+                $asset->save();
+            }
+
+            AssetAssignmentHistory::create([
+                'company_asset_id' => $asset->id,
+                'employee_id' => $request->employee,
+                'action_type' => 'assigned',
+                'qty' => $newQty,
+                'action_at' => now(),
+            ]);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return Reply::error($e->getMessage());
+        }
 
         $redirectUrl = route('company-assets.index');
 
         return Reply::successWithData(__('messages.recordSaved'), ['redirectUrl' => $redirectUrl]);
     }
 
+    public function returnAsset($id)
+    {
+
+        $this->assignment = AssetAssignment::find($id);
+        $asset = CompanyAsset::findOrFail($this->assignment->company_asset_id);
+        $this->asset = $asset;
+        $this->employees = User::allEmployees();
+
+        if (request()->ajax()) {
+            $html = view('company-assets.ajax.return', $this->data)->render();
+            return Reply::dataOnly(['status' => 'success', 'html' => $html, 'title' => 'Return Asset']);
+        }
+
+        $this->view = 'company-assets.ajax.return';
+        return view('company-assets.create', $this->data);
+    }
+
+    public function storeReturnAsset(Request $request, $id)
+    {
+        // dd($request->all());
+        $request->validate([
+            'qty' => 'required|integer|min:1',
+            'return_document' => 'required',
+        ]);
+
+        $assignment = AssetAssignment::find($request->id);
+        $asset = CompanyAsset::find($assignment->company_asset_id);
+        $qtyReturned = (int) $request->qty;
+
+        // Returned qty cannot exceed the currently assigned qty.
+        if ($qtyReturned > $assignment->qty) {
+            return redirect()->back()->with('error', __('messages.qtyExceedsAvailable'));
+        }
+
+        if ($request->hasFile('return_document')) {
+
+            $path = \App\Helper\Files::uploadLocalOrS3($request->return_document, 'asset');
+
+            $remaining = $assignment->qty - $qtyReturned;
+
+            // Create a dedicated history record for this return.
+            AssetAssignmentHistory::create([
+                'company_asset_id' => $asset->id,
+                'employee_id' => $assignment->employee_id,
+                'action_type' => 'Returned',
+                'qty' => $qtyReturned,
+                'signed_document' => $path,
+                'asset_assignment_id' => $assignment->id,
+                'action_at' => now(),
+            ]);
+
+            // Attach the return document to the latest approved (Assigned) record.
+            $assignmentHistory = AssetAssignmentHistory::where('asset_assignment_id', $assignment->id)
+                ->where('action_type', 'Assigned')
+                ->latest('action_at')
+                ->first();
+
+            if ($assignmentHistory) {
+                $assignmentHistory->signed_document = $path;
+                $assignmentHistory->save();
+            }
+
+            // Return the quantity back to the available pool.
+            $asset->available_qty += $qtyReturned;
+            $asset->status = $asset->available_qty == 0 ? 'Assigned' : 'Available';
+            $asset->save();
+
+            if ($remaining < 0) {
+                $remaining = 0;
+            }
+
+            if ($remaining < 1) {
+                $assignment->delete();
+            } else {
+                $assignment->update([
+                    'qty' => $remaining
+                ]);
+            }
+        }
+
+        return redirect()->route('company-assets.show', $id)->with('success', __('messages.recordSaved'));
+    }
+
     public function generatePdf($id)
     {
-        $asset = CompanyAsset::with('assignments.employee')->findOrFail($id);
-        $assignment = $asset->assignments->first();
+        $assignment = AssetAssignment::find($id);
+        $asset = CompanyAsset::with(['assignments.employee', 'history.employee'])->findOrFail($assignment->company_asset_id);
 
         $pdf = PDF::loadView('company-assets.pdf', compact('asset', 'assignment'));
         return $pdf->download('asset_assignment.pdf');
     }
 
+    public function returnPdf($id)
+    {
+        $assignment = AssetAssignment::find($id);
+        $asset = CompanyAsset::with(['assignments.employee', 'history.employee'])->findOrFail($assignment->company_asset_id);
+
+        $pdf = PDF::loadView('company-assets.return-pdf', compact('asset', 'assignment'));
+        return $pdf->download('asset_assignment-return.pdf');
+    }
+
     public function uploadSignature($id)
     {
-        $asset = CompanyAsset::findOrFail($id);
+        $this->assignment = AssetAssignment::find($id);
+        $asset = CompanyAsset::findOrFail($this->assignment->company_asset_id);
         $this->asset = $asset;
 
         if (request()->ajax()) {
@@ -283,22 +454,49 @@ class CompanyAssetController extends AccountBaseController
 
     public function storeSignature(Request $request, $id)
     {
+        // dd($request->all());
         $request->validate([
             'signature' => 'required',
         ]);
 
         // Load assignment with its relationships
-        $assignment = AssetAssignment::with(['employee', 'asset'])
-            ->where('company_asset_id', $id)
-            ->firstOrFail();
+        $assignment = AssetAssignment::with(['employee', 'asset'])->find($request->id);
+
+        // Only allow approval of a Pending assignment.
+        if ($assignment->status !== 'Pending') {
+            return redirect()->route('company-assets.show', $id)
+                ->with('error', __('messages.assignmentAlreadyProcessed'));
+        }
 
         if ($request->hasFile('signature')) {
+
+            // Approving the request reduces the available quantity.
+            $asset = $assignment->asset;
+
+            // Guard: ensure enough quantity is still available. Because pending
+            // assignments don't reduce available_qty, another pending may have
+            // been approved first, so re-check BEFORE committing the deduction.
+            if ($assignment->qty > $asset->available_qty) {
+                return redirect()->route('company-assets.show', $id)
+                    ->with('error', __('messages.qtyExceedsAvailable'));
+            }
 
             $path = \App\Helper\Files::uploadLocalOrS3($request->signature, 'asset');
 
             $assignment->signed_document = $path;
             $assignment->status = 'Assigned';
             $assignment->save();
+
+            $asset->available_qty -= $assignment->qty;
+            $asset->status = $asset->available_qty == 0 ? 'Assigned' : 'Available';
+            $asset->save();
+
+            $assignmentHistory = AssetAssignmentHistory::where('asset_assignment_id', $assignment->id)->where('action_type','Pending')->first();
+
+            $assignmentHistory->signed_document = $path;
+            $assignmentHistory->action_type = 'Assigned';
+            $assignmentHistory->action_at = now();
+            $assignmentHistory->save();
 
             // Send the email to the employee
             try {
@@ -309,13 +507,14 @@ class CompanyAssetController extends AccountBaseController
             }
         }
 
-        return redirect()->route('company-assets.index')->with('success', __('messages.recordSaved'));
+        return redirect()->route('company-assets.show', $id)->with('success', __('messages.recordSaved'));
     }
 
     public function viewAssign($id)
     {
-        $this->asset = CompanyAsset::with('assignments.employee')->findOrFail($id);
+        $this->asset = CompanyAsset::with(['assignments.employee', 'history.employee'])->findOrFail($id);
         $this->assignment = $this->asset->assignments->first();
+        $this->history = $this->asset->history()->orderBy('action_at', 'desc')->get();
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.show-assign', $this->data)->render();
@@ -324,5 +523,26 @@ class CompanyAssetController extends AccountBaseController
 
         $this->view = 'company-assets.ajax.show-assign';
         return view('company-assets.create', $this->data);
+    }
+
+    public function destroyAssignAsset($id)
+    {
+        $viewPermission = user()->permission('edit_assign_company_assets_to_employee');
+        abort_403(!in_array($viewPermission, ['all']));
+
+        $assignment = AssetAssignment::findOrFail($id);
+        $asset = CompanyAsset::findOrFail($assignment->company_asset_id);
+
+        // Only a Pending (not yet approved) assignment can be deleted without
+        // affecting the available quantity. Approved assignments must be returned.
+        if ($assignment->status === 'Pending') {
+            $assignment->delete();
+        } else {
+            return redirect()->route('company-assets.show', $asset->id)
+                ->with('error', __('messages.assignmentCannotDelete'));
+        }
+
+        return redirect()->route('company-assets.show', $asset->id)
+            ->with('success', __('messages.deleteSuccess'));
     }
 }

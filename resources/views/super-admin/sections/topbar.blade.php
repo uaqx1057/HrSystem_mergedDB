@@ -390,12 +390,44 @@
         }, 'google_translate_element');
     }
 
+    function applyRtlClass(lang) {
+        if (lang === 'ar') {
+            document.body.classList.add('rtl');
+        } else {
+            document.body.classList.remove('rtl');
+        }
+    }
+
+    function deleteGoogleTranslateCookie() {
+        document.cookie = 'googtrans=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        document.cookie = 'googtrans=;path=/;domain=' + window.location.hostname + ';expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    }
+
     function setGoogleTranslateLanguage(lang) {
+        // Toggle the app's own RTL class so the Arabic layout flips correctly.
+        // (Google's own translated-rtl class is stripped by the observer below.)
+        applyRtlClass(lang);
+
+        const combo = document.querySelector('#google_translate_element select.goog-te-combo');
+
+        if (lang === 'en') {
+            // To revert to the original language we must DELETE the googtrans cookie.
+            // Setting it to /en/en is ignored by Google and the page stays translated.
+            deleteGoogleTranslateCookie();
+
+            if (combo) {
+                combo.value = '';
+                combo.dispatchEvent(new Event('change'));
+            } else {
+                window.location.reload();
+            }
+            return;
+        }
+
         const cookieValue = '/en/' + lang;
         document.cookie = 'googtrans=' + cookieValue + ';path=/';
         document.cookie = 'googtrans=' + cookieValue + ';path=/;domain=' + window.location.hostname;
 
-        const combo = document.querySelector('#google_translate_element select.goog-te-combo');
         if (combo) {
             combo.value = lang;
             combo.dispatchEvent(new Event('change'));
@@ -408,7 +440,8 @@
         $('body').on('click', '.gtranslate-btn', function (e) {
             e.preventDefault();
             const lang = $(this).data('lang');
-            setGoogleTranslateLanguage(lang === 'en' ? 'en' : lang);
+            localStorage.setItem('app_lang', lang);
+            setGoogleTranslateLanguage(lang);
         });
     });
 
@@ -435,6 +468,17 @@
     });
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Re-apply the saved language + RTL direction after a page reload
+        const savedLang = localStorage.getItem('app_lang');
+        if (savedLang && savedLang !== 'en') {
+            applyRtlClass(savedLang);
+            const cookieValue = '/en/' + savedLang;
+            document.cookie = 'googtrans=' + cookieValue + ';path=/';
+            document.cookie = 'googtrans=' + cookieValue + ';path=/;domain=' + window.location.hostname;
+        } else {
+            applyRtlClass('en');
+        }
+
         removeGoogleTranslateArtifacts();
         gtObserver.observe(document.body, {
             childList: true,

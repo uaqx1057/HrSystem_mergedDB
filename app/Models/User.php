@@ -245,6 +245,7 @@ class User extends BaseModel
         'last_login' => 'datetime',
         'two_factor_expires_at	' => 'array',
         // 'salutation' => Salutation::class,
+        'branch_id' => 'integer',
     ];
 
     protected function salutation(): Attribute
@@ -393,6 +394,11 @@ class User extends BaseModel
     public function branches(): BelongsToMany
     {
         return $this->belongsToMany(Branch::class, 'branch_employee', 'employee_id', 'branch_id');
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 
     public function lead(): HasOne

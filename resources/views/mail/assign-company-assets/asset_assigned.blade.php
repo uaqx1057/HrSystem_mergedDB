@@ -22,7 +22,7 @@
     <div class="wrapper">
         <div class="container">
             <div class="content">
-                <div class="header-text">Asset Assignment Confirmation</div>
+                <div class="header-text">Asset Assignment Assigned</div>
 
                 <p>Dear <strong>{{ $assignment->employee->name }}</strong>,</p>
 
@@ -49,6 +49,12 @@
                         <td class="label">SKU/Serial No:</td>
                         <td class="value">{{ $assignment->asset->sku_no ?? 'N/A' }}</td>
                     </tr>
+
+                    <tr>
+                        <td class="label">Qty:</td>
+                        <td class="value">{{ $assignment->qty ?? 'N/A' }}</td>
+                    </tr>
+
                     <tr>
                         <td class="label">Status:</td>
                         <td class="value"><span style="color: #38a169;">{{ $assignment->status }}</span></td>
@@ -58,7 +64,7 @@
                 <p>Please click the button below to view your signed document and manage your assigned assets.</p>
 
                 <div class="btn-container">
-                    <a href="{{ route('company-assets.index') }}" class="btn">View My Assets</a>
+                    <a href="{{ route('company-assets.show', $assignment->asset->id) }}" class="btn">View My Assets</a>
                 </div>
 
                 <p style="margin-top: 30px; font-size: 13px; color: #4a5568;">

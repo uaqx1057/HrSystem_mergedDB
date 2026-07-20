@@ -30,6 +30,9 @@ class StoreRequest extends CoreRequest
             'sku_no' => 'required|string|max:255|unique:company_assets,sku_no',
             'type' => 'required|string|max:255',
             'brand' => 'required|string|max:255',
+            'department_id' => 'required|exists:departments,id',
+            'branch_id' => 'required|exists:branches,id',
+            'qty' => 'required|integer|min:1',
         ];
     }
 }

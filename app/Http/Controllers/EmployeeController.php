@@ -20,6 +20,7 @@ use Carbon\Carbon;
 use App\Models\Role;
 use App\Models\Task;
 use App\Models\Team;
+use App\Models\Branch;
 use App\Models\User;
 use App\Helper\Files;
 use App\Helper\Reply;
@@ -115,6 +116,7 @@ class EmployeeController extends AccountBaseController
 
         $this->teams = Team::all();
         $this->designations = Designation::allDesignations();
+        $this->branches = Branch::get();
 
         $this->skills = Skill::all()->pluck('name')->toArray();
         $this->countries = countries();
@@ -209,6 +211,7 @@ class EmployeeController extends AccountBaseController
             $user->gender = $request->gender;
             $user->locale = $request->locale;
             $user->user_auth_id = $userAuth->id;
+            $user->branch_id = $request->branch_id ?? null;
             $user->dark_theme       = 1;
 
             if ($request->has('login')) {
@@ -415,6 +418,7 @@ class EmployeeController extends AccountBaseController
         $this->skills = Skill::all()->pluck('name')->toArray();
         $this->teams = Team::allDepartments();
         $this->designations = Designation::allDesignations();
+        $this->branches = Branch::get();
         $this->countries = countries();
         $this->languages = LanguageSetting::where('status', 'enabled')->get();
         $exceptUsers = [$id];
@@ -471,6 +475,7 @@ class EmployeeController extends AccountBaseController
         $user->country_phonecode = $request->country_phonecode;
         $user->gender = $request->gender;
         $user->locale = $request->locale;
+        $user->branch_id = $request->branch_id ?? null;
 
         if (request()->has('status')) {
 

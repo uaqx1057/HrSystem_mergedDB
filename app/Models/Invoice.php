@@ -178,6 +178,11 @@ class Invoice extends BaseModel
         return $this->belongsTo(User::class, 'client_id')->withoutGlobalScope(ActiveScope::class);
     }
 
+    public function driver(): BelongsTo
+    {
+        return $this->belongsTo(Driver::class, 'driver_id')->withoutGlobalScope(ActiveScope::class);
+    }
+
     public function clientdetails(): BelongsTo
     {
         return $this->belongsTo(ClientDetails::class, 'client_id', 'user_id');

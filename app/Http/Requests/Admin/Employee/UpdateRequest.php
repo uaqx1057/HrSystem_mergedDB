@@ -35,6 +35,7 @@ class UpdateRequest extends CoreRequest
             'hourly_rate' => 'nullable|numeric',
             'department' => 'required',
             'designation' => 'required',
+            'branch_id' => 'nullable|exists:branches,id',
             'joining_date' => 'required',
             'last_date' => 'nullable|date_format:"' . $setting->date_format . '"|after_or_equal:joining_date',
             'date_of_birth' => 'nullable|date_format:"' . $setting->date_format . '"|before_or_equal:'.now($setting->timezone)->toDateString(),

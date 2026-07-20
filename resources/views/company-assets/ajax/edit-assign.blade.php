@@ -21,30 +21,10 @@
                         </x-forms.input-group>
                     </div>
                     <div class="col-md-6">
-                        <x-forms.label class="my-3" fieldId="branch_id"
-                            :fieldLabel="__('app.branchName')" fieldRequired="true">
-                        </x-forms.label>
-                        <x-forms.input-group>
-                            <select class="form-control select-picker" name="branch_id"
-                                id="branch_id" data-live-search="true">
-                                <option value="">--</option>
-                                @foreach ($branches as $branch)
-                                    <option value="{{ $branch->id }}" {{ $assignment && $assignment->branch_id == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
-                                @endforeach
-                            </select>
-                        </x-forms.input-group>
-                    </div>
-                    <div class="col-md-6">
-                        <x-forms.label class="my-3" fieldId="status"
-                            :fieldLabel="__('app.status')" fieldRequired="true">
-                        </x-forms.label>
-                        <x-forms.input-group>
-                            <select class="form-control height-35" name="status"
-                                id="status">
-                                <option value="Pending" {{ $assignment && $assignment->status == 'Pending' ? 'selected' : '' }}>Pending</option>
-                                <option value="Approve" {{ $assignment && $assignment->status == 'Approve' ? 'selected' : '' }}>Approve</option>
-                            </select>
-                        </x-forms.input-group>
+                        <x-forms.number fieldId="asset_qty" :fieldLabel="__('app.qty')" fieldName="qty"
+                                      fieldRequired="true" :fieldValue="$assignment ? $assignment->qty : 1" :fieldPlaceholder="__('placeholders.qty')">
+                        </x-forms.number>
+                        <small class="form-text text-muted">@lang('messages.availableQty'): {{ $asset->available_qty }}</small>
                     </div>
 
                 </div>

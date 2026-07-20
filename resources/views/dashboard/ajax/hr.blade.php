@@ -133,7 +133,7 @@
                     @forelse ($leavesTaken as $item)
                         <tr>
                             <td class="pl-20">
-                                <x-employee :user="$item" />
+                                <x-employee background="text-darkest-white" :user="$item" />
                             </td>
                             <td class="pr-20 text-right"><span
                                     class="badge badge-light p-2">{{ $item->employeeLeaveCount }}</span></td>

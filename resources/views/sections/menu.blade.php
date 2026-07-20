@@ -208,9 +208,9 @@
                 @endif
 
                 {{-- datatable issue  --}}
-                {{-- @if (in_array('invoices', user_modules()) && $sidebarUserPermissions['view_invoices'] != 5 && $sidebarUserPermissions['view_invoices'] != 'none')
+                @if (in_array('invoices', user_modules()) && in_array(user()->permission('view_invoices'), ['all', 'added', 'owned', 'both']))
                     <x-sub-menu-item :link="route('invoices.index')" :text="__('app.menu.invoices')" />
-                @endif --}}
+                @endif
 
                 @if (in_array('payments', user_modules()) && in_array(user()->permission('view_payments'), ['all', 'added', 'owned']))
                     <x-sub-menu-item :link="route('payments.index')" :text="__('app.menu.payments')" />

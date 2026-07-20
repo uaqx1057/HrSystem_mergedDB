@@ -30,6 +30,39 @@
                                       fieldRequired="true" :fieldValue="$asset->brand" :fieldPlaceholder="__('placeholders.brand')">
                         </x-forms.text>
                     </div>
+                    <div class="col-md-6">
+                        <x-forms.label class="" fieldId="department_id"
+                            :fieldLabel="__('app.department')" fieldRequired="true">
+                        </x-forms.label>
+                        <x-forms.input-group>
+                            <select class="form-control select-picker" name="department_id"
+                                id="department_id" data-live-search="true">
+                                <option value="">--</option>
+                                @foreach ($departments as $department)
+                                    <option value="{{ $department->id }}" {{ $asset->department_id == $department->id ? 'selected' : '' }}>{{ $department->name }}</option>
+                                @endforeach
+                            </select>
+                        </x-forms.input-group>
+                    </div>
+                    <div class="col-md-6">
+                        <x-forms.label class="" fieldId="branch_id"
+                            :fieldLabel="__('app.branchName')" fieldRequired="true">
+                        </x-forms.label>
+                        <x-forms.input-group>
+                            <select class="form-control select-picker" name="branch_id"
+                                id="branch_id" data-live-search="true">
+                                <option value="">--</option>
+                                @foreach ($branches as $branch)
+                                    <option value="{{ $branch->id }}" {{ $asset->branch_id == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                        </x-forms.input-group>
+                    </div>
+                    <div class="col-md-6">
+                        <x-forms.number fieldId="asset_qty" :fieldLabel="__('app.qty')" fieldName="qty"
+                                      fieldRequired="true" :fieldValue="$asset->qty" :fieldPlaceholder="__('placeholders.qty')">
+                        </x-forms.number>
+                    </div>
                 </div>
 
                 <x-form-actions>

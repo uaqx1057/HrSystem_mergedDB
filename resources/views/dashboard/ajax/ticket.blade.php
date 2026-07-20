@@ -87,11 +87,11 @@
                                 </div>
                             </td>
                             <td width="50%"><a href="{{ route('tickets.show', $item->ticket_number) }}"
-                                    class="text-darkest-grey">{{ $item->subject }}</a>
+                                    class="text-darkest-white">{{ $item->subject }}</a>
                                 <br />
-                                <span class="f-10 text-lightest mt-1">{{ $item->requester->name }}</span>
+                                <span class="f-10 text-darkest-white mt-1">{{ $item->requester->name }}</span>
                             </td>
-                            <td class="text-darkest-grey">{{ $item->updated_at->translatedFormat(company()->date_format) }}</td>
+                            <td class="text-darkest-white">{{ $item->updated_at->translatedFormat(company()->date_format) }}</td>
                             <td class="f-14 pr-20 text-right">
                                 @php
                                     if ($item->priority == 'low') {

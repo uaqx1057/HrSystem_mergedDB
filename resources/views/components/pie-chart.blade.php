@@ -38,6 +38,9 @@ var myChart = new Chart(ctx, {
     plugins: {
       legend: {
         position: 'right',
+        labels: {
+          color: '#fff',
+        }
       },
       title: {
         display: false,

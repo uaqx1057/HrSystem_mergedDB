@@ -146,6 +146,9 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                             <x-cards.data-row :background="'text-darkest-white'" :label="__('app.department')"
                                 :value="$employee->employeeDetail->department->team_name ?? '--'" />
 
+                            <x-cards.data-row :background="'text-darkest-white'" :label="__('app.branchName')"
+                                :value="$employee->branch->name ?? '--'" />
+
                             <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.gender')"
                                 :value="$employee->gender ?? '--'" />
 

@@ -41,10 +41,16 @@ class CompanyAssetDataTable extends BaseDataTable
                 $name = '<h5 class="mb-0 f-13 text-darkest-grey"><a href="' . route('company-assets.show', ['company_asset' => $row->id]) . '" class="openRightModal">' . $row->name . '</a></h5>';
                 return $name;
             })
+            ->editColumn('department', function ($row) {
+                return $row->department_id ? $row->department->name : '--';
+            })
+            ->editColumn('branch', function ($row) {
+                return $row->branch_id ? $row->branch->name : '--';
+            })
             ->addColumn('action', function ($row) {
 
                 $action = '<div class="task_view">
-                    <a href="' . route('company-assets.show', ['company_asset' => $row->id]) . '" class="taskView text-darkest-grey f-w-500 openRightModal">' . __('app.view') . '</a>
+                    <a href="' . route('company-assets.show', ['company_asset' => $row->id]) . '" class="taskView text-darkest-grey f-w-500">' . __('app.view') . '</a>
                     <div class="dropdown">
                         <a class="task_view_more d-flex align-items-center justify-content-center dropdown-toggle" type="link"
                             id="dropdownMenuLink-' . $row->id . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -55,43 +61,57 @@ class CompanyAssetDataTable extends BaseDataTable
                 $assignment = $row->assignments->first();
 
                 if (!$assignment) {
-                    if (user()->permission('assign_company_asset_to_employee') == 'all') {
-                        $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.assign', [$row->id]) . '">
-                                <i class="fa fa-user-check mr-2"></i>
-                                ' . trans('app.assign') . '
-                            </a>';
-                    }
+                    // if (user()->permission('assign_company_asset_to_employee') == 'all') {
+                    //     $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.assign', [$row->id]) . '">
+                    //             <i class="fa fa-user-check mr-2"></i>
+                    //             ' . trans('app.assign') . '
+                    //         </a>';
+                    // }
                 } elseif ($assignment->status == 'Pending') {
-                    if (user()->permission('edit_assign_company_assets_to_employee') == 'all') {
-                        $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.edit-assign', [$row->id]) . '">
-                                <i class="fa fa-edit mr-2"></i>
-                                Edit Assign
-                            </a>';
-                    }
+                    // if (user()->permission('edit_assign_company_assets_to_employee') == 'all') {
+                    //     $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.edit-assign', [$row->id]) . '">
+                    //             <i class="fa fa-edit mr-2"></i>
+                    //             Edit Assign
+                    //         </a>';
+                    // }
                 } elseif ($assignment->status == 'Approve') {
-                    if (user()->permission('upload_signature_assign_company_assets_to_employee') == 'all') {
-                        $action .= '<a class="dropdown-item" href="' . route('company-assets.generate-pdf', [$row->id]) . '">
-                                <i class="fa fa-file-pdf mr-2"></i>
-                                Generate Pdf
-                            </a>';
-                        $action .= '<a class="dropdown-item " href="' . route('company-assets.upload-signature', [$row->id]) . '">
-                                <i class="fa fa-upload mr-2"></i>
-                                Update Signature
-                            </a>';
-                    }
+                    // if (user()->permission('upload_signature_assign_company_assets_to_employee') == 'all') {
+                    //     $action .= '<a class="dropdown-item" href="' . route('company-assets.generate-pdf', [$row->id]) . '">
+                    //             <i class="fa fa-file-pdf mr-2"></i>
+                    //             Generate Pdf
+                    //         </a>';
+                    //     $action .= '<a class="dropdown-item " href="' . route('company-assets.upload-signature', [$row->id]) . '">
+                    //             <i class="fa fa-upload mr-2"></i>
+                    //             Update Signature
+                    //         </a>';
+                    // }
                 } elseif ($assignment->status == 'Assigned') {
-                    if (user()->permission('view_assign_company_assets_to_employee') == 'all') {
-                    $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.view-assign', [$row->id]) . '">
-                                <i class="fa fa-eye mr-2"></i>
-                                View Assign
-                            </a>';
-                    }
+                    // if (user()->permission('view_assign_company_assets_to_employee') == 'all') {
+                    // $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.view-assign', [$row->id]) . '">
+                    //             <i class="fa fa-eye mr-2"></i>
+                    //             View Assign
+                    //         </a>';
+                    // }
                 }
+
+                // Return action: show when there is at least one active assignment
+                // if ($row->assignments->count() > 0) {
+                //     if (user()->permission('assign_company_asset_to_employee') == 'all') {
+                //         $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.return', [$row->id]) . '">
+                //                 <i class="fa fa-undo mr-2"></i>
+                //                 ' . trans('app.return') . '
+                //             </a>';
+                //     }
+                // }
 
                 if ($this->editCompanyAssetPermission == 'all') {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.edit', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
                                 ' . trans('app.edit') . '
+                            </a>';
+                    $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.view-assign', [$row->id]) . '">
+                                <i class="fa fa-history mr-2"></i>
+                                ' . trans('app.assignmentHistory') . '
                             </a>';
                 }
                 if ($this->deleteCompanyAssetPermission == 'all') {
@@ -111,7 +131,7 @@ class CompanyAssetDataTable extends BaseDataTable
             ->setRowId(function ($row) {
                 return 'row-' . $row->id;
             })
-            ->rawColumns(['check', 'action', 'name']);
+            ->rawColumns(['check', 'action', 'name','department','branch']);
     }
 
     /**
@@ -124,7 +144,7 @@ class CompanyAssetDataTable extends BaseDataTable
 
         // FIX: select only company_assets.* to avoid ID collisions with assignments table
         $model = $model->newQuery()
-            ->with('assignments')
+            ->with(['assignments', 'department', 'branch'])
             ->leftJoin('asset_assignments', 'asset_assignments.company_asset_id', '=', 'company_assets.id')
             ->select('company_assets.*')
             ->groupBy('company_assets.id')->orderBy('company_assets.id', 'desc');
@@ -188,6 +208,11 @@ class CompanyAssetDataTable extends BaseDataTable
             Column::make('name')->title(__('app.name'))->width(20),
             Column::make('type')->title(__('app.type'))->width(15),
             Column::make('brand')->title(__('app.brand'))->width(15),
+            Column::make('department')->title(__('app.department'))->width(15),
+            Column::make('branch')->title(__('app.branchName'))->width(15),
+            Column::make('qty')->title(__('app.qty'))->width(10),
+            Column::make('available_qty')->title(__('app.availableQty'))->width(10),
+            Column::make('status')->title(__('app.status'))->width(15),
             Column::computed('action')
                 ->exportable(false)
                 ->printable(false)

@@ -8,7 +8,7 @@
                 <div class="row p-20">
 
                     <div class="col-md-6">
-                        <x-forms.label class="my-3" fieldId="employee"
+                        <x-forms.label class="" fieldId="employee"
                             :fieldLabel="__('app.employee')" fieldRequired="true">
                         </x-forms.label>
                         <x-forms.input-group>
@@ -22,30 +22,10 @@
                         </x-forms.input-group>
                     </div>
                     <div class="col-md-6">
-                        <x-forms.label class="my-3" fieldId="branch_id"
-                            :fieldLabel="__('app.branchName')" fieldRequired="true">
-                        </x-forms.label>
-                        <x-forms.input-group>
-                            <select class="form-control select-picker" name="branch_id"
-                                id="branch_id" data-live-search="true">
-                                <option value="">--</option>
-                                @foreach ($branches as $branch)
-                                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                                @endforeach
-                            </select>
-                        </x-forms.input-group>
-                    </div>
-                    <div class="col-md-6">
-                        <x-forms.label class="my-3" fieldId="status"
-                            :fieldLabel="__('app.status')" fieldRequired="true">
-                        </x-forms.label>
-                        <x-forms.input-group>
-                            <select class="form-control height-35" name="status"
-                                id="status">
-                                <option value="Pending" selected>Pending</option>
-                                <option value="Approve">Approve</option>
-                            </select>
-                        </x-forms.input-group>
+                        <x-forms.number fieldId="asset_qty" :fieldLabel="__('app.qty')" fieldName="qty"
+                                      fieldRequired="true" :fieldPlaceholder="__('placeholders.qty')" fieldValue="1">
+                        </x-forms.number>
+                        <small class="form-text text-muted">@lang('messages.availableQty'): {{ $asset->available_qty }}</small>
                     </div>
 
                 </div>

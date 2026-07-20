@@ -2,6 +2,15 @@
 $addInvoicesPermission = user()->permission('add_invoices');
 @endphp
 
+@push('styles')
+<style>
+    .dataTables_wrapper .col-sm-12{
+        overflow: auto !important;
+        min-height: 0 !important;
+    }
+</style>
+@endpush
+
 <!-- ROW START -->
 <div class="row pb-5">
     <div class="col-lg-12 col-md-12 mb-4 mb-xl-0 mb-lg-4">

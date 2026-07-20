@@ -2,10 +2,21 @@
     <div class="col-sm-12">
         <form action="{{ route('company-assets.store-signature', $asset->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
+            <input type="hidden" name="id" value="{{ $assignment->id }}">
             <div class="add-client bg-white rounded">
-                <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey">
+                <h4 class="mb-0 p-20 f-21 form-heading-background font-weight-normal text-capitalize border-bottom-grey">
                     Upload Signature</h4>
                 <div class="row p-20">
+                    <div class="col-lg-12 text-right">
+                        <a href="{{ route('company-assets.show', $asset->id) }}" class="btn btn-sm btn-primary">Back</a>
+                    </div>
+
+                    <div class="col-lg-12">
+                        <a href="{{ route('company-assets.generate-pdf', $assignment->id) }}" target="_blank"
+                            rel="noopener noreferrer">
+                            Download Signature Form
+                        </a>
+                    </div>
 
                     {{-- <div class="col-md-12">
                         <label class="f-14 f-w-500">Signature</label>
@@ -31,7 +42,7 @@
 
                 <div class="pl-3 pb-2">
                     <input type="submit" class="btn btn-primary rounded" value="Save">
-                    <x-forms.button-cancel :link="route('company-assets.index')" class="border-0">@lang('app.cancel')
+                    <x-forms.button-cancel :link="route('company-assets.show', $asset->id)" class="border-0">@lang('app.cancel')
                     </x-forms.button-cancel>
                 </div>
 

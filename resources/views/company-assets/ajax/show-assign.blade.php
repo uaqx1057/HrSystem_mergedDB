@@ -32,7 +32,7 @@
                     </div>
                 </div>
                 @php
-                    $signatureFile = ($assignment->signed_document) ? asset_url_local_s3('asset' . '/' . $assignment->signed_document) : '';
+                    $signatureFile = ($assignment && $assignment->signed_document) ? asset_url_local_s3('asset' . '/' . $assignment->signed_document) : '';
                 @endphp
                 <div class="card-body">
                     <x-cards.data-row :label="__('app.catalog')" :value="$asset->catalog" />
@@ -40,15 +40,60 @@
                         <x-cards.data-row :label="__('Name')" :value="$asset->name" />
                     <x-cards.data-row :label="__('Type')" :value="$asset->type" />
                     <x-cards.data-row :label="__('Brand')" :value="$asset->brand" />
+                    <x-cards.data-row :label="__('app.department')" :value="$asset->department->name ?? 'N/A'" />
+                    <x-cards.data-row :label="__('app.branchName')" :value="$asset->branch->name ?? 'N/A'" />
+                    <x-cards.data-row :label="__('app.qty')" :value="$asset->qty" />
+                    <x-cards.data-row :label="__('app.availableQty')" :value="$asset->available_qty" />
+                    <x-cards.data-row :label="__('app.status')" :value="ucfirst($asset->status)" />
                     <h4>Assignment Details</h4>
-                    <x-cards.data-row :label="__('Employee')" :value="$assignment->employee->name ?? 'N/A'" />
+                    @if ($assignment)
+                        <x-cards.data-row :label="__('Employee')" :value="$assignment->employee->name ?? 'N/A'" />
+                        <x-cards.data-row :label="__('app.qty')" :value="$assignment->qty ?? 'N/A'" />
                         <x-cards.data-row :label="__('Branch')" :value="$assignment->branch->name ?? 'N/A'" />
-                    <x-cards.data-row :label="__('Status')" :value="$assignment->status ?? 'N/A'" />
-                    <div class="col-12 px-0 pb-3 d-lg-flex d-md-flex d-block">
-                        <p class="mb-0 text-lightest f-14 w-30 text-capitalize">Signature</p>
-                        <p class="mb-0 text-dark-grey f-14 w-70 text-wrap"> <a href="{{ $signatureFile }}" target="_blank">
-                            View Signature
-                        </a></p>
+                        <x-cards.data-row :label="__('Status')" :value="$assignment->status ?? 'N/A'" />
+                        <div class="col-12 px-0 pb-3 d-lg-flex d-md-flex d-block">
+                            <p class="mb-0 text-lightest f-14 w-30 text-capitalize">Signature</p>
+                            <p class="mb-0 text-dark-grey f-14 w-70 text-wrap">
+                                @if ($signatureFile)
+                                    <a href="{{ $signatureFile }}" target="_blank">View Signature</a>
+                                @else
+                                    --
+                                @endif
+                            </p>
+                        </div>
+                    @else
+                        <x-cards.data-row :label="__('Employee')" :value="'N/A'" />
+                        <x-cards.data-row :label="__('app.qty')" :value="'N/A'" />
+                        <x-cards.data-row :label="__('Branch')" :value="'N/A'" />
+                        <x-cards.data-row :label="__('Status')" :value="'N/A'" />
+                    @endif
+
+                    <h4>Assignment History</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>@lang('app.employee')</th>
+                                    <th>@lang('app.action')</th>
+                                    <th>@lang('app.qty')</th>
+                                    <th>@lang('app.date')</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($history as $record)
+                                    <tr>
+                                        <td>{{ $record->employee->name ?? 'N/A' }}</td>
+                                        <td>{{ ucfirst($record->action_type) }}</td>
+                                        <td>{{ $record->qty }}</td>
+                                        <td>{{ $record->action_at ? $record->action_at->format('Y-m-d H:i') : 'N/A' }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center">@lang('messages.noRecordFound')</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

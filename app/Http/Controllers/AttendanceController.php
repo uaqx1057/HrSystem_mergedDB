@@ -204,7 +204,8 @@ class AttendanceController extends AccountBaseController
             }
 
             $emplolyeeName = view('components.employee', [
-                'user' => $employee
+                'user' => $employee,
+                'background' => 'text-darkest-white'
             ]);
 
             $final[$employee->id . '#' . $employee->name][] = $emplolyeeName;

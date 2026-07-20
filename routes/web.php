@@ -295,9 +295,14 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::get('company-assets/edit-assign/{id}', [CompanyAssetController::class, 'editAssignAsset'])->name('company-assets.edit-assign');
     Route::post('company-assets/update-assign/{id}', [CompanyAssetController::class, 'updateAssignAsset'])->name('company-assets.update-assign');
     Route::get('company-assets/generate-pdf/{id}', [CompanyAssetController::class, 'generatePdf'])->name('company-assets.generate-pdf');
+    Route::get('company-assets/return-pdf/{id}', [CompanyAssetController::class, 'returnPdf'])->name('company-assets.return-pdf');
     Route::get('company-assets/upload-signature/{id}', [CompanyAssetController::class, 'uploadSignature'])->name('company-assets.upload-signature');
     Route::get('company-assets/view-assign/{id}', [CompanyAssetController::class, 'viewAssign'])->name('company-assets.view-assign');
     Route::post('company-assets/store-signature/{id}', [CompanyAssetController::class, 'storeSignature'])->name('company-assets.store-signature');
+    // Return company asset
+    Route::get('company-assets/return/{id}', [CompanyAssetController::class, 'returnAsset'])->name('company-assets.return');
+    Route::post('company-assets/return/store/{id}', [CompanyAssetController::class, 'storeReturnAsset'])->name('company-assets.return.store');
+    Route::get('company-assets/delete-assign/{id}', [CompanyAssetController::class, 'destroyAssignAsset'])->name('company-assets.delete-assign');
 
     Route::resource('company-assets', CompanyAssetController::class);
 

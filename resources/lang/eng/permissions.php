@@ -453,4 +453,5 @@ return array (
     'edit_assign_company_assets_to_employee' => 'Edit Assign Company Asset to Employee',
     'upload_signature_assign_company_assets_to_employee' => 'Upload Signature Assign Company Asset to Employee',
     'view_assign_company_assets_to_employee' => 'View Assign Company Asset to Employee',
+    'view_system_access' => 'View System Access',
 );
