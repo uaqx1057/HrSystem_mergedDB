@@ -40,3 +40,14 @@ Do not run broad destructive rollback on the shared database. If rollback is req
 - Keep scheduler and queue workers active for document expiry reminders.
 - Review payroll preflight before employee payroll generation each period.
 - Review expired certifications, pending probation reviews, open offboarding, and asset returns through the HR worklist.
+
+## Automated verification
+
+On a development machine with PHP ZIP enabled, run the focused HR unit checks without using the shared MySQL database:
+
+```powershell
+$env:DB_CONNECTION='sqlite'; $env:DB_DATABASE=':memory:'
+php -d extension=zip vendor/phpunit/phpunit/phpunit tests/Unit/HrAccessTest.php tests/Unit/EmployeeLifecycleTest.php --testdox
+```
+
+Feature tests require a disposable MySQL test database. The historic migration set is not SQLite-compatible, so do not use SQLite migration failures as a production readiness signal.
