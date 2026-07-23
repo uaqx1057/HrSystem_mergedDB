@@ -2,6 +2,9 @@
 <script src="{{ asset('vendor/jquery/Chart.min.js') }}"></script>
 
 <div class="row">
+    @if(user()->permission('view_payroll') !== 'none')
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-role-worklists.finance') }}"><x-cards.widget title="Payroll worklist" value="Preflight & advances" icon="clipboard-check" /></a></div>
+    @endif
     <div class="col-md-12">
         <x-alert type="secondary" icon="info-circle">
             @lang('messages.earningChartNote') ({{ company()->currency->currency_code }})

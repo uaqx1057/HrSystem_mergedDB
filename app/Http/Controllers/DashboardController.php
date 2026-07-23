@@ -153,12 +153,12 @@ class DashboardController extends AccountBaseController
                 }
                 elseif ($this->sidebarUserPermissions['view_finance_dashboard'] == 4) {
                     $this->activeTab = $tab ?: 'finance';
-                    $this->ticketDashboard();
+                    $this->financeDashboard();
 
                 }
                 else if ($this->sidebarUserPermissions['view_ticket_dashboard'] == 4) {
-                    $this->activeTab = $tab ?: 'finance';
-                    $this->financeDashboard();
+                    $this->activeTab = $tab ?: 'ticket';
+                    $this->ticketDashboard();
                 }
 
                 break;

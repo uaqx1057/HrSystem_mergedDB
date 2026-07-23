@@ -2,13 +2,18 @@
 <script src="{{ asset('vendor/jquery/Chart.min.js') }}"></script>
 
 
+@php($canManageHr = in_array(user()->permission('edit_employees'), ['all', 'branch'], true))
 <div class="row">
-    <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-worklist.index') }}"><x-cards.widget title="HR worklist" value="Open tasks" icon="clipboard-list" /></a></div>
-    <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-employee-requests.index') }}"><x-cards.widget title="Employee requests" value="Review" icon="inbox" /></a></div>
-    <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-compliance.index') }}"><x-cards.widget title="Compliance" value="Reviews" icon="shield-alt" /></a></div>
-    <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-lifecycle.index') }}"><x-cards.widget title="Open onboarding" :value="$openOnboardingCases" icon="user-plus" /></a></div>
-    <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-lifecycle.index') }}"><x-cards.widget title="Open offboarding" :value="$openOffboardingCases" icon="user-times" /></a></div>
-    <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-lifecycle.index') }}"><x-cards.widget title="Pending transfers" :value="$pendingTransfers" icon="exchange-alt" /></a></div>
+    @if($canManageHr)
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-worklist.index') }}"><x-cards.widget title="HR worklist" value="Open tasks" icon="clipboard-list" /></a></div>
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-employee-requests.index') }}"><x-cards.widget title="Employee requests" value="Review" icon="inbox" /></a></div>
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-lifecycle.index') }}"><x-cards.widget title="Open onboarding" :value="$openOnboardingCases" icon="user-plus" /></a></div>
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-lifecycle.index') }}"><x-cards.widget title="Open offboarding" :value="$openOffboardingCases" icon="user-times" /></a></div>
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-lifecycle.index') }}"><x-cards.widget title="Pending transfers" :value="$pendingTransfers" icon="exchange-alt" /></a></div>
+    @endif
+    @if(user()->permission('edit_employees') === 'all')
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-compliance.index') }}"><x-cards.widget title="Compliance" value="Reviews" icon="shield-alt" /></a></div>
+    @endif
     @if (in_array('leaves', user_modules()) && in_array('total_leaves_approved', $activeWidgets))
         <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
 
