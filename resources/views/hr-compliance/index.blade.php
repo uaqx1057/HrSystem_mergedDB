@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('content')
-<div class="content-wrapper"><div class="card"><div class="card-body"><h4>HR compliance</h4>
+<div class="content-wrapper"><div class="d-flex justify-content-between mb-2"><h4>HR compliance</h4><a class="btn btn-light" href="{{ route('hr-certification-rules.index') }}">Certification rules</a></div><div class="card"><div class="card-body">
 <form method="POST" action="{{ route('hr-compliance.probation') }}">@csrf<select name="employee_id">@foreach($employees as $e)<option value="{{ $e->id }}">{{ $e->name }}</option>@endforeach</select><select name="review_day"><option>30</option><option>60</option><option>90</option></select><input type="date" name="due_date" required><button>Save probation review</button></form><hr>
 <form method="POST" action="{{ route('hr-compliance.certification') }}">@csrf<select name="employee_id">@foreach($employees as $e)<option value="{{ $e->id }}">{{ $e->name }}</option>@endforeach</select><input name="name" placeholder="Certification" required><input type="date" name="expires_at"><button>Save certification</button></form><hr>
 <form method="POST" action="{{ route('hr-compliance.case') }}">@csrf<input name="category" placeholder="Restricted case category" required><input name="details" placeholder="Confidential details" required><button>Create restricted case</button></form></div></div>

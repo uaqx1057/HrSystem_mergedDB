@@ -635,6 +635,8 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('hr-candidates/{candidate}/handoff', [\App\Http\Controllers\HrCandidateController::class, 'handoff'])->name('hr-candidates.handoff');
     Route::get('hr-worklist', [\App\Http\Controllers\HrWorklistController::class, 'index'])->name('hr-worklist.index');
     Route::get('hr-compliance', [\App\Http\Controllers\HrComplianceController::class, 'index'])->name('hr-compliance.index');
+    Route::get('hr-certification-rules', [\App\Http\Controllers\HrCertificationRuleController::class, 'index'])->name('hr-certification-rules.index');
+    Route::post('hr-certification-rules', [\App\Http\Controllers\HrCertificationRuleController::class, 'store'])->name('hr-certification-rules.store');
     Route::post('hr-compliance/probation', [\App\Http\Controllers\HrComplianceController::class, 'probation'])->name('hr-compliance.probation');
     Route::post('hr-compliance/probation/{review}', [\App\Http\Controllers\HrComplianceController::class, 'completeProbation'])->name('hr-compliance.probation.complete');
     Route::post('hr-compliance/certification', [\App\Http\Controllers\HrComplianceController::class, 'certification'])->name('hr-compliance.certification');

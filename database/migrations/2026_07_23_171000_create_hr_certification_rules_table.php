@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration;use Illuminate\Database\Schema\Blueprint;use Illuminate\Support\Facades\Schema;
+return new class extends Migration{public function up():void{Schema::create('hr_certification_rules',function(Blueprint $t){$t->id();$t->foreignId('company_id')->constrained()->cascadeOnDelete();$t->foreignId('designation_id')->nullable()->constrained('designations')->nullOnDelete();$t->string('certification_name');$t->unsignedSmallInteger('renewal_months')->nullable();$t->boolean('is_active')->default(true);$t->timestamps();$t->unique(['company_id','designation_id','certification_name']);});}public function down():void{Schema::dropIfExists('hr_certification_rules');}};

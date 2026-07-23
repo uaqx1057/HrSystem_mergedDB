@@ -1,0 +1,1 @@
+<?php namespace App\Models;class HrCertificationRule extends BaseModel{protected $table='hr_certification_rules';protected $guarded=['id'];public function designation(){return $this->belongsTo(Designation::class);}}
