@@ -625,6 +625,9 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::resource('leave-files', LeaveFileController::class);
 
     /* LEAVES */
+    Route::get('hr-employee-requests', [\App\Http\Controllers\HrEmployeeRequestController::class, 'index'])->name('hr-employee-requests.index');
+    Route::post('hr-employee-requests', [\App\Http\Controllers\HrEmployeeRequestController::class, 'store'])->name('hr-employee-requests.store');
+    Route::post('hr-employee-requests/{employeeRequest}/review', [\App\Http\Controllers\HrEmployeeRequestController::class, 'review'])->name('hr-employee-requests.review');
     Route::get('hr-payroll-preflight', [\App\Http\Controllers\HrPayrollPreflightController::class, 'index'])->name('hr-payroll-preflight.index');
     Route::post('hr-payroll-preflight/{run}/approve', [\App\Http\Controllers\HrPayrollPreflightController::class, 'approve'])->name('hr-payroll-preflight.approve');
     Route::get('hr-attendance-exceptions', [\App\Http\Controllers\HrAttendanceExceptionController::class, 'index'])->name('hr-attendance-exceptions.index');
