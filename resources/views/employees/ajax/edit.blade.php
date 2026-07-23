@@ -276,18 +276,27 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                         @lang('modules.employees.documentDetails')</h4>
                     <div class="row p-20">
 
-                        {{-- IQAMA --}}
+                        {{-- EMPLOYEE TYPE --}}
                         <div class="col-lg-4 col-md-6">
+                            <x-forms.select fieldId="employee_type" :fieldLabel="__('modules.employees.employeeType')" fieldName="employee_type"
+                                fieldRequired="true">
+                                <option value="expat" @if (($employee->employeeDetail->employee_type ?? 'expat') === 'expat') selected @endif>@lang('modules.employees.expat')</option>
+                                <option value="saudi" @if (($employee->employeeDetail->employee_type ?? 'expat') === 'saudi') selected @endif>@lang('modules.employees.saudi')</option>
+                            </x-forms.select>
+                        </div>
+
+                        {{-- EXPAT ONLY: IQAMA --}}
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.text fieldId="iqama_no" :fieldLabel="__('modules.employees.Iqama No')"
                                 fieldName="iqama_no" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama')" :fieldValue="$employee->employeeDetail->iqama_no">
                             </x-forms.text>
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.text fieldId="iqama_profession" :fieldLabel="__('modules.employees.iqama_profession')"
                                 fieldName="iqama_profession" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama_profession')" :fieldValue="$employee->employeeDetail->iqama_profession">
                             </x-forms.text>
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.datepicker
                                 fieldId="iqama_expiry_date"
                                 :fieldLabel="__('modules.employees.iqama_expiry_date')"
@@ -296,7 +305,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                 :fieldValue="optional($employee->employeeDetail->iqama_expiry_date)->format(company()->date_format)"
                             />
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp"
                                 class="mr-0 mr-lg-2 mr-md-2 cropper"
                                 :fieldLabel="__('modules.employees.iqama_image')"
@@ -304,6 +313,32 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                 fieldId="iqama_image"
                                 fieldHeight="119"
                                 :fieldValue="($employee->employeeDetail->iqama_image ? asset('user-uploads/iqama/' . $employee->employeeDetail->iqama_image) : null)"
+                                 />
+                        </div>
+
+                        {{-- SAUDI ONLY: NATIONAL ID --}}
+                        <div class="col-lg-4 col-md-6 saudi-only-field d-none">
+                            <x-forms.text fieldId="national_id" :fieldLabel="__('modules.employees.national_id')"
+                                fieldName="national_id" fieldRequired="true" :fieldPlaceholder="__('placeholders.national_id')" :fieldValue="$employee->employeeDetail->national_id">
+                            </x-forms.text>
+                        </div>
+                        <div class="col-lg-4 col-md-6 saudi-only-field d-none">
+                            <x-forms.datepicker
+                                fieldId="national_id_expiry_date"
+                                :fieldLabel="__('modules.employees.national_id_expiry_date')"
+                                fieldName="national_id_expiry_date"
+                                :fieldPlaceholder="__('placeholders.national_id_expiry_date')"
+                                :fieldValue="optional($employee->employeeDetail->national_id_expiry_date)->format(company()->date_format)"
+                            />
+                        </div>
+                        <div class="col-lg-4 col-md-6 saudi-only-field d-none">
+                            <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp"
+                                class="mr-0 mr-lg-2 mr-md-2 cropper"
+                                :fieldLabel="__('modules.employees.national_id_image')"
+                                fieldName="national_id_image"
+                                fieldId="national_id_image"
+                                fieldHeight="119"
+                                :fieldValue="($employee->employeeDetail->national_id_image ? asset('user-uploads/national_id/' . $employee->employeeDetail->national_id_image) : null)"
                                  />
                         </div>
 
@@ -333,14 +368,14 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                  />
                         </div>
 
-                        {{-- SPONSOR --}}
-                        <div class="col-lg-4 col-md-6">
+                        {{-- EXPAT ONLY: SPONSOR --}}
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.text fieldId="sponsor_kafala" :fieldLabel="__('modules.employees.Sponsor / kafala')"
                                 fieldName="sponsor_kafala" fieldRequired="true" :fieldPlaceholder="__('placeholders.sponsor_kafala')"
                                 :fieldValue="$employee->employeeDetail->sponsor_kafala">
                             </x-forms.text>
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.datepicker
                                 fieldId="sponsorship_transfer_date"
                                 :fieldLabel="__('modules.employees.sponsorship_transfer_date')"
@@ -350,8 +385,8 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             />
                         </div>
 
-                        {{-- NEW: Transfer Number --}}
-                        <div class="col-lg-4 col-md-6">
+                        {{-- EXPAT ONLY: Transfer Number --}}
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.text fieldId="transfer_number" :fieldLabel="__('modules.employees.transfer_number')"
                                 fieldName="transfer_number" :fieldPlaceholder="__('placeholders.transfer_number')"
                                 :fieldValue="$employee->employeeDetail->transfer_number">
@@ -366,8 +401,8 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </x-forms.text>
                         </div>
 
-                        {{-- NEW: Qiva Contract --}}
-                        <div class="col-lg-4 col-md-6">
+                        {{-- EXPAT ONLY: Qiva Contract --}}
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.file allowedFileExtensions="pdf png jpg jpeg bmp" class="mr-0 mr-lg-2 mr-md-2"
                                 :fieldLabel="__('modules.employees.qiva_contract')" fieldName="qiva_contract" fieldId="qiva_contract"
                                 :fieldValue="($employee->employeeDetail->qiva_contract ? asset('user-uploads/contracts/' . $employee->employeeDetail->qiva_contract) : null)"
@@ -972,6 +1007,15 @@ $(document).ready(function () {
         ...datepickerConfig
     });
 
+    @php $nationalIdExpiryDate = $employee->employeeDetail?->national_id_expiry_date; @endphp
+    datepicker('#national_id_expiry_date', {
+        position: 'bl',
+        @if ($nationalIdExpiryDate)
+            dateSelected: new Date("{{ str_replace('-', '/', $nationalIdExpiryDate) }}"),
+        @endif
+        ...datepickerConfig
+    });
+
     datepicker('#passport_expiry_date', {
         position: 'bl',
         @if ($employee->employeeDetail->passport_expiry_date)
@@ -1140,6 +1184,27 @@ $(document).ready(function () {
         addedDependants = $('#dependant-rows .dependant-row').length;
         updateAddButton();
     });
+
+    // ── Employee type (Saudi / Expat) toggle ──────────────
+    function toggleEmployeeTypeFields() {
+        var isSaudi = $('#employee_type').val() === 'saudi';
+
+        $('.expat-only-field').toggleClass('d-none', isSaudi);
+        $('.expat-only-field').find('input, select, textarea').prop('disabled', isSaudi);
+
+        $('.saudi-only-field').toggleClass('d-none', !isSaudi);
+        $('.saudi-only-field').find('input, select, textarea').prop('disabled', !isSaudi);
+
+        $('#iqama_no, #iqama_profession').prop('required', !isSaudi);
+        $('#national_id').prop('required', isSaudi);
+
+        // Passport is required for expats, optional for Saudis.
+        $('#passport_no').prop('required', !isSaudi);
+        $('label[for="passport_no"] sup').toggle(!isSaudi);
+    }
+
+    $('#employee_type').on('change', toggleEmployeeTypeFields);
+    toggleEmployeeTypeFields();
 
     // ── Marital status change handler ─────────────────────
     var marriedValue = '{{ \App\Enums\MaritalStatus::Married->value }}';

@@ -26,7 +26,7 @@ trait CurrencyExchange
 
         $currencies = Currency::where('id', '<>', $setting->currency_id)->get();
         $currencyApiKeyVersion = $setting->currency_key_version;
-        $currencyApiKey = $setting->currency_converter_key ?: env('CURRENCY_CONVERTER_KEY');
+        $currencyApiKey = $setting->currency_converter_key ?: config('services.currency_converter.key');
 
         $baseCurrency = $setting->currency;
         $baseCurrency->exchange_rate = 1;

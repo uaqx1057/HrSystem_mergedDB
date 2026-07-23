@@ -19,17 +19,17 @@ trait PaystackSettings
         $settings = GlobalPaymentGatewayCredentials::first();
 
         if($settings->paystack_mode == 'sandbox'){
-            $key       = ($settings->test_paystack_key) ?: env('PAYSTACK_PUBLIC_KEY');
-            $apiSecret = ($settings->test_paystack_secret) ?: env('PAYSTACK_SECRET_KEY');
-            $email = ($settings->test_paystack_merchant_email) ?: env('MERCHANT_EMAIL');
+            $key       = ($settings->test_paystack_key) ?: config('paystack.publicKey');
+            $apiSecret = ($settings->test_paystack_secret) ?: config('paystack.secretKey');
+            $email = ($settings->test_paystack_merchant_email) ?: config('paystack.merchantEmail');
         }
         else{
-            $key       = ($settings->paystack_key) ?: env('PAYSTACK_PUBLIC_KEY');
-            $apiSecret = ($settings->paystack_secret) ?: env('PAYSTACK_SECRET_KEY');
-            $email = ($settings->paystack_merchant_email) ?: env('MERCHANT_EMAIL');
+            $key       = ($settings->paystack_key) ?: config('paystack.publicKey');
+            $apiSecret = ($settings->paystack_secret) ?: config('paystack.secretKey');
+            $email = ($settings->paystack_merchant_email) ?: config('paystack.merchantEmail');
         }
 
-        $url = ($settings->paystack_payment_url) ?: env('PAYSTACK_PAYMENT_URL');
+        $url = ($settings->paystack_payment_url) ?: config('paystack.paymentUrl');
 
 
         Config::set('paystack.publicKey', $key);

@@ -17,7 +17,7 @@ trait MollieSettings
     public function setMollieConfigs()
     {
         $settings = GlobalPaymentGatewayCredentials::first();
-        $key       = ($settings->mollie_api_key) ?: env('MOLLIE_KEY');
+        $key       = ($settings->mollie_api_key) ?: config('mollie.key');
         Config::set('mollie.key', $key);
         Config::set('mollie.api', $key);
     }

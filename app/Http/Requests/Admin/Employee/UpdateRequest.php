@@ -31,6 +31,7 @@ class UpdateRequest extends CoreRequest
         $setting = company();
         $rules = [
             'employee_id' => 'required|max:50|unique:employee_details,employee_id,'.$detailID->id.',id,company_id,' . company()->id,
+            'employee_type' => 'required|in:saudi,expat',
             'name'  => 'required|max:50',
             'hourly_rate' => 'nullable|numeric',
             'department' => 'required',

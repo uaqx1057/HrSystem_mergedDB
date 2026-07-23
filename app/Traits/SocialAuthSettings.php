@@ -19,20 +19,20 @@ trait SocialAuthSettings
     {
         $settings = SocialAuthSetting::first();
 
-        Config::set('services.facebook.client_id', ($settings->facebook_client_id) ?: env('FACEBOOK_CLIENT_ID'));
-        Config::set('services.facebook.client_secret', ($settings->facebook_secret_id) ?: env('FACEBOOK_CLIENT_SECRET'));
+        Config::set('services.facebook.client_id', ($settings->facebook_client_id) ?: config('services.facebook.client_id'));
+        Config::set('services.facebook.client_secret', ($settings->facebook_secret_id) ?: config('services.facebook.client_secret'));
         Config::set('services.facebook.redirect', $this->updateMainAppUrl(route('social_login_callback', 'facebook')));
 
-        Config::set('services.google.client_id', ($settings->google_client_id) ?: env('GOOGLE_CLIENT_ID'));
-        Config::set('services.google.client_secret', ($settings->google_secret_id) ?: env('GOOGLE_CLIENT_SECRET'));
+        Config::set('services.google.client_id', ($settings->google_client_id) ?: config('services.google.client_id'));
+        Config::set('services.google.client_secret', ($settings->google_secret_id) ?: config('services.google.client_secret'));
         Config::set('services.google.redirect', $this->updateMainAppUrl(route('social_login_callback', 'google')));
 
-        Config::set('services.twitter.client_id', ($settings->twitter_client_id) ?: env('TWITTER_CLIENT_ID'));
-        Config::set('services.twitter.client_secret', ($settings->twitter_secret_id) ?: env('TWITTER_CLIENT_SECRET'));
+        Config::set('services.twitter.client_id', ($settings->twitter_client_id) ?: config('services.twitter.client_id'));
+        Config::set('services.twitter.client_secret', ($settings->twitter_secret_id) ?: config('services.twitter.client_secret'));
         Config::set('services.twitter.redirect', $this->updateMainAppUrl(route('social_login_callback', 'twitter')));
 
-        Config::set('services.linkedin.client_id', ($settings->linkedin_client_id) ?: env('LINKEDIN_CLIENT_ID'));
-        Config::set('services.linkedin.client_secret', ($settings->linkedin_secret_id) ?: env('LINKEDIN_CLIENT_SECRET'));
+        Config::set('services.linkedin.client_id', ($settings->linkedin_client_id) ?: config('services.linkedin.client_id'));
+        Config::set('services.linkedin.client_secret', ($settings->linkedin_secret_id) ?: config('services.linkedin.client_secret'));
         Config::set('services.linkedin.redirect', $this->updateMainAppUrl(route('social_login_callback', 'linkedin')));
     }
 

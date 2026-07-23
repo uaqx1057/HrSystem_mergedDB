@@ -169,7 +169,7 @@ class DriverDocumentController extends AccountBaseController
     {
         $document = DriverDocument::findOrFail($id);
 
-        $fullPath = env('DRIVER_DOCUMENT_PATH') . '/' . $document->file_path;
+        $fullPath = Storage::disk('driver_documents')->path($document->file_path);
 
         if (!file_exists($fullPath)) {
             abort(404, 'File not found');

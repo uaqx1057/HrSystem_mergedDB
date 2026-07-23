@@ -260,24 +260,51 @@
                         @lang('modules.employees.documentDetails')</h4>
                     <div class="row p-20">
                         <div class="col-lg-4 col-md-6">
+                            <x-forms.select fieldId="employee_type" :fieldLabel="__('modules.employees.employeeType')" fieldName="employee_type"
+                                fieldRequired="true">
+                                <option value="expat">@lang('modules.employees.expat')</option>
+                                <option value="saudi">@lang('modules.employees.saudi')</option>
+                            </x-forms.select>
+                        </div>
+
+                        {{-- EXPAT ONLY: Iqama --}}
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.text fieldId="iqama_no" :fieldLabel="__('modules.employees.Iqama No')" fieldName="iqama_no" fieldRequired="true"
                                 :fieldPlaceholder="__('placeholders.iqama')">
                             </x-forms.text>
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.text fieldId="iqama_profession" :fieldLabel="__('modules.employees.iqama_profession')" fieldName="iqama_profession"
                                 fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama_profession')">
                             </x-forms.text>
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.datepicker fieldId="iqama_expiry_date" :fieldLabel="__('modules.employees.iqama_expiry_date')" fieldName="iqama_expiry_date"
                                 :fieldPlaceholder="__('placeholders.iqama_expiry_date')" minlength="10" maxlength="10" />
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
                                 :fieldLabel="__('modules.employees.iqama_image')" fieldName="iqama_image" fieldId="iqama_image" fieldHeight="119"
                                  />
                         </div>
+
+                        {{-- SAUDI ONLY: National ID --}}
+                        <div class="col-lg-4 col-md-6 saudi-only-field d-none">
+                            <x-forms.text fieldId="national_id" :fieldLabel="__('modules.employees.national_id')" fieldName="national_id"
+                                fieldRequired="true" :fieldPlaceholder="__('placeholders.national_id')">
+                            </x-forms.text>
+                        </div>
+                        <div class="col-lg-4 col-md-6 saudi-only-field d-none">
+                            <x-forms.datepicker fieldId="national_id_expiry_date" :fieldLabel="__('modules.employees.national_id_expiry_date')" fieldName="national_id_expiry_date"
+                                :fieldPlaceholder="__('placeholders.national_id_expiry_date')" minlength="10" maxlength="10" />
+                        </div>
+                        <div class="col-lg-4 col-md-6 saudi-only-field d-none">
+                            <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
+                                :fieldLabel="__('modules.employees.national_id_image')" fieldName="national_id_image" fieldId="national_id_image" fieldHeight="119"
+                                 />
+                        </div>
+
+                        {{-- PASSPORT: both types, required for expat only --}}
                         <div class="col-lg-4 col-md-6">
                             <x-forms.text fieldId="passport_no" :fieldLabel="__('modules.employees.passport_no')" fieldName="passport_no"
                                 fieldRequired="true" :fieldPlaceholder="__('placeholders.passport_no')">
@@ -292,14 +319,16 @@
                                 :fieldLabel="__('modules.employees.passport_image')" fieldName="passport_image" fieldId="passport_image" fieldHeight="119"
                                  />
                         </div>
-                        <div class="col-lg-4 col-md-6">
+
+                        {{-- EXPAT ONLY: Sponsor / Kafala --}}
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.text fieldId="sponsor_kafala." :fieldLabel="__('modules.employees.Sponsor / kafala')" fieldName="sponsor_kafala"
                                 fieldRequired="true" :fieldPlaceholder="__('placeholders.sponsor_kafala')">
                             </x-forms.text>
                         </div>
 
-                        {{-- NEW: Transfer Number --}}
-                        <div class="col-lg-4 col-md-6">
+                        {{-- EXPAT ONLY: Transfer Number --}}
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.text fieldId="transfer_number" :fieldLabel="__('modules.employees.transfer_number')" fieldName="transfer_number"
                                 :fieldPlaceholder="__('placeholders.transfer_number')">
                             </x-forms.text>
@@ -312,8 +341,8 @@
                             </x-forms.text>
                         </div>
 
-                        {{-- NEW: Qiva Contract File --}}
-                        <div class="col-lg-4 col-md-6">
+                        {{-- EXPAT ONLY: Qiva Contract File --}}
+                        <div class="col-lg-4 col-md-6 expat-only-field">
                             <x-forms.file allowedFileExtensions="pdf png jpg jpeg bmp" class="mr-0 mr-lg-2 mr-md-2"
                                 :fieldLabel="__('modules.employees.qiva_contract')" fieldName="qiva_contract" fieldId="qiva_contract"
                                  />
@@ -790,6 +819,7 @@
         });
 
         datepicker('#iqama_expiry_date',         { position: 'bl', ...datepickerConfig });
+        datepicker('#national_id_expiry_date',    { position: 'bl', ...datepickerConfig });
         datepicker('#passport_expiry_date',       { position: 'bl', ...datepickerConfig });
         datepicker('#joining_date',               { position: 'bl', ...datepickerConfig });
         datepicker('#probation_end_date',         { position: 'bl', ...datepickerConfig });
@@ -798,6 +828,27 @@
         datepicker('#date_of_birth',              { position: 'bl', maxDate: new Date(), ...datepickerConfig });
         datepicker('#internship_end_date',        { position: 'bl', ...datepickerConfig });
         datepicker('#contract_end_date',          { position: 'bl', ...datepickerConfig });
+
+        // ── EMPLOYEE TYPE (Saudi / Expat) ─────────────────────
+        function toggleEmployeeTypeFields() {
+            var isSaudi = $('#employee_type').val() === 'saudi';
+
+            $('.expat-only-field').toggleClass('d-none', isSaudi);
+            $('.expat-only-field').find('input, select, textarea').prop('disabled', isSaudi);
+
+            $('.saudi-only-field').toggleClass('d-none', !isSaudi);
+            $('.saudi-only-field').find('input, select, textarea').prop('disabled', !isSaudi);
+
+            $('#iqama_no, #iqama_profession').prop('required', !isSaudi);
+            $('#national_id').prop('required', isSaudi);
+
+            // Passport is required for expats, optional for Saudis.
+            $('#passport_no').prop('required', !isSaudi);
+            $('label[for="passport_no"] sup').toggle(!isSaudi);
+        }
+
+        $('#employee_type').change(toggleEmployeeTypeFields);
+        toggleEmployeeTypeFields();
 
         // ── MARITAL STATUS ────────────────────────────────────
         $('#marital_status').change(function() {

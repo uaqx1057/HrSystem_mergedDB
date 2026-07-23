@@ -94,7 +94,7 @@ class MigrateDriverDocuments extends Command
         $this->isDryRun = (bool) $this->option('dry-run');
         $only = $this->option('only');
 
-        $this->sharedRoot   = rtrim(env('DRIVER_DOCUMENT_PATH'), '/\\');
+        $this->sharedRoot   = rtrim((string) config('filesystems.disks.driver_documents.root'), '/\\');
         // user-uploads/ lives inside public/, not at the project root
         $this->hrLegacyRoot  = rtrim(public_path('user-uploads'), '/\\');
         $this->dmsLegacyRoot = rtrim(storage_path('app/public'), '/\\');

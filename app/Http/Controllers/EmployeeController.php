@@ -1282,9 +1282,20 @@ class EmployeeController extends AccountBaseController
         $employee->employee_id = $request->employee_id;
         $employee->address = $request->address;
         $employee->slack_username = $request->slack_username;
+        $employee->employee_type = $request->employee_type === 'saudi' ? 'saudi' : 'expat';
         $employee->iqama_no = $request->iqama_no;
         $employee->iqama_designation = $request->iqama_designation;
         $employee->iqama_profession = $request->iqama_profession;
+
+        $employee->national_id = $request->national_id;
+        $employee->national_id_expiry_date = $request->national_id_expiry_date
+            ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->national_id_expiry_date)->format('Y-m-d')
+            : null;
+
+        if ($request->hasFile('national_id_image')) {
+            Files::deleteFile($employee->national_id_image, 'national_id');
+            $employee->national_id_image = Files::uploadLocalOrS3($request->national_id_image, 'national_id');
+        }
 
         $employee->basic_salary = $request->basic_salary;
         $employee->vehicle_allocation = $request->vehicle_allocation;
@@ -1553,8 +1564,8 @@ class EmployeeController extends AccountBaseController
         });
 
         $systemUrl = $system === 'dms'
-            ? env('DMS_URL', 'https://dms.speedlogi.sa')
-            : env('DOBS_URL', 'https://dobs.speedlogi.sa');
+            ? config('services.sso.dms_url')
+            : config('services.sso.dobs_url');
 
         try {
             $hrUser->notify(new \App\Notifications\SystemAccessGranted($system, $request->role, $systemUrl));

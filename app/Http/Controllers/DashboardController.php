@@ -279,7 +279,7 @@ class DashboardController extends AccountBaseController
                 $tasks = Task::with('boardColumn')
                     ->where('board_column_id', '<>', $completedTaskColumn->id)
                     ->whereHas('users', function ($query) {
-                        $query->where('user_id', user()->id);
+                        $query->where('task_users.user_id', user()->id);
                     })
                     ->where(function ($q) use ($startDate, $endDate) {
                         $q->whereBetween(DB::raw('DATE(tasks.`due_date`)'), [$startDate->toDateString(), $endDate->toDateString()]);

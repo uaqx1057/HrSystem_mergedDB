@@ -9,6 +9,8 @@ return array(
     'password' => '********',
     'iqama' => '1234567890',
     'iqama_expiry_date' => 'Iqama Expiry Date',
+    'national_id' => '1234567890',
+    'national_id_expiry_date' => 'National ID Expiry Date',
     'sponsor_kafala' => 'John Doe',
     'iqama_designation' => 'Iqama Designation',
     'iqama_profession' => 'Iqama profssion',

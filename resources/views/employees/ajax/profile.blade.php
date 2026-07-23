@@ -272,31 +272,59 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                         @if ($showFullProfile)
                             <x-cards.data :title="__('modules.employees.iqamaPassportInfo')" class="mt-4">
 
-                                {{-- IQAMA --}}
-                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.Iqama No')"
-                                    :value="$employee->employeeDetail->iqama_no ?? '--'" />
+                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.employeeType')"
+                                    :value="($employee->employeeDetail->employee_type ?? 'expat') === 'saudi' ? __('modules.employees.saudi') : __('modules.employees.expat')" />
+
+                                @if (($employee->employeeDetail->employee_type ?? 'expat') === 'saudi')
+                                    {{-- NATIONAL ID --}}
+                                    <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.national_id')"
+                                        :value="$employee->employeeDetail->national_id ?? '--'" />
+
+                                    <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.national_id_expiry_date')"
+                                        :value="$employee->employeeDetail->national_id_expiry_date
+                                            ? \Carbon\Carbon::parse($employee->employeeDetail->national_id_expiry_date)->translatedFormat(company()->date_format)
+                                            : '--'" />
+
+                                    @if ($employee->employeeDetail->national_id_image)
+                                        <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
+                                            <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                                                @lang('modules.employees.national_id_image')</p>
+                                            <p class="mb-0 text-dark-grey f-14 w-70">
+                                                <a href="{{ asset('user-uploads/national_id/' . $employee->employeeDetail->national_id_image) }}"
+                                                   target="_blank">
+                                                    <img src="{{ asset('user-uploads/national_id/' . $employee->employeeDetail->national_id_image) }}"
+                                                         style="max-width:120px; max-height:80px; object-fit:cover; border-radius:4px;">
+                                                </a>
+                                            </p>
+                                        </div>
+                                    @endif
+                                @else
+                                    {{-- IQAMA --}}
+                                    <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.Iqama No')"
+                                        :value="$employee->employeeDetail->iqama_no ?? '--'" />
 
 
-                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.iqama_profession')"
-                                    :value="$employee->employeeDetail->iqama_profession ?? '--'" />
+                                    <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.iqama_profession')"
+                                        :value="$employee->employeeDetail->iqama_profession ?? '--'" />
 
-                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.iqama_expiry_date')"
-                                    :value="$employee->employeeDetail->iqama_expiry_date
-                                        ? \Carbon\Carbon::parse($employee->employeeDetail->iqama_expiry_date)->translatedFormat(company()->date_format)
-                                        : '--'" />
+                                    <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.iqama_expiry_date')"
+                                        :value="$employee->employeeDetail->iqama_expiry_date
+                                            ? \Carbon\Carbon::parse($employee->employeeDetail->iqama_expiry_date)->translatedFormat(company()->date_format)
+                                            : '--'" />
 
-                                @if ($employee->employeeDetail->iqama_image)
-                                    <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
-                                        <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
-                                            @lang('modules.employees.iqama_image')</p>
-                                        <p class="mb-0 text-dark-grey f-14 w-70">
-                                            <a href="{{ asset('user-uploads/iqama/' . $employee->employeeDetail->iqama_image) }}"
-                                               target="_blank">
-                                                <img src="{{ asset('user-uploads/iqama/' . $employee->employeeDetail->iqama_image) }}"
-                                                     style="max-width:120px; max-height:80px; object-fit:cover; border-radius:4px;">
-                                            </a>
-                                        </p>
-                                    </div>
+                                    @if ($employee->employeeDetail->iqama_image)
+                                        <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
+                                            <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                                                @lang('modules.employees.iqama_image')</p>
+                                            <p class="mb-0 text-dark-grey f-14 w-70">
+                                                <a href="{{ asset('user-uploads/iqama/' . $employee->employeeDetail->iqama_image) }}"
+                                                   target="_blank">
+                                                    <img src="{{ asset('user-uploads/iqama/' . $employee->employeeDetail->iqama_image) }}"
+                                                         style="max-width:120px; max-height:80px; object-fit:cover; border-radius:4px;">
+                                                </a>
+                                            </p>
+                                        </div>
+                                    @endif
                                 @endif
 
                                 {{-- PASSPORT --}}
@@ -322,14 +350,16 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                     </div>
                                 @endif
 
-                                {{-- SPONSOR --}}
-                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.Sponsor / kafala')"
-                                    :value="$employee->employeeDetail->sponsor_kafala ?? '--'" />
+                                @if (($employee->employeeDetail->employee_type ?? 'expat') !== 'saudi')
+                                    {{-- SPONSOR --}}
+                                    <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.Sponsor / kafala')"
+                                        :value="$employee->employeeDetail->sponsor_kafala ?? '--'" />
 
-                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.sponsorship_transfer_date')"
-                                    :value="$employee->employeeDetail->sponsorship_transfer_date
-                                        ? \Carbon\Carbon::parse($employee->employeeDetail->sponsorship_transfer_date)->translatedFormat(company()->date_format)
-                                        : '--'" />
+                                    <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.sponsorship_transfer_date')"
+                                        :value="$employee->employeeDetail->sponsorship_transfer_date
+                                            ? \Carbon\Carbon::parse($employee->employeeDetail->sponsorship_transfer_date)->translatedFormat(company()->date_format)
+                                            : '--'" />
+                                @endif
 
                             </x-cards.data>
 

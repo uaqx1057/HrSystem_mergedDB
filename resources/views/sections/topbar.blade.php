@@ -551,8 +551,22 @@
     }
 
     function deleteGoogleTranslateCookie() {
-        document.cookie = 'googtrans=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT';
-        document.cookie = 'googtrans=;path=/;domain=' + window.location.hostname + ';expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        const hostname = window.location.hostname;
+        const hostParts = hostname.split('.');
+        const domains = ['', hostname, '.' + hostname];
+
+        // Google's widget sometimes sets the cookie against the parent registrable
+        // domain (e.g. ".speedlogi.sa") instead of the exact subdomain, so a delete
+        // that only targets the current hostname silently fails to clear it and the
+        // stale cookie re-translates the page back to Arabic on the next load.
+        if (hostParts.length > 2) {
+            domains.push('.' + hostParts.slice(-2).join('.'));
+        }
+
+        domains.forEach(function (domain) {
+            const domainAttr = domain ? ';domain=' + domain : '';
+            document.cookie = 'googtrans=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT' + domainAttr;
+        });
     }
 
     function setGoogleTranslateLanguage(lang) {
@@ -560,19 +574,12 @@
         // (Google's own translated-rtl class is stripped by the observer below.)
         applyRtlClass(lang);
 
-        const combo = document.querySelector('#google_translate_element select.goog-te-combo');
-
         if (lang === 'en') {
-            // To revert to the original language we must DELETE the googtrans cookie.
-            // Setting it to /en/en is ignored by Google and the page stays translated.
+            // Resetting the combo to an empty value does NOT revert already-translated
+            // text (there is no "original language" entry in Google's dropdown) - only
+            // a real reload with the googtrans cookie gone restores the source markup.
             deleteGoogleTranslateCookie();
-
-            if (combo) {
-                combo.value = '';
-                combo.dispatchEvent(new Event('change'));
-            } else {
-                window.location.reload();
-            }
+            window.location.reload();
             return;
         }
 
@@ -580,6 +587,7 @@
         document.cookie = 'googtrans=' + cookieValue + ';path=/';
         document.cookie = 'googtrans=' + cookieValue + ';path=/;domain=' + window.location.hostname;
 
+        const combo = document.querySelector('#google_translate_element select.goog-te-combo');
         if (combo) {
             combo.value = lang;
             combo.dispatchEvent(new Event('change'));
@@ -603,7 +611,9 @@
             '.goog-te-spinner-pos',
             '.goog-te-banner-frame',
             '#goog-gt-tt',
-            '.goog-te-balloon-frame'
+            '.goog-te-balloon-frame',
+            '.goog-te-gadget-icon',
+            '.goog-te-ftab'
         ];
         selectors.forEach(sel => {
             document.querySelectorAll(sel).forEach(el => el.remove());

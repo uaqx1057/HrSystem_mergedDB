@@ -36,6 +36,7 @@ class StoreRequest extends CoreRequest
         $setting = company();
         $rules = [
             'employee_id' => 'required|unique:employee_details,employee_id,null,id,company_id,' . company()->id.'|max:100',
+            'employee_type' => 'required|in:saudi,expat',
             'name' => 'required|max:50',
             'email' => 'required|email:rfc|unique:users,email,null,id,company_id,' . company()->id.'|max:100|check_superadmin',
             'slack_username' => 'nullable|unique:employee_details,slack_username,null,id,company_id,' . company()->id.'|max:30',

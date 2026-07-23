@@ -34,8 +34,39 @@ return [
     'square' => [
         'application_id' => env('SQUARE_APPLICATION_ID'),
         'access_token' => env('SQUARE_ACCESS_TOKEN'),
-        'location_id' => env('SQUARE_ACCESS_TOKEN'),
+        'location_id' => env('SQUARE_LOCATION_ID'),
         'environment' => env('SQUARE_ENVIRONMENT', 'sandbox'),
+    ],
+
+    'paystack' => [
+        'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+        'secret_key' => env('PAYSTACK_SECRET_KEY'),
+        'merchant_email' => env('MERCHANT_EMAIL'),
+        'payment_url' => env('PAYSTACK_PAYMENT_URL'),
+    ],
+
+    'currency_converter' => [
+        'key' => env('CURRENCY_CONVERTER_KEY'),
+    ],
+
+    'facebook' => [
+        'client_id' => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+    ],
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+    ],
+
+    'twitter' => [
+        'client_id' => env('TWITTER_CLIENT_ID'),
+        'client_secret' => env('TWITTER_CLIENT_SECRET'),
+    ],
+
+    'linkedin' => [
+        'client_id' => env('LINKEDIN_CLIENT_ID'),
+        'client_secret' => env('LINKEDIN_CLIENT_SECRET'),
     ],
 
     'ses' => [
@@ -74,5 +105,11 @@ return [
     'onesignal' => [
         'app_id' => 'YOUR-APP-ID-HERE',
         'rest_api_key' => 'YOUR-REST-API-KEY-HERE',
+    ],
+
+    'sso' => [
+        'dms_url'  => env('DMS_URL', 'https://dms.speedlogi.sa'),
+        'dobs_url' => env('DOBS_URL', 'https://dobs.speedlogi.sa'),
+        'hr_url'   => env('HR_URL', 'https://hr.speedlogi.sa'),
     ],
 ];
