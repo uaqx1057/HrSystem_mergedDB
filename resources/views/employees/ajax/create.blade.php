@@ -412,7 +412,7 @@
                                     @endforeach
                                 </x-forms.select>
                                 <input type="tel" class="form-control height-35 f-14" placeholder="@lang('placeholders.mobile')"
-                                    name="mobile" id="mobile">
+                                    name="mobile" id="mobile" value="{{ $candidate?->mobile ?? '' }}">
                             </x-forms.input-group>
                         </div>
                         <div class="col-lg-3 col-md-6">
