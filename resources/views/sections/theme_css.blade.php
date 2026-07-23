@@ -85,9 +85,9 @@
     }
 
     .project-header .project-menu .p-sub-menu.active {
-        color: {{ !user()->dark_theme ? 'white' : 'white' }};
+        color: {{ !user()?->dark_theme ? 'white' : 'white' }};
 
-        background: @if (!user()->dark_theme)
+        background: @if (!user()?->dark_theme)
             var(--header_color);
         @else
             white;
@@ -97,9 +97,9 @@
     }
 
     .form-heading-background {
-        color: {{ !user()->dark_theme ? 'white' : 'white' }};
+        color: {{ !user()?->dark_theme ? 'white' : 'white' }};
 
-        background: @if (!user()->dark_theme)
+        background: @if (!user()?->dark_theme)
             linear-gradient(135deg, {{ $themeColor ?? 'var(--header_color)' }}, color-mix(in srgb, var(--header_color) 80%, black 20%));
 
         @else
@@ -108,9 +108,9 @@
     }
 
     table.dataTable thead th {
-        color: {{ !user()->dark_theme ? 'white' : '' }};
+        color: {{ !user()?->dark_theme ? 'white' : '' }};
 
-    background: @if (!user()->dark_theme)
+    background: @if (!user()?->dark_theme)
         #246A45;
 
     @else
@@ -118,7 +118,7 @@
     @endif
 
     .light-theme-white-color {
-        color: {{ !user()->dark_theme ? 'white' : '' }};
+        color: {{ !user()?->dark_theme ? 'white' : '' }};
     }
 }
 </style>

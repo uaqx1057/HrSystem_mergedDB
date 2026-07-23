@@ -246,7 +246,7 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     // employee routes
     Route::post('employees/apply-quick-action', [EmployeeController::class, 'applyQuickAction'])->name('employees.apply_quick_action');
     Route::post('employees/assignRole', [EmployeeController::class, 'assignRole'])->name('employees.assign_role');
-    Route::get('employees/byDepartment/{id}', [EmployeeController::class, 'byDepartment'])->name('employees.by_department');
+    Route::get('employees/byDepartment/{id}/{permission?}', [EmployeeController::class, 'byDepartment'])->name('employees.by_department');
     Route::get('employees/invite-member', [EmployeeController::class, 'inviteMember'])->name('employees.invite_member');
     Route::get('employees/import', [EmployeeController::class, 'importMember'])->name('employees.import');
     Route::post('employees/import', [EmployeeController::class, 'importStore'])->name('employees.import.store');

@@ -200,7 +200,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                         ? \Carbon\Carbon::parse($employee->employeeDetail->probation_end_date)->translatedFormat(company()->date_format)
                                         : '--'" />
 
-                                <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.noticePeriodStartDate')"
+                                {{-- <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.noticePeriodStartDate')"
                                     :value="$employee->employeeDetail->notice_period_start_date
                                         ? \Carbon\Carbon::parse($employee->employeeDetail->notice_period_start_date)->translatedFormat(company()->date_format)
                                         : '--'" />
@@ -208,7 +208,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.noticePeriodEndDate')"
                                     :value="$employee->employeeDetail->notice_period_end_date
                                         ? \Carbon\Carbon::parse($employee->employeeDetail->notice_period_end_date)->translatedFormat(company()->date_format)
-                                        : '--'" />
+                                        : '--'" /> --}}
 
                                 <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.maritalStatus')"
                                     :value="$storedMaritalStatus ? ucfirst($storedMaritalStatus) : '--'" />

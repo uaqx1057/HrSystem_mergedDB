@@ -1132,12 +1132,16 @@ class EmployeeController extends AccountBaseController
         return $data;
     }
 
-    public function byDepartment($id)
+    public function byDepartment($id, $permission = null)
     {
         $users = User::join('employee_details', 'employee_details.user_id', '=', 'users.id');
 
         if ($id != 0) {
             $users = $users->where('employee_details.department_id', $id);
+        }
+
+        if ($permission && $permission == 'branch' && user()->branch_id !== 6) {
+            $users = $users->where('users.branch_id', user()->branch_id);
         }
 
         $users = $users->select('users.*')->get();

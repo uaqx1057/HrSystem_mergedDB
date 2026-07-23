@@ -711,18 +711,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                 :fieldValue="$employee->employeeDetail->probation_end_date ? Carbon\Carbon::parse($employee->employeeDetail->probation_end_date)->format(company()->date_format) : ''"
                                 :popover="__('messages.probationEndDate')"/>
                         </div>
-                        <div class="col-lg-3 col-md-4">
-                            <x-forms.datepicker fieldId="notice_period_start_date" :fieldLabel="__('modules.employees.noticePeriodStartDate')"
-                                fieldName="notice_period_start_date" :fieldPlaceholder="__('placeholders.date')"
-                                :fieldValue="$employee->employeeDetail->notice_period_start_date ? Carbon\Carbon::parse($employee->employeeDetail->notice_period_start_date)->format(company()->date_format) : ''"
-                                :popover="__('messages.noticePeriodStartDate')"/>
-                        </div>
-                        <div class="col-lg-3 col-md-4">
-                            <x-forms.datepicker fieldId="notice_period_end_date" :fieldLabel="__('modules.employees.noticePeriodEndDate')"
-                                fieldName="notice_period_end_date" :fieldPlaceholder="__('placeholders.date')"
-                                :fieldValue="$employee->employeeDetail->notice_period_end_date ? Carbon\Carbon::parse($employee->employeeDetail->notice_period_end_date)->format(company()->date_format) : ''"
-                                :popover="__('messages.noticePeriodEndDate')"/>
-                        </div>
+                        
                         <div class="col-lg-3 col-md-4">
                             <x-forms.select fieldId="employment_type" :fieldLabel="__('modules.employees.employmentType')"
                                 fieldName="employment_type">
@@ -915,8 +904,7 @@ $(document).ready(function () {
 
     ['joining_date', 'iqama_expiry_date', 'national_id_expiry_date', 'passport_expiry_date',
     'sponsorship_transfer_date', 'date_of_birth', 'probation_end_date',
-    'notice_period_start_date', 'notice_period_end_date', 'internship_end_date',
-    'contract_end_date'
+    'notice_period_start_date','contract_end_date'
     ].forEach(lockDateField);
     // ── MULTISTEP NAVIGATION ──────────────────────────────
     var currentStep = 1;
@@ -1085,8 +1073,6 @@ $(document).ready(function () {
     });
 
     datepicker('#probation_end_date',       { position: 'bl', ...datepickerConfig });
-    datepicker('#notice_period_start_date', { position: 'bl', ...datepickerConfig });
-    datepicker('#notice_period_end_date',   { position: 'bl', ...datepickerConfig });
     datepicker('#internship_end_date',      { position: 'bl', ...datepickerConfig });
     datepicker('#contract_end_date',        { position: 'bl', ...datepickerConfig });
 

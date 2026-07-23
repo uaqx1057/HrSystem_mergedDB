@@ -449,6 +449,10 @@ class EmployeeShiftScheduleController extends AccountBaseController
 
     public function create()
     {
+        $this->manageEmployeeShifts = user()->permission('manage_employee_shifts');
+
+        abort_403(!($this->manageEmployeeShifts == 'all' || $this->manageEmployeeShifts == 'branch'));
+
         $this->employees = User::allEmployees(null, true, 'all');
         $this->departments = Team::all();
         $this->employeeShifts = EmployeeShift::all();

@@ -602,14 +602,7 @@
                             <x-forms.datepicker fieldId="probation_end_date" :fieldLabel="__('modules.employees.probationEndDate')"
                                 fieldName="probation_end_date" :fieldPlaceholder="__('placeholders.date')" :popover="__('messages.probationEndDate')" />
                         </div>
-                        <div class="col-lg-3 col-md-6">
-                            <x-forms.datepicker fieldId="notice_period_start_date" :fieldLabel="__('modules.employees.noticePeriodStartDate')"
-                                fieldName="notice_period_start_date" :fieldPlaceholder="__('placeholders.date')" :popover="__('messages.noticePeriodStartDate')" />
-                        </div>
-                        <div class="col-lg-3 col-md-6">
-                            <x-forms.datepicker fieldId="notice_period_end_date" :fieldLabel="__('modules.employees.noticePeriodEndDate')"
-                                fieldName="notice_period_end_date" :fieldPlaceholder="__('placeholders.date')" :popover="__('messages.noticePeriodEndDate')" />
-                        </div>
+                        
                         <div class="col-lg-3 col-md-6">
                             <x-forms.select fieldId="employment_type" :fieldLabel="__('modules.employees.employmentType')" fieldName="employment_type"
                                 :fieldPlaceholder="__('placeholders.date')">
@@ -736,8 +729,7 @@
         }
 
         ['iqama_expiry_date', 'national_id_expiry_date', 'passport_expiry_date', 'joining_date',
-        'probation_end_date', 'notice_period_start_date', 'notice_period_end_date',
-        'date_of_birth', 'internship_end_date', 'contract_end_date'
+        'probation_end_date', 'date_of_birth', 'internship_end_date', 'contract_end_date'
         ].forEach(lockDateField);
         // ── MULTISTEP NAVIGATION ──────────────────────────────
         var currentStep = 1;
@@ -876,8 +868,6 @@
         datepicker('#passport_expiry_date',       { position: 'bl', ...datepickerConfig });
         datepicker('#joining_date',               { position: 'bl', ...datepickerConfig });
         datepicker('#probation_end_date',         { position: 'bl', ...datepickerConfig });
-        datepicker('#notice_period_start_date',   { position: 'bl', ...datepickerConfig });
-        datepicker('#notice_period_end_date',     { position: 'bl', ...datepickerConfig });
         datepicker('#date_of_birth',              { position: 'bl', maxDate: new Date(), ...datepickerConfig });
         datepicker('#internship_end_date',        { position: 'bl', ...datepickerConfig });
         datepicker('#contract_end_date',          { position: 'bl', ...datepickerConfig });

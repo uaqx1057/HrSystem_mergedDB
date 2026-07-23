@@ -214,10 +214,13 @@
             showMeridian: (company.time_format == 'H:i' ? false : true)
         });
 
+        var addPermission = "{{ $addPermission }}";
+
         $('#department_id').change(function() {
             var id = $(this).val();
-            var url = "{{ route('employees.by_department', ':id') }}";
+            var url = "{{ route('employees.by_department', ['id' => ':id', 'permission' => ':permission']) }}";
             url = url.replace(':id', id);
+            url = url.replace(':permission', addPermission);
 
             $.easyAjax({
                 url: url,
