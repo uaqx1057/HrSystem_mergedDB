@@ -25,6 +25,9 @@ php artisan queue:restart
 ## Smoke test
 
 1. HR admin: open `/hr-worklist`, `/hr-lifecycle`, `/hr-compliance`, and `/hr-candidates`.
+2. Finance user: open the Finance dashboard and verify the Payroll worklist shortcut; confirm a salary-slip action is blocked until the selected period's preflight is approved.
+3. Employee: open the employee dashboard, submit an HR request, and verify the pending count/link; confirm the employee cannot view another employee's attachment.
+4. IT admin: open `/hr-role-worklists/it` and verify pending DMS/DOBS revocation tasks are limited to the current company.
 2. Manager: create a dated leave delegation; verify the delegate can act only for direct reports.
 3. Employee: submit an attendance exception, self-service request, and asset acknowledgement.
 4. Payroll admin: open `/hr-payroll-preflight`, approve the current period, then create one employee salary slip.
@@ -47,7 +50,7 @@ On a development machine with PHP ZIP enabled, run the focused HR unit checks wi
 
 ```powershell
 $env:DB_CONNECTION='sqlite'; $env:DB_DATABASE=':memory:'
-php -d extension=zip vendor/phpunit/phpunit/phpunit tests/Unit/HrAccessTest.php tests/Unit/EmployeeLifecycleTest.php --testdox
+php -d extension=zip vendor/phpunit/phpunit/phpunit tests/Unit/HrAccessTest.php tests/Unit/EmployeeLifecycleTest.php tests/Unit/HrWorkflowRouteTest.php --testdox
 ```
 
 Feature tests require a disposable MySQL test database. The historic migration set is not SQLite-compatible, so do not use SQLite migration failures as a production readiness signal.
