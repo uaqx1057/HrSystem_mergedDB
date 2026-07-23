@@ -896,6 +896,17 @@ class LeaveController extends AccountBaseController
 
     public function leaveStore($leave, $request)
     {
+        // In pre-approve mode the employee's manager (or a dated delegate)
+        // records the first stage only. A branch/all HR approver completes it.
+        if ($request->action === 'approved'
+            && LeaveSetting::value('manager_permission') === 'pre-approve'
+            && HrAccess::canActAsLeaveManager(user(), $leave->user)) {
+            $leave->manager_status_permission = 'pre-approve';
+            $leave->save();
+
+            return;
+        }
+
         $leave->status = $request->action;
 
         if (isset($request->approveReason)) {
