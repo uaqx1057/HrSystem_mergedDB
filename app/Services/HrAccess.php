@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\EmployeeDetails;
 use App\Models\HrAccessScope;
+use App\Models\HrLeaveApproverDelegation;
 use App\Models\Leave;
 use App\Models\User;
 
@@ -51,6 +52,21 @@ final class HrAccess
         return $detail && (int) $detail->reporting_to === (int) $actor->id;
     }
 
+    public static function isDelegatedLeaveApprover(User $actor, User $employee): bool
+    {
+        $detail = $employee->relationLoaded('employeeDetail') ? $employee->employeeDetail : EmployeeDetails::where('user_id', $employee->id)->first();
+
+        return $detail && $detail->reporting_to && HrLeaveApproverDelegation::query()
+            ->where('company_id', $employee->company_id)->where('manager_id', $detail->reporting_to)
+            ->where('delegate_id', $actor->id)->where('is_active', true)
+            ->whereDate('starts_at', '<=', today())->whereDate('ends_at', '>=', today())->exists();
+    }
+
+    public static function canActAsLeaveManager(User $actor, User $employee): bool
+    {
+        return self::isDirectManager($actor, $employee) || self::isDelegatedLeaveApprover($actor, $employee);
+    }
+
     public static function canAccessLeave(User $actor, Leave $leave, string|bool $permission, bool $allowDirectManager = true): bool
     {
         $employee = $leave->relationLoaded('user') ? $leave->user : $leave->user()->first();
@@ -79,7 +95,7 @@ final class HrAccess
             return true;
         }
 
-        return $allowDirectManager && self::isDirectManager($actor, $employee);
+        return $allowDirectManager && self::canActAsLeaveManager($actor, $employee);
     }
 
     public static function canApproveLeave(User $actor, Leave $leave, string|bool $permission): bool
@@ -94,7 +110,7 @@ final class HrAccess
             return false;
         }
 
-        if (self::isDirectManager($actor, $employee)) {
+        if (self::canActAsLeaveManager($actor, $employee)) {
             return true;
         }
 

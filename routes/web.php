@@ -625,6 +625,9 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::resource('leave-files', LeaveFileController::class);
 
     /* LEAVES */
+    Route::get('hr-leave-delegations', [\App\Http\Controllers\HrLeaveDelegationController::class, 'index'])->name('hr-leave-delegations.index');
+    Route::post('hr-leave-delegations', [\App\Http\Controllers\HrLeaveDelegationController::class, 'store'])->name('hr-leave-delegations.store');
+    Route::post('hr-leave-delegations/{delegation}/revoke', [\App\Http\Controllers\HrLeaveDelegationController::class, 'revoke'])->name('hr-leave-delegations.revoke');
     Route::get('leaves/leaves-date', [LeaveController::class, 'getDate'])->name('leaves.date');
     Route::get('leaves/personal', [LeaveController::class, 'personalLeaves'])->name('leaves.personal');
     Route::get('leaves/calendar', [LeaveController::class, 'leaveCalendar'])->name('leaves.calendar');
