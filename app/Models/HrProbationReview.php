@@ -1,0 +1,1 @@
+<?php namespace App\Models; class HrProbationReview extends BaseModel{protected $table='hr_probation_reviews';protected $guarded=['id'];protected $casts=['due_date'=>'date'];public function employee(){return $this->belongsTo(User::class,'employee_id');}}

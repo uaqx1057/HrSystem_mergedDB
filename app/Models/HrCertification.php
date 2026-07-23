@@ -1,0 +1,1 @@
+<?php namespace App\Models; class HrCertification extends BaseModel{protected $table='hr_certifications';protected $guarded=['id'];protected $casts=['expires_at'=>'date'];public function employee(){return $this->belongsTo(User::class,'employee_id');}}
