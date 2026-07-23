@@ -258,6 +258,13 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('employees/create-link', [EmployeeController::class, 'createLink'])->name('employees.create_link');
     Route::post('employees/change-password', [EmployeeController::class, 'changePassword'])->name('employees.change-password');
     Route::post('employees/{id}/save-step', [EmployeeController::class, 'saveStep'])->name('employees.save_step');
+    Route::get('hr-lifecycle/employees/{employee}', [\App\Http\Controllers\HrLifecycleController::class, 'show'])->name('hr-lifecycle.show');
+    Route::post('hr-lifecycle/employees/{employee}/onboarding', [\App\Http\Controllers\HrLifecycleController::class, 'startOnboarding'])->name('hr-lifecycle.onboarding.start');
+    Route::post('hr-lifecycle/employees/{employee}/offboarding', [\App\Http\Controllers\HrLifecycleController::class, 'startOffboarding'])->name('hr-lifecycle.offboarding.start');
+    Route::post('hr-lifecycle/tasks/{type}/{task}/status', [\App\Http\Controllers\HrLifecycleController::class, 'updateTask'])->name('hr-lifecycle.tasks.update');
+    Route::post('hr-lifecycle/employees/{employee}/transfers', [\App\Http\Controllers\HrLifecycleController::class, 'requestTransfer'])->name('hr-lifecycle.transfer.request');
+    Route::post('hr-lifecycle/transfers/{transfer}/approve', [\App\Http\Controllers\HrLifecycleController::class, 'approveTransfer'])->name('hr-lifecycle.transfer.approve');
+    Route::post('hr-lifecycle/transfers/{transfer}/apply', [\App\Http\Controllers\HrLifecycleController::class, 'applyTransfer'])->name('hr-lifecycle.transfer.apply');
     Route::resource('employees', EmployeeController::class);
 
     Route::post('employees/{id}/grant-system-access',  [EmployeeController::class, 'grantSystemAccess'])->name('employees.grant_system_access');

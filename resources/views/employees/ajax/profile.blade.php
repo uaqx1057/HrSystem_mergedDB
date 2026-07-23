@@ -55,7 +55,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                         <div class="card-body py-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <strong>Employee lifecycle</strong>
-                                <span class="badge badge-{{ $employeeLifecycle['percentage'] === 100 ? 'success' : 'warning' }}">{{ $employeeLifecycle['percentage'] }}% complete</span>
+                                <span><span class="badge badge-{{ $employeeLifecycle['percentage'] === 100 ? 'success' : 'warning' }}">{{ $employeeLifecycle['percentage'] }}% complete</span> <a class="ml-2" href="{{ route('hr-lifecycle.show', $employee->id) }}">Manage</a></span>
                             </div>
                             <div class="progress mb-2" style="height: 8px;"><div class="progress-bar" role="progressbar" style="width: {{ $employeeLifecycle['percentage'] }}%"></div></div>
                             @if ($employeeLifecycle['missing']->isNotEmpty())
