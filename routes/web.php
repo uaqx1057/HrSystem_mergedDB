@@ -257,6 +257,7 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('employees/send-invite', [EmployeeController::class, 'sendInvite'])->name('employees.send_invite');
     Route::post('employees/create-link', [EmployeeController::class, 'createLink'])->name('employees.create_link');
     Route::post('employees/change-password', [EmployeeController::class, 'changePassword'])->name('employees.change-password');
+    Route::post('employees/{id}/save-step', [EmployeeController::class, 'saveStep'])->name('employees.save_step');
     Route::resource('employees', EmployeeController::class);
 
     Route::post('employees/{id}/grant-system-access',  [EmployeeController::class, 'grantSystemAccess'])->name('employees.grant_system_access');

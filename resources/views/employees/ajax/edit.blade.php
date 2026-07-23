@@ -260,6 +260,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                     <div class="ms-nav-buttons">
                         <div class="left-btns"></div>
                         <div class="right-btns">
+                            <button type="button" class="btn btn-outline-primary save-step-btn" data-step="1"><i class="fa fa-save"></i> Save this step</button>
                             <button type="button" class="btn btn-primary ms-next-btn" data-next="2">
                                 @lang('app.next') &nbsp;<i class="fa fa-arrow-right"></i>
                             </button>
@@ -391,6 +392,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </button>
                         </div>
                         <div class="right-btns">
+                            <button type="button" class="btn btn-outline-primary save-step-btn" data-step="2"><i class="fa fa-save"></i> Save this step</button>
                             <button type="button" class="btn btn-primary ms-next-btn" data-next="3">
                                 @lang('app.next') &nbsp;<i class="fa fa-arrow-right"></i>
                             </button>
@@ -545,6 +547,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </button>
                         </div>
                         <div class="right-btns">
+                            <button type="button" class="btn btn-outline-primary save-step-btn" data-step="3"><i class="fa fa-save"></i> Save this step</button>
                             <button type="button" class="btn btn-primary ms-next-btn" data-next="4">
                                 @lang('app.next') &nbsp;<i class="fa fa-arrow-right"></i>
                             </button>
@@ -762,6 +765,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </button>
                         </div>
                         <div class="right-btns">
+                            <button type="button" class="btn btn-outline-primary save-step-btn" data-step="4"><i class="fa fa-save"></i> Save this step</button>
                             <button type="button" class="btn btn-primary ms-next-btn" data-next="5">
                                 @lang('app.next') &nbsp;<i class="fa fa-arrow-right"></i>
                             </button>
@@ -814,6 +818,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </button>
                         </div>
                         <div class="right-btns">
+                            <button type="button" class="btn btn-outline-primary save-step-btn" data-step="5"><i class="fa fa-save"></i> Save this step</button>
                             <x-forms.button-primary id="save-form" class="mr-3" icon="check">@lang('app.save')
                             </x-forms.button-primary>
                             <x-forms.button-cancel :link="route('employees.index')" class="border-0">@lang('app.cancel')
@@ -1218,6 +1223,55 @@ $(document).ready(function () {
     }
 
     // ── Save form ─────────────────────────────────────────
+    function stepFormData(step) {
+        var data = new FormData();
+
+        $('#form-step-' + step).find(':input[name]').each(function () {
+            var $input = $(this);
+            if ($input.is(':disabled') || ($input.is(':checkbox, :radio') && !$input.is(':checked'))) return;
+
+            if (this.type === 'file') {
+                if (this.files && this.files[0]) data.append(this.name, this.files[0]);
+                return;
+            }
+
+            data.append(this.name, $input.val());
+        });
+
+        data.append('step', step);
+        if (step === 4) data.append('dependants_present', '1');
+        if (step === 5) data.append('allowances_present', '1');
+        return data;
+    }
+
+    $(document).on('click', '.save-step-btn', function () {
+        var $button = $(this);
+        var step = parseInt($button.data('step'));
+
+        if (step === 4 && !validateDependants()) return;
+        if (step === 5 && !validateAllowances()) return;
+
+        $button.prop('disabled', true);
+        $.ajax({
+            url: "{{ route('employees.save_step', $employee->id) }}",
+            type: 'POST',
+            data: stepFormData(step),
+            contentType: false,
+            processData: false,
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            success: function (response) {
+                if (response.status === 'success') {
+                    Swal.fire({ icon: 'success', text: 'This step has been saved.', toast: true, position: 'top-end', timer: 2500, showConfirmButton: false });
+                }
+            },
+            error: function (xhr) {
+                var message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Unable to save this step. Please check the highlighted fields.';
+                Swal.fire({ icon: 'error', text: message, toast: true, position: 'top-end', timer: 4000, showConfirmButton: false });
+            },
+            complete: function () { $button.prop('disabled', false); }
+        });
+    });
+
     $('#save-form').click(function () {
         if (!validateDependants()) return;
         if (!validateAllowances()) return;

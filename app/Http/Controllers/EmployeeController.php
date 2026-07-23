@@ -593,6 +593,111 @@ class EmployeeController extends AccountBaseController
     }
 
     /**
+     * Persist one section of the edit-employee wizard without requiring the
+     * remaining sections to be valid. This endpoint is not used by create.
+     */
+    public function saveStep(Request $request, $id)
+    {
+        $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
+        $this->authorizeEmployeeStepSave($user);
+
+        $step = (int) $request->input('step');
+        abort_unless(in_array($step, [1, 2, 3, 4, 5], true), 422);
+
+        $employee = EmployeeDetails::firstOrNew(['user_id' => $user->id]);
+        $request->validate($this->employeeStepRules($step, $employee));
+
+        DB::transaction(function () use ($request, $step, $user, $employee) {
+            if ($step === 1) {
+                $user->fill($request->only(['name', 'salutation', 'branch_id']));
+                if ($request->hasFile('image')) {
+                    Files::deleteFile($user->image, 'avatar');
+                    $user->image = Files::uploadLocalOrS3($request->image, 'avatar', 300);
+                }
+                $employee->employee_id = $request->employee_id;
+                $employee->department_id = $request->department;
+                $employee->designation_id = $request->designation;
+            }
+
+            if ($step === 2) {
+                foreach (['employee_type', 'iqama_no', 'iqama_profession', 'national_id', 'transfer_number', 'probation_time', 'passport_no', 'sponsor_kafala'] as $field) {
+                    if ($request->has($field)) $employee->{$field} = $request->input($field);
+                }
+                $this->saveEmployeeStepDates($request, $employee, ['national_id_expiry_date', 'iqama_expiry_date', 'passport_expiry_date', 'sponsorship_transfer_date']);
+                $this->saveEmployeeStepFiles($request, $employee, ['national_id_image' => 'national_id', 'iqama_image' => 'iqama', 'passport_image' => 'passport', 'qiva_contract' => 'contracts', 'company_contract' => 'contracts']);
+            }
+
+            if ($step === 3) {
+                $user->fill($request->only(['mobile', 'country_id', 'country_phonecode', 'gender', 'locale']));
+                foreach (['address', 'about_me', 'reporting_to', 'basic_salary', 'vehicle_allocation'] as $field) {
+                    if ($request->has($field)) $employee->{$field} = $request->input($field);
+                }
+                $this->saveEmployeeStepDates($request, $employee, ['date_of_birth', 'joining_date', 'last_date']);
+            }
+
+            if ($step === 4) {
+                foreach (['login', 'email_notifications', 'telegram_user_id', 'status'] as $field) {
+                    if ($request->has($field) && ($field !== 'login' || $user->id !== user()->id)) $user->{$field} = $request->input($field);
+                }
+                foreach (['slack_username', 'employment_type', 'marital_status', 'no_of_dependants'] as $field) {
+                    if ($request->has($field)) $employee->{$field} = $request->input($field);
+                }
+                $this->saveEmployeeStepDates($request, $employee, ['probation_end_date', 'notice_period_start_date', 'notice_period_end_date', 'internship_end_date', 'contract_end_date']);
+            }
+
+            $user->save();
+            $employee->save();
+
+            if ($step === 4 && $request->boolean('dependants_present')) $this->saveDependants($request, $employee);
+            if ($step === 5 && $request->boolean('allowances_present')) $this->saveAllowances($request, $employee);
+        });
+
+        return Reply::success(__('messages.updateSuccess'));
+    }
+
+    private function authorizeEmployeeStepSave(User $employee): void
+    {
+        $permission = user()->permission('edit_employees');
+        abort_403(!in_array('admin', user_roles()) && $employee->hasRole('admin'));
+        abort_403(!(
+            $permission === 'all'
+            || ($permission === 'added' && optional($employee->employeeDetail)->added_by === user()->id)
+            || ($permission === 'owned' && $employee->id === user()->id)
+            || ($permission === 'both' && ($employee->id === user()->id || optional($employee->employeeDetail)->added_by === user()->id))
+        ));
+    }
+
+    private function employeeStepRules(int $step, EmployeeDetails $employee): array
+    {
+        $date = 'nullable|date_format:"' . $this->company->date_format . '"';
+
+        return match ($step) {
+            1 => ['employee_id' => 'required|max:50|unique:employee_details,employee_id,' . $employee->id . ',id,company_id,' . company()->id, 'name' => 'required|max:50', 'department' => 'required', 'designation' => 'required', 'branch_id' => 'nullable|exists:branches,id', 'image' => 'nullable|image'],
+            2 => ['employee_type' => 'nullable|in:saudi,expat', 'national_id_expiry_date' => $date, 'iqama_expiry_date' => $date, 'passport_expiry_date' => $date, 'sponsorship_transfer_date' => $date, 'transfer_number' => 'nullable|numeric'],
+            3 => ['date_of_birth' => $date, 'joining_date' => $date, 'last_date' => $date, 'basic_salary' => 'nullable|numeric'],
+            4 => ['probation_end_date' => $date, 'notice_period_start_date' => $date, 'notice_period_end_date' => $date, 'internship_end_date' => $date, 'contract_end_date' => $date, 'dependants.*.name' => 'required_with:dependants.*.relation', 'dependants.*.relation' => 'required_with:dependants.*.name', 'dependants.*.date_of_birth' => $date],
+            5 => ['allowances.*.name' => 'required_with:allowances.*.amount', 'allowances.*.amount' => 'required_with:allowances.*.name|numeric|min:0'],
+        };
+    }
+
+    private function saveEmployeeStepDates(Request $request, EmployeeDetails $employee, array $fields): void
+    {
+        foreach ($fields as $field) {
+            if ($request->has($field)) $employee->{$field} = filled($request->input($field)) ? Carbon::createFromFormat($this->company->date_format, $request->input($field))->format('Y-m-d') : null;
+        }
+    }
+
+    private function saveEmployeeStepFiles(Request $request, EmployeeDetails $employee, array $fields): void
+    {
+        foreach ($fields as $field => $directory) {
+            if ($request->hasFile($field)) {
+                Files::deleteFile($employee->{$field}, $directory);
+                $employee->{$field} = Files::uploadLocalOrS3($request->file($field), $directory);
+            }
+        }
+    }
+
+    /**
      * @param int $id
      * @return array
      */
