@@ -40,14 +40,14 @@ $addAttendancePermission = user()->permission('add_attendance');
                                     <span data-toggle="tooltip" data-original-title="@lang('modules.attendance.halfDay')"><i
                                         class="fa fa-star-half-alt text-red"></i></span>
                                 @else
-                                    <a @if ($addAttendancePermission == 'all') href="javascript:;" class="edit-attendance" @endif data-user-id="{{ $userId }}"
+                                    <a @if ($addAttendancePermission == 'all' || $addAttendancePermission == 'branch') href="javascript:;" class="edit-attendance" @endif data-user-id="{{ $userId }}"
                                             data-attendance-date="{{ $key2 }}">
                                         <span data-toggle="tooltip" data-original-title="@lang('modules.attendance.halfDay')"><i
                                                 class="fa fa-star-half-alt text-red"></i></span>
                                     </a>
                                 @endif
                             @elseif ($day == 'Absent')
-                                <a @if ($addAttendancePermission == 'all') href="javascript:;" class="edit-attendance" @endif data-user-id="{{ $userId }}"
+                                <a @if ($addAttendancePermission == 'all' || $addAttendancePermission == 'branch') href="javascript:;" class="edit-attendance" @endif data-user-id="{{ $userId }}"
                                     data-attendance-date="{{ $key2 }}"><i
                                         class="fa fa-times text-lightest"></i></a>
                             @elseif ($day == 'Holiday')

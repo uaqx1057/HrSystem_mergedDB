@@ -60,7 +60,7 @@
                     </li>
                     @endif
 
-                    @if (in_array(user()->permission('manage_employee_salary'), ['all']))
+                    @if (in_array(user()->permission('manage_employee_salary'), ['all', 'branch']))
                     <li>
                         <x-tab :href="route('payroll.index', ['tab' => 'salary-setups'])"
                             :text="__('Salary Setups')"
@@ -109,7 +109,7 @@
 
         @if ($activeTab === 'salary-slips')
             <div class="d-flex justify-content-between align-items-center mb-3">
-                @if (in_array($addPayrollPermission, ['all']))
+                @if (in_array($addPayrollPermission, ['all','branch']))
                 <x-forms.link-primary :link="route('payroll.salary-slips.add')" class="mr-3"
                                           icon="plus">
                     @lang('app.addSalary')
@@ -117,7 +117,7 @@
                 @endif
                 <div>
 
-                    @if (in_array($addPayrollPermission, ['all', 'added']))
+                    @if (in_array($addPayrollPermission, ['all', 'branch']))
                         <form method="POST" action="{{ route('payroll.salary-slips.generate-monthly') }}" class="d-inline">
                             @csrf
                             <button type="submit" class="btn btn-sm btn-outline-success mr-1">Generate Current Month Slips</button>
@@ -309,7 +309,15 @@
                                         <a href="{{ route('payroll.salary-slips.print', $slip->id) }}" target="_blank" class="btn btn-sm btn-primary mr-1">Print</a>
                                         <a href="{{ route('payroll.salary-slips.pdf', $slip->id) }}" class="btn btn-sm btn-primary mr-1">Download PDF</a>
 
-                                        @if (in_array($editPayrollPermission, ['all', 'added']))
+                                        @if (
+                                                $editPayrollPermission == 'all'
+                                                || ($editPayrollPermission == 'branch' && user()->branch_id == 6)
+                                                || ($editPayrollPermission == 'branch' && user()->branch_id == $slip->user->branch_id)
+                                                || ($editPayrollPermission == 'added' && user()->id == $slip->added_by)
+                                                || ($editPayrollPermission == 'owned' && user()->id == $slip->user_id)
+                                                || ($editPayrollPermission == 'both' && (user()->id == $row->user_id
+                                                || user()->id == $row->added_by))
+                                            ) 
                                             <form method="POST" action="{{ route('payroll.salary-slips.update', $slip->id) }}" class="mr-1 d-flex align-items-center salary-slip-update-form">
                                                 @csrf
                                                 @method('PUT')
@@ -349,7 +357,15 @@
                                                 <button type="submit" class="btn btn-sm btn-secondary">Save</button>
                                             </form>
                                         @endif
-                                        @if ($deletePayrollPermission != 'none' && $deletePayrollPermission != 5)
+                                        @if (
+                                                $deletePayrollPermission == 'all'
+                                                || ($deletePayrollPermission == 'branch' && user()->branch_id == 6)
+                                                || ($deletePayrollPermission == 'branch' && user()->branch_id == $slip->user->branch_id)
+                                                || ($deletePayrollPermission == 'added' && user()->id == $slip->added_by)
+                                                || ($deletePayrollPermission == 'owned' && user()->id == $slip->user_id)
+                                                || ($deletePayrollPermission == 'both' && (user()->id == $row->user_id
+                                                || user()->id == $row->added_by))
+                                            ) 
                                             <form method="POST" action="{{ route('payroll.salary-slips.destroy', $slip->id) }}" onsubmit="return confirm('Delete this salary slip?');">
                                                 @csrf
                                                 @method('DELETE')
@@ -376,7 +392,7 @@
                     <div class="card">
                         <div class="card-header form-heading-background">Employee Salary Setup (One-Time)</div>
                         <div class="card-body">
-                            @if (in_array($addPayrollPermission, ['all', 'added']))
+                            @if (in_array(user()->permission('manage_employee_salary'), ['all', 'branch']))
                                 <form method="POST" action="{{ route('payroll.salary-setups.employees.store') }}" class="mb-3">
                                     @csrf
                                     <div class="form-row">
@@ -442,7 +458,7 @@
                                                 <td>
                                                     <div class="d-flex">
 
-                                                        @if (in_array($editPayrollPermission, ['all', 'added']))
+                                                        @if (in_array(user()->permission('manage_employee_salary'), ['all', 'branch']))
                                                             <form method="POST" action="{{ route('payroll.salary-setups.employees.update', $setup->id) }}" class="mb-1">
                                                                 @csrf
                                                                 @method('PUT')
@@ -459,7 +475,7 @@
                                                                 </div>
                                                             </form>
                                                         @endif
-                                                        @if ($deletePayrollPermission != 'none' && $deletePayrollPermission != 5)
+                                                        @if (in_array(user()->permission('manage_employee_salary'), ['all', 'branch']))
                                                             <form method="POST" action="{{ route('payroll.salary-setups.employees.destroy', $setup->id) }}" onsubmit="return confirm('Delete this setup?');">
                                                                 @csrf
                                                                 @method('DELETE')

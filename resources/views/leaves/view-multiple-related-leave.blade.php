@@ -25,7 +25,7 @@
             }
         @endphp
 
-        @if ($pendingCountLeave > 0 && ($approveRejectPermission == 'all' || ($leaveSetting->manager_permission != 'cannot-approve' && user()->id == $multipleLeaves->first()->user->employeeDetails->reporting_to)))
+        @if ($pendingCountLeave > 0 && ($approveRejectPermission == 'all' || $approveRejectPermission == 'branch' || ($leaveSetting->manager_permission != 'cannot-approve' && user()->id == $multipleLeaves->first()->user->employeeDetails->reporting_to)))
             <a class="btn btn-secondary rounded f-14 p-2 leave-action-approved" data-leave-id="{{ $multipleLeaves->first()->unique_id }}"
                 data-leave-action="approved" data-type="approveAll" class="mr-3" icon="check" href="javascript:;">
                 <i class="fa fa-check mr-2"></i>{{$approveTitle}}</a>

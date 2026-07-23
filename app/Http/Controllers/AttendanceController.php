@@ -51,13 +51,15 @@ class AttendanceController extends AccountBaseController
 
         if ($request->employee_id) {
             abort_403(!(
-                $this->viewAttendancePermission == 'all'
+                $this->viewAttendancePermission == 'all' 
+                || ($this->viewAttendancePermission == 'branch' && user()->branch_id == 6)
+                || ($this->viewAttendancePermission == 'branch' && $attendance->user->branch_id == user()->branch_id)
                 || ($this->viewAttendancePermission == 'added' && $attendance->added_by == user()->id)
                 || ($this->viewAttendancePermission == 'owned' && $attendance->user_id == user()->id)
                 || ($this->viewAttendancePermission == 'both' && ($attendance->added_by == user()->id || $attendance->user_id == user()->id))));
         }
         else {
-            abort_403(!in_array($this->viewAttendancePermission, ['all', 'added', 'owned', 'both']));
+            abort_403(!in_array($this->viewAttendancePermission, ['all', 'added', 'owned', 'both', 'branch']));
         }
 
         if (request()->ajax()) {
@@ -69,7 +71,16 @@ class AttendanceController extends AccountBaseController
 
         }
         else {
-            $this->employees = User::allEmployees(null, true, ($this->viewAttendancePermission == 'all' ? 'all' : null));
+            if(in_array($this->viewAttendancePermission, ['all','branch']) ){
+                if($this->viewAttendancePermission == 'branch' && user()->branch_id == 6){
+                    $employeePermission = 'all';
+                } else{
+                    $employeePermission = $this->viewAttendancePermission;
+                }
+            } else{
+                $employeePermission = null;
+            }
+            $this->employees = User::allEmployees(null, true, $employeePermission);
         }
 
         $now = now();
@@ -128,6 +139,10 @@ class AttendanceController extends AccountBaseController
 
         if ($this->viewAttendancePermission == 'owned') {
             $employees = $employees->where('users.id', user()->id);
+        }
+
+        if ($this->viewAttendancePermission == 'branch' && user()->branch_id !== 6) {
+            $employees = $employees->where('users.branch_id', user()->branch_id);
         }
 
         $employees = $employees->get();
@@ -290,6 +305,8 @@ class AttendanceController extends AccountBaseController
 
         abort_403(!(
             $viewPermission == 'all'
+            || ($viewPermission == 'branch' && user()->branch_id == 6)
+            || ($viewPermission == 'branch' && $attendance->user->branch_id == user()->branch_id)
             || ($viewPermission == 'added' && $attendance->added_by == user()->id)
             || ($viewPermission == 'owned' && $attendance->user->id == user()->id)
             || ($viewPermission == 'both' && ($attendance->added_by == user()->id || $attendance->user->id == user()->id))
@@ -594,14 +611,23 @@ class AttendanceController extends AccountBaseController
     {
         $this->pageTitle = 'modules.attendance.attendanceByMember';
 
-        abort_403(!(in_array($this->viewAttendancePermission, ['all', 'added', 'owned', 'both'])));
+        abort_403(!(in_array($this->viewAttendancePermission, ['all', 'added', 'owned', 'both', 'branch'])));
 
         if ($this->viewAttendancePermission == 'owned') {
             $this->employees = User::where('id', user()->id)->get();
 
         }
         else {
-            $this->employees = User::allEmployees(null, true, ($this->viewAttendancePermission == 'all' ? 'all' : null));
+            if(in_array($this->viewAttendancePermission, ['all','branch']) ){
+                if($this->viewAttendancePermission == 'branch' && user()->branch_id == 6){
+                    $employeePermission = 'all';
+                } else{
+                    $employeePermission = $this->viewAttendancePermission;
+                }
+            } else{
+                $employeePermission = null;
+            }
+            $this->employees = User::allEmployees(null, true, $employeePermission);
         }
 
         $now = now();
@@ -748,8 +774,13 @@ class AttendanceController extends AccountBaseController
     {
         $addPermission = user()->permission('add_attendance');
 
-        abort_403(!($addPermission == 'all' || $addPermission == 'added'));
-        $this->employees = User::allEmployees(null, true, ($addPermission == 'all' ? 'all' : null));
+        abort_403(!($addPermission == 'all' || $addPermission == 'added' || $addPermission == 'branch'));
+        if(in_array($addPermission, ['all','branch']) ){
+                $employeePermission = $addPermission;
+            } else{
+                $employeePermission = null;
+            }
+        $this->employees = User::allEmployees(null, true, $employeePermission);
         $this->departments = Team::allDepartments();
         $this->pageTitle = __('modules.attendance.markAttendance');
         $this->year = now()->format('Y');
@@ -969,7 +1000,7 @@ class AttendanceController extends AccountBaseController
         $attendance = Attendance::findOrFail($id);
         $deleteAttendancePermission = user()->permission('delete_attendance');
 
-        abort_403(!($deleteAttendancePermission == 'all' || ($deleteAttendancePermission == 'added' && $attendance->added_by == user()->id)));
+        abort_403(!($deleteAttendancePermission == 'all' || $deleteAttendancePermission == 'branch' || ($deleteAttendancePermission == 'added' && $attendance->added_by == user()->id)));
         Attendance::destroy($id);
 
         return Reply::success(__('messages.deleteSuccess'));
@@ -981,7 +1012,7 @@ class AttendanceController extends AccountBaseController
 
         $addPermission = user()->permission('add_attendance');
 
-        abort_403(!($addPermission == 'all' || $addPermission == 'added'));
+        abort_403(!($addPermission == 'all' || $addPermission == 'added' || $addPermission == 'branch'));
 
 
         if (request()->ajax()) {
@@ -1039,7 +1070,7 @@ class AttendanceController extends AccountBaseController
     {
         $this->pageTitle = 'modules.attendance.attendanceByHour';
 
-        abort_403(!(in_array($this->viewAttendancePermission, ['all', 'added', 'owned', 'both'])));
+        abort_403(!(in_array($this->viewAttendancePermission, ['all', 'added', 'owned', 'both', 'branch'])));
 
         if (request()->ajax()) {
             return $this->hourSummaryData($request);
@@ -1049,8 +1080,17 @@ class AttendanceController extends AccountBaseController
             $this->employees = User::where('id', user()->id)->get();
 
         }
-        elseif ($this->viewAttendancePermission == 'all') {
-            $this->employees = User::allEmployees(null, true, ($this->viewAttendancePermission == 'all' ? 'all' : null));
+        elseif ($this->viewAttendancePermission == 'all' || $this->viewAttendancePermission == 'branch') {
+            if(in_array($this->viewAttendancePermission, ['all','branch']) ){
+                if($this->viewAttendancePermission == 'branch' && user()->branch_id == 6){
+                    $employeePermission = 'all';
+                } else{
+                    $employeePermission = $this->viewAttendancePermission;
+                }
+            } else{
+                $employeePermission = null;
+            }
+            $this->employees = User::allEmployees(null, true, $employeePermission);
         }
 
         $now = Carbon::now(company()->timezone);
@@ -1108,6 +1148,9 @@ class AttendanceController extends AccountBaseController
 
         if ($this->viewAttendancePermission == 'owned') {
             $employees = $employees->where('users.id', user()->id);
+        }
+        if ($this->viewAttendancePermission == 'branch' && user()->branch_id !== 6) {
+            $employees = $employees->where('users.branch_id', user()->branch_id);
         }
 
         $employees = $employees->get();
@@ -1188,7 +1231,8 @@ class AttendanceController extends AccountBaseController
             $total[$count] = $resultTotalTime;
 
             $emplolyeeName = view('components.employee', [
-                'user' => $employee
+                'user' => $employee,
+                'background' => 'text-darkest-white'
             ]);
 
             $final[$employee->id . '#' . $employee->name][] = $emplolyeeName;
@@ -1258,13 +1302,22 @@ class AttendanceController extends AccountBaseController
 
     public function byMapLocation(Request $request)
     {
-        abort_403(!(in_array($this->viewAttendancePermission, ['all', 'added', 'owned', 'both'])));
+        abort_403(!(in_array($this->viewAttendancePermission, ['all', 'added', 'owned', 'both', 'branch'])));
 
         if (request()->ajax()) {
             return $this->byMapLocationData($request);
         }
+        if(in_array($this->viewAttendancePermission, ['all','branch']) ){
+            if($this->viewAttendancePermission == 'branch' && user()->branch_id == 6){
+                $employeePermission = 'all';
+            } else{
+                $employeePermission = $this->viewAttendancePermission;
+            }
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees(null, true, $employeePermission);
 
-        $this->employees = User::allEmployees(null, true, ($this->viewAttendancePermission == 'all' ? 'all' : null));
         $this->departments = Team::all();
 
         return view('attendances.by_map_location', $this->data);
@@ -1292,6 +1345,10 @@ class AttendanceController extends AccountBaseController
 
         if ($this->viewAttendancePermission == 'owned') {
             $this->attendances = $this->attendances->where('users.id', user()->id);
+        }
+
+        if ($this->viewAttendancePermission == 'branch' && user()->branch_id !== 6) {
+            $this->attendances = $this->attendances->where('users.branch_id', user()->branch_id);
         }
 
         if ($request->late != 'all') {

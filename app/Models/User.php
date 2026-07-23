@@ -683,6 +683,16 @@ class User extends BaseModel
                     });
 
                 }
+                elseif ($viewEmployeePermission == 'branch' && !in_array('client', user_roles())) {
+                    $currentBranchId = user()->branch_id;
+
+                    if (!is_null($currentBranchId)) {
+                        $users->where('users.branch_id', $currentBranchId);
+                    }
+                    else {
+                        $users->whereRaw('1 = 0');
+                    }
+                }
                 elseif (($viewEmployeePermission == 'none' || $viewEmployeePermission == '') && !in_array('client', user_roles())) {
                     $users->where('users.id', user()->id);
                 }

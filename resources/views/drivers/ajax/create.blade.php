@@ -20,12 +20,16 @@ $addDesignationPermission = user()->permission('add_designation');
                 </div>
 
                 <div class="row  p-20">
-                    <div class="col-md-4">
-                        <x-forms.select2-ajax  fieldId="branch_id" fieldName="branch_id"
-                            :fieldLabel="__('modules.drivers.branch')" :route="route('get.branch-ajax')"
-                            :placeholder="__('placeholders.searchForBranches')" fieldRequired="true">
-                        </x-forms.select2-ajax>
-                    </div>
+                    @if (!in_array(user()->permission('add_drivers'), ['branch']))
+                        <div class="col-md-4">
+                            <x-forms.select2-ajax  fieldId="branch_id" fieldName="branch_id"
+                                :fieldLabel="__('modules.drivers.branch')" :route="route('get.branch-ajax')"
+                                :placeholder="__('placeholders.searchForBranches')" fieldRequired="true">
+                            </x-forms.select2-ajax>
+                        </div>
+                    @else
+                        <input type="hidden" name="branch_id" value="{{ user()->branch_id }}">
+                    @endif
 
                     <div class="col-md-4">
                         <x-forms.text fieldId="name" :fieldLabel="__('modules.drivers.name')"

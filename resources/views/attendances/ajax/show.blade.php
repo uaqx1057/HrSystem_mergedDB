@@ -17,13 +17,13 @@ $deleteAttendancePermission = user()->permission('delete_attendance');
                     <div class="col-12">
                         <h4 class="card-title f-15 f-w-500 text-darkest-grey mb-0">
                             <a href="{{ route('employees.show', [$attendance->user->id]) }}"
-                                class="text-darkest-grey">{{ $attendance->user->name }}  @if(user() && user()->id == $attendance->user->id) <span class='ml-2 badge badge-secondary'> @lang('app.itsYou')</span> @endif </a>
+                                class="text-darkest-white">{{ $attendance->user->name }}  @if(user() && user()->id == $attendance->user->id) <span class='ml-2 badge badge-secondary'> @lang('app.itsYou')</span> @endif </a>
 
                             @isset($attendance->user->country)
-                                <x-flag :country="$attendance->user->country" />
+                                <x-flag textColor="text-darkest-white" :country="$attendance->user->country" />
                             @endisset
                         </h4>
-                        <p class="mb-0 f-13 text-dark-grey">
+                        <p class="mb-0 f-13 text-darkest-white">
                             {{ (!is_null($attendance->user->employeeDetail) && !is_null($attendance->user->employeeDetail->designation)) ? $attendance->user->employeeDetail->designation->name : ' ' }}
                         </p>
                     </div>
@@ -36,7 +36,7 @@ $deleteAttendancePermission = user()->permission('delete_attendance');
         <div class="col-md-6">
             <x-cards.data :title="__('app.date').' - '.$attendanceDate->translatedFormat(company()->date_format) .' ('.$attendanceDate->translatedFormat('l').')'">
                 <div class="punch-status">
-                    <div class="border rounded p-3 mb-3 bg-light">
+                    <div class="border rounded p-3 mb-3 ">
                         <h6 class="f-13">@lang('modules.attendance.clock_in')</h6>
                         <p class="mb-0">{{ $startTime->translatedFormat(company()->time_format) }}</p>
                     </div>
@@ -45,7 +45,7 @@ $deleteAttendancePermission = user()->permission('delete_attendance');
                             <span>{{ $totalTime }}</span>
                         </div>
                     </div>
-                    <div class="border rounded p-3 bg-light">
+                    <div class="border rounded p-3 ">
                         <h6 class="f-13">@lang('modules.attendance.clock_out')</h6>
                         <p class="mb-0">{{ $endTime != '' ? $endTime->translatedFormat(company()->time_format) : '' }}
                             @if (isset($notClockedOut))
@@ -61,7 +61,7 @@ $deleteAttendancePermission = user()->permission('delete_attendance');
         <div class="col-md-6">
 
             <x-cards.data :title="__('modules.employees.activity')">
-                @if ($addAttendancePermission == 'all' && $maxClockIn)
+                @if (($addAttendancePermission == 'all' || $addAttendancePermission == 'branch') && $maxClockIn)
                     <x-slot name="action">
                         <a class="btn-primary rounded f-12 py-1 px-2" href="javascript:;" onclick="addAttendance({{ $attendance->user->id }})" data-attendance-id="{{ $attendance->user->id }}">@lang('app.add')</a>
                     </x-slot>
@@ -129,12 +129,12 @@ $deleteAttendancePermission = user()->permission('delete_attendance');
 
                             <div class="col-md-3 text-right">
                                 <div class="dropdown ml-auto comment-action">
-                                    @if ($editAttendancePermission == 'all'
+                                    @if ($editAttendancePermission == 'all' || $editAttendancePermission == 'branch'
                                         || ($addAttendancePermission == 'all')
                                         || ($editAttendancePermission == 'added' && $item->added_by == user()->id)
                                         || ($editAttendancePermission == 'owned' && $attendance->user->id == user()->id)
                                         || ($editAttendancePermission == 'both' && ($item->added_by == user()->id || $attendance->user->id == user()->id))
-                                        || $deleteAttendancePermission == 'all'
+                                        || $deleteAttendancePermission == 'all' || $deleteAttendancePermission == 'branch'
                                         || ($deleteAttendancePermission == 'added' && $item->added_by == user()->id)
                                         || ($deleteAttendancePermission == 'owned' && $attendance->user->id == user()->id)
                                         || ($deleteAttendancePermission == 'both' && ($item->added_by == user()->id || $attendance->user->id == user()->id))
@@ -147,7 +147,7 @@ $deleteAttendancePermission = user()->permission('delete_attendance');
                                     <div class="dropdown-menu dropdown-menu-right border-grey rounded b-shadow-4 p-0 mr-2"
                                         aria-labelledby="dropdownMenuLink" tabindex="0">
 
-                                        @if ($editAttendancePermission == 'all'
+                                        @if ($editAttendancePermission == 'all' || $editAttendancePermission == 'branch'
                                             || ($editAttendancePermission == 'added' && $item->added_by == user()->id)
                                             || ($editAttendancePermission == 'owned' && $attendance->user->id == user()->id)
                                             || ($editAttendancePermission == 'both' && ($item->added_by == user()->id || $attendance->user->id == user()->id))
@@ -157,7 +157,7 @@ $deleteAttendancePermission = user()->permission('delete_attendance');
                                                 data-attendance-id="{{ $item->aId }}">@lang('app.edit')</a>
                                         @endif
 
-                                        @if ($deleteAttendancePermission == 'all'
+                                        @if ($deleteAttendancePermission == 'all' || $deleteAttendancePermission == 'branch'
                                             || ($deleteAttendancePermission == 'added' && $item->added_by == user()->id)
                                             || ($deleteAttendancePermission == 'owned' && $attendance->user->id == user()->id)
                                             || ($deleteAttendancePermission == 'both' && ($item->added_by == user()->id || $attendance->user->id == user()->id))

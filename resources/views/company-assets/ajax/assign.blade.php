@@ -8,18 +8,25 @@
                 <div class="row p-20">
 
                     <div class="col-md-6">
-                        <x-forms.label class="" fieldId="employee"
-                            :fieldLabel="__('app.employee')" fieldRequired="true">
-                        </x-forms.label>
-                        <x-forms.input-group>
-                            <select class="form-control select-picker" name="employee"
-                                id="employee" data-live-search="true">
-                                <option value="">--</option>
-                                @foreach ($employees as $employee)
-                                    <option value="{{ $employee->id }}">{{ $employee->name }}</option>
-                                @endforeach
-                            </select>
-                        </x-forms.input-group>
+                        @if (in_array($addPermission, ['all', 'branch']))
+                            <x-forms.label class="" fieldId="employee"
+                                :fieldLabel="__('app.employee')" fieldRequired="true">
+                            </x-forms.label>
+                            <x-forms.input-group>
+                                <select class="form-control select-picker" name="employee"
+                                    id="employee" data-live-search="true">
+                                    <option value="">--</option>
+                                    @foreach ($employees as $employee)
+                                        <option value="{{ $employee->id }}">{{ $employee->name }}</option>
+                                    @endforeach
+                                </select>
+                            </x-forms.input-group>
+                        @else
+                            <input type="hidden" value="{{ user()->id }}" name="employee">
+                            <x-forms.text fieldId="basic_salary" :fieldLabel="__('app.employee')" fieldName="basic_salary"
+                                fieldRequired="true" :fieldPlaceholder="__('placeholders.basic_salary')" :fieldValue="user()->name" :fieldReadOnly="true">
+                            </x-forms.text>
+                        @endif
                     </div>
                     <div class="col-md-6">
                         <x-forms.number fieldId="asset_qty" :fieldLabel="__('app.qty')" fieldName="qty"

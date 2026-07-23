@@ -28,7 +28,7 @@ class StoreRequest extends CoreRequest
     {
         $setting = company();
         $rules = [
-            'branch_id' => 'required|exists:branches,id',
+            'branch_id' => 'nullable|exists:branches,id',
             'driver_id' => 'required',
             'driver_type_id' => 'required',
             'image' => 'required|image',

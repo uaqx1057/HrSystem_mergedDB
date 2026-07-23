@@ -18,10 +18,17 @@
                         <select class="select-picker role-permission-select border-0"
                             data-permission-id="{{ $permission->id }}" data-role-id="{{ $role->id }}">
                             @if (!is_null($allowedPermissions))
-                                @foreach ($allowedPermissions as $key => $item)
-                                    <option @if ($permissionType == $item) selected @endif value="{{ $item }}">@lang('app.'.$key)</option>
-                                @endforeach
-                            @endif
+                            @foreach ($allowedPermissions as $key => $item)
+                                @php
+                                    $translationKey = $key === 'branch' ? 'app.permissionTypeBranch' : 'app.' . $key;
+                                    $label = __($translationKey);
+                                    $label = is_array($label) ? ucfirst($key) : $label;
+                                @endphp
+                                <option @if ($permissionType == $item) selected @endif
+                                @if (!$permissionType && $item == 5) selected @endif value="{{ $item }}">
+                                    {{ $label }}</option>
+                            @endforeach
+                        @endif
                         </select>
                     </td>
                 </tr>

@@ -20,20 +20,38 @@ class EmployeeBankAccountController extends AccountBaseController
 
     public function index(EmployeeBankAccountDataTable $dataTable)
     {
-        $viewPermission = user()->permission('view_employee_bank_account');
-        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
+        $this->viewPermission = user()->permission('view_employee_bank_account');
+        abort_403(!in_array($this->viewPermission, ['all', 'added', 'owned', 'both', 'branch']));
 
-        $this->employees = User::allEmployees(null, true, ($viewPermission == 'all' ? 'all' : null));
+       if(in_array($this->viewPermission, ['all','branch']) ){
+            if($this->viewPermission == 'branch' && user()->branch_id == 6){
+                $employeePermission = 'all';
+            } else{
+                $employeePermission = $this->viewPermission;
+            }
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees(null, true, $employeePermission);
 
         return $dataTable->render('employee-bank-accounts.index', $this->data);
     }
 
     public function create()
     {
-        $addPermission = user()->permission('add_employee_bank_account');
-        abort_403(!in_array($addPermission, ['all', 'added']));
+        $this->addPermission = user()->permission('add_employee_bank_account');
+        abort_403(!in_array($this->addPermission, ['all','added', 'branch']));
 
-        $this->employees = User::allEmployees(null, true, ($addPermission == 'all' ? 'all' : null));
+        if(in_array($this->addPermission, ['all','branch']) ){
+            if($this->addPermission == 'branch' && user()->branch_id == 6){
+                $employeePermission = 'all';
+            } else{
+                $employeePermission = $this->addPermission;
+            }
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees(null, true, $employeePermission);
 
         if (request()->ajax()) {
             $html = view('employee-bank-accounts.ajax.create', $this->data)->render();
@@ -49,7 +67,7 @@ class EmployeeBankAccountController extends AccountBaseController
     public function store(StoreEmployeeBankAccount $request)
     {
         $addPermission = user()->permission('add_employee_bank_account');
-        abort_403(!in_array($addPermission, ['all', 'added']));
+        abort_403(!in_array($addPermission, ['all','added', 'branch']));
 
         $account = new EmployeeBankAccount();
         $account->employee_id = $request->employee_id;
@@ -79,7 +97,7 @@ class EmployeeBankAccountController extends AccountBaseController
     public function show($id)
     {
         $viewPermission = user()->permission('view_employee_bank_account');
-        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both', 'branch']));
 
         $this->account = EmployeeBankAccount::with('employee')->findOrFail($id);
 
@@ -100,16 +118,25 @@ class EmployeeBankAccountController extends AccountBaseController
 
     public function edit($id)
     {
-        $editPermission = user()->permission('edit_employee_bank_account');
-        abort_403(!in_array($editPermission, ['all', 'added', 'owned', 'both']));
+        $this->editPermission = user()->permission('edit_employee_bank_account');
+        abort_403(!in_array($this->editPermission, ['all', 'added', 'owned', 'both', 'branch']));
 
         $this->account = EmployeeBankAccount::findOrFail($id);
 
-        if (!$this->canManageRecord($this->account, $editPermission)) {
+        if (!$this->canManageRecord($this->account, $this->editPermission)) {
             abort(403);
         }
 
-        $this->employees = User::allEmployees(null, true, ($editPermission == 'all' ? 'all' : null));
+        if(in_array($this->editPermission, ['all','branch']) ){
+            if($this->editPermission == 'branch' && user()->branch_id == 6){
+                $employeePermission = 'all';
+            } else{
+                $employeePermission = $this->editPermission;
+            }
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees(null, true, $employeePermission);
 
         if (request()->ajax()) {
             $html = view('employee-bank-accounts.ajax.edit', $this->data)->render();
@@ -125,7 +152,7 @@ class EmployeeBankAccountController extends AccountBaseController
     public function update(UpdateEmployeeBankAccount $request, $id)
     {
         $editPermission = user()->permission('edit_employee_bank_account');
-        abort_403(!in_array($editPermission, ['all', 'added', 'owned', 'both']));
+        abort_403(!in_array($editPermission, ['all', 'added', 'owned', 'both', 'branch']));
 
         $account = EmployeeBankAccount::findOrFail($id);
 
@@ -155,7 +182,7 @@ class EmployeeBankAccountController extends AccountBaseController
     public function destroy($id)
     {
         $deletePermission = user()->permission('delete_employee_bank_account');
-        abort_403(!in_array($deletePermission, ['all', 'added', 'owned', 'both']));
+        abort_403(!in_array($deletePermission, ['all', 'added', 'owned', 'both', 'branch']));
 
         $account = EmployeeBankAccount::findOrFail($id);
 
@@ -171,7 +198,7 @@ class EmployeeBankAccountController extends AccountBaseController
     public function applyQuickAction(Request $request)
     {
         $deletePermission = user()->permission('delete_employee_bank_account');
-        abort_403(!in_array($deletePermission, ['all', 'added', 'owned', 'both']));
+        abort_403(!in_array($deletePermission, ['all', 'added', 'owned', 'both', 'branch']));
 
         if ($request->action_type === 'delete') {
             $this->deleteRecords($request);
@@ -201,7 +228,7 @@ class EmployeeBankAccountController extends AccountBaseController
 
     protected function canAccessRecord(EmployeeBankAccount $account, $permission): bool
     {
-        if ($permission === 'all') {
+        if ($permission === 'all' || ($permission === 'branch' && user()->branch_id == 6)) {
             return true;
         }
 
@@ -217,12 +244,16 @@ class EmployeeBankAccountController extends AccountBaseController
             return $account->employee_id == user()->id || $account->added_by == user()->id;
         }
 
+        if ($permission === 'branch' && $account->employee->branch_id == user()->branch_id) {
+            return true;
+        }
+
         return false;
     }
 
     protected function canManageRecord(EmployeeBankAccount $account, $permission): bool
     {
-        if ($permission === 'all') {
+        if ($permission === 'all' || ($permission === 'branch' && user()->branch_id == 6)) {
             return true;
         }
 
@@ -234,6 +265,10 @@ class EmployeeBankAccountController extends AccountBaseController
             return true;
         }
         if ($permission == 'both' && (user()->id == $account->added_by || user()->id == $account->employee_id)){
+            return true;
+        }
+
+        if ($permission === 'branch' && $account->employee->branch_id == user()->branch_id) {
             return true;
         }
 

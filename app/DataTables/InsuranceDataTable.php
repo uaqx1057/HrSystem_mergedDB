@@ -15,10 +15,12 @@ class InsuranceDataTable extends BaseDataTable
     private $employeeId; // ✅ Add this
     private $driverId; // ✅ Add this
     private $assignRole;
+    private $viewPermission;
 
     public function __construct($employeeId = null, $driverId = null)
     {
         parent::__construct();
+        $this->viewPermission = user()->permission('view_insurance');
         $this->editInsurancePermission = user()->permission('edit_insurance');
         $this->deleteInsurancePermission = user()->permission('delete_insurance');
         $this->employeeId = $employeeId; // ✅ Store it
@@ -41,23 +43,49 @@ class InsuranceDataTable extends BaseDataTable
             })
             ->addColumn('action', function ($row) {
 
-                $action = '<div class="task_view">
-<a href="' . route('insurance.show', [$row->id]) . '" class="taskView text-darkest-grey f-w-500 openRightModal">' . __('app.view') . '</a>';
+                $action = '<div class="task_view">';
+                if (
+                    $this->viewPermission == 'all'
+                    || ($this->viewPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->viewPermission == 'branch' && user()->branch_id == $row->employee_branch)
+                    || ($this->viewPermission == 'added' && user()->id == $row->added_by)
+                    || ($this->viewPermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->viewPermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by))
+                ) {
+                    $action .= '<a href="' . route('insurance.show', [$row->id]) . '" class="taskView text-darkest-grey f-w-500 openRightModal">' . __('app.view') . '</a>';
+                }
 
-                    $action .= '<div class="dropdown">
+                $action .= '<div class="dropdown">
                         <a class="task_view_more d-flex align-items-center justify-content-center dropdown-toggle" type="link"
                             id="dropdownMenuLink-' . $row->id . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="icon-options-vertical icons"></i>
                         </a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
 
-                if ($this->editInsurancePermission == 'all') {
+                if (
+                    $this->editInsurancePermission == 'all'
+                    || ($this->editInsurancePermission == 'branch' && user()->branch_id == 6)
+                    || ($this->editInsurancePermission == 'branch' && user()->branch_id == $row->employee_branch)
+                    || ($this->editInsurancePermission == 'added' && user()->id == $row->added_by)
+                    || ($this->editInsurancePermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->editInsurancePermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by))
+                ) {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('insurance.edit', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
                                 ' . trans('app.edit') . '
                             </a>';
                 }
 
-                if ($this->deleteInsurancePermission == 'all') {
+                if (
+                    $this->deleteInsurancePermission == 'all'
+                    || ($this->deleteInsurancePermission == 'branch' && user()->branch_id == 6)
+                    || ($this->deleteInsurancePermission == 'branch' && user()->branch_id == $row->employee_branch)
+                    || ($this->deleteInsurancePermission == 'added' && user()->id == $row->added_by)
+                    || ($this->deleteInsurancePermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->deleteInsurancePermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by))
+                ) {
                     $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-insurance-id="' . $row->id . '">
                                 <i class="fa fa-trash mr-2"></i>
                                 ' . trans('app.delete') . '
@@ -119,22 +147,47 @@ class InsuranceDataTable extends BaseDataTable
         $request = $this->request();
         // dd($this->employeeId);
         $model = $model->leftJoin('users', 'users.id', '=', 'insurances.employee_id')->leftJoin('drivers', 'drivers.id', '=', 'insurances.driver_id')
-            ->select('insurances.*', 'users.name as employee_name', 'drivers.name as driver_name')->orderBy('insurances.id', 'desc');
+            ->select('insurances.*', 'users.name as employee_name', 'users.branch_id as employee_branch', 'drivers.name as driver_name')->orderBy('insurances.id', 'desc');
         if ($this->driverId == null && $this->employeeId == null) {
 
         } else {
             if ($this->driverId == 0) {
                 $model->where('insurances.employee_id', $this->employeeId);
-            } else{
+            } else {
                 $model->where('insurances.driver_id', $this->driverId);
             }
         }
 
-        if (in_array('employee', $this->assignRole) && count($this->assignRole) < 2) {
+        // if (in_array('employee', $this->assignRole) && count($this->assignRole) < 2) {
+        //     $model->where(function ($query) use ($request) {
+        //         $query->where('insurances.employee_id', user()->id)->where('insurances.status', 'active');
+        //     });
+        // }
+
+        if ($this->viewPermission == 'added') {
             $model->where(function ($query) use ($request) {
-                $query->where('insurances.employee_id', user()->id)->where('insurances.status', 'active');
+                $query->where('insurances.added_by', user()->id);
             });
         }
+
+        if ($this->viewPermission == 'owned') {
+            $model->where(function ($query) use ($request) {
+                $query->where('insurances.employee_id', user()->id);
+            });
+        }
+
+        if ($this->viewPermission == 'both') {
+            $model->where(function ($query) use ($request) {
+                $query->where('insurances.employee_id', user()->id)->orWhere('insurances.added_by', user()->id);
+            });
+        }
+
+        if ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+            $model->where(function ($query) use ($request) {
+                $query->where('users.branch_id', user()->branch_id);
+            });
+        }
+
 
         if ($request->searchText != '') {
             $model->where(function ($query) use ($request) {

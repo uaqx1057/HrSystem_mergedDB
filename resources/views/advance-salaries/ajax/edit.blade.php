@@ -13,22 +13,24 @@
                 <div class="row p-20">
 
                     <div class="col-lg-4 col-md-6">
-                        <x-forms.label class="" fieldId="employee"
-                            :fieldLabel="__('app.employee')" fieldRequired="true">
-                        </x-forms.label>
-                        @if (count($assignRole) < 2)
-                        <input type="hidden" value="{{ $advanceSalary->employee_id }}" name="employee">
+                        @if (in_array(user()->permission('edit_advance_salary'), ['all', 'added', 'both','branch']))
+                            <x-forms.label class="" fieldId="employee" :fieldLabel="__('app.employee')" fieldRequired="true">
+                            </x-forms.label>
+                            <x-forms.input-group>
+                                <select class="form-control select-picker" name="employee" id="employee"
+                                    data-live-search="true">
+                                    <option value="">--</option>
+                                    @foreach ($employees as $employee)
+                                        <option value="{{ $employee->id }}" @if ($advanceSalary->employee_id == $employee->id) selected @endif>{{ $employee->name }}</option>
+                                    @endforeach
+                                </select>
+                            </x-forms.input-group>
+                        @else
+                            <input type="hidden" value="{{ user()->id }}" name="employee">
+                            <x-forms.text fieldId="basic_salary" :fieldLabel="__('app.employee')" fieldName="basic_salary"
+                                fieldRequired="true" :fieldPlaceholder="__('placeholders.basic_salary')" :fieldValue="user()->name" :fieldReadOnly="true">
+                            </x-forms.text>
                         @endif
-                        <x-forms.input-group>
-                            <select class="form-control select-picker" name="employee"
-                                id="employee" data-live-search="true" @if (count($assignRole) < 2) disabled @endif>
-                                <option value="">--</option>
-                                @foreach ($employees as $employee)
-                                    <option value="{{ $employee->id }}"
-                                        @if ($advanceSalary->employee_id == $employee->id) selected @endif>{{ $employee->name }}</option>
-                                @endforeach
-                            </select>
-                        </x-forms.input-group>
                     </div>
 
                     <div class="col-lg-4 col-md-6">
@@ -48,7 +50,7 @@
                         />
                     </div>
 
-                    @if (count($assignRole) > 1)
+                    @if (in_array(user()->permission('approve_or_reject_air_tickets'), ['all']))
                     <div class="col-lg-4 col-md-6">
                         <x-forms.select fieldId="status" :fieldLabel="__('app.status')" fieldName="status"
                             search="true">

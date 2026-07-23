@@ -28,30 +28,37 @@ class AdvanceSalaryController extends AccountBaseController
     {
         $viewPermission = user()->permission('view_advance_salary');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
-        $this->assignRole = user()->roles->pluck('name')->toArray();
-        $this->employees = User::allEmployees();
+        if(in_array($viewPermission, ['all','branch']) ){
+            if($viewPermission == 'branch' && user()->branch_id == 6){
+                $employeePermission = 'all';
+            } else{
+                $employeePermission = $viewPermission;
+            }
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees(null, true, $employeePermission);
         return $dataTable->render('advance-salaries.index', $this->data);
     }
 
     public function create()
     {
-        $viewPermission = user()->permission('add_advance_salary');
+        $this->addPermission = user()->permission('add_advance_salary');
 
-        abort_403(!in_array($viewPermission, ['all']));
-
-        // dd(user()->company->id);
-        // $adminUsers = User::allAdmins($salary->employee->company->id);
+        abort_403(!in_array($this->addPermission, ['all', 'added', 'branch']));
 
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
-        $today = now();
+        $eligibleEmployees = User::with(['employeeDetails', 'advanceSalary'])->has('employeeDetail');
 
-        $eligibleEmployees = User::with(['employeeDetails', 'advanceSalary']);
-
-        if (count($this->assignRole) < 2) {
+        if($this->addPermission == 'added'){
             $eligibleEmployees = $eligibleEmployees->where('id', user()->id);
+        }
+
+        if($this->addPermission == 'branch' && user()->branch_id !== 6){
+            $eligibleEmployees = $eligibleEmployees->where('branch_id', user()->branch_id);
         }
 
         $this->employees = $eligibleEmployees->get();
@@ -70,13 +77,14 @@ class AdvanceSalaryController extends AccountBaseController
     {
         $viewPermission = user()->permission('add_advance_salary');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'branch']));
 
         $salary = new AdvanceSalary();
         $salary->employee_id = $request->employee;
         $salary->date = $request->date;
         $salary->advance_salary = $request->advance_salary;
         $salary->status = $request->status ?? 'pending';
+        $salary->added_by = user()->id;
         $salary->save();
 
         $this->assignRole = user()->roles->pluck('name')->toArray();
@@ -106,9 +114,15 @@ class AdvanceSalaryController extends AccountBaseController
     {
         $viewPermission = user()->permission('view_advance_salary');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $this->advanceSalary = AdvanceSalary::with(['employee'])->findOrFail($id);
+
+        if (!$this->canManageRecord($this->advanceSalary, $viewPermission)) {
+            abort(403);
+        }
+
+
         if (request()->ajax()) {
             $html = view('advance-salaries.ajax.show', $this->data)->render();
             return Reply::dataOnly(['status' => 'success', 'html' => $html, 'title' => $this->pageTitle]);
@@ -120,22 +134,25 @@ class AdvanceSalaryController extends AccountBaseController
 
     public function edit(string $id)
     {
-        $viewPermission = user()->permission('edit_advance_salary');
+        $this->editPermission = user()->permission('edit_advance_salary');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($this->editPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $this->assignRole = user()->roles->pluck('name')->toArray();
         $this->advanceSalary = AdvanceSalary::findOrFail($id);
-        // if(!in_array('admin', $this->assignRole)){
-        //     if($this->advanceSalary->status !== 'pending'){
-        //         abort_403(true);
-        //     }
-        // }
-        $today = now();
-        $currentEmployeeId = $this->advanceSalary->employee_id;
 
-        $this->employees = User::with(['employeeDetails', 'advanceSalary'])
-            ->get();
+        if (!$this->canManageRecord($this->advanceSalary, $this->editPermission)) {
+            abort(403);
+        }
+
+        $eligibleEmployees = User::with(['employeeDetails', 'advanceSalary'])->has('employeeDetail');
+
+
+        if($this->editPermission == 'branch' && user()->branch_id !== 6){
+            $eligibleEmployees = $eligibleEmployees->where('branch_id', user()->branch_id);
+        }
+
+        $this->employees = $eligibleEmployees->get();
 
         if (request()->ajax()) {
             $html = view('advance-salaries.ajax.edit', $this->data)->render();
@@ -150,12 +167,13 @@ class AdvanceSalaryController extends AccountBaseController
     {
         $viewPermission = user()->permission('edit_advance_salary');
 
-        abort_403(!in_array($viewPermission, ['all']));
-
-        $editDepartment = user()->permission('edit_employees');
-        abort_403($editDepartment != 'all');
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $salary = AdvanceSalary::findOrFail($id);
+        if (!$this->canManageRecord($salary, $viewPermission)) {
+            abort(403);
+        }
+
         $salary->employee_id = $request->employee;
         $salary->date = $request->date;
         $salary->advance_salary = $request->advance_salary;
@@ -170,12 +188,14 @@ class AdvanceSalaryController extends AccountBaseController
     {
         $viewPermission = user()->permission('delete_advance_salary');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
-        $deletePermission = user()->permission('delete_employees');
-        abort_403($deletePermission != 'all');
+        $salary = AdvanceSalary::findOrFail($id);
+        if (!$this->canManageRecord($salary, $viewPermission)) {
+            abort(403);
+        }
+        $salary->delete();
 
-        AdvanceSalary::findOrFail($id)->delete();
         $redirectUrl = route('advance-salaries.index');
         return Reply::successWithData(__('messages.deleteSuccess'), ['redirectUrl' => $redirectUrl]);
     }
@@ -184,12 +204,17 @@ class AdvanceSalaryController extends AccountBaseController
     {
         $viewPermission = user()->permission('delete_advance_salary');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $ids = explode(',', $request->row_ids);
 
         if ($request->action_type === 'delete') {
-            AdvanceSalary::whereIn('id', $ids)->delete();
+            $salaries = AdvanceSalary::whereIn('id', $ids)->get();
+            foreach ($salaries as $salary) {
+                if ($this->canManageRecord($salary, $viewPermission)) {
+                    $salary->delete();
+                }
+            }
             return response()->json([
                 'status' => 'success',
                 'message' => 'Records deleted successfully.'
@@ -203,7 +228,7 @@ class AdvanceSalaryController extends AccountBaseController
     {
         $viewPermission = user()->permission('approve_or_reject_advance_salary');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $this->salaryID = $request->ticket_id;
         $this->salaryAction = $request->ticket_action;
@@ -214,7 +239,7 @@ class AdvanceSalaryController extends AccountBaseController
     {
         $viewPermission = user()->permission('approve_or_reject_advance_salary');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $this->salaryID = $request->ticket_id;
         $this->salaryAction = $request->ticket_action;
@@ -225,9 +250,14 @@ class AdvanceSalaryController extends AccountBaseController
     {
         $viewPermission = user()->permission('approve_or_reject_advance_salary');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $salary = AdvanceSalary::with('employee')->findOrFail($request->salaryId);
+
+        if (!$this->canManageRecord($salary, $viewPermission)) {
+            abort(403);
+        }
+
         $salary->status = $request->action;
 
         if ($request->action == 'approved') {
@@ -240,10 +270,35 @@ class AdvanceSalaryController extends AccountBaseController
         $salary->save();
 
         // Send email to the employee
-        if ($salary->employee && $salary->employee->email) {
-            Mail::to($salary->employee->email)->send(new \App\Mail\AdvanceSalaryStatusUpdate($salary));
-        }
+        // if ($salary->employee && $salary->employee->email) {
+        //     Mail::to($salary->employee->email)->send(new \App\Mail\AdvanceSalaryStatusUpdate($salary));
+        // }
 
         return Reply::success(__('messages.updateSuccess'));
+    }
+
+    protected function canManageRecord(AdvanceSalary $salary, $permission): bool
+    {
+        if ($permission === 'all' || ($permission === 'branch' && user()->branch_id == 6)) {
+            return true;
+        }
+
+        if ($permission === 'added' && $salary->added_by == user()->id) {
+            return true;
+        }
+
+        if ($permission === 'owned' && $salary->employee_id == user()->id) {
+            return true;
+        }
+        if ($permission == 'both' && (user()->id == $salary->added_by || user()->id == $salary->employee_id)){
+            return true;
+        }
+
+        if ($permission === 'branch' && $salary->employee->branch_id == user()->branch_id) {
+            return true;
+        }
+
+        return false;
+
     }
 }

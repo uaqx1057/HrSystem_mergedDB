@@ -68,7 +68,7 @@
         <!-- Add Task Export Buttons Start -->
         <div class="d-grid d-lg-flex d-md-flex action-bar">
             <div id="table-actions" class="flex-grow-1 align-items-center">
-                @if (user()->permission('add_air_tickets') == 'all')
+                @if (in_array(user()->permission('add_air_tickets'), ['all', 'added', 'owned', 'both','branch']))
                     <x-forms.link-primary :link="route('air-tickets.create')" class="mr-3 openRightModal float-left"
                                             icon="plus">
                         @lang('modules.airTicket.addTitle')

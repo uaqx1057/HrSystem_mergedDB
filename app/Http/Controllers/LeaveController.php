@@ -45,7 +45,7 @@ class LeaveController extends AccountBaseController
     public function index(LeaveDataTable $dataTable)
     {
         $viewPermission = user()->permission('view_leave');
-        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $reportingTo = User::with('employeeDetail')->whereHas('employeeDetail', function ($q) {
             $q->where('reporting_to', user()->id);
@@ -67,9 +67,14 @@ class LeaveController extends AccountBaseController
     public function create()
     {
         $this->addPermission = user()->permission('add_leave');
-        abort_403(!in_array($this->addPermission, ['all', 'added']));
+        abort_403(!in_array($this->addPermission, ['all', 'added','branch']));
 
-        $this->employees = User::allEmployees(null, true, ($this->addPermission == 'all' ? 'all' : null));
+        if(in_array($this->addPermission, ['all','branch']) ){
+            $employeePermission = $this->addPermission;
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees(null, true, $employeePermission);
 
         $this->currentDate = Carbon::now()->format('Y-m-d');
 
@@ -117,18 +122,18 @@ class LeaveController extends AccountBaseController
     public function employeeLeaveSummary()
     {
         $viewPermission = user()->permission('view_leave');
-        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $assignRole = user()->roles->pluck('name')->toArray();
 
-        $employees = User::allEmployees(null, true, ($viewPermission == 'all' ? 'all' : null));
-        $employeeIDs = $employees->where('id', '!==', user()->id)->pluck('id')->toArray();
+        $employees = User::allEmployees(null, true, $viewPermission);
+        // $employeeIDs = $employees->where('id', '!==', user()->id)->pluck('id')->toArray();
 
-        if(!in_array('admin', $assignRole))
-        {
-            $employees = User::allEmployees($employeeIDs, true, ($viewPermission == 'all' ? 'all' : null));
-        };
-        $employees->load(['employeeDetail']);
+        // if(!in_array('admin', $assignRole))
+        // {
+        //     $employees = User::allEmployees($employeeIDs, true, ($viewPermission == 'all' ? 'all' : null));
+        // };
+        // $employees->load(['employeeDetail']);
 
         $summary = $employees->map(function ($employee) {
             $joiningDate = $employee->employeeDetail->joining_date
@@ -175,7 +180,7 @@ class LeaveController extends AccountBaseController
     public function store(StoreLeave $request)
     {
         $this->addPermission = user()->permission('add_leave');
-        abort_403(!in_array($this->addPermission, ['all', 'added']));
+        abort_403(!in_array($this->addPermission, ['all', 'added','branch']));
 
         $redirectUrl = urldecode($request->redirect_url);
 
@@ -510,7 +515,7 @@ class LeaveController extends AccountBaseController
         $this->reportingTo = EmployeeDetails::where('reporting_to', user()->id)->first();
 
         $this->viewPermission = user()->permission('view_leave');
-        abort_403(!($this->viewPermission == 'all'
+        abort_403(!($this->viewPermission == 'all' || $this->viewPermission == 'branch'
             || ($this->viewPermission == 'added' && user()->id == $this->leave->added_by)
             || ($this->viewPermission == 'owned' && user()->id == $this->leave->user_id)
             || ($this->viewPermission == 'both' && (user()->id == $this->leave->user_id || user()->id == $this->leave->added_by)) || ($this->reportingTo)
@@ -550,14 +555,19 @@ class LeaveController extends AccountBaseController
         $this->leave = Leave::with('files')->findOrFail($id);
         $this->editPermission = user()->permission('edit_leave');
         abort_403(!(
-            ($this->editPermission == 'all'
+            ($this->editPermission == 'all' || $this->editPermission == 'branch'
                 || ($this->editPermission == 'added' && $this->leave->added_by == user()->id)
                 || ($this->editPermission == 'owned' && $this->leave->user_id == user()->id)
                 || ($this->editPermission == 'both' && ($this->leave->user_id == user()->id || $this->leave->added_by == user()->id))
             )
             && ($this->leave->status == 'pending')));
 
-        $this->employees = User::allEmployees();
+        if(in_array($this->editPermission, ['all','branch']) ){
+            $employeePermission = $this->editPermission;
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees(null, true, $employeePermission);
 
         $this->pageTitle = $this->leave->user->name;
 
@@ -583,6 +593,8 @@ class LeaveController extends AccountBaseController
             $this->leaveTypeRole($this->leave->user_id);
         }
 
+        $this->leaveTypes = LeaveType::all();
+        
         if (request()->ajax()) {
             $html = view('leaves.ajax.edit', $this->data)->render();
 
@@ -723,7 +735,7 @@ class LeaveController extends AccountBaseController
     public function leaveCalendar(Request $request)
     {
         $viewPermission = user()->permission('view_leave');
-        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both', 'branch']));
 
         $this->pendingLeaves = Leave::where('status', 'pending')->count();
         $this->employees = User::allEmployees();

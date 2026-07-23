@@ -30,7 +30,7 @@ class EmployeeShiftChangeRequestController extends AccountBaseController
     {
         $this->manageEmployeeShifts = user()->permission('manage_employee_shifts');
 
-        abort_403(!(in_array($this->manageEmployeeShifts, ['all'])));
+        abort_403(!(in_array($this->manageEmployeeShifts, ['all', 'branch'])));
 
         if (!request()->ajax()) {
             $this->employees = User::allEmployees(null, true, 'all');

@@ -606,8 +606,8 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                         <form method="POST" id="save-employee-data-form">
                                             @csrf
                                             <input type="hidden" name="email" value="{{ $employee->email }}">
-                                            <div class="col-lg-12 mb-2">
-                                                <x-forms.text fieldId="password"
+                                            <div class="col-lg-12 my-2">
+                                                <x-forms.text textColor="text-darkest-white" fieldId="password"
                                                     :fieldLabel="__('app.menu.new_password')"
                                                     fieldName="password" fieldRequired="true"
                                                     :fieldPlaceholder="__('placeholders.password')"

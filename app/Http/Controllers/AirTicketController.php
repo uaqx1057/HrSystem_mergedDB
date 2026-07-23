@@ -31,11 +31,18 @@ class AirTicketController extends AccountBaseController
     {
         $viewPermission = user()->permission('view_air_tickets');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
-        $this->assignRole = user()->roles->pluck('name')->toArray();
-
-        $this->employees = User::allEmployees();
+        if(in_array($viewPermission, ['all','branch']) ){
+            if($viewPermission == 'branch' && user()->branch_id == 6){
+                $employeePermission = 'all';
+            } else{
+                $employeePermission = $viewPermission;
+            }
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees(null, true, $employeePermission);
         return $dataTable->render('air-tickets.index', $this->data);
     }
 
@@ -44,22 +51,23 @@ class AirTicketController extends AccountBaseController
      */
     public function create()
     {
-        $viewPermission = user()->permission('add_air_tickets');
+        $this->addPermission = user()->permission('add_air_tickets');
 
-        abort_403(!in_array($viewPermission, ['all']));
-
-        $this->assignRole = user()->roles->pluck('name')->toArray();
+        abort_403(!in_array($this->addPermission, ['all', 'added', 'branch']));
 
         $today = now();
 
-        $eligibleEmployees = User::with(['employeeDetails', 'airTicket'])
+        $eligibleEmployees = User::with(['employeeDetails', 'airTicket'])->has('employeeDetail')
             ->whereHas('employeeDetails', function ($query) use ($today) {
                 // Only employees who have completed at least 1 year
                 $query->where('joining_date', '<=', $today->copy()->subYear());
             });
 
-        if(count($this->assignRole) < 2){
+        if($this->addPermission == 'added'){
             $eligibleEmployees = $eligibleEmployees->where('id', user()->id);
+        }
+        if($this->addPermission == 'branch' && user()->branch_id !== 6){
+            $eligibleEmployees = $eligibleEmployees->where('branch_id', user()->branch_id);
         }
         $this->employees = $eligibleEmployees->get()
             ->filter(function ($employee) use ($today) {
@@ -98,7 +106,7 @@ class AirTicketController extends AccountBaseController
     {
         $viewPermission = user()->permission('add_air_tickets');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'branch']));
 
         $today = now();
 
@@ -129,6 +137,7 @@ class AirTicketController extends AccountBaseController
         $ticket->employee_id = $request->employee;
         $ticket->date = $request->date;
         $ticket->status = $request->status ?? 'pending';
+        $ticket->added_by = user()->id;
         $ticket->save();
 
         // Logic for sending email (Exactly like Advance Salary)
@@ -162,9 +171,13 @@ class AirTicketController extends AccountBaseController
     {
         $viewPermission = user()->permission('view_air_tickets');
 
-        abort_403(!in_array($viewPermission, ['all']));
-
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
         $this->airTicket = AirTicket::with(['employee'])->findOrFail($id);
+
+        if (!$this->canManageRecord($this->airTicket, $viewPermission)) {
+            abort(403);
+        }
+
         if (request()->ajax()) {
             $html = view('air-tickets.ajax.show', $this->data)->render();
 
@@ -183,21 +196,28 @@ class AirTicketController extends AccountBaseController
     {
         $viewPermission = user()->permission('edit_air_tickets');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
         $this->airTicket = AirTicket::findOrFail($id);
-        
+
+        if (!$this->canManageRecord($this->airTicket, $viewPermission)) {
+            abort(403);
+        }
+
         $today = now();
         $currentEmployeeId = $this->airTicket->employee_id; // ✅ Store for use in filter
 
-        $this->employees = User::with(['employeeDetails', 'airTicket'])
+        $this->employees = User::with(['employeeDetails', 'airTicket'])->has('employeeDetail')
             // ✅ Removed where('id', '!=', ...) so current employee is included
             ->whereHas('employeeDetails', function ($query) use ($today) {
                 $query->where('joining_date', '<=', $today->copy()->subYear());
-            })
-            ->get()
+            });
+            if($viewPermission == 'branch' && user()->branch_id !== 6){
+                $this->employees = $this->employees->where('branch_id', user()->branch_id);
+            }
+            $this->employees = $this->employees->get()
             ->filter(function ($employee) use ($today, $currentEmployeeId) {
                 $joiningDate = $employee->employeeDetails->joining_date;
 
@@ -258,9 +278,13 @@ class AirTicketController extends AccountBaseController
     {
         $viewPermission = user()->permission('delete_air_tickets');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
-        AirTicket::findOrFail($id)->delete();
+        $airticket = AirTicket::findOrFail($id);
+        if (!$this->canManageRecord($airticket, $viewPermission)) {
+            abort(403);
+        }
+        $airticket->delete();
 
         $redirectUrl = route('air-tickets.index');
 
@@ -271,12 +295,18 @@ class AirTicketController extends AccountBaseController
     {
         $viewPermission = user()->permission('delete_air_tickets');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $ids = explode(',', $request->row_ids);
 
         if ($request->action_type === 'delete') {
             AirTicket::whereIn('id', $ids)->delete();
+            $airTickets = AirTicket::whereIn('id', $ids)->get();
+            foreach ($airTickets as $airTicket) {
+                if ($this->canManageRecord($airTicket, $viewPermission)) {
+                    $airTicket->delete();
+                }
+            }
 
             return response()->json([
                 'status' => 'success',
@@ -291,7 +321,7 @@ class AirTicketController extends AccountBaseController
     {
         $viewPermission = user()->permission('approve_or_reject_air_tickets');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $this->ticketID = $request->ticket_id;
         $this->ticketAction = $request->ticket_action; // This is 'approved'
@@ -302,7 +332,7 @@ class AirTicketController extends AccountBaseController
     {
         $viewPermission = user()->permission('approve_or_reject_air_tickets');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $this->ticketID = $request->ticket_id;
         $this->ticketAction = $request->ticket_action; // This is 'rejected'
@@ -313,9 +343,12 @@ class AirTicketController extends AccountBaseController
     {
         $viewPermission = user()->permission('approve_or_reject_air_tickets');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $ticket = AirTicket::with('employee')->findOrFail($request->ticketId);
+        if (!$this->canManageRecord($ticket, $viewPermission)) {
+            abort(403);
+        }
         $ticket->status = $request->action;
 
         if ($request->action == 'approved') {
@@ -328,10 +361,35 @@ class AirTicketController extends AccountBaseController
         $ticket->save();
 
         // Send email to the employee (Exactly like Advance Salary)
-        if ($ticket->employee && $ticket->employee->email) {
-            Mail::to($ticket->employee->email)->send(new AirTicketStatusUpdate($ticket));
-        }
+        // if ($ticket->employee && $ticket->employee->email) {
+        //     Mail::to($ticket->employee->email)->send(new AirTicketStatusUpdate($ticket));
+        // }
 
         return Reply::success(__('messages.updateSuccess'));
+    }
+
+    protected function canManageRecord(AirTicket $airTicket, $permission): bool
+    {
+        if ($permission === 'all' || ($permission === 'branch' && user()->branch_id == 6)) {
+            return true;
+        }
+
+        if ($permission === 'added' && $airTicket->added_by == user()->id) {
+            return true;
+        }
+
+        if ($permission === 'owned' && $airTicket->employee_id == user()->id) {
+            return true;
+        }
+        if ($permission == 'both' && (user()->id == $airTicket->added_by || user()->id == $airTicket->employee_id)){
+            return true;
+        }
+
+        if ($permission === 'branch' && $airTicket->employee->branch_id == user()->branch_id) {
+            return true;
+        }
+
+        return false;
+
     }
 }

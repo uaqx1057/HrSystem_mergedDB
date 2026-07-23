@@ -25,7 +25,8 @@ class SuperadminRolePermissionController extends AccountBaseController
         'owned' => 2,
         'both' => 3,
         'all' => 4,
-        'none' => 5
+        'none' => 5,
+        'branch' => 6
     ];
 
     public function __construct()

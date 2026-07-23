@@ -74,7 +74,7 @@
                         </x-forms.input-group>
                     </div>
 
-                    @if ($approveRejectPermission == 'all')
+                    @if ($approveRejectPermission == 'all' || $approveRejectPermission == 'branch')
                         <div class="col-lg-4 col-md-6">
                             <x-forms.select fieldId="status" :fieldLabel="__('app.status')" fieldName="status" search="true">
                                 <option value="pending">@lang('app.pending')</option>

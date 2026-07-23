@@ -23,14 +23,14 @@
                         <h4 class="card-title f-15 f-w-500 text-darkest-white mb-0">
                             {{ ($employee->salutation ? $employee->salutation->label() . ' ' : '') . $employee->name }}
                             @isset($employee->country)
-                                <x-flag :country="$employee->country" />
+                                <x-flag textColor="text-darkest-white" :country="$employee->country" />
                             @endisset
                         </h4>
                     </div>
 
                 </div>
 
-                <p class="f-13 font-weight-normal text-dark-grey mb-0">
+                <p class="f-13 font-weight-normal text-darkest-white mb-0">
                     {{ !is_null($employee->employeeDetail) && !is_null($employee->employeeDetail->designation) ? $employee->employeeDetail->designation->name : '' }}
                     &bull;
                     {{ isset($employee->employeeDetail) && !is_null($employee->employeeDetail->department) && !is_null($employee->employeeDetail->department) ? $employee->employeeDetail->department->team_name : '' }}

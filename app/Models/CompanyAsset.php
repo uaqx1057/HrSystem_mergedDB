@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Scopes\ActiveScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CompanyAsset extends Model
 {
@@ -20,6 +22,7 @@ class CompanyAsset extends Model
         'qty',
         'available_qty',
         'status',
+        'added_by',
     ];
 
     public function assignments()
@@ -40,5 +43,10 @@ class CompanyAsset extends Model
     public function history()
     {
         return $this->hasMany(AssetAssignmentHistory::class, 'company_asset_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'added_by')->withoutGlobalScope(ActiveScope::class)->withOut('clientDetails');
     }
 }

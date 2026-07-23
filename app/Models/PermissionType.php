@@ -31,6 +31,7 @@ class PermissionType extends BaseModel
     const BOTH = 3;
     const ALL = 4;
     const NONE = 5;
+    const BRANCH = 6;
 
     protected $guarded = ['id'];
 

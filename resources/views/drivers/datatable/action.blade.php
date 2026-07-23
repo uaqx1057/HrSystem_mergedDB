@@ -1,4 +1,5 @@
 @php
+    $viewDriverPermission = user()->permission('view_drivers');
     $editDriverPermission = user()->permission('edit_drivers');
     $deleteDriverPermission = user()->permission('delete_drivers');
 @endphp
@@ -13,17 +14,19 @@
         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-{{ $id }}"
             tabindex="0">
 
+            @if ($viewDriverPermission == 'all' || $viewDriverPermission == 'branch')
             <a href="{{ route('drivers.show', [$id]) }}" class="dropdown-item"><i
                     class="fa fa-eye mr-2"></i>{{ __('app.view') }}</a>
+            @endif
 
-            @if ($editDriverPermission == 'all')
+            @if ($editDriverPermission == 'all' || $editDriverPermission == 'branch')
             <a class="dropdown-item openRightModal" href="{{ route('drivers.edit', [$id]) }}">
                 <i class="fa fa-edit mr-2"></i>
                 {{ trans('app.edit') }}
             </a>
             @endif
 
-            @if ($deleteDriverPermission == 'all')
+            @if ($deleteDriverPermission == 'all' || $editDriverPermission == 'branch')
             <a class="dropdown-item delete-table-row" href="javascript:;" data-driver-id="{{ $id }}">
                 <i class="fa fa-trash mr-2"></i>
                 {{ trans('app.delete') }}

@@ -12,16 +12,19 @@
                     @lang('modules.insurance.addTitle')</h4>
                 <div class="row p-20">
 
+                    @if ($addPermission == 'added')
+                        <input type="hidden" name="employee" value="{{ user()->id }}">
+                    @endif
                     <div class="col-lg-4 col-md-6 employee-select">
                         <x-forms.label class="" fieldId="employee"
                             :fieldLabel="__('app.employee')" fieldRequired="true">
                         </x-forms.label>
                         <x-forms.input-group>
                             <select class="form-control select-picker" name="employee"
-                                id="employee" data-live-search="true">
+                                id="employee" data-live-search="true" {{ $addPermission == 'added' ? 'disabled' : '' }}>
                                 <option value="">--</option>
                                 @foreach ($employees as $employee)
-                                    <option value="{{ $employee->id }}">{{ $employee->name }}</option>
+                                    <option {{ ($addPermission == 'added' && user()->id == $employee->id) ? 'selected' : '' }} value="{{ $employee->id }}">{{ $employee->name }}</option>
                                 @endforeach
                             </select>
                         </x-forms.input-group>
@@ -62,7 +65,7 @@
                              :fieldPlaceholder="__('placeholders.class')">
                         </x-forms.text>
                     </div>
-                    <div class="col-lg-4 col-md-6">
+                    {{-- <div class="col-lg-4 col-md-6">
                         <x-forms.label class="my-3" fieldId="status"
                             :fieldLabel="__('app.status')" >
                         </x-forms.label>
@@ -73,7 +76,7 @@
                                 <option value="cancelled">Cancelled</option>
                             </select>
                         </x-forms.input-group>
-                    </div>
+                    </div> --}}
                 </div>
 
                 <x-form-actions>

@@ -43,7 +43,7 @@ class EmployeeShiftScheduleController extends AccountBaseController
         $this->viewShiftPermission = user()->permission('view_shift_roster');
         $this->manageEmployeeShifts = user()->permission('manage_employee_shifts');
 
-        abort_403(!(in_array($this->viewShiftPermission, ['all', 'owned'])));
+        abort_403(!(in_array($this->viewShiftPermission, ['all', 'owned', 'branch'])));
 
         if (request()->ajax()) {
             if (request()->view_type == 'week') {
@@ -59,7 +59,16 @@ class EmployeeShiftScheduleController extends AccountBaseController
             $this->employees = User::where('id', user()->id)->get();
 
         } else {
-            $this->employees = User::allEmployees(null, true, ($this->viewShiftPermission == 'all' ? 'all' : null));
+            if(in_array($this->viewShiftPermission, ['all','branch']) ){
+                if($this->viewShiftPermission == 'branch' && user()->branch_id == 6){
+                    $employeePermission = 'all';
+                } else{
+                    $employeePermission = $this->viewShiftPermission;
+                }
+            } else{
+                $employeePermission = null;
+            }
+            $this->employees = User::allEmployees(null, true, $employeePermission);
         }
 
         $now = now();
@@ -72,6 +81,8 @@ class EmployeeShiftScheduleController extends AccountBaseController
 
     public function summaryData($request)
     {
+        $viewShiftPermission = user()->permission('view_shift_roster');
+
         $this->attendanceSetting = AttendanceSetting::with('shift')->first()->shift;
         $this->employeeShifts = EmployeeShift::where('shift_name', '<>', 'Day Off')->get();
 
@@ -99,8 +110,12 @@ class EmployeeShiftScheduleController extends AccountBaseController
         }
 
 
-        if ($request->userId != 'all') {
+        if ($request->userId != 'all' && $viewShiftPermission != 'branch') {
             $employees = $employees->where('users.id', $request->userId);
+        }
+
+        if ($viewShiftPermission == 'branch' && user()->branch_id !== 6) {
+            $employees = $employees->where('users.branch_id', user()->branch_id);
         }
 
         $employees = $employees->get();
@@ -205,6 +220,8 @@ class EmployeeShiftScheduleController extends AccountBaseController
 
     public function weekSummaryData($request)
     {
+        $viewShiftPermission = user()->permission('view_shift_roster');
+
         $this->attendanceSetting = AttendanceSetting::with('shift')->first()->shift;
         $this->employeeShifts = EmployeeShift::where('shift_name', '<>', 'Day Off')->get();
 
@@ -232,8 +249,12 @@ class EmployeeShiftScheduleController extends AccountBaseController
         }
 
 
-        if ($request->userId != 'all') {
+        if ($request->userId != 'all' && $viewShiftPermission != 'branch') {
             $employees = $employees->where('users.id', $request->userId);
+        }
+
+        if ($viewShiftPermission == 'branch' && user()->branch_id !== 6) {
+            $employees = $employees->where('users.branch_id', user()->branch_id);
         }
 
         $employees = $employees->get();
@@ -320,7 +341,7 @@ class EmployeeShiftScheduleController extends AccountBaseController
     {
         $manageEmployeeShifts = user()->permission('manage_employee_shifts');
 
-        abort_403(!(in_array($manageEmployeeShifts, ['all'])));
+        abort_403(!(in_array($manageEmployeeShifts, ['all', 'branch'])));
 
         $this->date = Carbon::createFromFormat('d-m-Y', $day . '-' . $month . '-' . $year)->format('Y-m-d');
         $this->day = Carbon::createFromFormat('d-m-Y', $day . '-' . $month . '-' . $year)->dayOfWeek;

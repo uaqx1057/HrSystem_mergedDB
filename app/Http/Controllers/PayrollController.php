@@ -46,13 +46,15 @@ class PayrollController extends AccountBaseController
 
         $tab = $request->get('tab', 'salary-slips');
         if($tab == 'salary-slips'){
+            $this->viewPermission = user()->permission('view_payroll');
             abort_403(user()->permission('view_payroll') == 'none');
         } elseif($tab == 'salary-groups'){
             abort_403(!in_array(user()->permission('manage_salary_group'), ['all']));
         } elseif($tab == 'salary-components'){
             abort_403(!in_array(user()->permission('manage_salary_component'), ['all']));
         } elseif($tab == 'salary-setups'){
-            abort_403(!in_array(user()->permission('manage_employee_salary'), ['all']));
+            $this->viewPermission = user()->permission('manage_employee_salary');
+            abort_403(!in_array(user()->permission('manage_employee_salary'),  ['all', 'branch']));
         } elseif($tab == 'payroll-cycles'){
             abort_403(!in_array(user()->permission('add_payroll'), ['all']));
         } elseif($tab == 'payment-methods'){
@@ -68,8 +70,26 @@ class PayrollController extends AccountBaseController
         $currentYear = (int) $currentDate->year;
         $currentMonth = (int) $currentDate->month;
 
-        $this->salarySlips = SalarySlip::with(['user:id,name', 'salaryGroup:id,group_name', 'paymentMethod:id,payment_method', 'cycle:id,cycle'])
+        $this->salarySlips = SalarySlip::with(['user:id,name,branch_id', 'salaryGroup:id,group_name', 'paymentMethod:id,payment_method', 'cycle:id,cycle'])
             ->latest('id');
+
+        if ($this->viewPermission == 'added') {
+            $this->salarySlips = $this->salarySlips->where('added_by', user()->id);
+        }
+
+        if ($this->viewPermission == 'owned') {
+            $this->salarySlips = $this->salarySlips->where('user_id', user()->id);
+        }
+
+        if ($this->viewPermission == 'both') {
+            $this->salarySlips = $this->salarySlips->where('user_id', user()->id)->orWhere('added_by', user()->id);
+        }
+
+        if ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+            $this->salarySlips = $this->salarySlips->whereHas('user', function ($query) use ($request) {
+                $query->where('branch_id', user()->branch_id);
+            });
+        }
 
         $this->salarySlips = $this->salarySlips->paginate(15, ['*'], 'salary_slips_page')
             ->withQueryString();
@@ -94,8 +114,15 @@ class PayrollController extends AccountBaseController
             ->withQueryString();
 
         $this->employeeSetups = PayrollEmployeeSetup::with(['employee:id,name'])
-            ->latest('id')
-            ->paginate(15, ['*'], 'employee_setups_page')
+            ->latest('id');
+
+        if ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+            $this->employeeSetups = $this->employeeSetups->whereHas('employee', function ($query) use ($request) {
+                $query->where('branch_id', user()->branch_id);
+            });
+        }
+
+        $this->employeeSetups = $this->employeeSetups->paginate(15, ['*'], 'employee_setups_page')
             ->withQueryString();
 
         $this->driverSetups = PayrollDriverSetup::with(['driver:id,name,driver_id,iqaama_number'])
@@ -115,7 +142,16 @@ class PayrollController extends AccountBaseController
             ]
         );
 
-        $this->employees = User::allEmployees(null, false, 'all');
+        if(in_array($this->viewPermission, ['all','branch']) ){
+            if($this->viewPermission == 'branch' && user()->branch_id == 6){
+                $employeePermission = 'all';
+            } else{
+                $employeePermission = $this->viewPermission;
+            }
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees(null, true, $employeePermission);
         $this->drivers = Driver::withoutGlobalScopes()
             ->newQuery()
             ->select('id', 'name', 'driver_id', 'iqaama_number', 'email', 'mobile', 'onboarding_stage', 'offboard_request', 'offboarding_stage')
@@ -150,8 +186,28 @@ class PayrollController extends AccountBaseController
         $month = $request->get('month');
         $year = $request->get('year');
 
+        $this->viewPermission = user()->permission('view_payroll');
+
         $query = SalarySlip::with(['user:id,name', 'driver:id,name', 'salaryGroup:id,group_name', 'paymentMethod:id,payment_method', 'cycle:id,cycle'])
             ->orderByDesc('id');
+
+        if ($this->viewPermission == 'added') {
+            $query = $query->where('added_by', user()->id);
+        }
+
+        if ($this->viewPermission == 'owned') {
+            $query = $query->where('user_id', user()->id);
+        }
+
+        if ($this->viewPermission == 'both') {
+            $query = $query->where('user_id', user()->id)->orWhere('added_by', user()->id);
+        }
+
+        if ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+            $query = $query->whereHas('user', function ($query) use ($request) {
+                $query->where('branch_id', user()->branch_id);
+            });
+        }
 
         if (!empty($status) && in_array($status, ['generated', 'review', 'locked', 'paid'])) {
             $query->where('status', $status);
@@ -275,7 +331,7 @@ class PayrollController extends AccountBaseController
     {
         // dd($request->all());
         $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
+        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'branch']));
 
         $validated = $request->validate([
             'payee_type' => 'required|in:employee,driver',
@@ -353,8 +409,9 @@ class PayrollController extends AccountBaseController
     public function updateSalarySlip(Request $request, SalarySlip $salarySlip): RedirectResponse
     {
         $isImpersonatingCompany = session()->has('impersonate');
-        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
+        abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added', 'owned', 'both','branch']));
 
+        
         $validated = $request->validate([
             'payee_type' => 'nullable|in:employee,driver',
             'employee_id' => 'nullable|exists:users,id',
@@ -413,14 +470,14 @@ class PayrollController extends AccountBaseController
         $validated['balance_amount'] = max($netSalary - $paidAmount, 0);
         $validated['payee_type'] = $payeeType;
 
-        if ($validated['balance_amount'] <= 0 && ($validated['status'] ?? '') !== 'paid') {
-            $validated['status'] = 'paid';
-            $validated['paid_on'] = $validated['paid_on'] ?? now()->toDateString();
-        }
+        // if ($validated['balance_amount'] <= 0 && ($validated['status'] ?? '') !== 'paid') {
+        //     $validated['status'] = 'paid';
+        //     $validated['paid_on'] = $validated['paid_on'] ?? now()->toDateString();
+        // }
 
-        if (($validated['status'] ?? '') === 'paid' && empty($validated['paid_on'])) {
-            $validated['paid_on'] = now()->toDateString();
-        }
+        // if (($validated['status'] ?? '') === 'paid' && empty($validated['paid_on'])) {
+        //     $validated['paid_on'] = now()->toDateString();
+        // }
 
         $validated['salary_json'] = json_encode($salaryJson);
         $salarySlip->update($validated);
@@ -874,9 +931,18 @@ class PayrollController extends AccountBaseController
     public function create()
     {
         $addPayrollPermission = user()->permission('add_payroll');
-        abort_403(!in_array($addPayrollPermission, ['all', 'added']));
+        abort_403(!in_array($addPayrollPermission, ['all', 'branch']));
 
-        $this->employees = User::allEmployees(null, false, 'all');
+        if(in_array($addPayrollPermission, ['all','branch']) ){
+            if($addPayrollPermission == 'branch' && user()->branch_id == 6){
+                $employeePermission = 'all';
+            } else{
+                $employeePermission = $addPayrollPermission;
+            }
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees(null, true, $employeePermission);
         $this->allGroups = SalaryGroup::orderBy('group_name')->get(['id', 'group_name']);
         $this->allCycles = PayrollCycle::orderBy('cycle')->get(['id', 'cycle']);
         $this->allPaymentMethods = SalaryPaymentMethod::orderBy('payment_method')->get(['id', 'payment_method']);

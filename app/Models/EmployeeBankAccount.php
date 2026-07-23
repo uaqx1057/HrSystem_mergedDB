@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Scopes\ActiveScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EmployeeBankAccount extends Model
 {
@@ -19,8 +21,13 @@ class EmployeeBankAccount extends Model
         'added_by',
     ];
 
-    public function employee()
+    public function employee(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'employee_id');
+        return $this->belongsTo(User::class, 'employee_id')->withoutGlobalScope(ActiveScope::class)->withOut('clientDetails');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'added_by')->withoutGlobalScope(ActiveScope::class)->withOut('clientDetails');
     }
 }

@@ -77,7 +77,7 @@
                             :fieldValue="$insurance->class">
                         </x-forms.text>
                     </div>
-                    <div class="col-lg-4 col-md-6">
+                    {{-- <div class="col-lg-4 col-md-6">
                         <x-forms.label class="my-3" fieldId="status"
                             :fieldLabel="__('app.status')" >
                         </x-forms.label>
@@ -88,7 +88,7 @@
                                 <option @if ($insurance->status == 'cancelled') selected @endif value="cancelled">Cancelled</option>
                             </select>
                         </x-forms.input-group>
-                    </div>
+                    </div> --}}
 
                 </div>
 

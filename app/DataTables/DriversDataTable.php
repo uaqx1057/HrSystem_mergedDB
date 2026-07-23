@@ -123,6 +123,11 @@ class DriversDataTable extends DataTable
             }
         });
 
+        if (user()->permission('view_drivers') == 'branch') {
+            $currentBranchId = user()->branch_id;
+            $query->where('branch_id', $currentBranchId);
+        }
+
         return $query;
     }
 

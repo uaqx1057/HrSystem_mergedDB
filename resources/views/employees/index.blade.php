@@ -145,7 +145,7 @@
 
             <div id="table-actions" class="d-block d-lg-flex align-items-center">
                 @if (checkCompanyCanAddMoreEmployees(user()->company_id))
-                @if ($addEmployeePermission == 'all')
+                @if (in_array($addEmployeePermission, ['all', 'added', 'branch']))
                     <x-forms.link-primary :link="route('employees.create')" class="mr-3 openRightModal" icon="plus">
                         @lang('app.addEmployee')
                     </x-forms.link-primary>
@@ -155,7 +155,7 @@
                     </x-forms.button-secondary>
                 @endif
 
-                @if ($addEmployeePermission == 'all')
+                @if (in_array($addEmployeePermission, ['all', 'added', 'branch']))
                     <x-forms.link-secondary :link="route('employees.import')" class="mr-3 openRightModal mb-2 mb-lg-0 d-none d-lg-block"
                                             icon="file-upload">
                         @lang('app.importExcel')

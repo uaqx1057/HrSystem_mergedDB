@@ -50,7 +50,7 @@
                             </div>
 
                             <div class="col-lg-4">
-                                <div class="form-group my-3">
+                                <div class="form-group">
                                     <x-forms.label fieldId="colorselector" fieldRequired="true"
                                         :fieldLabel="__('modules.sticky.colors')">
                                     </x-forms.label>

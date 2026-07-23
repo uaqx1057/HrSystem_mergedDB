@@ -68,7 +68,7 @@
         <!-- Add Task Export Buttons Start -->
         <div class="d-grid d-lg-flex d-md-flex action-bar">
             <div id="table-actions" class="flex-grow-1 align-items-center">
-                @if (in_array(user()->permission('add_insurance'), ['all']))
+                @if (in_array(user()->permission('add_insurance'), ['all', 'added', 'branch']))
                     <x-forms.link-primary :link="route('insurance.create')" class="mr-3 openRightModal float-left"
                                           icon="plus">
                         @lang('modules.insurance.addTitle')

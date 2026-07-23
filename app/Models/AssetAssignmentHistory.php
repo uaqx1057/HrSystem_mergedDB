@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\ActiveScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -19,6 +20,7 @@ class AssetAssignmentHistory extends Model
         'action_at',
         'signed_document',
         'asset_assignment_id',
+        'added_by',
     ];
 
     protected $casts = [
@@ -33,5 +35,10 @@ class AssetAssignmentHistory extends Model
     public function employee()
     {
         return $this->belongsTo(User::class, 'employee_id');
+    }
+
+    public function addedBy()
+    {
+        return $this->belongsTo(User::class, 'added_by')->withoutGlobalScope(ActiveScope::class)->withOut('clientDetails');
     }
 }

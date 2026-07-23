@@ -99,7 +99,7 @@ $addAttendancePermission = user()->permission('add_attendance');
         <div class="d-grid d-lg-flex d-md-flex action-bar">
 
             <div id="table-actions" class="flex-grow-1 align-items-center">
-                @if ($addAttendancePermission == 'all' || $addAttendancePermission == 'added')
+                @if ($addAttendancePermission == 'all' || $addAttendancePermission == 'added' || $addAttendancePermission == 'branch')
                     <x-forms.link-primary :link="route('attendances.create')"
                         data-redirect-url="{{ route('attendances.by_member') }}" class="mr-3 openRightModal float-left"
                         icon="plus">
@@ -112,7 +112,7 @@ $addAttendancePermission = user()->permission('add_attendance');
                     @endif
                 @endif
 
-                @if ($addAttendancePermission == 'all' || $addAttendancePermission == 'added')
+                @if ($addAttendancePermission == 'all' || $addAttendancePermission == 'added' || $addAttendancePermission == 'branch')
                     <x-forms.link-secondary :link="route('attendances.import')" class="mr-3 openRightModal float-left d-none d-lg-block"
                         icon="file-upload">
                         @lang('app.importExcel')

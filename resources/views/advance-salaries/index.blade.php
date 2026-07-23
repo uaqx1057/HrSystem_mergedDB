@@ -55,7 +55,7 @@
     <div class="content-wrapper">
         <div class="d-grid d-lg-flex d-md-flex action-bar">
             <div id="table-actions" class="flex-grow-1 align-items-center">
-                @if (in_array(user()->permission('add_advance_salary'), ['all']))
+                @if (in_array(user()->permission('add_advance_salary'), ['all', 'added', 'owned', 'both','branch']))
                     <x-forms.link-primary :link="route('advance-salaries.create')" class="mr-3 openRightModal float-left"
                                             icon="plus">
                         @lang('modules.advanceSalary.addTitle')
