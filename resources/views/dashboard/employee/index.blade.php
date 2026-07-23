@@ -18,6 +18,7 @@
         @if (($managerLifecycleTasks ?? 0) > 0)
             <div class="row pt-3"><div class="col-md-12"><x-alert type="info" icon="tasks">You have {{ $managerLifecycleTasks }} pending onboarding/offboarding task(s) for your direct reports.</x-alert></div></div>
         @endif
+        <div class="row pt-3"><div class="col-md-12"><a class="btn btn-outline-primary" href="{{ route('hr-employee-requests.index') }}"><i class="fa fa-inbox mr-1"></i>My HR requests @if(($myPendingEmployeeRequests ?? 0) > 0)<span class="badge badge-primary ml-1">{{ $myPendingEmployeeRequests }}</span>@endif</a></div></div>
         <!-- WELOCOME START -->
         @if (!is_null($checkTodayLeave))
             <div class="row pt-4">

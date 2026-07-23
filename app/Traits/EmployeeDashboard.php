@@ -31,6 +31,7 @@ use App\Models\EmployeeShiftSchedule;
 use App\Http\Requests\ClockIn\ClockInRequest;
 use App\Models\Company;
 use App\Models\EmployeeShift;
+use App\Models\HrEmployeeRequest;
 
 /**
  *
@@ -43,6 +44,8 @@ trait EmployeeDashboard
      */
     public function employeeDashboard()
     {
+        $this->myPendingEmployeeRequests = HrEmployeeRequest::where('employee_id', user()->id)
+            ->where('status', 'pending')->count();
         $this->managerLifecycleTasks = DB::table('hr_onboarding_tasks')
             ->join('hr_onboarding_cases', 'hr_onboarding_cases.id', '=', 'hr_onboarding_tasks.case_id')
             ->join('employee_details', 'employee_details.user_id', '=', 'hr_onboarding_cases.employee_id')
