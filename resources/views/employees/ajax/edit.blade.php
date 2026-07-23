@@ -136,6 +136,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
 <div class="row">
     <div class="col-sm-12">
         <x-form id="save-data-form" method="PUT">
+            <input type="hidden" name="edit_version" id="edit_version" value="{{ $editState->version ?? 0 }}">
             <div class="add-client bg-white rounded">
 
                 {{-- ── STEP INDICATORS ── --}}
@@ -164,6 +165,13 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                         <div class="ms-step-circle">5</div>
                         <span class="ms-step-label">Allowances</span>
                     </div>
+                </div>
+                <div class="px-3 pb-2 text-muted f-12" id="edit-save-status">
+                    @if (($editState->last_saved_at ?? null))
+                        Last saved step {{ $editState->last_saved_step }} at {{ $editState->last_saved_at->timezone(company()->timezone)->format(company()->time_format) }}
+                    @else
+                        Changes save per step.
+                    @endif
                 </div>
 
                 {{-- ══════════════════════════════════════
@@ -1304,6 +1312,7 @@ $(document).ready(function () {
         });
 
         data.append('step', step);
+        data.append('edit_version', $('#edit_version').val());
         if (step === 4) data.append('dependants_present', '1');
         if (step === 5) data.append('allowances_present', '1');
         return data;
@@ -1339,6 +1348,9 @@ $(document).ready(function () {
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             success: function (response) {
                 if (response.status === 'success') {
+                    if (response.editVersion !== undefined) $('#edit_version').val(response.editVersion);
+                    dirtySteps[step] = false;
+                    $('#edit-save-status').text('Saved step ' + step + ' at ' + new Date().toLocaleTimeString());
                     $button.data('saved-at', new Date().toLocaleTimeString()).attr('title', 'Saved at ' + $button.data('saved-at'));
                     Swal.fire({ icon: 'success', text: 'This step has been saved.', toast: true, position: 'top-end', timer: 2500, showConfirmButton: false });
                 }
@@ -1351,6 +1363,20 @@ $(document).ready(function () {
             complete: function () { $button.prop('disabled', false); }
         });
     });
+
+    var dirtySteps = {};
+    $('#save-data-form').on('input change', '.form-step :input', function () {
+        var step = parseInt($(this).closest('.form-step').attr('id').replace('form-step-', ''));
+        dirtySteps[step] = true;
+        $('#edit-save-status').text('Unsaved changes in step ' + step + '.');
+    });
+
+    setInterval(function () {
+        var activeStep = parseInt($('.form-step.active').attr('id').replace('form-step-', ''));
+        if (dirtySteps[activeStep] && !$('.save-step-btn[data-step="' + activeStep + '"]').prop('disabled')) {
+            $('.save-step-btn[data-step="' + activeStep + '"]').trigger('click');
+        }
+    }, 60000);
 
     $('#save-form').click(function () {
         if (!validateDependants()) return;

@@ -55,6 +55,8 @@ use App\Models\UserActivity;
 use App\Models\UserInvitation;
 use App\Models\VisaDetail;
 use App\Models\EmployeeDependant;
+use App\Models\HrEmployeeEditState;
+use App\Services\EmployeeLifecycle;
 
 use App\Traits\ImportExcel;
 use Illuminate\Http\Request;
@@ -495,6 +497,10 @@ class EmployeeController extends AccountBaseController
         $this->employees = User::allEmployees($exceptUsers, true);
 
         $this->existingAllowances = EmployeeAllowance::where('employee_id', $this->employee->id)->get();
+        $this->editState = HrEmployeeEditState::firstOrCreate(
+            ['company_id' => $this->employee->company_id, 'employee_id' => $this->employee->id],
+            ['version' => 0]
+        );
 
         if (!is_null($this->employee->employeeDetail)) {
             $this->employeeDetail = $this->employee->employeeDetail->withCustomFields();
@@ -526,6 +532,11 @@ class EmployeeController extends AccountBaseController
     public function update(UpdateRequest $request, $id)
     {
         $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
+        $editState = HrEmployeeEditState::firstOrCreate(
+            ['company_id' => $user->company_id, 'employee_id' => $user->id],
+            ['version' => 0]
+        );
+        abort_if($request->has('edit_version') && (int) $request->edit_version !== (int) $editState->version, 409, 'This employee was updated by another user. Refresh before saving again.');
         $currentUser = user();
         $editPermission = $currentUser->permission('edit_employees');
 
@@ -646,6 +657,12 @@ class EmployeeController extends AccountBaseController
         }
 
         $employee->save();
+        $editState->update([
+            'last_saved_step' => 5,
+            'version' => $editState->version + 1,
+            'last_saved_by' => $currentUser->id,
+            'last_saved_at' => now(),
+        ]);
         try {
             app(\App\Services\BioTimeService::class)->createEmployee($user, $employee);
         } catch (\Exception $e) {
@@ -681,7 +698,14 @@ class EmployeeController extends AccountBaseController
         $employee = EmployeeDetails::firstOrNew(['user_id' => $user->id]);
         $request->validate($this->employeeStepRules($step, $employee));
 
-        DB::transaction(function () use ($request, $step, $user, $employee) {
+        $nextVersion = null;
+        DB::transaction(function () use ($request, $step, $user, $employee, &$nextVersion) {
+            $editState = HrEmployeeEditState::where('company_id', $user->company_id)
+                ->where('employee_id', $user->id)
+                ->lockForUpdate()
+                ->firstOrCreate(['company_id' => $user->company_id, 'employee_id' => $user->id], ['version' => 0]);
+
+            abort_if((int) $request->input('edit_version', 0) !== (int) $editState->version, 409, 'This employee was updated by another user. Refresh before saving again.');
             if ($step === 1) {
                 $user->fill($request->only(['name', 'salutation', 'branch_id']));
                 if ($request->hasFile('image')) {
@@ -724,9 +748,17 @@ class EmployeeController extends AccountBaseController
 
             if ($step === 4 && $request->boolean('dependants_present')) $this->saveDependants($request, $employee);
             if ($step === 5 && $request->boolean('allowances_present')) $this->saveAllowances($request, $employee);
+
+            $editState->update([
+                'last_saved_step' => $step,
+                'version' => $editState->version + 1,
+                'last_saved_by' => user()->id,
+                'last_saved_at' => now(),
+            ]);
+            $nextVersion = $editState->version;
         });
 
-        return Reply::success(__('messages.updateSuccess'));
+        return Reply::successWithData(__('messages.updateSuccess'), ['editVersion' => $nextVersion]);
     }
 
     private function authorizeEmployeeStepSave(User $employee, Request $request): void
@@ -855,6 +887,7 @@ class EmployeeController extends AccountBaseController
             ->findOrFail($id);
 
         $this->employeeLanguage = LanguageSetting::where('language_code', $this->employee->locale)->first();
+        $this->employeeLifecycle = EmployeeLifecycle::summary($this->employee);
         $this->employeeInsurances = \App\Models\Insurance::where('employee_id', $id)
             ->orderBy('expiry_date', 'desc')
             ->get();

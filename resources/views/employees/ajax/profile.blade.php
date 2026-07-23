@@ -49,6 +49,25 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
     <div class="w-100 py-0 py-lg-3 py-md-0">
         <!-- ROW START -->
         <div class="row">
+            @if (isset($employeeLifecycle))
+                <div class="col-12 mb-3">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body py-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>Employee lifecycle</strong>
+                                <span class="badge badge-{{ $employeeLifecycle['percentage'] === 100 ? 'success' : 'warning' }}">{{ $employeeLifecycle['percentage'] }}% complete</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 8px;"><div class="progress-bar" role="progressbar" style="width: {{ $employeeLifecycle['percentage'] }}%"></div></div>
+                            @if ($employeeLifecycle['missing']->isNotEmpty())
+                                <div class="text-danger f-12">Missing: {{ $employeeLifecycle['missing']->implode(', ') }}</div>
+                            @endif
+                            @foreach ($employeeLifecycle['documents']->take(3) as $document)
+                                <span class="badge badge-{{ $document['days_remaining'] < 0 ? 'danger' : ($document['days_remaining'] <= 30 ? 'warning' : 'light') }} mr-1">{{ $document['label'] }}: {{ $document['days_remaining'] < 0 ? 'expired' : $document['days_remaining'] . ' days' }}</span>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
             <!--  USER CARDS START -->
             <div class="col-lg-12 col-md-12 mb-4 mb-xl-0 mb-lg-4 mb-md-0">
                 <div class="row">
