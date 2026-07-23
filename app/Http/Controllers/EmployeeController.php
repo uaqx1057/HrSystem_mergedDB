@@ -37,6 +37,9 @@ use App\Models\Appreciation;
 use App\Models\Attendance;
 use App\Models\Designation;
 use App\Models\EmployeeDetails;
+use App\Models\HrCandidate;
+use App\Models\HrEmployeeEditState;
+use App\Models\HrOnboardingCase;
 use App\Models\EmployeeSkill;
 use App\Models\LanguageSetting;
 use App\Models\Leave;
@@ -55,6 +58,8 @@ use App\Models\UserActivity;
 use App\Models\UserInvitation;
 use App\Models\VisaDetail;
 use App\Models\EmployeeDependant;
+use App\Services\EmployeeLifecycle;
+use App\Services\HrAccess;
 
 use App\Traits\ImportExcel;
 use Illuminate\Http\Request;
@@ -131,6 +136,9 @@ class EmployeeController extends AccountBaseController
         $this->employees = User::allEmployees(null, true);
         $this->languages = LanguageSetting::where('status', 'enabled')->get();
         $this->salutations = Salutation::cases();
+        $this->candidate = request('candidate_id')
+            ? HrCandidate::whereKey(request('candidate_id'))->where('company_id', user()->company_id)->where('status', 'handoff')->first()
+            : null;
 
         $userRoles = user()->roles->pluck('name')->toArray();
 
@@ -296,6 +304,22 @@ class EmployeeController extends AccountBaseController
 
             // Commit Transaction
             DB::commit();
+
+            if ($request->filled('candidate_id')) {
+                $candidate = HrCandidate::whereKey($request->candidate_id)->where('company_id', user()->company_id)->where('status', 'handoff')->first();
+                if ($candidate) {
+                    $candidate->update(['status' => 'converted', 'converted_employee_id' => $user->id]);
+                    $case = HrOnboardingCase::firstOrCreate(
+                        ['employee_id' => $user->id, 'status' => 'open'],
+                        ['company_id' => $user->company_id, 'template_name' => $employee->employee_type ?? 'expat', 'due_date' => now()->addDays(14), 'initiated_by' => user()->id]
+                    );
+                    if ($case->wasRecentlyCreated) {
+                        foreach (['Verify employee profile and documents', 'Set up bank and payroll', 'Assign insurance', 'Assign required assets', 'Grant DMS/DOBS access', 'Manager confirmation'] as $title) {
+                            DB::table('hr_onboarding_tasks')->insert(['case_id' => $case->id, 'title' => $title, 'owner_type' => 'hr', 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
+                        }
+                    }
+                }
+            }
 
             // WORKSUITESAAS
             session()->forget('company');
@@ -495,6 +519,10 @@ class EmployeeController extends AccountBaseController
         $this->employees = User::allEmployees($exceptUsers, true);
 
         $this->existingAllowances = EmployeeAllowance::where('employee_id', $this->employee->id)->get();
+        $this->editState = HrEmployeeEditState::firstOrCreate(
+            ['company_id' => $this->employee->company_id, 'employee_id' => $this->employee->id],
+            ['version' => 0]
+        );
 
         if (!is_null($this->employee->employeeDetail)) {
             $this->employeeDetail = $this->employee->employeeDetail->withCustomFields();
@@ -526,6 +554,11 @@ class EmployeeController extends AccountBaseController
     public function update(UpdateRequest $request, $id)
     {
         $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
+        $editState = HrEmployeeEditState::firstOrCreate(
+            ['company_id' => $user->company_id, 'employee_id' => $user->id],
+            ['version' => 0]
+        );
+        abort_if($request->has('edit_version') && (int) $request->edit_version !== (int) $editState->version, 409, 'This employee was updated by another user. Refresh before saving again.');
         $currentUser = user();
         $editPermission = $currentUser->permission('edit_employees');
 
@@ -646,6 +679,12 @@ class EmployeeController extends AccountBaseController
         // }
 
         $employee->save();
+        $editState->update([
+            'last_saved_step' => 5,
+            'version' => $editState->version + 1,
+            'last_saved_by' => $currentUser->id,
+            'last_saved_at' => now(),
+        ]);
         try {
             app(\App\Services\BioTimeService::class)->createEmployee($user, $employee);
         } catch (\Exception $e) {
@@ -673,7 +712,7 @@ class EmployeeController extends AccountBaseController
     public function saveStep(Request $request, $id)
     {
         $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
-        $this->authorizeEmployeeStepSave($user);
+        $this->authorizeEmployeeStepSave($user, $request);
 
         $step = (int) $request->input('step');
         abort_unless(in_array($step, [1, 2, 3, 4, 5], true), 422);
@@ -681,7 +720,12 @@ class EmployeeController extends AccountBaseController
         $employee = EmployeeDetails::firstOrNew(['user_id' => $user->id]);
         $request->validate($this->employeeStepRules($step, $employee));
 
-        DB::transaction(function () use ($request, $step, $user, $employee) {
+        $nextVersion = null;
+        DB::transaction(function () use ($request, $step, $user, $employee, &$nextVersion) {
+            $editState = HrEmployeeEditState::where('company_id', $user->company_id)
+                ->where('employee_id', $user->id)->lockForUpdate()
+                ->firstOrCreate(['company_id' => $user->company_id, 'employee_id' => $user->id], ['version' => 0]);
+            abort_if((int) $request->input('edit_version', 0) !== (int) $editState->version, 409, 'This employee was updated by another user. Refresh before saving again.');
             if ($step === 1) {
                 $user->fill($request->only(['name', 'salutation', 'branch_id']));
                 if ($request->hasFile('image')) {
@@ -724,21 +768,26 @@ class EmployeeController extends AccountBaseController
 
             if ($step === 4 && $request->boolean('dependants_present')) $this->saveDependants($request, $employee);
             if ($step === 5 && $request->boolean('allowances_present')) $this->saveAllowances($request, $employee);
+            $editState->update(['last_saved_step' => $step, 'version' => $editState->version + 1, 'last_saved_by' => user()->id, 'last_saved_at' => now()]);
+            $nextVersion = $editState->version;
         });
 
-        return Reply::success(__('messages.updateSuccess'));
+        return Reply::successWithData(__('messages.updateSuccess'), ['editVersion' => $nextVersion]);
     }
 
-    private function authorizeEmployeeStepSave(User $employee): void
+    private function authorizeEmployeeStepSave(User $employee, Request $request): void
     {
-        $permission = user()->permission('edit_employees');
+        $currentUser = user();
+        $permission = $currentUser->permission('edit_employees');
         abort_403(!in_array('admin', user_roles()) && $employee->hasRole('admin'));
         abort_403(!(
             $permission === 'all'
             || ($permission === 'added' && optional($employee->employeeDetail)->added_by === user()->id)
             || ($permission === 'owned' && $employee->id === user()->id)
             || ($permission === 'both' && ($employee->id === user()->id || optional($employee->employeeDetail)->added_by === user()->id))
+            || ($permission === 'branch' && HrAccess::canAccessEmployeeBranch($currentUser, $employee, 'employees'))
         ));
+        abort_403($permission === 'branch' && !HrAccess::hasAllBranchAccess($currentUser, 'employees') && $request->has('branch_id') && (int) $request->branch_id !== (int) $currentUser->branch_id);
     }
 
     private function employeeStepRules(int $step, EmployeeDetails $employee): array
@@ -747,7 +796,7 @@ class EmployeeController extends AccountBaseController
 
         return match ($step) {
             1 => ['employee_id' => 'required|max:50|unique:employee_details,employee_id,' . $employee->id . ',id,company_id,' . company()->id, 'name' => 'required|max:50', 'department' => 'required', 'designation' => 'required', 'branch_id' => 'nullable|exists:branches,id', 'image' => 'nullable|image'],
-            2 => ['employee_type' => 'nullable|in:saudi,expat', 'national_id_expiry_date' => $date, 'iqama_expiry_date' => $date, 'passport_expiry_date' => $date, 'sponsorship_transfer_date' => $date, 'transfer_number' => 'nullable|numeric'],
+            2 => array_merge(['employee_type' => 'required|in:saudi,expat', 'national_id_expiry_date' => $date, 'iqama_expiry_date' => $date, 'passport_expiry_date' => $date, 'sponsorship_transfer_date' => $date, 'transfer_number' => 'nullable|numeric'], $request()->input('employee_type') === 'saudi' ? ['national_id' => 'required|string|max:50', 'national_id_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"'] : ['iqama_no' => 'required|string|max:50', 'iqama_profession' => 'required|string|max:100', 'iqama_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"']),
             3 => ['date_of_birth' => $date, 'joining_date' => $date, 'basic_salary' => 'nullable|numeric'],
             4 => ['probation_end_date' => $date, 'notice_period_start_date' => $date, 'notice_period_end_date' => $date, 'internship_end_date' => $date, 'contract_end_date' => $date, 'dependants.*.name' => 'required_with:dependants.*.relation', 'dependants.*.relation' => 'required_with:dependants.*.name', 'dependants.*.date_of_birth' => $date],
             5 => ['allowances.*.name' => 'required_with:allowances.*.amount', 'allowances.*.amount' => 'required_with:allowances.*.name|numeric|min:0'],
@@ -842,6 +891,7 @@ class EmployeeController extends AccountBaseController
             ->findOrFail($id);
 
         $this->employeeLanguage = LanguageSetting::where('language_code', $this->employee->locale)->first();
+        $this->employeeLifecycle = EmployeeLifecycle::summary($this->employee);
         $this->employeeInsurances = \App\Models\Insurance::where('employee_id', $id)
             ->orderBy('expiry_date', 'desc')
             ->get();
@@ -1140,7 +1190,8 @@ class EmployeeController extends AccountBaseController
             $users = $users->where('employee_details.department_id', $id);
         }
 
-        if ($permission && $permission == 'branch' && user()->branch_id !== 6) {
+        if ($permission === 'branch' && !hr_has_all_branch_access('employees')) {
+            abort_403(is_null(user()->branch_id));
             $users = $users->where('users.branch_id', user()->branch_id);
         }
 
@@ -1575,6 +1626,7 @@ class EmployeeController extends AccountBaseController
 
         $hrUser = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
         $system = $request->system;
+        $this->validateSystemRole($system, $request->role);
 
         DB::transaction(function () use ($hrUser, $system, $request, $id) {
 
@@ -1699,6 +1751,7 @@ class EmployeeController extends AccountBaseController
         $access = \App\Models\EmployeeSystemAccess::where('employee_id', $id)
             ->where('system', $request->system)
             ->firstOrFail();
+        $this->validateSystemRole($request->system, $request->role);
 
         if ($request->system === 'dms') {
             $roleId = DB::table('roles')->where('name', $request->role)->value('id');
@@ -1742,6 +1795,15 @@ class EmployeeController extends AccountBaseController
         ];
 
         return redirect($urls[$system] . '/sso/login?token=' . $tokenStr);
+    }
+
+    private function validateSystemRole(string $system, string $role): void
+    {
+        $valid = $system === 'dms'
+            ? DB::table('roles')->where('name', $role)->where('name', '!=', 'client')->exists()
+            : in_array($role, ['FleetManager', 'FinanceManager', 'HR', 'OpsManager', 'OpsSupervisor', 'SuperAdmin'], true);
+
+        abort_unless($valid, 422, 'The selected system role is not allowed.');
     }
 
 }
