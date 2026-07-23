@@ -751,7 +751,16 @@ class EmployeeController extends AccountBaseController
 
         return match ($step) {
             1 => ['employee_id' => 'required|max:50|unique:employee_details,employee_id,' . $employee->id . ',id,company_id,' . company()->id, 'name' => 'required|max:50', 'department' => 'required', 'designation' => 'required', 'branch_id' => 'nullable|exists:branches,id', 'image' => 'nullable|image'],
-            2 => ['employee_type' => 'nullable|in:saudi,expat', 'national_id_expiry_date' => $date, 'iqama_expiry_date' => $date, 'passport_expiry_date' => $date, 'sponsorship_transfer_date' => $date, 'transfer_number' => 'nullable|numeric'],
+            2 => array_merge([
+                'employee_type' => 'required|in:saudi,expat',
+                'national_id_expiry_date' => $date,
+                'iqama_expiry_date' => $date,
+                'passport_expiry_date' => $date,
+                'sponsorship_transfer_date' => $date,
+                'transfer_number' => 'nullable|numeric',
+            ], $request()->input('employee_type') === 'saudi'
+                ? ['national_id' => 'required|string|max:50', 'national_id_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"']
+                : ['iqama_no' => 'required|string|max:50', 'iqama_profession' => 'required|string|max:100', 'iqama_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"']),
             3 => ['date_of_birth' => $date, 'joining_date' => $date, 'last_date' => $date, 'basic_salary' => 'nullable|numeric'],
             4 => ['probation_end_date' => $date, 'notice_period_start_date' => $date, 'notice_period_end_date' => $date, 'internship_end_date' => $date, 'contract_end_date' => $date, 'dependants.*.name' => 'required_with:dependants.*.relation', 'dependants.*.relation' => 'required_with:dependants.*.name', 'dependants.*.date_of_birth' => $date],
             5 => ['allowances.*.name' => 'required_with:allowances.*.amount', 'allowances.*.amount' => 'required_with:allowances.*.name|numeric|min:0'],

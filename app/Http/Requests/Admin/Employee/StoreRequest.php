@@ -60,6 +60,17 @@ class StoreRequest extends CoreRequest
             $rules['telegram_user_id'] = 'nullable|unique:users,telegram_user_id,null,id,company_id,' . company()->id;
         }
 
+        if (request()->employee_type === 'saudi') {
+            $rules['national_id'] = 'required|string|max:50';
+            $rules['national_id_expiry_date'] = 'required|date_format:"' . $setting->date_format . '"';
+        }
+
+        if (request()->employee_type === 'expat') {
+            $rules['iqama_no'] = 'required|string|max:50';
+            $rules['iqama_profession'] = 'required|string|max:100';
+            $rules['iqama_expiry_date'] = 'required|date_format:"' . $setting->date_format . '"';
+        }
+
         $rules = $this->customFieldRules($rules);
 
         return $rules;

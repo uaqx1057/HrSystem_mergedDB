@@ -1309,6 +1309,19 @@ $(document).ready(function () {
         return data;
     }
 
+    function displayStepErrors(xhr) {
+        $('.save-step-error').remove();
+        $('.is-invalid').removeClass('is-invalid');
+        var errors = xhr.responseJSON && xhr.responseJSON.errors;
+        if (!errors) return;
+
+        $.each(errors, function (field, messages) {
+            var $input = $('[name="' + field + '"]');
+            if (!$input.length) $input = $('[name^="' + field.replace(/\..*$/, '') + '"]');
+            $input.addClass('is-invalid').first().after('<div class="invalid-feedback save-step-error d-block">' + messages[0] + '</div>');
+        });
+    }
+
     $(document).on('click', '.save-step-btn', function () {
         var $button = $(this);
         var step = parseInt($button.data('step'));
@@ -1326,10 +1339,12 @@ $(document).ready(function () {
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             success: function (response) {
                 if (response.status === 'success') {
+                    $button.data('saved-at', new Date().toLocaleTimeString()).attr('title', 'Saved at ' + $button.data('saved-at'));
                     Swal.fire({ icon: 'success', text: 'This step has been saved.', toast: true, position: 'top-end', timer: 2500, showConfirmButton: false });
                 }
             },
             error: function (xhr) {
+                displayStepErrors(xhr);
                 var message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Unable to save this step. Please check the highlighted fields.';
                 Swal.fire({ icon: 'error', text: message, toast: true, position: 'top-end', timer: 4000, showConfirmButton: false });
             },
@@ -1349,7 +1364,7 @@ $(document).ready(function () {
             blockUI: true,
             buttonSelector: "#save-form",
             file: true,
-            data: $('#save-data-form').serialize(),
+            data: new FormData($('#save-data-form')[0]),
             success: function (response) {
                 if (response.status == 'success') {
                     window.location.href = response.redirectUrl;

@@ -14,16 +14,18 @@ class SendExpiryReminders extends Command
 {
     protected $signature = 'send:expiry-reminders';
 
-    protected $description = 'Send email reminders to employees whose Iqama or Passport expires in 7 days';
+    protected $description = 'Send staged expiry reminders for HR identity documents and insurance';
 
     public function handle()
     {
-        $targetDay = Carbon::now()->addDays(7)->format('Y-m-d');
+        $targetDays = collect([90, 60, 30, 7, 1])
+            ->map(fn (int $days) => Carbon::now()->addDays($days)->format('Y-m-d'));
 
         $employees = User::with('employeeDetail')
-            ->whereHas('employeeDetail', function ($query) use ($targetDay) {
-                $query->where('iqama_expiry_date', $targetDay)
-                    ->orWhere('passport_expiry_date', $targetDay);
+            ->whereHas('employeeDetail', function ($query) use ($targetDays) {
+                $query->whereIn('iqama_expiry_date', $targetDays)
+                    ->orWhereIn('passport_expiry_date', $targetDays)
+                    ->orWhereIn('national_id_expiry_date', $targetDays);
             })
             ->get();
 
@@ -35,7 +37,7 @@ class SendExpiryReminders extends Command
         foreach ($employees as $employee) {
             $detail = $employee->employeeDetail;
 
-            $insurance = Insurance::whereDate('expiry_date', $targetDay)
+            $insurance = Insurance::whereIn('expiry_date', $targetDays)
                 ->where('employee_id', $employee->id)
                 ->orderBy('id', 'desc')
                 ->first();
@@ -50,20 +52,26 @@ class SendExpiryReminders extends Command
 
             $sendEmail = false;
 
-            if ($detail->iqama_expiry_date == $targetDay) {
+            if ($detail->iqama_expiry_date && $targetDays->contains(Carbon::parse($detail->iqama_expiry_date)->format('Y-m-d'))) {
                 $data['iqama'] = $detail->iqama_no;
                 $data['iqama_expiry'] = $detail->iqama_expiry_date;
                 $sendEmail = true;
             }
 
-            if ($detail->passport_expiry_date == $targetDay) {
+            if ($detail->passport_expiry_date && $targetDays->contains(Carbon::parse($detail->passport_expiry_date)->format('Y-m-d'))) {
                 $data['passport'] = $detail->passport_no;
                 $data['passport_expiry'] = $detail->passport_expiry_date;
                 $sendEmail = true;
             }
 
-            if ($insurance_expiry === $targetDay) {
+            if ($targetDays->contains($insurance_expiry)) {
                 $data['insurance_expiry'] = $insurance_expiry;
+                $sendEmail = true;
+            }
+
+            if ($detail->national_id_expiry_date && $targetDays->contains(Carbon::parse($detail->national_id_expiry_date)->format('Y-m-d'))) {
+                $data['national_id'] = $detail->national_id;
+                $data['national_id_expiry'] = $detail->national_id_expiry_date;
                 $sendEmail = true;
             }
 
@@ -79,7 +87,7 @@ class SendExpiryReminders extends Command
         // Send one summary email to all admins, only if there's something to report
         if (!empty($expiringSummary) && $admins->isNotEmpty()) {
             foreach ($admins as $admin) {
-                Mail::to($admin->email)->send(new DocumentExpirySummaryMail($expiringSummary, $targetDay));
+                Mail::to($admin->email)->send(new DocumentExpirySummaryMail($expiringSummary, $targetDays->implode(', ')));
             }
             $this->info('Summary email sent to ' . $admins->count() . ' admin(s).');
         }
