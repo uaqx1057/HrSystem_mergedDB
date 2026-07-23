@@ -78,38 +78,38 @@
             </x-slot>
             <div class="accordionItemContent pb-2">
 
-                @if (in_array('employees', user_modules()) && in_array(user()->permission('view_employees'), ['all', 'added', 'owned', 'both']))
+                @if (in_array('employees', user_modules()) && in_array(user()->permission('view_employees'), ['all', 'added', 'owned', 'both','branch']))
                     <x-sub-menu-item :link="route('employees.index')" :text="__('app.menu.employees')" />
                 @endif
 
-                @if (in_array(user()->permission('view_insurance'), ['all']))
+                @if (in_array(user()->permission('view_insurance'), ['all', 'added', 'owned', 'both','branch']))
                 <x-sub-menu-item :link="route('insurance.index')" :text="__('app.menu.insurance')" />
                 @endif
 
-                @if (in_array('drivers', user_modules()) && in_array(user()->permission('view_drivers'), ['all']))
+                @if (in_array('drivers', user_modules()) && in_array(user()->permission('view_drivers'), ['all','branch']))
                     <x-sub-menu-item :link="route('drivers.index')" :text="__('app.menu.drivers')" />
                 @endif
 
                 <x-sub-menu-item :link="route('driver-documents.index')" text="Driver Documents" />
 
-                @if (in_array('leaves', user_modules()) && in_array(user()->permission('view_leave'), ['all', 'added', 'owned', 'both']))
+                @if (in_array('leaves', user_modules()) && in_array(user()->permission('view_leave'), ['all', 'added', 'owned', 'both', 'branch']))
                     <x-sub-menu-item :link="route('leaves.index')" :text="__('app.menu.leaves')" />
                 @endif
 
 
-                @if (in_array(user()->permission('view_air_tickets'), ['all']))
+                @if (in_array(user()->permission('view_air_tickets'), ['all', 'added', 'owned', 'both','branch']))
                     <x-sub-menu-item :link="route('air-tickets.index')" :text="__('app.menu.airTickets')" />
                 @endif
 
-                @if (in_array(user()->permission('view_advance_salary'), ['all']))
+                @if (in_array(user()->permission('view_advance_salary'), ['all', 'added', 'owned', 'both','branch']))
                 <x-sub-menu-item :link="route('advance-salaries.index')" :text="__('app.menu.advanceSalaries')" />
                 @endif
 
-                @if (in_array('attendance', user_modules()) && in_array(user()->permission('view_shift_roster'), ['all', 'owned']))
+                @if (in_array('attendance', user_modules()) && in_array(user()->permission('view_shift_roster'), ['all', 'owned', 'branch']))
                     <x-sub-menu-item :link="route('shifts.index')" :text="__('app.menu.shiftRoster')" />
                 @endif
 
-                @if (in_array('attendance', user_modules()) && in_array(user()->permission('view_attendance'), ['all', 'added', 'owned', 'both']))
+                @if (in_array('attendance', user_modules()) && in_array(user()->permission('view_attendance'), ['all', 'added', 'owned', 'both', 'branch']))
                     <x-sub-menu-item :link="route('attendances.index')" :text="__('app.menu.attendance')" />
                 @endif
 
@@ -134,7 +134,7 @@
                 @endif --}}
 
                 {{-- company assets  --}}
-                @if (in_array(user()->permission('view_company_assets'), ['all']))
+                @if (in_array(user()->permission('view_company_assets'), ['all', 'added', 'owned', 'both','branch']))
                     <x-sub-menu-item :link="route('company-assets.index')" :text="__('app.menu.companyAssets')" />
                 @endif
                 <!-- NAV ITEM - CUSTOM MODULES  -->
@@ -232,7 +232,7 @@
                 @endif
 
                 @if (in_array('bankaccount', user_modules()) && user()->permission('view_bankaccount') !== 'none')
-                    <x-sub-menu-item :link="route('bankaccounts.index')" :text="__('app.menu.bankaccount')" />
+                    <x-sub-menu-item :link="route('bankaccounts.index')" :text="__('app.menu.companyTransaction')" />
                 @endif
 
                 @if (in_array('employeebankaccount', user_modules()) && user()->permission('view_employee_bank_account') !== 'none')

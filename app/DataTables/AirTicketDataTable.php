@@ -9,15 +9,19 @@ use Yajra\DataTables\Html\Column;
 
 class AirTicketDataTable extends BaseDataTable
 {
-    private $editAirTicketPermission;
-    private $deleteInsurancePermission;
+    private $viewPermission;
+    private $editPermission;
+    private $deletePermission;
+    private $approveRejectPermission;
     private $assignRole;
 
     public function __construct()
     {
         parent::__construct();
-        $this->editAirTicketPermission = user()->permission('edit_employees');
-        $this->deleteInsurancePermission = user()->permission('delete_employees');
+        $this->viewPermission = user()->permission('view_air_tickets');
+        $this->editPermission = user()->permission('edit_air_tickets');
+        $this->deletePermission = user()->permission('delete_air_tickets');
+        $this->approveRejectPermission = user()->permission('approve_or_reject_air_tickets');
         $this->assignRole = user()->roles->pluck('name')->toArray();
     }
 
@@ -29,17 +33,37 @@ class AirTicketDataTable extends BaseDataTable
                 return '<input type="checkbox" class="select-table-row" id="datatable-row-' . $row->id . '" name="datatable_ids[]" value="' . $row->id . '" onclick="dataTableRowCheck(' . $row->id . ')">';
             })
             ->addColumn('action', function ($row) {
-                $action = '<div class="task_view">
-                <a href="' . route('air-tickets.show', [$row->id]) . '" class="taskView text-darkest-grey f-w-500 openRightModal">' . __('app.view') . '</a>
-                    <div class="dropdown">
+                $action = '<div class="task_view">';
+
+                if (
+                    $this->viewPermission == 'all'
+                    || ($this->viewPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->viewPermission == 'branch' && user()->branch_id == $row->employee_branch)
+                    || ($this->viewPermission == 'added' && user()->id == $row->added_by)
+                    || ($this->viewPermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->viewPermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by))
+                ) {
+                $action .= '<a href="' . route('air-tickets.show', [$row->id]) . '" class="taskView text-darkest-grey f-w-500 openRightModal">' . __('app.view') . '</a>';
+                }
+
+                $action .= '<div class="dropdown">
                         <a class="task_view_more d-flex align-items-center justify-content-center dropdown-toggle" type="link"
                             id="dropdownMenuLink-' . $row->id . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="icon-options-vertical icons"></i>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
 
-                    // Approve/Reject Buttons (Only if status is pending)
-                if ($row->status == 'pending' && user()->permission('approve_or_reject_air_tickets') == 'all') {
+                // Approve/Reject Buttons (Only if status is pending)
+                if ($row->status == 'pending' &&
+                    ($this->approveRejectPermission == 'all'
+                    || ($this->approveRejectPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->approveRejectPermission == 'branch' && user()->branch_id == $row->employee_branch)
+                    || ($this->approveRejectPermission == 'added' && user()->id == $row->added_by)
+                    || ($this->approveRejectPermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->approveRejectPermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by)))
+                ) {
                     $action .= '<a class="dropdown-item ticket-action-approved" href="javascript:;" data-ticket-id="' . $row->id . '" data-action="approved">
                             <i class="fa fa-check mr-2"></i> ' . __('app.approve') . '
                         </a>
@@ -48,14 +72,30 @@ class AirTicketDataTable extends BaseDataTable
                         </a>';
                 }
 
-                if (user()->permission('edit_air_tickets') == 'all') {
+                if (
+                    $this->editPermission == 'all'
+                    || ($this->editPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->editPermission == 'branch' && user()->branch_id == $row->employee_branch)
+                    || ($this->editPermission == 'added' && user()->id == $row->added_by)
+                    || ($this->editPermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->editPermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by))
+                ) {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('air-tickets.edit', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
                                 ' . trans('app.edit') . '
                             </a>';
                 }
 
-                if (user()->permission('delete_air_tickets') == 'all') {
+                if (
+                    $this->deletePermission == 'all'
+                    || ($this->deletePermission == 'branch' && user()->branch_id == 6)
+                    || ($this->deletePermission == 'branch' && user()->branch_id == $row->employee_branch)
+                    || ($this->deletePermission == 'added' && user()->id == $row->added_by)
+                    || ($this->deletePermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->deletePermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by))
+                ) {
                     $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-air-ticket-id="' . $row->id . '">
                                 <i class="fa fa-trash mr-2"></i>
                                 ' . trans('app.delete') . '
@@ -100,7 +140,7 @@ class AirTicketDataTable extends BaseDataTable
     {
         $request = $this->request();
         $model = $model->leftJoin('users', 'users.id', '=', 'air_tickets.employee_id')
-            ->select('air_tickets.*', 'users.name as employee_name')->orderBy('air_tickets.id', 'desc');
+            ->select('air_tickets.*', 'users.name as employee_name', 'users.branch_id as employee_branch')->orderBy('air_tickets.id', 'desc');
 
         if ($request->searchText != '') {
             $model->where(function ($query) use ($request) {
@@ -112,9 +152,32 @@ class AirTicketDataTable extends BaseDataTable
             $model->where('air_tickets.employee_id', $request->employeeId);
         }
 
-        if (in_array('employee', $this->assignRole) && count($this->assignRole) < 2) {
+        // if (in_array('employee', $this->assignRole) && count($this->assignRole) < 2) {
+        //     $model->where(function ($query) use ($request) {
+        //         $query->where('users.id', user()->id);
+        //     });
+        // }
+        if ($this->viewPermission == 'added') {
             $model->where(function ($query) use ($request) {
-                $query->where('users.id', user()->id);
+                $query->where('air_tickets.added_by', user()->id);
+            });
+        }
+
+        if ($this->viewPermission == 'owned') {
+            $model->where(function ($query) use ($request) {
+                $query->where('air_tickets.employee_id', user()->id);
+            });
+        }
+
+        if ($this->viewPermission == 'both') {
+            $model->where(function ($query) use ($request) {
+                $query->where('air_tickets.employee_id', user()->id)->orWhere('air_tickets.added_by', user()->id);
+            });
+        }
+
+        if ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+            $model->where(function ($query) use ($request) {
+                $query->where('users.branch_id', user()->branch_id);
             });
         }
 

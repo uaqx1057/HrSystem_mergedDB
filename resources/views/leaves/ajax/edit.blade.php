@@ -45,6 +45,12 @@ $approveRejectPermission = user()->permission('approve_or_reject_leaves');
                             <select class="form-control select-picker" name="leave_type_id" id="leave_type_id"
                                 data-live-search="true">
                                 <option value="">--</option>
+                                @if (isset($leaveTypes))
+                                    @foreach ($leaveTypes as $leaveType)
+                                        <option @if ($leave->leave_type_id == $leaveType->id) selected @endif value="{{ $leaveType->id }}">{{ $leaveType->type_name }}
+                                        </option>
+                                    @endforeach
+                                @endif
                                 @foreach ($leaveQuotas as $leaveQuota)
                                     @php
                                         $leaveType = new \App\Models\LeaveType();
@@ -67,7 +73,7 @@ $approveRejectPermission = user()->permission('approve_or_reject_leaves');
                         </x-forms.input-group>
                     </div>
 
-                    @if ($approveRejectPermission == 'all')
+                    @if ($approveRejectPermission == 'all' || $approveRejectPermission == 'branch')
                         <div class="col-lg-3 col-md-6">
                             <x-forms.select fieldId="status" :fieldLabel="__('app.status')" fieldName="status"
                                 search="true">

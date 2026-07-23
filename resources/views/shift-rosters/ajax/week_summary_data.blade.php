@@ -73,7 +73,7 @@
                                 @elseif ($day == 'EMPTY')
                                     <button type="button" class="py-4 change-shift-week badge badge-light f-14 p-1 border w-100"  data-user-id="{{ $userId }}"
                                         data-attendance-date="{{ $key2 }}">
-                                        @if (in_array($manageEmployeeShifts, ['all']))
+                                        @if (in_array($manageEmployeeShifts, ['all', 'branch']))
                                         <i class="fa fa-plus-circle text-primary"></i>
                                         @else
                                         <i class="fa fa-ban text-red"></i>

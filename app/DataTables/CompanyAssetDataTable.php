@@ -10,15 +10,19 @@ use Yajra\DataTables\EloquentDataTable;
 
 class CompanyAssetDataTable extends BaseDataTable
 {
-    private $editCompanyAssetPermission;
-    private $deleteCompanyAssetPermission;
+    private $editPermission;
+    private $deletePermission;
     private $assignRole;
+    private $viewPermission;
+    private $historyPermission;
 
     public function __construct()
     {
         parent::__construct();
-        $this->editCompanyAssetPermission = user()->permission('edit_company_assets');
-        $this->deleteCompanyAssetPermission = user()->permission('delete_company_assets');
+        $this->viewPermission = user()->permission('view_company_assets');
+        $this->editPermission = user()->permission('edit_company_assets');
+        $this->deletePermission = user()->permission('delete_company_assets');
+        $this->historyPermission = user()->permission('view_assign_company_assets_to_employee');
         $this->assignRole = user()->roles->pluck('name')->toArray();
     }
 
@@ -49,9 +53,9 @@ class CompanyAssetDataTable extends BaseDataTable
             })
             ->addColumn('action', function ($row) {
 
-                $action = '<div class="task_view">
-                    <a href="' . route('company-assets.show', ['company_asset' => $row->id]) . '" class="taskView text-darkest-grey f-w-500">' . __('app.view') . '</a>
-                    <div class="dropdown">
+                $action = '<div class="task_view">';
+                    $action .= '<a href="' . route('company-assets.show', ['company_asset' => $row->id]) . '" class="taskView text-darkest-grey f-w-500">' . __('app.view') . '</a>';
+                    $action .= '<div class="dropdown">
                         <a class="task_view_more d-flex align-items-center justify-content-center dropdown-toggle" type="link"
                             id="dropdownMenuLink-' . $row->id . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="icon-options-vertical icons"></i>
@@ -104,17 +108,29 @@ class CompanyAssetDataTable extends BaseDataTable
                 //     }
                 // }
 
-                if ($this->editCompanyAssetPermission == 'all') {
+                if (
+                    $this->editPermission == 'all'
+                    || ($this->editPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->editPermission == 'branch' && user()->branch_id == $row->branch_id)
+                    || ($this->editPermission == 'added' && user()->id == $row->added_by)
+                ) {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.edit', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
                                 ' . trans('app.edit') . '
                             </a>';
-                    $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.view-assign', [$row->id]) . '">
+                }
+                if(in_array(user()->permission('view_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both','branch'])){
+                $action .= '<a class="dropdown-item openRightModal" href="' . route('company-assets.view-assign', [$row->id]) . '">
                                 <i class="fa fa-history mr-2"></i>
                                 ' . trans('app.assignmentHistory') . '
                             </a>';
                 }
-                if ($this->deleteCompanyAssetPermission == 'all') {
+                if (
+                    $this->deletePermission == 'all'
+                    || ($this->deletePermission == 'branch' && user()->branch_id == 6)
+                    || ($this->deletePermission == 'branch' && user()->branch_id == $row->branch_id)
+                    || ($this->deletePermission == 'added' && user()->id == $row->added_by)
+                ) {
                     $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-asset-id="' . $row->id . '">
                                 <i class="fa fa-trash mr-2"></i>
                                 ' . trans('app.delete') . '
@@ -161,8 +177,31 @@ class CompanyAssetDataTable extends BaseDataTable
         }
 
         // Logic: Only show assigned assets for non-admins
-        if (count($this->assignRole) < 2) {
-            $model->where('asset_assignments.employee_id', user()->id)->where('asset_assignments.status', 'Assigned');
+        // if (count($this->assignRole) < 2) {
+        //     $model->where('asset_assignments.employee_id', user()->id)->where('asset_assignments.status', 'Assigned');
+        // }
+        if ($this->viewPermission == 'added') {
+            $model->where(function ($query) use ($request) {
+                $query->where('company_assets.added_by', user()->id);
+            });
+        }
+
+        if ($this->viewPermission == 'owned') {
+            $model->where(function ($query) use ($request) {
+                $query->where('asset_assignments.employee_id', user()->id)->where('asset_assignments.status', 'Assigned');
+            });
+        }
+
+        if ($this->viewPermission == 'both') {
+            $model->where(function ($query) use ($request) {
+                $query->where('asset_assignments.employee_id', user()->id)->where('asset_assignments.status', 'Assigned');
+            })->orWhere('company_assets.added_by', user()->id);
+        }
+
+        if ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+            $model->where(function ($query) use ($request) {
+                $query->where('company_assets.branch_id', user()->branch_id);
+            });
         }
 
         return $model;

@@ -145,7 +145,7 @@ class LeaveDataTable extends BaseDataTable
                     $actions .= '<a href="' . route('leaves.show', [$row->id]).'?type=single" class="dropdown-item"><i class="fa fa-eye mr-2"></i>' . __('app.view') . '</a>';
                 }
 
-                if ($row->status == 'pending' && ($row->duration != 'multiple' || is_null($row->unique_id)) && $this->approveRejectPermission == 'all') {
+                if ($row->status == 'pending' && ($row->duration != 'multiple' || is_null($row->unique_id)) && ($this->approveRejectPermission == 'all' || $this->approveRejectPermission == 'branch')) {
                     $actions .= '<a class="dropdown-item leave-action-approved" data-leave-id=' . $row->id . '
                              data-leave-action="approved" data-user-id="' . $row->user_id . '" data-leave-type-id="' . $row->leave_type_id . '" href="javascript:;">
                                 <i class="fa fa-check mr-2"></i>
@@ -158,7 +158,7 @@ class LeaveDataTable extends BaseDataTable
                         </a>';
                 }
 
-                if (($row->duration == 'multiple' && !is_null($row->unique_id)) && $this->approveRejectPermission == 'all') {
+                if (($row->duration == 'multiple' && !is_null($row->unique_id)) && ($this->approveRejectPermission == 'all' || $this->approveRejectPermission == 'branch')) {
                     $actions .= '<a class="dropdown-item view-related-leave" data-leave-id=' . $row->id . '
                              data-unique-id="' . $row->unique_id . '" data-leave-type-id="' . $row->leave_type_id . '" href="javascript:;">
                                 <i class="fa fa-eye mr-2"></i>
@@ -196,7 +196,7 @@ class LeaveDataTable extends BaseDataTable
                 }
 
                 if ($row->status == 'pending' && ($row->duration != 'multiple' || is_null($row->unique_id))) {
-                    if ($this->editLeavePermission == 'all'
+                    if ($this->editLeavePermission == 'all' || $this->editLeavePermission == 'branch'
                         || ($this->editLeavePermission == 'added' && user()->id == $row->added_by)
                         || ($this->editLeavePermission == 'owned' && user()->id == $row->user_id)
                         || ($this->editLeavePermission == 'both' && (user()->id == $row->user_id || user()->id == $row->added_by))
@@ -208,7 +208,7 @@ class LeaveDataTable extends BaseDataTable
                     }
                 }
 
-                if ($this->deleteLeavePermission == 'all'
+                if ($this->deleteLeavePermission == 'all' || $this->deleteLeavePermission == 'branch'
                     || ($this->deleteLeavePermission == 'added' && user()->id == $row->added_by)
                     || ($this->deleteLeavePermission == 'owned' && user()->id == $row->user_id)
                     || ($this->deleteLeavePermission == 'both' && (user()->id == $row->user_id || user()->id == $row->added_by)))
@@ -222,7 +222,7 @@ class LeaveDataTable extends BaseDataTable
                     }
                     else
                     {
-                        ($this->deleteApproveLeavePermission == 'all') ? $actions .= '<a data-leave-id=' . $row->id . '
+                        ($this->deleteApproveLeavePermission == 'all' || $this->deleteApproveLeavePermission == 'branch') ? $actions .= '<a data-leave-id=' . $row->id . '
                                     data-unique-id="'.$row->unique_id.'" data-duration="'.$row->duration.'" class="dropdown-item delete-table-row" href="javascript:;">
                                    <i class="fa fa-trash mr-2"></i>
                                     ' . __('app.delete') . '
@@ -314,6 +314,15 @@ class LeaveDataTable extends BaseDataTable
                 $q->orwhere('leaves.user_id', '=', user()->id);
 
                 $q->orWhere('leaves.added_by', '=', user()->id);
+
+                ($this->reportingPermission != 'cannot-approve') ? $q->orWhere('employee_details.reporting_to', user()->id) : '';
+            });
+        }
+
+        if ($this->viewLeavePermission == 'branch') {
+
+            $leavesList->where(function ($q) {
+                $q->orwhere('users.branch_id', '=', user()->branch_id);
 
                 ($this->reportingPermission != 'cannot-approve') ? $q->orWhere('employee_details.reporting_to', user()->id) : '';
             });

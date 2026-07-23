@@ -22,7 +22,7 @@
 
 </style>
 
-    @if ($manageEmployeeShifts != 'all')
+    @if ($manageEmployeeShifts != 'all' || $manageEmployeeShifts != 'branch')
         <style>
             .change-shift, .change-shift-week {
                 cursor: unset !important;
@@ -94,7 +94,7 @@
 
         <div class="d-grid d-lg-flex d-md-flex action-bar">
             <div id="table-actions" class="flex-grow-1 align-items-center">
-                @if ($manageEmployeeShifts == 'all')
+                @if ($manageEmployeeShifts == 'all' || $manageEmployeeShifts == 'branch')
                     <x-forms.link-primary :link="route('shifts.create')" class="mr-3 openRightModal float-left"
                     icon="plus">
                         @lang('modules.attendance.bulkShiftAssign')
@@ -110,7 +110,7 @@
             <div class="btn-group mt-2 mt-lg-0 mt-md-0 ml-0 ml-lg-3 ml-md-3" role="group">
                 <a href="{{ route('shifts.index') }}" class="btn btn-secondary f-14 btn-active" data-toggle="tooltip"
                     data-original-title="@lang('app.summary')"><i class="side-icon bi bi-list-ul"></i></a>
-                @if ($manageEmployeeShifts == 'all')
+                @if ($manageEmployeeShifts == 'all' || $manageEmployeeShifts == 'branch')
                     <a href="{{ route('shifts-change.index') }}" class="btn btn-secondary f-14" data-toggle="tooltip"
                         data-original-title="@lang('modules.attendance.shiftChangeRequests')"><i
                             class="side-icon bi bi-hourglass-split"></i>
@@ -232,7 +232,7 @@
             $.ajaxModal(MODAL_XL, url);
         });
 
-        if (manageEmployeeShiftPermission == 'all') {
+        if (manageEmployeeShiftPermission == 'all' || manageEmployeeShiftPermission == 'branch') {
             $('#attendance-data').on('click', '.change-shift', function(event) {
                 var attendanceDate = $(this).data('attendance-date');
                 var userData = $(this).closest('tr').children('td:first');

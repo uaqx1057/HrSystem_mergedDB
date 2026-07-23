@@ -42,7 +42,7 @@ class CompanyAssetController extends AccountBaseController
     public function index(CompanyAssetDataTable $dataTable)
     {
         $viewPermission = user()->permission('view_company_assets');
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
         return $dataTable->render('company-assets.index', $this->data);
@@ -53,8 +53,8 @@ class CompanyAssetController extends AccountBaseController
      */
     public function create()
     {
-        $viewPermission = user()->permission('add_company_assets');
-        abort_403(!in_array($viewPermission, ['all']));
+        $this->addPermission = user()->permission('add_company_assets');
+        abort_403(!in_array($this->addPermission, ['all', 'branch']));
 
         $this->departments = Department::orderBy('name')->get();
         $this->branches = Branch::latest()->get();
@@ -74,7 +74,7 @@ class CompanyAssetController extends AccountBaseController
     public function store(StoreRequest $request)
     {
         $viewPermission = user()->permission('add_company_assets');
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'branch']));
 
         $asset = new CompanyAsset();
         $asset->name = $request->name;
@@ -87,6 +87,7 @@ class CompanyAssetController extends AccountBaseController
         $asset->qty = $request->qty;
         $asset->available_qty = $request->qty;
         $asset->status = 'available';
+        $asset->added_by = user()->id;
         $asset->save();
 
         $redirectUrl = urldecode($request->redirect_url);
@@ -104,9 +105,13 @@ class CompanyAssetController extends AccountBaseController
     public function show($id)
     {
         $viewPermission = user()->permission('view_company_assets');
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $this->asset = CompanyAsset::findOrFail($id);
+
+        if (!$this->canManageRecord($this->asset, $viewPermission)) {
+            abort(403);
+        }
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.show', $this->data)->render();
@@ -123,9 +128,14 @@ class CompanyAssetController extends AccountBaseController
     public function edit($id)
     {
         $viewPermission = user()->permission('edit_company_assets');
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added','branch']));
 
         $this->asset = CompanyAsset::findOrFail($id);
+
+        if (!$this->canManageRecord($this->asset, $viewPermission)) {
+            abort(403);
+        }
+
         $this->departments = Department::orderBy('name')->get();
         $this->branches = Branch::latest()->get();
 
@@ -144,7 +154,7 @@ class CompanyAssetController extends AccountBaseController
     public function update(UpdateRequest $request, $id)
     {
         $viewPermission = user()->permission('edit_company_assets');
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added','branch']));
 
         $asset = CompanyAsset::findOrFail($id);
         $asset->name = $request->name;
@@ -171,7 +181,14 @@ class CompanyAssetController extends AccountBaseController
         $viewPermission = user()->permission('delete_company_assets');
         abort_403(!in_array($viewPermission, ['all']));
 
+        $this->asset = CompanyAsset::findOrFail($id);
+
+        if (!$this->canManageRecord($this->asset, $viewPermission)) {
+            abort(403);
+        }
         CompanyAsset::destroy($id);
+        AssetAssignment::where('company_asset_id',$id)->delete();
+        AssetAssignmentHistory::where('company_asset_id',$id)->delete();
 
         $redirectUrl = route('company-assets.index');
         return Reply::successWithData(__('messages.deleteSuccess'), ['redirectUrl' => $redirectUrl]);
@@ -198,7 +215,7 @@ class CompanyAssetController extends AccountBaseController
      */
     protected function deleteRecords($request)
     {
-        // $deletePermission = user()->permission('delete_company_asset');
+        $deletePermission = user()->permission('delete_company_assets');
         // abort_403($deletePermission != 'all');
 
         $rowIds = explode(',', $request->row_ids);
@@ -207,14 +224,34 @@ class CompanyAssetController extends AccountBaseController
             unset($rowIds[$key]);
         }
 
-        CompanyAsset::whereIn('id', $rowIds)->delete();
+        $assets = CompanyAsset::whereIn('id', $rowIds)->get();
+        // dd($assets);
+            foreach ($assets as $asset) {
+                // dd($deletePermission);
+                if ($this->canManageRecord($asset, $deletePermission)) {
+                    $asset->delete();
+                }
+            }
+        // CompanyAsset::whereIn('id', $rowIds)->delete();
     }
 
     public function assignAsset($id)
     {
+        $this->addPermission = user()->permission('assign_company_asset_to_employee');
+        abort_403(!in_array($this->addPermission, ['all', 'added','branch']));
+
+       if(in_array($this->addPermission, ['all','branch']) ){
+            if($this->addPermission == 'branch' && user()->branch_id == 6){
+                $employeePermission = 'all';
+            } else{
+                $employeePermission = $this->addPermission;
+            }
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees(null, true, $employeePermission);
         $this->company_asset_id = $id;
         $this->asset = CompanyAsset::findOrFail($id);
-        $this->employees = User::allEmployees();
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.assign', $this->data)->render();
@@ -244,6 +281,7 @@ class CompanyAssetController extends AccountBaseController
             $assign->status = 'Pending';
             $assign->branch_id = $asset->branch_id;
             $assign->qty = $qtyAssigned;
+            $assign->added_by = user()->id;
             $assign->save();
 
             // NOTE: available_qty is NOT reduced here. It is only reduced when the
@@ -255,6 +293,7 @@ class CompanyAssetController extends AccountBaseController
                 'action_type' => 'Pending',
                 'qty' => $qtyAssigned,
                 'asset_assignment_id' => $assign->id,
+                'added_by' => user()->id,
                 'action_at' => now(),
             ]);
 
@@ -384,6 +423,7 @@ class CompanyAssetController extends AccountBaseController
                 'qty' => $qtyReturned,
                 'signed_document' => $path,
                 'asset_assignment_id' => $assignment->id,
+                'added_by' => user()->id,
                 'action_at' => now(),
             ]);
 
@@ -528,7 +568,7 @@ class CompanyAssetController extends AccountBaseController
     public function destroyAssignAsset($id)
     {
         $viewPermission = user()->permission('edit_assign_company_assets_to_employee');
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $assignment = AssetAssignment::findOrFail($id);
         $asset = CompanyAsset::findOrFail($assignment->company_asset_id);
@@ -544,5 +584,30 @@ class CompanyAssetController extends AccountBaseController
 
         return redirect()->route('company-assets.show', $asset->id)
             ->with('success', __('messages.deleteSuccess'));
+    }
+
+    protected function canManageRecord(CompanyAsset $asset, $permission): bool
+    {
+        if ($permission === 'all' || ($permission === 'branch' && user()->branch_id == 6)) {
+            return true;
+        }
+
+        if ($permission === 'added' && $asset->added_by == user()->id) {
+            return true;
+        }
+
+        if ($permission === 'owned' && user()->id == $asset->assignments->employee_id) {
+            return true;
+        }
+        if ($permission == 'both' && (user()->id == $asset->added_by || user()->id == $asset->assignments->employee_id)){
+            return true;
+        }
+
+        if ($permission === 'branch' && $asset->branch_id == user()->branch_id) {
+            return true;
+        }
+
+        return false;
+
     }
 }

@@ -35,11 +35,20 @@ class InsuranceController extends AccountBaseController
     {
         $viewPermission = user()->permission('view_insurance');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
-        $this->employees = User::allEmployees();
+        if(in_array($viewPermission, ['all','branch']) ){
+            if($viewPermission == 'branch' && user()->branch_id == 6){
+                $employeePermission = 'all';
+            } else{
+                $employeePermission = $viewPermission;
+            }
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees(null, true, $employeePermission);
         return $dataTable->render('insurances.index', $this->data);
     }
 
@@ -48,15 +57,9 @@ class InsuranceController extends AccountBaseController
      */
     public function create()
     {
-        $viewPermission = user()->permission('add_insurance');
+        $this->addPermission = user()->permission('add_insurance');
 
-        abort_403(!in_array($viewPermission, ['all']));
-
-        $this->assignRole = user()->roles->pluck('name')->toArray();
-
-        if (!in_array('admin', $this->assignRole)) {
-            abort_403(true);
-        }
+        abort_403(!in_array($this->addPermission, ['all', 'added', 'branch']));
 
         $existEmployeeInsurance = Insurance::whereNotNull('employee_id')
             ->where('status', 'active')
@@ -72,7 +75,16 @@ class InsuranceController extends AccountBaseController
             ->unique()
             ->toArray();
 
-        $this->employees = User::allEmployees($existEmployeeInsurance);
+        if(in_array($this->addPermission, ['all','branch']) ){
+            if($this->addPermission == 'branch' && user()->branch_id == 6){
+                $employeePermission = 'all';
+            } else{
+                $employeePermission = $this->addPermission;
+            }
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees($existEmployeeInsurance, true, $employeePermission);
 
         $this->drivers = Driver::withoutGlobalScopes()->select(['id', 'name'])->whereNotIn('id', $existDriverInsurance)->orderBy('id', 'desc')->get();
 
@@ -94,9 +106,9 @@ class InsuranceController extends AccountBaseController
      */
     public function store(StoreInsurance $request)
     {
-        $viewPermission = user()->permission('add_insurance');
+        $this->addPermission = user()->permission('add_insurance');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($this->addPermission, ['all', 'added', 'branch']));
 
         // dd($request);
         $insurance = new Insurance();
@@ -113,7 +125,8 @@ class InsuranceController extends AccountBaseController
         $insurance->company = $request->company_name;
         $insurance->policy_no = $request->policy_no;
         $insurance->class = $request->class;
-        $insurance->status = $request->status;
+        $insurance->added_by = user()->id;
+        $insurance->status = 'active';
         $insurance->save();
 
         $redirectUrl = urldecode($request->redirect_url);
@@ -132,9 +145,14 @@ class InsuranceController extends AccountBaseController
     {
         $viewPermission = user()->permission('view_insurance');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $this->insurance = Insurance::with(['driver', 'employee'])->findOrFail($id);
+
+        if (!$this->canManageRecord($this->insurance, $viewPermission)) {
+            abort(403);
+        }
+
         if (request()->ajax()) {
             $html = view('insurances.ajax.show', $this->data)->render();
 
@@ -151,16 +169,16 @@ class InsuranceController extends AccountBaseController
      */
     public function edit(string $id)
     {
-        $viewPermission = user()->permission('edit_insurance');
+        $this->editPermission = user()->permission('edit_insurance');
 
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($this->editPermission, ['all', 'added', 'owned', 'both','branch']));
 
+        $this->insurance = Insurance::with(['driver', 'employee'])->findOrFail($id);
 
-        $this->assignRole = user()->roles->pluck('name')->toArray();
-
-        if (!in_array('admin', $this->assignRole)) {
-            abort_403(true);
+        if (!$this->canManageRecord($this->insurance, $this->editPermission)) {
+            abort(403);
         }
+
 
         $existEmployeeInsurance = Insurance::whereNotNull('employee_id')
             ->where('status', 'active')->where('employee_id', '!==', $id)
@@ -176,8 +194,17 @@ class InsuranceController extends AccountBaseController
             ->unique()
             ->toArray();
 
-        $this->insurance = Insurance::findOrFail($id);
-        $this->employees = User::allEmployees($existEmployeeInsurance);
+        if(in_array($this->editPermission, ['all','branch']) ){
+            if($this->editPermission == 'branch' && user()->branch_id == 6){
+                $employeePermission = 'all';
+            } else{
+                $employeePermission = $this->editPermission;
+            }
+        } else{
+            $employeePermission = null;
+        }
+        $this->employees = User::allEmployees($existEmployeeInsurance, true, $employeePermission);
+        // dd($this->employees);
 
         $this->drivers = Driver::withoutGlobalScopes()->select(['id', 'name'])->whereNotIn('id', $existDriverInsurance)->orderBy('id', 'desc')->get();
 
@@ -200,13 +227,16 @@ class InsuranceController extends AccountBaseController
      */
     public function update(UpdateInsurance $request, $id)
     {
-        $viewPermission = user()->permission('edit_insurance');
+        $editPermission = user()->permission('edit_insurance');
 
-        abort_403(!in_array($viewPermission, ['all']));
-        // $editDepartment = user()->permission('edit_employees');
-        // abort_403($editDepartment != 'all');
+        abort_403(!in_array($editPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $insurance = Insurance::findOrFail($id);
+
+        if (!$this->canManageRecord($insurance, $editPermission)) {
+            abort(403);
+        }
+
         if ($request->type == 'employee') {
             $insurance->employee_id = $request->employee;
             $insurance->driver_id = null;
@@ -219,7 +249,7 @@ class InsuranceController extends AccountBaseController
         $insurance->company = $request->company_name;
         $insurance->policy_no = $request->policy_no;
         $insurance->class = $request->class;
-        $insurance->status = $request->status;
+        // $insurance->status = $request->status;
         $insurance->save();
 
         $redirectUrl = route('insurance.index');
@@ -232,13 +262,16 @@ class InsuranceController extends AccountBaseController
      */
     public function destroy($id)
     {
-        $viewPermission = user()->permission('delete_insurance');
+        $deletePermission = user()->permission('delete_insurance');
 
-        abort_403(!in_array($viewPermission, ['all']));
-        // $deletePermission = user()->permission('delete_employees');
-        // abort_403($deletePermission != 'all');
+        abort_403(!in_array($deletePermission, ['all', 'added', 'owned', 'both','branch']));
 
-        Insurance::findOrFail($id)->delete();
+        $insurance = Insurance::findOrFail($id);
+        if (!$this->canManageRecord($insurance, $deletePermission)) {
+            abort(403);
+        }
+
+        $insurance->delete();
 
         $redirectUrl = route('insurance.index');
 
@@ -247,20 +280,19 @@ class InsuranceController extends AccountBaseController
 
     public function applyQuickAction(Request $request)
     {
-        $viewPermission = user()->permission('delete_insurance');
+        $deletePermission = user()->permission('delete_insurance');
 
-        abort_403(!in_array($viewPermission, ['all']));
-        
-        $this->assignRole = user()->roles->pluck('name')->toArray();
-
-        if (!in_array('admin', $this->assignRole)) {
-            abort_403(true);
-        }
+        abort_403(!in_array($deletePermission, ['all', 'added', 'owned', 'both','branch']));
 
         $ids = explode(',', $request->row_ids);
 
         if ($request->action_type === 'delete') {
-            Insurance::whereIn('id', $ids)->delete();
+            $insurances = Insurance::whereIn('id', $ids)->get();
+            foreach ($insurances as $insurance) {
+                if ($this->canManageRecord($insurance, $deletePermission)) {
+                    $insurance->delete();
+                }
+            }
 
             return response()->json([
                 'status' => 'success',
@@ -269,5 +301,30 @@ class InsuranceController extends AccountBaseController
         }
 
         return response()->json(['status' => 'error', 'message' => 'Invalid action.']);
+    }
+
+    protected function canManageRecord(Insurance $insurance, $permission): bool
+    {
+        if ($permission === 'all' || ($permission === 'branch' && user()->branch_id == 6)) {
+            return true;
+        }
+
+        if ($permission === 'added' && $insurance->added_by == user()->id) {
+            return true;
+        }
+
+        if ($permission === 'owned' && $insurance->employee_id == user()->id) {
+            return true;
+        }
+        if ($permission == 'both' && (user()->id == $insurance->added_by || user()->id == $insurance->employee_id)){
+            return true;
+        }
+
+        if ($permission === 'branch' && $insurance->employee->branch_id == user()->branch_id) {
+            return true;
+        }
+
+        return false;
+
     }
 }

@@ -13,7 +13,7 @@
                 <div class="row p-20">
 
                     <div class="col-lg-4 col-md-6">
-                        @if (count($assignRole) > 1)
+                        @if (in_array($addPermission, ['all', 'branch']))
                             <x-forms.label class="" fieldId="employee" :fieldLabel="__('app.employee')" fieldRequired="true">
                             </x-forms.label>
                             <x-forms.input-group>
@@ -39,7 +39,7 @@
                             :fieldPlaceholder="__('placeholders.date')" minlength="10" maxlength="10" />
                     </div>
 
-                    @if (count($assignRole) > 1)
+                    @if (in_array(user()->permission('approve_or_reject_air_tickets'), ['all']))
                         <div class="col-lg-4 col-md-6">
                             <x-forms.select fieldId="status" :fieldLabel="__('app.status')" fieldName="status" search="true">
                                 <option value="pending">@lang('app.pending')</option>

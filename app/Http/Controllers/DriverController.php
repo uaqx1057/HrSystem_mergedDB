@@ -41,7 +41,7 @@ class DriverController extends AccountBaseController
     public function index(DriversDataTable $dataTable)
     {
         $viewPermission = user()->permission('view_drivers');
-        abort_403(!in_array($viewPermission, ['all']));
+        abort_403(!in_array($viewPermission, ['all','branch']));
         return $dataTable->render('drivers.index', $this->data);
     }
 
@@ -51,7 +51,7 @@ class DriverController extends AccountBaseController
     public function create()
     {
         $addPermission = user()->permission('add_drivers');
-        abort_403(!in_array($addPermission, ['all', 'added']));
+        abort_403(!in_array($addPermission, ['all', 'added','branch']));
 
         $this->pageTitle = __('app.addDriver');
         $this->countries = countries();
@@ -72,7 +72,7 @@ class DriverController extends AccountBaseController
     public function store(StoreRequest $request)
     {
         $addPermission = user()->permission('add_drivers');
-        abort_403(!in_array($addPermission, ['all', 'added']));
+        abort_403(!in_array($addPermission, ['all', 'added','branch']));
         DB::beginTransaction();
         try {
             $validated = $request->validated();
@@ -208,9 +208,13 @@ class DriverController extends AccountBaseController
     public function show(string $id)
     {
         $this->viewPermission = user()->permission('view_drivers');
-        abort_403(!($this->viewPermission == 'all'));
+        abort_403(!in_array($this->viewPermission, ['all','branch']));
 
         $this->driver = Driver::withoutGlobalScopes()->findOrFail($id);
+
+        if (user()->permission('view_drivers') == 'branch' && user()->branch_id !== $this->driver->branch_id) {
+            abort_403(true);
+        }
 
         $this->driver_iqama = DriverDocument::where('driver_id', $id)->where('document_type', 'iqama')->first();
         $this->driver_license = DriverDocument::where('driver_id', $id)->where('document_type', 'license')->first();
@@ -266,7 +270,7 @@ class DriverController extends AccountBaseController
     public function edit(string $id)
     {
         $this->editPermission = user()->permission('edit_drivers');
-        abort_403(!($this->editPermission == 'all'));
+        abort_403(!in_array($this->editPermission, ['all','branch']));
 
         $this->pageTitle = __('app.update');
 
@@ -324,7 +328,7 @@ class DriverController extends AccountBaseController
     public function update(UpdateRequest $request, string $id)
     {
         $this->editPermission = user()->permission('edit_drivers');
-        abort_403(!($this->editPermission == 'all'));
+        abort_403(!in_array($this->editPermission, ['all','branch']));
 
         $driver = Driver::withoutGlobalScopes()->findOrFail($id);
 
@@ -782,9 +786,13 @@ class DriverController extends AccountBaseController
     public function destroy(string $id)
     {
         $deletePermission = user()->permission('delete_drivers');
-        abort_403(!($deletePermission == 'all'));
+        abort_403(!in_array($deletePermission, ['all','branch']));
 
         $this->driver = Driver::withoutGlobalScopes()->findOrFail($id);
+
+        if($deletePermission == 'branch' && $this->driver->branch_id !== user()->branch_id){
+            abort_403(true);
+        }
 
         Driver::destroy($id);
 

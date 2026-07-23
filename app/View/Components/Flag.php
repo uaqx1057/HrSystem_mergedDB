@@ -8,15 +8,17 @@ class Flag extends Component
 {
 
     public $country;
+    public $textColor;
 
     /**
      * Create a new component instance.
      *
      * @return void
      */
-    public function __construct($country)
+    public function __construct($country, $textColor = null)
     {
         $this->country = $country;
+        $this->textColor = $textColor;
     }
 
     /**

@@ -23,9 +23,14 @@
                             data-permission-id="{{ $permission->id }}" data-role-id="{{ $role->id }}">
                         @if (!is_null($allowedPermissions))
                             @foreach ($allowedPermissions as $key => $item)
+                                @php
+                                    $translationKey = $key === 'branch' ? 'app.permissionTypeBranch' : 'app.' . $key;
+                                    $label = __($translationKey);
+                                    $label = is_array($label) ? ucfirst($key) : $label;
+                                @endphp
                                 <option @if ($permissionType == $item) selected @endif
                                 @if (!$permissionType && $item == 5) selected @endif value="{{ $item }}">
-                                    @lang('app.'.$key)</option>
+                                    {{ $label }}</option>
                             @endforeach
                         @endif
                     </select>

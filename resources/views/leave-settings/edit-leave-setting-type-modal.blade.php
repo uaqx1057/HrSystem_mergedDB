@@ -48,7 +48,7 @@
                         </div>
 
                         <div class="col-lg-4">
-                            <div class="form-group my-3">
+                            <div class="form-group">
                                 <x-forms.label fieldId="colorselector" :fieldLabel="__('modules.sticky.colors')">
                                 </x-forms.label>
                                 <x-forms.input-group id="colorpicker">

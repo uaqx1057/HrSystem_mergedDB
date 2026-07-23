@@ -9,17 +9,19 @@ use Yajra\DataTables\Html\Column;
 
 class AdvanceSalaryDataTable extends BaseDataTable
 {
-    private $editSalaryPermission;
-    private $deleteSalaryPermission;
-    private $approveRejectSalaryPermission;
+    private $viewPermission;
+    private $editPermission;
+    private $deletePermission;
+    private $approveRejectPermission;
     private $assignRole;
 
     public function __construct()
     {
         parent::__construct();
-        $this->editSalaryPermission = user()->permission('edit_advance_salary');
-        $this->deleteSalaryPermission = user()->permission('delete_advance_salary');
-        $this->approveRejectSalaryPermission = user()->permission('approve_or_reject_advance_salary');
+        $this->viewPermission = user()->permission('view_advance_salary');
+        $this->editPermission = user()->permission('edit_advance_salary');
+        $this->deletePermission = user()->permission('delete_advance_salary');
+        $this->approveRejectPermission = user()->permission('approve_or_reject_advance_salary');
         $this->assignRole = user()->roles->pluck('name')->toArray();
     }
 
@@ -31,16 +33,35 @@ class AdvanceSalaryDataTable extends BaseDataTable
                 return '<input type="checkbox" class="select-table-row" id="datatable-row-' . $row->id . '" name="datatable_ids[]" value="' . $row->id . '" onclick="dataTableRowCheck(' . $row->id . ')">';
             })
             ->addColumn('action', function ($row) {
-                $action = '<div class="task_view">
-                <a href="' . route('advance-salaries.show', [$row->id]) . '" class="taskView text-darkest-grey f-w-500 openRightModal">' . __('app.view') . '</a>
-                    <div class="dropdown">
+                $action = '<div class="task_view">';
+                if (
+                    $this->viewPermission == 'all'
+                    || ($this->viewPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->viewPermission == 'branch' && user()->branch_id == $row->employee_branch)
+                    || ($this->viewPermission == 'added' && user()->id == $row->added_by)
+                    || ($this->viewPermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->viewPermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by))
+                ) {
+                $action .= '<a href="' . route('advance-salaries.show', [$row->id]) . '" class="taskView text-darkest-grey f-w-500 openRightModal">' . __('app.view') . '</a>';
+                }
+
+                    $action .= '<div class="dropdown">
                         <a class="task_view_more d-flex align-items-center justify-content-center dropdown-toggle" type="link"
                             id="dropdownMenuLink-' . $row->id . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="icon-options-vertical icons"></i>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
 
-                if ($row->status == 'pending' && $this->approveRejectSalaryPermission == 'all') {
+                if ($row->status == 'pending' &&
+                    ($this->approveRejectPermission == 'all'
+                    || ($this->approveRejectPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->approveRejectPermission == 'branch' && user()->branch_id == $row->employee_branch)
+                    || ($this->approveRejectPermission == 'added' && user()->id == $row->added_by)
+                    || ($this->approveRejectPermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->approveRejectPermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by)))
+                ) {
                     $action .= '<a class="dropdown-item salary-action-approved" href="javascript:;" data-salary-id="' . $row->id . '" data-action="approved">
                             <i class="fa fa-check mr-2"></i> ' . __('app.approve') . '
                         </a>
@@ -49,14 +70,30 @@ class AdvanceSalaryDataTable extends BaseDataTable
                         </a>';
                 }
 
-                if ($this->editSalaryPermission == 'all') {
+                if (
+                    $this->editPermission == 'all'
+                    || ($this->editPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->editPermission == 'branch' && user()->branch_id == $row->employee_branch)
+                    || ($this->editPermission == 'added' && user()->id == $row->added_by)
+                    || ($this->editPermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->editPermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by))
+                ) {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('advance-salaries.edit', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
                                 ' . trans('app.edit') . '
                             </a>';
                 }
 
-                if ($this->deleteSalaryPermission == 'all') {
+                if (
+                    $this->deletePermission == 'all'
+                    || ($this->deletePermission == 'branch' && user()->branch_id == 6)
+                    || ($this->deletePermission == 'branch' && user()->branch_id == $row->employee_branch)
+                    || ($this->deletePermission == 'added' && user()->id == $row->added_by)
+                    || ($this->deletePermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->deletePermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by))
+                ) {
                     $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-advance-salary-id="' . $row->id . '">
                                 <i class="fa fa-trash mr-2"></i>
                                 ' . trans('app.delete') . '
@@ -101,7 +138,7 @@ class AdvanceSalaryDataTable extends BaseDataTable
     {
         $request = $this->request();
         $model = $model->leftJoin('users', 'users.id', '=', 'advance_salaries.employee_id')
-            ->select('advance_salaries.*', 'users.name as employee_name')->orderBy('advance_salaries.id', 'desc');
+            ->select('advance_salaries.*', 'users.name as employee_name', 'users.branch_id as employee_branch')->orderBy('advance_salaries.id', 'desc');
 
         if ($request->searchText != '') {
             $model->where(function ($query) use ($request) {
@@ -113,9 +150,32 @@ class AdvanceSalaryDataTable extends BaseDataTable
             $model->where('advance_salaries.employee_id', $request->employeeId);
         }
 
-        if (count($this->assignRole) < 2) {
+        // if (count($this->assignRole) < 2) {
+        //     $model->where(function ($query) use ($request) {
+        //         $query->where('users.id', user()->id);
+        //     });
+        // }
+        if ($this->viewPermission == 'added') {
             $model->where(function ($query) use ($request) {
-                $query->where('users.id', user()->id);
+                $query->where('advance_salaries.added_by', user()->id);
+            });
+        }
+
+        if ($this->viewPermission == 'owned') {
+            $model->where(function ($query) use ($request) {
+                $query->where('advance_salaries.employee_id', user()->id);
+            });
+        }
+
+        if ($this->viewPermission == 'both') {
+            $model->where(function ($query) use ($request) {
+                $query->where('advance_salaries.employee_id', user()->id)->orWhere('advance_salaries.added_by', user()->id);
+            });
+        }
+
+        if ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+            $model->where(function ($query) use ($request) {
+                $query->where('users.branch_id', user()->branch_id);
             });
         }
 

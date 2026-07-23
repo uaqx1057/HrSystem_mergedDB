@@ -128,10 +128,13 @@ class EmployeesDataTable extends BaseDataTable
 
             $action .= '<a href="' . route('employees.show', [$row->id]) . '" class="dropdown-item"><i class="fa fa-eye mr-2"></i>' . __('app.view') . '</a>';
 
-            if ($this->editEmployeePermission == 'all'
+            $canEdit = $this->editEmployeePermission == 'all'
                 || ($this->editEmployeePermission == 'added' && user()->id == $row->added_by)
                 || ($this->editEmployeePermission == 'owned' && user()->id == $row->id)
-                || ($this->editEmployeePermission == 'both' && (user()->id == $row->id || user()->id == $row->added_by))) {
+                || ($this->editEmployeePermission == 'both' && (user()->id == $row->id || user()->id == $row->added_by))
+                || ($this->editEmployeePermission == 'branch' && !is_null(user()->branch_id) && $row->branch_id == user()->branch_id);
+
+            if ($canEdit) {
                 if (!in_array('admin', $userRole) || (in_array('admin', $userRole) && in_array('admin', user_roles()))) {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('employees.edit', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
@@ -140,7 +143,11 @@ class EmployeesDataTable extends BaseDataTable
                 }
             }
 
-                if ($this->deleteEmployeePermission == 'all' || ($this->deleteEmployeePermission == 'added' && user()->id == $row->added_by)) {
+            $canDelete = $this->deleteEmployeePermission == 'all'
+                || ($this->deleteEmployeePermission == 'added' && user()->id == $row->added_by)
+                || ($this->deleteEmployeePermission == 'branch' && !is_null(user()->branch_id) && $row->branch_id == user()->branch_id);
+
+            if ($canDelete) {
                 if ((!in_array('admin', $userRole) && user()->id !== $row->id) || (user()->id !== $row->id && in_array('admin', $userRole) && in_array('admin', user_roles()))) {
                     $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-user-id="' . $row->id . '">
                                 <i class="fa fa-trash mr-2"></i>
@@ -224,7 +231,7 @@ class EmployeesDataTable extends BaseDataTable
             ->leftJoin('employee_details', 'employee_details.user_id', '=', 'users.id')
             ->leftJoin('designations', 'employee_details.designation_id', '=', 'designations.id')
             ->join('roles', 'roles.id', '=', 'role_user.role_id')
-            ->select('users.id', 'employee_details.added_by', 'users.salutation', 'users.name', 'users.email', 'users.created_at', 'roles.name as roleName', 'roles.id as roleId', 'users.image', 'users.gender', 'users.status', DB::raw('(select user_roles.role_id from role_user as user_roles where user_roles.user_id = users.id ORDER BY user_roles.role_id DESC limit 1) as `current_role`'), DB::raw('(select roles.name from roles as roles where roles.id = current_role limit 1) as `current_role_name`'), 'designations.name as designation_name', 'employee_details.employee_id', 'employee_details.joining_date','employee_details.iqama_no','employee_details.iqama_expiry_date','employee_details.sponsor_kafala')
+            ->select('users.id', 'users.branch_id', 'employee_details.added_by', 'users.salutation', 'users.name', 'users.email', 'users.created_at', 'roles.name as roleName', 'roles.id as roleId', 'users.image', 'users.gender', 'users.status', DB::raw('(select user_roles.role_id from role_user as user_roles where user_roles.user_id = users.id ORDER BY user_roles.role_id DESC limit 1) as `current_role`'), DB::raw('(select roles.name from roles as roles where roles.id = current_role limit 1) as `current_role_name`'), 'designations.name as designation_name', 'employee_details.employee_id', 'employee_details.joining_date','employee_details.iqama_no','employee_details.iqama_expiry_date','employee_details.sponsor_kafala')
             ->onlyEmployee();
 
 
@@ -286,6 +293,16 @@ class EmployeesDataTable extends BaseDataTable
                 $q->where('employee_details.user_id', user()->id);
                 $q->orWhere('employee_details.added_by', user()->id);
             });
+        }
+
+        if ($this->viewEmployeePermission == 'branch') {
+            $currentBranchId = user()->branch_id;
+
+            if (!is_null($currentBranchId)) {
+                $users = $users->where('users.branch_id', $currentBranchId);
+            } else {
+                $users = $users->whereRaw('1 = 0');
+            }
         }
 
         if ($request->startDate != '' && $request->endDate != '') {

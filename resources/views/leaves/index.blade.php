@@ -125,7 +125,7 @@
     {{-- Action bar --}}
     <div class="d-grid d-lg-flex d-md-flex action-bar">
         <div id="table-actions" class="flex-grow-1 align-items-center">
-            @if ($addLeavePermission == 'all' || $addLeavePermission == 'added')
+            @if ($addLeavePermission == 'all' || $addLeavePermission == 'added' || $addLeavePermission == 'branch')
                 <x-forms.link-primary :link="route('leaves.create')" class="mr-3 openRightModal float-left" icon="plus">
                     @lang('modules.leaves.addLeave')
                 </x-forms.link-primary>

@@ -97,11 +97,11 @@
                             :fieldValue="now(company()->timezone)->translatedFormat(company()->date_format)" />
                     </div>
 
-                    @if ($emailSetting->send_email == 'yes')
+                    {{-- @if ($emailSetting->send_email == 'yes')
                         <div class="col-md-4 mt-3">
                             <x-forms.checkbox :fieldLabel="__('modules.attendance.sendEmail')" fieldName="send_email" fieldId="sendEmail" />
                         </div>
-                    @endif
+                    @endif --}}
 
                 </div>
                 <div class="row pl-20 pr-20 pb-4">

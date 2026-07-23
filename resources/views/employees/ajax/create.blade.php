@@ -220,6 +220,7 @@
                                         </select>
                                     </x-forms.input-group>
                                 </div>
+                                @if (in_array(user()->permission('add_employees'), ['all', 'added']))
                                 <div class="col-lg-4 col-md-6">
                                     <x-forms.label class="" fieldId="branch_id" :fieldLabel="__('app.branchName')">
                                     </x-forms.label>
@@ -233,6 +234,7 @@
                                         </select>
                                     </x-forms.input-group>
                                 </div>
+                                @endif
                             </div>
                         </div>
                         <div class="col-lg-3">

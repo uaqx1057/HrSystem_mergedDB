@@ -6,12 +6,24 @@
                     @lang('app.edit')</h4>
                 <div class="row p-20">
                     <div class="col-md-6">
-                        <x-forms.select fieldId="employee_id" :fieldLabel="__('app.employee')" fieldName="employee_id" fieldRequired="true" search="true">
-                            <option value="">@lang('app.select')...</option>
-                            @foreach ($employees as $employee)
-                                <x-user-option :user="$employee" :selected="$employee->id == $account->employee_id" />
-                            @endforeach
-                        </x-forms.select>
+                        @if (in_array(user()->permission('edit_advance_salary'), ['all', 'added', 'both','branch']))
+                            <x-forms.label class="" fieldId="employee_id" :fieldLabel="__('app.employee')" fieldRequired="true">
+                            </x-forms.label>
+                            <x-forms.input-group>
+                                <select class="form-control select-picker" name="employee_id" id="employee_id"
+                                    data-live-search="true">
+                                    <option value="">--</option>
+                                    @foreach ($employees as $employee)
+                                        <option value="{{ $employee->id }}" @if ($account->employee_id == $employee->id) selected @endif>{{ $employee->name }}</option>
+                                    @endforeach
+                                </select>
+                            </x-forms.input-group>
+                        @else
+                            <input type="hidden" value="{{ user()->id }}" name="employee_id">
+                            <x-forms.text fieldId="basic_salary" :fieldLabel="__('app.employee')" fieldName="basic_salary"
+                                fieldRequired="true" :fieldPlaceholder="__('placeholders.basic_salary')" :fieldValue="user()->name" :fieldReadOnly="true">
+                            </x-forms.text>
+                        @endif
                     </div>
                     <div class="col-md-6">
                         <x-forms.text fieldId="bank_name" :fieldLabel="__('app.bankName')" fieldName="bank_name" fieldRequired="true" :fieldValue="$account->bank_name" :fieldPlaceholder="__('placeholders.name')"></x-forms.text>

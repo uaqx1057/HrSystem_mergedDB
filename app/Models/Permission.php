@@ -37,17 +37,17 @@ use Trebol\Entrust\EntrustPermission;
 class Permission extends EntrustPermission
 {
 
-    const ALL_NONE = '{"all":4, "none":5}';
+    const ALL_NONE = '{"all":4, "none":5, "branch":6}';
 
-    const ALL_ADDED_NONE = '{"all":4, "added":1, "none":5}';
+    const ALL_ADDED_NONE = '{"all":4, "added":1, "none":5, "branch":6}';
 
-    const ALL_4_ADDED_1_NONE_5 = '{"all":4,"added":1, "none":5}';
+    const ALL_4_ADDED_1_NONE_5 = '{"all":4,"added":1, "none":5, "branch":6}';
 
-    const ALL_4_OWNED_2_NONE_5 = '{"all":4, "owned":2, "none":5}';
+    const ALL_4_OWNED_2_NONE_5 = '{"all":4, "owned":2, "none":5, "branch":6}';
 
-    const ALL_4_ADDED_1_OWNED_2_NONE_5 = '{"all":4, "added":1, "owned":2, "none":5}';
+    const ALL_4_ADDED_1_OWNED_2_NONE_5 = '{"all":4, "added":1, "owned":2, "none":5, "branch":6}';
 
-    const ALL_4_ADDED_1_OWNED_2_BOTH_3_NONE_5 = '{"all":4, "added":1, "owned":2,"both":3, "none":5}';
+    const ALL_4_ADDED_1_OWNED_2_BOTH_3_NONE_5 = '{"all":4, "added":1, "owned":2,"both":3, "none":5, "branch":6}';
 
     protected $fillable = ['name', 'display_name', 'description', 'module_id', 'is_custom', 'allowed_permissions'];
 

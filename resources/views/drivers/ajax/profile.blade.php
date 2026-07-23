@@ -48,10 +48,10 @@ $viewAppreciationPermission = true; // user()->permission('view_appreciation');
                         <x-cards.user :image="$driver->image_url">
                             <div class="row">
                                 <div class="col-10">
-                                    <h4 class="card-title f-15 f-w-500 text-darkest-grey mb-0">
+                                    <h4 class="card-title f-15 f-w-500 text-darkest-white mb-0">
                                         {{ $driver->name }}
                                         @isset($driver->nationality)
-                                            <x-flag :country="$driver->nationality" />
+                                            <x-flag textColor="text-darkest-white" :country="$driver->nationality" />
                                         @endisset
                                     </h4>
                                 </div>

@@ -138,7 +138,7 @@
                 </div>
 
                 @if (checkCompanyCanAddMoreEmployees(user()->company_id))
-                @if ($addDriverPermission == 'all')
+                @if (in_array($addDriverPermission, ['all', 'branch']))
                     <x-forms.link-primary :link="route('drivers.create')" class="mr-3 openRightModal" icon="plus">
                         @lang('app.addDriver')
                     </x-forms.link-primary>

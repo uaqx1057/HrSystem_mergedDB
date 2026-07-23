@@ -33,13 +33,39 @@ class EmployeeBankAccountDataTable extends BaseDataTable
                 $action = '<div class="task_view"><div class="dropdown">';
                 $action .= '<a class="task_view_more d-flex align-items-center justify-content-center dropdown-toggle" type="link" id="dropdownMenuLink-' . $row->id . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="icon-options-vertical icons"></i></a>';
                 $action .= '<div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
+                if (
+                    $this->viewPermission == 'all'
+                    || ($this->viewPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->viewPermission == 'branch' && user()->branch_id == $row->employee?->branch_id)
+                    || ($this->viewPermission == 'added' && user()->id == $row->added_by)
+                    || ($this->viewPermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->viewPermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by))
+                ) {
                 $action .= '<a href="' . route('employee-bank-accounts.show', $row->id) . '" class="dropdown-item openRightModal"><i class="fa fa-eye mr-2"></i>' . __('app.view') . '</a>';
+                }
 
-                if ($this->editPermission == 'all' || ($this->editPermission == 'added' && user()->id == $row->added_by) || ($this->editPermission == 'owned' && user()->id == $row->employee_id) || ($this->editPermission == 'both' && (user()->id == $row->added_by || user()->id == $row->employee_id)) ) {
+                if (
+                    $this->editPermission == 'all'
+                    || ($this->editPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->editPermission == 'branch' && user()->branch_id == $row->employee?->branch_id)
+                    || ($this->editPermission == 'added' && user()->id == $row->added_by)
+                    || ($this->editPermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->editPermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by))
+                ) {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('employee-bank-accounts.edit', [$row->id]) . '"><i class="fa fa-edit mr-2"></i>' . __('app.edit') . '</a>';
                 }
 
-                if ($this->deletePermission == 'all' || ($this->deletePermission == 'added' && user()->id == $row->added_by) || ($this->deletePermission == 'owned' && user()->id == $row->employee_id) || ($this->deletePermission == 'both' && (user()->id == $row->added_by || user()->id == $row->employee_id)) ) {
+                if (
+                    $this->deletePermission == 'all'
+                    || ($this->deletePermission == 'branch' && user()->branch_id == 6)
+                    || ($this->deletePermission == 'branch' && user()->branch_id == $row->employee?->branch_id)
+                    || ($this->deletePermission == 'added' && user()->id == $row->added_by)
+                    || ($this->deletePermission == 'owned' && user()->id == $row->employee_id)
+                    || ($this->deletePermission == 'both' && (user()->id == $row->employee_id
+                    || user()->id == $row->added_by))
+                ) {
                     $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-employee-bank-account-id="' . $row->id . '"><i class="fa fa-trash mr-2"></i>' . __('app.delete') . '</a>';
                 }
 
@@ -97,6 +123,11 @@ class EmployeeBankAccountDataTable extends BaseDataTable
             $query->where(function ($q) {
                 $q->where('employee_id', user()->id)
                     ->orWhere('added_by', user()->id);
+            });
+        }
+        elseif ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+            $query->whereHas('employee', function ($e) {
+                $e->where('branch_id', user()->branch_id);
             });
         }
 

@@ -54,7 +54,8 @@ class ModulePermissionSeeder extends Seeder
             ['name' => 'owned'],
             ['name' => 'both'],
             ['name' => 'all'],
-            ['name' => 'none']
+            ['name' => 'none'],
+            ['name' => 'branch']
         ]);
     }
 
