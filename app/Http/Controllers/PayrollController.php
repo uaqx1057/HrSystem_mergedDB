@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Currency;
 use App\Models\Driver;
 use App\Models\EmployeeBankAccount;
+use App\Models\HrPayrollPreflightRun;
 use App\Models\EmployeeSalaryGroup;
 use App\Models\Order;
 use App\Models\PayrollDriverSetup;
@@ -362,6 +363,10 @@ class PayrollController extends AccountBaseController
         $payeeId = $payeeType === 'driver' ? $request->driver_id : $request->employee_id;
 
         abort_403(empty($payeeId));
+
+        if ($payeeType === 'employee') {
+            $this->requireApprovedPreflight((int) $validated['year'], (string) $validated['month']);
+        }
 
         $validated['user_id'] = $payeeId;
         unset($validated['employee_id'], $validated['driver_id'], $validated['payee_type']);
@@ -764,9 +769,16 @@ class PayrollController extends AccountBaseController
         // $isImpersonatingCompany = session()->has('impersonate');
         // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
 
+        $this->requireApprovedPreflight(now()->year, now()->format('m'));
         Artisan::call('payroll:generate-monthly-slips');
 
         return redirect()->route('payroll.index', ['tab' => 'salary-slips'])->with('success', 'Monthly salary slips generated successfully.');
+    }
+
+    private function requireApprovedPreflight(int $year, string $month): void
+    {
+        $period = sprintf('%04d-%02d', $year, (int) $month);
+        abort_403(!HrPayrollPreflightRun::where('company_id', company()->id)->where('period', $period)->where('status', 'approved')->exists());
     }
 
     public function storeEmployeeSetup(Request $request): RedirectResponse
