@@ -634,8 +634,11 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::get('hr-worklist', [\App\Http\Controllers\HrWorklistController::class, 'index'])->name('hr-worklist.index');
     Route::get('hr-compliance', [\App\Http\Controllers\HrComplianceController::class, 'index'])->name('hr-compliance.index');
     Route::post('hr-compliance/probation', [\App\Http\Controllers\HrComplianceController::class, 'probation'])->name('hr-compliance.probation');
+    Route::post('hr-compliance/probation/{review}', [\App\Http\Controllers\HrComplianceController::class, 'completeProbation'])->name('hr-compliance.probation.complete');
     Route::post('hr-compliance/certification', [\App\Http\Controllers\HrComplianceController::class, 'certification'])->name('hr-compliance.certification');
+    Route::post('hr-compliance/certification/{certification}', [\App\Http\Controllers\HrComplianceController::class, 'renewCertification'])->name('hr-compliance.certification.renew');
     Route::post('hr-compliance/cases', [\App\Http\Controllers\HrComplianceController::class, 'restrictedCase'])->name('hr-compliance.case');
+    Route::post('hr-compliance/cases/{case}', [\App\Http\Controllers\HrComplianceController::class, 'updateCase'])->name('hr-compliance.case.update');
     Route::get('hr-employee-requests', [\App\Http\Controllers\HrEmployeeRequestController::class, 'index'])->name('hr-employee-requests.index');
     Route::post('hr-employee-requests', [\App\Http\Controllers\HrEmployeeRequestController::class, 'store'])->name('hr-employee-requests.store');
     Route::post('hr-employee-requests/{employeeRequest}/review', [\App\Http\Controllers\HrEmployeeRequestController::class, 'review'])->name('hr-employee-requests.review');
