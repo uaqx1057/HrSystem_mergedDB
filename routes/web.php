@@ -260,6 +260,9 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('employees/{id}/save-step', [EmployeeController::class, 'saveStep'])->name('employees.save_step');
     Route::get('hr-lifecycle/employees/{employee}', [\App\Http\Controllers\HrLifecycleController::class, 'show'])->name('hr-lifecycle.show');
     Route::get('hr-lifecycle', [\App\Http\Controllers\HrLifecycleController::class, 'index'])->name('hr-lifecycle.index');
+    Route::get('hr-access-scopes', [\App\Http\Controllers\HrAccessScopeController::class, 'index'])->name('hr-access-scopes.index');
+    Route::post('hr-access-scopes', [\App\Http\Controllers\HrAccessScopeController::class, 'store'])->name('hr-access-scopes.store');
+    Route::post('hr-access-scopes/{scope}/revoke', [\App\Http\Controllers\HrAccessScopeController::class, 'revoke'])->name('hr-access-scopes.revoke');
     Route::post('hr-lifecycle/employees/{employee}/onboarding', [\App\Http\Controllers\HrLifecycleController::class, 'startOnboarding'])->name('hr-lifecycle.onboarding.start');
     Route::post('hr-lifecycle/employees/{employee}/offboarding', [\App\Http\Controllers\HrLifecycleController::class, 'startOffboarding'])->name('hr-lifecycle.offboarding.start');
     Route::post('hr-lifecycle/tasks/{type}/{task}/status', [\App\Http\Controllers\HrLifecycleController::class, 'updateTask'])->name('hr-lifecycle.tasks.update');

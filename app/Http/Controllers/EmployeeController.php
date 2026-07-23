@@ -1617,6 +1617,7 @@ class EmployeeController extends AccountBaseController
 
         $hrUser = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
         $system = $request->system;
+        $this->validateSystemRole($system, $request->role);
 
         DB::transaction(function () use ($hrUser, $system, $request, $id) {
 
@@ -1741,6 +1742,7 @@ class EmployeeController extends AccountBaseController
         $access = \App\Models\EmployeeSystemAccess::where('employee_id', $id)
             ->where('system', $request->system)
             ->firstOrFail();
+        $this->validateSystemRole($request->system, $request->role);
 
         if ($request->system === 'dms') {
             $roleId = DB::table('roles')->where('name', $request->role)->value('id');
@@ -1784,6 +1786,15 @@ class EmployeeController extends AccountBaseController
         ];
 
         return redirect($urls[$system] . '/sso/login?token=' . $tokenStr);
+    }
+
+    private function validateSystemRole(string $system, string $role): void
+    {
+        $valid = $system === 'dms'
+            ? DB::table('roles')->where('name', $role)->where('name', '!=', 'client')->exists()
+            : in_array($role, ['FleetManager', 'FinanceManager', 'HR', 'OpsManager', 'OpsSupervisor', 'SuperAdmin'], true);
+
+        abort_unless($valid, 422, 'The selected system role is not allowed.');
     }
 
 }
