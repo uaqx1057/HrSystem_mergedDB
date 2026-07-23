@@ -131,6 +131,45 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
     }
     .ms-nav-buttons .left-btns { display: flex; gap: 8px; }
     .ms-nav-buttons .right-btns { display: flex; gap: 8px; }
+    .datepicker-input {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236c757d'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM5 7V6h14v1H5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 18px 18px;
+        padding-right: 34px !important;
+        cursor: pointer !important;
+        caret-color: transparent; /* hides the text cursor since typing is blocked anyway */
+    }
+      .datepicker-input {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236c757d'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM5 7V6h14v1H5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 18px 18px;
+        padding-right: 34px !important;
+        cursor: pointer !important;
+        caret-color: transparent;
+    }
+
+    /* override Bootstrap's greyed-out readonly look */
+    .datepicker-input,
+    .datepicker-input:read-only,
+    .datepicker-input[readonly] {
+        background-color: #fff !important;
+        opacity: 1 !important;
+        color: #212529 !important;
+    }
+    @if(user()->dark_theme)
+    .datepicker-input,
+    .datepicker-input:read-only,
+    .datepicker-input[readonly] {
+        background-color: #1e2136 !important; /* replace with your actual dark input bg */
+        color: #ffffff !important;
+        border-color: #4b4e69 !important;
+    }
+    .datepicker-input {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23adb5bd'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM5 7V6h14v1H5z'/%3E%3C/svg%3E");
+    }
+    @endif
 </style>
 
 <div class="row">
@@ -533,14 +572,6 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </div>
                         @endif
 
-                        @if ($employee->id != user()->id)
-                            <div class="col-md-4 col-lg-3">
-                                <x-forms.datepicker fieldId="last_date" :fieldLabel="__('modules.employees.lastDate')"
-                                    fieldName="last_date" :fieldPlaceholder="__('placeholders.date')"
-                                    :fieldValue="($employee->employeeDetail->last_date ? $employee->employeeDetail->last_date->format(company()->date_format) : '')" />
-                            </div>
-                        @endif
-
                         <div class="col-lg-3 col-md-4">
                             <div class="form-group">
                                 <label class="f-14 text-dark-grey mb-12 w-100"
@@ -768,7 +799,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                                    class="form-control height-35 f-14 dependant-dob"
                                                    name="dependants[{{ $depIdx }}][date_of_birth]"
                                                    value="{{ $dep->date_of_birth ? $dep->date_of_birth->format(company()->date_format) : '' }}"
-                                                   placeholder="Date of Birth" autocomplete="off">
+                                                   placeholder="DD-MM-YYYY" autocomplete="off">
                                         </div>
                                         <div class="col-lg-1 col-md-1 mb-2 d-flex align-items-end">
                                             <button type="button" class="btn btn-danger btn-sm remove-dependant-btn">
@@ -874,7 +905,19 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
 
 <script>
 $(document).ready(function () {
+    function lockDateField(id) {
+        $('#' + id)
+            .addClass('datepicker-input')
+            .attr('placeholder', 'DD-MM-YYYY')
+            .attr('readonly', true)
+            .on('keydown paste', function (e) { e.preventDefault(); }); // belt-and-suspenders
+    }
 
+    ['joining_date', 'iqama_expiry_date', 'national_id_expiry_date', 'passport_expiry_date',
+    'sponsorship_transfer_date', 'date_of_birth', 'probation_end_date',
+    'notice_period_start_date', 'notice_period_end_date', 'internship_end_date',
+    'contract_end_date', 'last_date'
+    ].forEach(lockDateField);
     // ── MULTISTEP NAVIGATION ──────────────────────────────
     var currentStep = 1;
     var totalSteps  = 5;
@@ -1162,7 +1205,7 @@ $(document).ready(function () {
                     <input type="text" id="dep_dob_${idx}"
                            class="form-control height-35 f-14 dependant-dob"
                            name="dependants[${idx}][date_of_birth]"
-                           placeholder="Date of Birth" autocomplete="off">
+                           placeholder="DD-MM-YYYY" autocomplete="off">
                 </div>
                 <div class="col-lg-1 col-md-1 mb-2 d-flex align-items-end">
                     <button type="button" class="btn btn-danger btn-sm remove-dependant-btn">

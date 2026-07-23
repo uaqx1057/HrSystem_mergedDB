@@ -637,13 +637,13 @@ class EmployeeController extends AccountBaseController
 
         $this->employeeData($request, $employee);
 
-        $employee->last_date = null;
+        // $employee->last_date = null;
         $employee->basic_salary = $request->basic_salary;
         $employee->vehicle_allocation = $request->vehicle_allocation;
 
-        if ($request->last_date != '') {
-            $employee->last_date = Carbon::createFromFormat($this->company->date_format, $request->last_date)->format('Y-m-d');
-        }
+        // if ($request->last_date != '') {
+        //     $employee->last_date = Carbon::createFromFormat($this->company->date_format, $request->last_date)->format('Y-m-d');
+        // }
 
         $employee->save();
         try {
@@ -706,7 +706,7 @@ class EmployeeController extends AccountBaseController
                 foreach (['address', 'about_me', 'reporting_to', 'basic_salary', 'vehicle_allocation'] as $field) {
                     if ($request->has($field)) $employee->{$field} = $request->input($field);
                 }
-                $this->saveEmployeeStepDates($request, $employee, ['date_of_birth', 'joining_date', 'last_date']);
+                $this->saveEmployeeStepDates($request, $employee, ['date_of_birth', 'joining_date']);
             }
 
             if ($step === 4) {
@@ -748,7 +748,7 @@ class EmployeeController extends AccountBaseController
         return match ($step) {
             1 => ['employee_id' => 'required|max:50|unique:employee_details,employee_id,' . $employee->id . ',id,company_id,' . company()->id, 'name' => 'required|max:50', 'department' => 'required', 'designation' => 'required', 'branch_id' => 'nullable|exists:branches,id', 'image' => 'nullable|image'],
             2 => ['employee_type' => 'nullable|in:saudi,expat', 'national_id_expiry_date' => $date, 'iqama_expiry_date' => $date, 'passport_expiry_date' => $date, 'sponsorship_transfer_date' => $date, 'transfer_number' => 'nullable|numeric'],
-            3 => ['date_of_birth' => $date, 'joining_date' => $date, 'last_date' => $date, 'basic_salary' => 'nullable|numeric'],
+            3 => ['date_of_birth' => $date, 'joining_date' => $date, 'basic_salary' => 'nullable|numeric'],
             4 => ['probation_end_date' => $date, 'notice_period_start_date' => $date, 'notice_period_end_date' => $date, 'internship_end_date' => $date, 'contract_end_date' => $date, 'dependants.*.name' => 'required_with:dependants.*.relation', 'dependants.*.relation' => 'required_with:dependants.*.name', 'dependants.*.date_of_birth' => $date],
             5 => ['allowances.*.name' => 'required_with:allowances.*.amount', 'allowances.*.amount' => 'required_with:allowances.*.name|numeric|min:0'],
         };
