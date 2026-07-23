@@ -625,6 +625,8 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::resource('leave-files', LeaveFileController::class);
 
     /* LEAVES */
+    Route::get('hr-role-worklists/finance', [\App\Http\Controllers\HrRoleWorklistController::class, 'finance'])->name('hr-role-worklists.finance');
+    Route::get('hr-role-worklists/it', [\App\Http\Controllers\HrRoleWorklistController::class, 'it'])->name('hr-role-worklists.it');
     Route::get('hr-asset-custody', [\App\Http\Controllers\HrAssetCustodyController::class, 'index'])->name('hr-asset-custody.index');
     Route::post('hr-asset-custody/{assignment}/acknowledge', [\App\Http\Controllers\HrAssetCustodyController::class, 'acknowledge'])->name('hr-asset-custody.acknowledge');
     Route::post('hr-asset-custody/{assignment}/return', [\App\Http\Controllers\HrAssetCustodyController::class, 'return'])->name('hr-asset-custody.return');
