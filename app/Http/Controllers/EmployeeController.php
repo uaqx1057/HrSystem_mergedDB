@@ -673,7 +673,7 @@ class EmployeeController extends AccountBaseController
     public function saveStep(Request $request, $id)
     {
         $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
-        $this->authorizeEmployeeStepSave($user);
+        $this->authorizeEmployeeStepSave($user, $request);
 
         $step = (int) $request->input('step');
         abort_unless(in_array($step, [1, 2, 3, 4, 5], true), 422);
@@ -729,16 +729,20 @@ class EmployeeController extends AccountBaseController
         return Reply::success(__('messages.updateSuccess'));
     }
 
-    private function authorizeEmployeeStepSave(User $employee): void
+    private function authorizeEmployeeStepSave(User $employee, Request $request): void
     {
-        $permission = user()->permission('edit_employees');
+        $currentUser = user();
+        $permission = $currentUser->permission('edit_employees');
         abort_403(!in_array('admin', user_roles()) && $employee->hasRole('admin'));
         abort_403(!(
             $permission === 'all'
-            || ($permission === 'added' && optional($employee->employeeDetail)->added_by === user()->id)
-            || ($permission === 'owned' && $employee->id === user()->id)
-            || ($permission === 'both' && ($employee->id === user()->id || optional($employee->employeeDetail)->added_by === user()->id))
+            || ($permission === 'added' && optional($employee->employeeDetail)->added_by === $currentUser->id)
+            || ($permission === 'owned' && $employee->id === $currentUser->id)
+            || ($permission === 'both' && ($employee->id === $currentUser->id || optional($employee->employeeDetail)->added_by === $currentUser->id))
+            || ($permission === 'branch' && !is_null($currentUser->branch_id) && $employee->branch_id === $currentUser->branch_id)
         ));
+
+        abort_403($permission === 'branch' && $request->has('branch_id') && (int) $request->branch_id !== (int) $currentUser->branch_id);
     }
 
     private function employeeStepRules(int $step, EmployeeDetails $employee): array
