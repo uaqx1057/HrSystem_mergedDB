@@ -204,7 +204,7 @@
                                             id="employee_designation" data-live-search="true">
                                             <option value="">--</option>
                                             @foreach ($designations as $designation)
-                                                <option value="{{ $designation->id }}">{{ $designation->name }}</option>
+                                                <option value="{{ $designation->id }}" @selected(strcasecmp($candidate?->designation ?? '', $designation->name) === 0)>{{ $designation->name }}</option>
                                             @endforeach
                                         </select>
                                     </x-forms.input-group>
@@ -232,7 +232,7 @@
                                             id="employee_branch" data-live-search="true">
                                             <option value="">--</option>
                                             @foreach ($branches as $branch)
-                                                <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                                                <option value="{{ $branch->id }}" @selected(($candidate?->branch_id) == $branch->id)>{{ $branch->name }}</option>
                                             @endforeach
                                         </select>
                                     </x-forms.input-group>
