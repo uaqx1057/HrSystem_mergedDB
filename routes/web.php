@@ -640,6 +640,7 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('hr-compliance/cases', [\App\Http\Controllers\HrComplianceController::class, 'restrictedCase'])->name('hr-compliance.case');
     Route::post('hr-compliance/cases/{case}', [\App\Http\Controllers\HrComplianceController::class, 'updateCase'])->name('hr-compliance.case.update');
     Route::get('hr-employee-requests', [\App\Http\Controllers\HrEmployeeRequestController::class, 'index'])->name('hr-employee-requests.index');
+    Route::get('hr-employee-requests/{employeeRequest}/attachment', [\App\Http\Controllers\HrEmployeeRequestController::class, 'download'])->name('hr-employee-requests.download');
     Route::post('hr-employee-requests', [\App\Http\Controllers\HrEmployeeRequestController::class, 'store'])->name('hr-employee-requests.store');
     Route::post('hr-employee-requests/{employeeRequest}/review', [\App\Http\Controllers\HrEmployeeRequestController::class, 'review'])->name('hr-employee-requests.review');
     Route::get('hr-payroll-preflight', [\App\Http\Controllers\HrPayrollPreflightController::class, 'index'])->name('hr-payroll-preflight.index');
