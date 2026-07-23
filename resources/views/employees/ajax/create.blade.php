@@ -126,6 +126,9 @@
 <div class="row">
     <div class="col-sm-12">
         <x-form id="save-employee-data-form">
+            @if(request('candidate_id'))
+                <input type="hidden" name="candidate_id" value="{{ request('candidate_id') }}">
+            @endif
             <div class="add-client bg-white rounded">
 
                 {{-- ── STEP INDICATORS ── --}}

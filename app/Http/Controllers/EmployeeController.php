@@ -37,6 +37,8 @@ use App\Models\Appreciation;
 use App\Models\Attendance;
 use App\Models\Designation;
 use App\Models\EmployeeDetails;
+use App\Models\HrCandidate;
+use App\Models\HrOnboardingCase;
 use App\Models\EmployeeSkill;
 use App\Models\LanguageSetting;
 use App\Models\Leave;
@@ -298,6 +300,22 @@ class EmployeeController extends AccountBaseController
 
             // Commit Transaction
             DB::commit();
+
+            if ($request->filled('candidate_id')) {
+                $candidate = HrCandidate::whereKey($request->candidate_id)->where('company_id', user()->company_id)->where('status', 'handoff')->first();
+                if ($candidate) {
+                    $candidate->update(['status' => 'converted', 'converted_employee_id' => $user->id]);
+                    $case = HrOnboardingCase::firstOrCreate(
+                        ['employee_id' => $user->id, 'status' => 'open'],
+                        ['company_id' => $user->company_id, 'template_name' => $employee->employee_type ?? 'expat', 'due_date' => now()->addDays(14), 'initiated_by' => user()->id]
+                    );
+                    if ($case->wasRecentlyCreated) {
+                        foreach (['Verify employee profile and documents', 'Set up bank and payroll', 'Assign insurance', 'Assign required assets', 'Grant DMS/DOBS access', 'Manager confirmation'] as $title) {
+                            DB::table('hr_onboarding_tasks')->insert(['case_id' => $case->id, 'title' => $title, 'owner_type' => 'hr', 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
+                        }
+                    }
+                }
+            }
 
             // WORKSUITESAAS
             session()->forget('company');
