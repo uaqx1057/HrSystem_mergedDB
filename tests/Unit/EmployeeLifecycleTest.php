@@ -3,9 +3,12 @@
 namespace Tests\Unit;
 
 use App\Models\EmployeeDetails;
+use App\Models\HrCertification;
+use App\Models\HrCertificationRule;
 use App\Models\User;
 use App\Services\EmployeeLifecycle;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 class EmployeeLifecycleTest extends TestCase
@@ -48,5 +51,29 @@ class EmployeeLifecycleTest extends TestCase
         $this->assertContains('National ID', $summary['missing']->all());
         $this->assertContains('National ID expiry', $summary['missing']->all());
         $this->assertNotContains('Iqama number', $summary['missing']->all());
+    }
+
+    public function test_required_certification_gaps_respect_designation_and_valid_expiry(): void
+    {
+        Carbon::setTestNow('2026-07-23 12:00:00');
+        $driver = new User(['name' => 'Driver']); $driver->id = 10;
+        $driver->setRelation('employeeDetail', new EmployeeDetails(['designation_id' => 3]));
+        $coordinator = new User(['name' => 'Coordinator']); $coordinator->id = 11;
+        $coordinator->setRelation('employeeDetail', new EmployeeDetails(['designation_id' => 4]));
+
+        $rules = new Collection([
+            new HrCertificationRule(['designation_id' => null, 'certification_name' => 'Safety']),
+            new HrCertificationRule(['designation_id' => 3, 'certification_name' => 'Driving permit']),
+        ]);
+        $certifications = new Collection([
+            new HrCertification(['employee_id' => 10, 'name' => 'Safety', 'expires_at' => '2026-08-01', 'status' => 'valid']),
+            new HrCertification(['employee_id' => 11, 'name' => 'Safety', 'expires_at' => '2026-07-01', 'status' => 'valid']),
+        ]);
+
+        $gaps = HrCertificationRule::missingForEmployees(new Collection([$driver, $coordinator]), $rules, $certifications);
+
+        $this->assertCount(2, $gaps);
+        $this->assertSame(['Driving permit'], $gaps->first()['requirements']->all());
+        $this->assertSame(['Safety'], $gaps->last()['requirements']->all());
     }
 }
