@@ -15,6 +15,20 @@ use Illuminate\Support\Facades\DB;
 
 class HrLifecycleController extends AccountBaseController
 {
+    public function index(Request $request)
+    {
+        $permission = user()->permission('edit_employees');
+        abort_403(!in_array($permission, ['all', 'branch'], true));
+        $this->status = $request->input('status', 'open');
+        $this->onboardingCases = HrOnboardingCase::with('employee')->where('status', $this->status)->latest()->get();
+        $this->offboardingCases = HrOffboardingCase::with('employee')->where('status', $this->status)->latest()->get();
+        $this->transfers = HrEmployeeTransfer::with('employee')->whereIn('status', $this->status === 'open' ? ['pending', 'approved'] : [$this->status])->latest()->get();
+        if ($permission === 'branch') {
+            $filter = fn ($cases) => $cases->filter(fn ($case) => $case->employee?->branch_id === user()->branch_id);
+            $this->onboardingCases = $filter($this->onboardingCases); $this->offboardingCases = $filter($this->offboardingCases); $this->transfers = $filter($this->transfers);
+        }
+        return view('hr-lifecycle.index', $this->data);
+    }
     public function show($employeeId)
     {
         $employee = $this->employee($employeeId);
@@ -56,7 +70,20 @@ class HrLifecycleController extends AccountBaseController
         $task = DB::table($table)->join($caseTable, $caseTable . '.id', '=', $table . '.case_id')->select($table . '.*', $caseTable . '.employee_id')->where($table . '.id', $taskId)->first(); abort_if(!$task, 404);
         $this->authorizeEmployee($this->employee($task->employee_id));
         DB::table($table)->where('id', $taskId)->update(['status' => $request->boolean('complete') ? 'completed' : 'pending', 'completed_at' => $request->boolean('complete') ? now() : null, 'updated_at' => now()]);
+        $this->syncCaseCompletion($type, $task->case_id);
         return Reply::success('Task updated.');
+    }
+
+    public function addTask(Request $request, string $type, int $caseId)
+    {
+        abort_403(!in_array($type, ['onboarding', 'offboarding'], true));
+        $caseTable = 'hr_' . $type . '_cases'; $taskTable = 'hr_' . $type . '_tasks';
+        $case = DB::table($caseTable)->where('id', $caseId)->first(); abort_if(!$case, 404);
+        $this->authorizeEmployee($this->employee($case->employee_id));
+        $data = $request->validate(['title' => 'required|string|max:255', 'assigned_to' => 'nullable|exists:users,id', 'due_date' => 'nullable|date']);
+        DB::table($taskTable)->insert(['case_id' => $caseId, 'title' => $data['title'], 'owner_type' => 'hr', 'assigned_to' => $data['assigned_to'] ?? null, 'due_date' => $data['due_date'] ?? null, 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
+        DB::table($caseTable)->where('id', $caseId)->update(['status' => 'open', 'completed_at' => null, 'updated_at' => now()]);
+        return Reply::success('Task added.');
     }
 
     public function requestTransfer(Request $request, $employeeId)
@@ -84,4 +111,5 @@ class HrLifecycleController extends AccountBaseController
 
     private function employee($id): User { return User::withoutGlobalScope(ActiveScope::class)->with('employeeDetail')->findOrFail($id); }
     private function authorizeEmployee(User $employee): void { $permission = user()->permission('edit_employees'); abort_403(!($permission === 'all' || ($permission === 'branch' && user()->branch_id === $employee->branch_id))); }
+    private function syncCaseCompletion(string $type, int $caseId): void { $taskTable = 'hr_' . $type . '_tasks'; $caseTable = 'hr_' . $type . '_cases'; $openTasks = DB::table($taskTable)->where('case_id', $caseId)->where('status', '!=', 'completed')->exists(); if (!$openTasks) DB::table($caseTable)->where('id', $caseId)->update(['status' => 'completed', 'completed_at' => now(), 'updated_at' => now()]); }
 }

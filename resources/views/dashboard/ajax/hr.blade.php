@@ -3,9 +3,9 @@
 
 
 <div class="row">
-    <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('employees.index') }}"><x-cards.widget title="Open onboarding" :value="$openOnboardingCases" icon="user-plus" /></a></div>
-    <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('employees.index') }}"><x-cards.widget title="Open offboarding" :value="$openOffboardingCases" icon="user-times" /></a></div>
-    <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('employees.index') }}"><x-cards.widget title="Pending transfers" :value="$pendingTransfers" icon="exchange-alt" /></a></div>
+    <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-lifecycle.index') }}"><x-cards.widget title="Open onboarding" :value="$openOnboardingCases" icon="user-plus" /></a></div>
+    <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-lifecycle.index') }}"><x-cards.widget title="Open offboarding" :value="$openOffboardingCases" icon="user-times" /></a></div>
+    <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-lifecycle.index') }}"><x-cards.widget title="Pending transfers" :value="$pendingTransfers" icon="exchange-alt" /></a></div>
     @if (in_array('leaves', user_modules()) && in_array('total_leaves_approved', $activeWidgets))
         <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
 
