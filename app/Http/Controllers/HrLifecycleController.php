@@ -50,7 +50,7 @@ class HrLifecycleController extends AccountBaseController
         $case = HrOnboardingCase::create(['company_id' => $employee->company_id, 'employee_id' => $employee->id, 'template_name' => $employee->employeeDetail?->employee_type ?? 'expat', 'status' => 'open', 'due_date' => now()->addDays(14), 'initiated_by' => user()->id]);
         $tasks = ['Verify employee profile and documents', 'Set up bank and payroll', 'Assign insurance', 'Assign required assets', 'Grant DMS/DOBS access', 'Manager confirmation'];
         foreach ($tasks as $title) DB::table('hr_onboarding_tasks')->insert(['case_id' => $case->id, 'title' => $title, 'owner_type' => 'hr', 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
-        return Reply::successWithData('Onboarding checklist started.', ['redirectUrl' => route('hr-lifecycle.show', $employeeId)]);
+        return $this->workflowResponse($request, 'Onboarding checklist started.', $employeeId);
     }
 
     public function startOffboarding(Request $request, $employeeId)
@@ -59,7 +59,7 @@ class HrLifecycleController extends AccountBaseController
         $data = $request->validate(['reason' => 'required|string|max:255', 'last_working_date' => 'required|date']);
         $case = HrOffboardingCase::create(['company_id' => $employee->company_id, 'employee_id' => $employee->id, 'reason' => $data['reason'], 'last_working_date' => $data['last_working_date'], 'status' => 'open', 'initiated_by' => user()->id]);
         foreach (['Return and verify assets', 'Calculate leave and advance settlement', 'Complete final payroll', 'Revoke DMS/DOBS access', 'Archive employee documents'] as $title) DB::table('hr_offboarding_tasks')->insert(['case_id' => $case->id, 'title' => $title, 'owner_type' => 'hr', 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
-        return Reply::successWithData('Offboarding clearance started.', ['redirectUrl' => route('hr-lifecycle.show', $employeeId)]);
+        return $this->workflowResponse($request, 'Offboarding clearance started.', $employeeId);
     }
 
     public function updateTask(Request $request, string $type, int $taskId)
@@ -71,7 +71,7 @@ class HrLifecycleController extends AccountBaseController
         $this->authorizeEmployee($this->employee($task->employee_id));
         DB::table($table)->where('id', $taskId)->update(['status' => $request->boolean('complete') ? 'completed' : 'pending', 'completed_at' => $request->boolean('complete') ? now() : null, 'updated_at' => now()]);
         $this->syncCaseCompletion($type, $task->case_id);
-        return Reply::success('Task updated.');
+        return $this->workflowResponse($request, 'Task updated.', $task->employee_id);
     }
 
     public function addTask(Request $request, string $type, int $caseId)
@@ -83,7 +83,7 @@ class HrLifecycleController extends AccountBaseController
         $data = $request->validate(['title' => 'required|string|max:255', 'assigned_to' => 'nullable|exists:users,id', 'due_date' => 'nullable|date']);
         DB::table($taskTable)->insert(['case_id' => $caseId, 'title' => $data['title'], 'owner_type' => 'hr', 'assigned_to' => $data['assigned_to'] ?? null, 'due_date' => $data['due_date'] ?? null, 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
         DB::table($caseTable)->where('id', $caseId)->update(['status' => 'open', 'completed_at' => null, 'updated_at' => now()]);
-        return Reply::success('Task added.');
+        return $this->workflowResponse($request, 'Task added.', $case->employee_id);
     }
 
     public function requestTransfer(Request $request, $employeeId)
@@ -91,25 +91,26 @@ class HrLifecycleController extends AccountBaseController
         $employee = $this->employee($employeeId); $this->authorizeEmployee($employee);
         $data = $request->validate(['to_branch_id' => 'required|exists:branches,id', 'effective_date' => 'required|date', 'reason' => 'nullable|string']);
         HrEmployeeTransfer::create(['company_id' => $employee->company_id, 'employee_id' => $employee->id, 'from_branch_id' => $employee->branch_id, 'to_branch_id' => $data['to_branch_id'], 'from_department_id' => $employee->employeeDetail?->department_id, 'from_manager_id' => $employee->employeeDetail?->reporting_to, 'effective_date' => $data['effective_date'], 'reason' => $data['reason'] ?? null, 'requested_by' => user()->id]);
-        return Reply::successWithData('Transfer request created.', ['redirectUrl' => route('hr-lifecycle.show', $employeeId)]);
+        return $this->workflowResponse($request, 'Transfer request created.', $employeeId);
     }
 
-    public function approveTransfer($id)
+    public function approveTransfer(Request $request, $id)
     {
         abort_403(!in_array('admin', user_roles()));
         $transfer = HrEmployeeTransfer::findOrFail($id); $transfer->update(['status' => 'approved', 'approved_by' => user()->id]);
-        return Reply::success('Transfer approved.');
+        return $this->workflowResponse($request, 'Transfer approved.', $transfer->employee_id);
     }
 
-    public function applyTransfer($id)
+    public function applyTransfer(Request $request, $id)
     {
         abort_403(!in_array('admin', user_roles()));
         $transfer = HrEmployeeTransfer::findOrFail($id); abort_403($transfer->status !== 'approved' || Carbon::parse($transfer->effective_date)->isFuture());
         DB::transaction(function () use ($transfer) { User::whereKey($transfer->employee_id)->update(['branch_id' => $transfer->to_branch_id]); EmployeeDetails::where('user_id', $transfer->employee_id)->update(['department_id' => $transfer->to_department_id, 'reporting_to' => $transfer->to_manager_id]); $transfer->update(['status' => 'applied', 'applied_at' => now()]); });
-        return Reply::success('Transfer applied.');
+        return $this->workflowResponse($request, 'Transfer applied.', $transfer->employee_id);
     }
 
     private function employee($id): User { return User::withoutGlobalScope(ActiveScope::class)->with('employeeDetail')->findOrFail($id); }
     private function authorizeEmployee(User $employee): void { $permission = user()->permission('edit_employees'); abort_403(!($permission === 'all' || ($permission === 'branch' && user()->branch_id === $employee->branch_id))); }
     private function syncCaseCompletion(string $type, int $caseId): void { $taskTable = 'hr_' . $type . '_tasks'; $caseTable = 'hr_' . $type . '_cases'; $openTasks = DB::table($taskTable)->where('case_id', $caseId)->where('status', '!=', 'completed')->exists(); if (!$openTasks) DB::table($caseTable)->where('id', $caseId)->update(['status' => 'completed', 'completed_at' => now(), 'updated_at' => now()]); }
+    private function workflowResponse(Request $request, string $message, int $employeeId) { return $request->ajax() ? Reply::successWithData($message, ['redirectUrl' => route('hr-lifecycle.show', $employeeId)]) : redirect()->route('hr-lifecycle.show', $employeeId)->with('success', $message); }
 }
