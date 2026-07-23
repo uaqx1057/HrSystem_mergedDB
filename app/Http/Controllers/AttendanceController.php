@@ -52,7 +52,7 @@ class AttendanceController extends AccountBaseController
         if ($request->employee_id) {
             abort_403(!(
                 $this->viewAttendancePermission == 'all' 
-                || ($this->viewAttendancePermission == 'branch' && user()->branch_id == 6)
+                || ($this->viewAttendancePermission == 'branch' && hr_has_all_branch_access('attendance'))
                 || ($this->viewAttendancePermission == 'branch' && $attendance->user->branch_id == user()->branch_id)
                 || ($this->viewAttendancePermission == 'added' && $attendance->added_by == user()->id)
                 || ($this->viewAttendancePermission == 'owned' && $attendance->user_id == user()->id)
@@ -72,7 +72,7 @@ class AttendanceController extends AccountBaseController
         }
         else {
             if(in_array($this->viewAttendancePermission, ['all','branch']) ){
-                if($this->viewAttendancePermission == 'branch' && user()->branch_id == 6){
+                if($this->viewAttendancePermission == 'branch' && hr_has_all_branch_access('attendance')){
                     $employeePermission = 'all';
                 } else{
                     $employeePermission = $this->viewAttendancePermission;
@@ -141,7 +141,7 @@ class AttendanceController extends AccountBaseController
             $employees = $employees->where('users.id', user()->id);
         }
 
-        if ($this->viewAttendancePermission == 'branch' && user()->branch_id !== 6) {
+        if ($this->viewAttendancePermission == 'branch' && !hr_has_all_branch_access('attendance')) {
             $employees = $employees->where('users.branch_id', user()->branch_id);
         }
 
@@ -305,7 +305,7 @@ class AttendanceController extends AccountBaseController
 
         abort_403(!(
             $viewPermission == 'all'
-            || ($viewPermission == 'branch' && user()->branch_id == 6)
+            || ($viewPermission == 'branch' && hr_has_all_branch_access('attendance'))
             || ($viewPermission == 'branch' && $attendance->user->branch_id == user()->branch_id)
             || ($viewPermission == 'added' && $attendance->added_by == user()->id)
             || ($viewPermission == 'owned' && $attendance->user->id == user()->id)
@@ -619,7 +619,7 @@ class AttendanceController extends AccountBaseController
         }
         else {
             if(in_array($this->viewAttendancePermission, ['all','branch']) ){
-                if($this->viewAttendancePermission == 'branch' && user()->branch_id == 6){
+                if($this->viewAttendancePermission == 'branch' && hr_has_all_branch_access('attendance')){
                     $employeePermission = 'all';
                 } else{
                     $employeePermission = $this->viewAttendancePermission;
@@ -1082,7 +1082,7 @@ class AttendanceController extends AccountBaseController
         }
         elseif ($this->viewAttendancePermission == 'all' || $this->viewAttendancePermission == 'branch') {
             if(in_array($this->viewAttendancePermission, ['all','branch']) ){
-                if($this->viewAttendancePermission == 'branch' && user()->branch_id == 6){
+                if($this->viewAttendancePermission == 'branch' && hr_has_all_branch_access('attendance')){
                     $employeePermission = 'all';
                 } else{
                     $employeePermission = $this->viewAttendancePermission;
@@ -1149,7 +1149,7 @@ class AttendanceController extends AccountBaseController
         if ($this->viewAttendancePermission == 'owned') {
             $employees = $employees->where('users.id', user()->id);
         }
-        if ($this->viewAttendancePermission == 'branch' && user()->branch_id !== 6) {
+        if ($this->viewAttendancePermission == 'branch' && !hr_has_all_branch_access('attendance')) {
             $employees = $employees->where('users.branch_id', user()->branch_id);
         }
 
@@ -1308,7 +1308,7 @@ class AttendanceController extends AccountBaseController
             return $this->byMapLocationData($request);
         }
         if(in_array($this->viewAttendancePermission, ['all','branch']) ){
-            if($this->viewAttendancePermission == 'branch' && user()->branch_id == 6){
+                if($this->viewAttendancePermission == 'branch' && hr_has_all_branch_access('attendance')){
                 $employeePermission = 'all';
             } else{
                 $employeePermission = $this->viewAttendancePermission;
@@ -1347,7 +1347,7 @@ class AttendanceController extends AccountBaseController
             $this->attendances = $this->attendances->where('users.id', user()->id);
         }
 
-        if ($this->viewAttendancePermission == 'branch' && user()->branch_id !== 6) {
+        if ($this->viewAttendancePermission == 'branch' && !hr_has_all_branch_access('attendance')) {
             $this->attendances = $this->attendances->where('users.branch_id', user()->branch_id);
         }
 

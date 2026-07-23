@@ -7,6 +7,7 @@ use App\Models\EmployeeDetails;
 use App\Models\Leave;
 use App\Models\LeaveSetting;
 use App\Models\User;
+use App\Services\HrAccess;
 use Carbon\Carbon;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
@@ -130,6 +131,11 @@ class LeaveDataTable extends BaseDataTable
             })
             ->addColumn('action', function ($row) {
 
+                $canApprove = HrAccess::canApproveLeave(user(), $row, $this->approveRejectPermission);
+                $canEdit = HrAccess::canAccessLeave(user(), $row, $this->editLeavePermission, false);
+                $canDelete = HrAccess::canAccessLeave(user(), $row, $this->deleteLeavePermission, false);
+                $canDeleteApproved = HrAccess::canAccessLeave(user(), $row, $this->deleteApproveLeavePermission, false);
+
                 $actions = '<div class="task_view">
 
                     <div class="dropdown">
@@ -145,7 +151,7 @@ class LeaveDataTable extends BaseDataTable
                     $actions .= '<a href="' . route('leaves.show', [$row->id]).'?type=single" class="dropdown-item"><i class="fa fa-eye mr-2"></i>' . __('app.view') . '</a>';
                 }
 
-                if ($row->status == 'pending' && ($row->duration != 'multiple' || is_null($row->unique_id)) && ($this->approveRejectPermission == 'all' || $this->approveRejectPermission == 'branch')) {
+                if ($row->status == 'pending' && ($row->duration != 'multiple' || is_null($row->unique_id)) && $canApprove) {
                     $actions .= '<a class="dropdown-item leave-action-approved" data-leave-id=' . $row->id . '
                              data-leave-action="approved" data-user-id="' . $row->user_id . '" data-leave-type-id="' . $row->leave_type_id . '" href="javascript:;">
                                 <i class="fa fa-check mr-2"></i>
@@ -158,7 +164,7 @@ class LeaveDataTable extends BaseDataTable
                         </a>';
                 }
 
-                if (($row->duration == 'multiple' && !is_null($row->unique_id)) && ($this->approveRejectPermission == 'all' || $this->approveRejectPermission == 'branch')) {
+                if (($row->duration == 'multiple' && !is_null($row->unique_id)) && $canApprove) {
                     $actions .= '<a class="dropdown-item view-related-leave" data-leave-id=' . $row->id . '
                              data-unique-id="' . $row->unique_id . '" data-leave-type-id="' . $row->leave_type_id . '" href="javascript:;">
                                 <i class="fa fa-eye mr-2"></i>
@@ -166,7 +172,7 @@ class LeaveDataTable extends BaseDataTable
                         </a>';
                 }
 
-                if ($row->status == 'pending' && $this->reportingTo && $row->user_id != user()->id && !in_array('admin', user_roles())) {
+                if ($row->status == 'pending' && HrAccess::isDirectManager(user(), $row->user) && $row->user_id != user()->id && !in_array('admin', user_roles())) {
 
                     if ($row->manager_status_permission == '' && !($this->reportingPermission == 'cannot-approve')) {
                         $actions .= '<a data-leave-id=' . $row->id . '
@@ -196,11 +202,7 @@ class LeaveDataTable extends BaseDataTable
                 }
 
                 if ($row->status == 'pending' && ($row->duration != 'multiple' || is_null($row->unique_id))) {
-                    if ($this->editLeavePermission == 'all' || $this->editLeavePermission == 'branch'
-                        || ($this->editLeavePermission == 'added' && user()->id == $row->added_by)
-                        || ($this->editLeavePermission == 'owned' && user()->id == $row->user_id)
-                        || ($this->editLeavePermission == 'both' && (user()->id == $row->user_id || user()->id == $row->added_by))
-                    ) {
+                    if ($canEdit) {
                         $actions .= '<a class="dropdown-item openRightModal" href="' . route('leaves.edit', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
                                 ' . __('app.edit') . '
@@ -208,11 +210,7 @@ class LeaveDataTable extends BaseDataTable
                     }
                 }
 
-                if ($this->deleteLeavePermission == 'all' || $this->deleteLeavePermission == 'branch'
-                    || ($this->deleteLeavePermission == 'added' && user()->id == $row->added_by)
-                    || ($this->deleteLeavePermission == 'owned' && user()->id == $row->user_id)
-                    || ($this->deleteLeavePermission == 'both' && (user()->id == $row->user_id || user()->id == $row->added_by)))
-                    {
+                if ($canDelete) {
                     if($row->status != 'approved'){
                         $actions .= '<a data-leave-id=' . $row->id . ' data-unique-id="'.$row->unique_id.'"
                                 data-duration="'.$row->duration.'" class="dropdown-item delete-table-row" href="javascript:;">
@@ -222,7 +220,7 @@ class LeaveDataTable extends BaseDataTable
                     }
                     else
                     {
-                        ($this->deleteApproveLeavePermission == 'all' || $this->deleteApproveLeavePermission == 'branch') ? $actions .= '<a data-leave-id=' . $row->id . '
+                        $canDeleteApproved ? $actions .= '<a data-leave-id=' . $row->id . '
                                     data-unique-id="'.$row->unique_id.'" data-duration="'.$row->duration.'" class="dropdown-item delete-table-row" href="javascript:;">
                                    <i class="fa fa-trash mr-2"></i>
                                     ' . __('app.delete') . '
@@ -319,7 +317,7 @@ class LeaveDataTable extends BaseDataTable
             });
         }
 
-        if ($this->viewLeavePermission == 'branch') {
+        if ($this->viewLeavePermission == 'branch' && !HrAccess::hasAllBranchAccess(user(), 'leave')) {
 
             $leavesList->where(function ($q) {
                 $q->orwhere('users.branch_id', '=', user()->branch_id);

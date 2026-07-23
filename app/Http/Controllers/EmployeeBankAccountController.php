@@ -24,7 +24,7 @@ class EmployeeBankAccountController extends AccountBaseController
         abort_403(!in_array($this->viewPermission, ['all', 'added', 'owned', 'both', 'branch']));
 
        if(in_array($this->viewPermission, ['all','branch']) ){
-            if($this->viewPermission == 'branch' && user()->branch_id == 6){
+            if($this->viewPermission == 'branch' && hr_has_all_branch_access('employee_bank_accounts')){
                 $employeePermission = 'all';
             } else{
                 $employeePermission = $this->viewPermission;
@@ -43,7 +43,7 @@ class EmployeeBankAccountController extends AccountBaseController
         abort_403(!in_array($this->addPermission, ['all','added', 'branch']));
 
         if(in_array($this->addPermission, ['all','branch']) ){
-            if($this->addPermission == 'branch' && user()->branch_id == 6){
+            if($this->addPermission == 'branch' && hr_has_all_branch_access('employee_bank_accounts')){
                 $employeePermission = 'all';
             } else{
                 $employeePermission = $this->addPermission;
@@ -128,7 +128,7 @@ class EmployeeBankAccountController extends AccountBaseController
         }
 
         if(in_array($this->editPermission, ['all','branch']) ){
-            if($this->editPermission == 'branch' && user()->branch_id == 6){
+            if($this->editPermission == 'branch' && hr_has_all_branch_access('employee_bank_accounts')){
                 $employeePermission = 'all';
             } else{
                 $employeePermission = $this->editPermission;
@@ -228,7 +228,7 @@ class EmployeeBankAccountController extends AccountBaseController
 
     protected function canAccessRecord(EmployeeBankAccount $account, $permission): bool
     {
-        if ($permission === 'all' || ($permission === 'branch' && user()->branch_id == 6)) {
+        if ($permission === 'all' || ($permission === 'branch' && hr_has_all_branch_access('employee_bank_accounts'))) {
             return true;
         }
 
@@ -253,7 +253,7 @@ class EmployeeBankAccountController extends AccountBaseController
 
     protected function canManageRecord(EmployeeBankAccount $account, $permission): bool
     {
-        if ($permission === 'all' || ($permission === 'branch' && user()->branch_id == 6)) {
+        if ($permission === 'all' || ($permission === 'branch' && hr_has_all_branch_access('employee_bank_accounts'))) {
             return true;
         }
 

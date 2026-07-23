@@ -1481,3 +1481,19 @@ if (!function_exists('clearCompanyValidPackageCache')) {
     }
 
 }
+
+if (!function_exists('hr_has_all_branch_access')) {
+
+    /**
+     * Explicit HR-only cross-branch access. Never infer global access from a
+     * branch ID, including Head Office.
+     */
+    function hr_has_all_branch_access(string $module, $actor = null): bool
+    {
+        $actor = $actor ?: user();
+
+        return $actor instanceof \App\Models\User
+            && \App\Services\HrAccess::hasAllBranchAccess($actor, $module);
+    }
+
+}

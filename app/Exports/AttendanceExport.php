@@ -120,7 +120,7 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
             $employees->where('users.id', user()->id);
         }
 
-        if ($this->viewAttendancePermission == 'branch' && user()->branch_id !== 6) {
+        if ($this->viewAttendancePermission == 'branch' && !hr_has_all_branch_access('attendance')) {
             $employees->where('users.branch_id', user()->branch_id);
         }
 

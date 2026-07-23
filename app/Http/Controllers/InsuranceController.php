@@ -40,7 +40,7 @@ class InsuranceController extends AccountBaseController
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
         if(in_array($viewPermission, ['all','branch']) ){
-            if($viewPermission == 'branch' && user()->branch_id == 6){
+            if($viewPermission == 'branch' && hr_has_all_branch_access('insurance')){
                 $employeePermission = 'all';
             } else{
                 $employeePermission = $viewPermission;
@@ -76,7 +76,7 @@ class InsuranceController extends AccountBaseController
             ->toArray();
 
         if(in_array($this->addPermission, ['all','branch']) ){
-            if($this->addPermission == 'branch' && user()->branch_id == 6){
+            if($this->addPermission == 'branch' && hr_has_all_branch_access('insurance')){
                 $employeePermission = 'all';
             } else{
                 $employeePermission = $this->addPermission;
@@ -195,7 +195,7 @@ class InsuranceController extends AccountBaseController
             ->toArray();
 
         if(in_array($this->editPermission, ['all','branch']) ){
-            if($this->editPermission == 'branch' && user()->branch_id == 6){
+            if($this->editPermission == 'branch' && hr_has_all_branch_access('insurance')){
                 $employeePermission = 'all';
             } else{
                 $employeePermission = $this->editPermission;
@@ -305,7 +305,7 @@ class InsuranceController extends AccountBaseController
 
     protected function canManageRecord(Insurance $insurance, $permission): bool
     {
-        if ($permission === 'all' || ($permission === 'branch' && user()->branch_id == 6)) {
+        if ($permission === 'all' || ($permission === 'branch' && hr_has_all_branch_access('insurance'))) {
             return true;
         }
 

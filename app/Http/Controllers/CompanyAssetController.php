@@ -241,7 +241,7 @@ class CompanyAssetController extends AccountBaseController
         abort_403(!in_array($this->addPermission, ['all', 'added','branch']));
 
        if(in_array($this->addPermission, ['all','branch']) ){
-            if($this->addPermission == 'branch' && user()->branch_id == 6){
+            if($this->addPermission == 'branch' && hr_has_all_branch_access('company_assets')){
                 $employeePermission = 'all';
             } else{
                 $employeePermission = $this->addPermission;
@@ -588,7 +588,7 @@ class CompanyAssetController extends AccountBaseController
 
     protected function canManageRecord(CompanyAsset $asset, $permission): bool
     {
-        if ($permission === 'all' || ($permission === 'branch' && user()->branch_id == 6)) {
+        if ($permission === 'all' || ($permission === 'branch' && hr_has_all_branch_access('company_assets'))) {
             return true;
         }
 

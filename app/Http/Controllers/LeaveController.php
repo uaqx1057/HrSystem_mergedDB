@@ -16,6 +16,7 @@ use App\Models\LeaveType;
 use App\Models\Permission;
 use App\Models\User;
 use App\Scopes\ActiveScope;
+use App\Services\HrAccess;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
@@ -51,7 +52,8 @@ class LeaveController extends AccountBaseController
             $q->where('reporting_to', user()->id);
         })->get();
 
-        $employee = User::allEmployees(null, true, ($viewPermission == 'all' ? 'all' : null));
+        $employeePermission = ($viewPermission == 'all' || HrAccess::hasAllBranchAccess(user(), 'leave')) ? 'all' : null;
+        $employee = User::allEmployees(null, true, $employeePermission);
         $this->employees = $reportingTo->merge($employee);
 
         $this->leaveTypes = LeaveType::all();
@@ -69,8 +71,10 @@ class LeaveController extends AccountBaseController
         $this->addPermission = user()->permission('add_leave');
         abort_403(!in_array($this->addPermission, ['all', 'added','branch']));
 
-        if(in_array($this->addPermission, ['all','branch']) ){
-            $employeePermission = $this->addPermission;
+        if ($this->addPermission === 'all' || HrAccess::hasAllBranchAccess(user(), 'leave')) {
+            $employeePermission = 'all';
+        } elseif ($this->addPermission === 'branch') {
+            $employeePermission = 'branch';
         } else{
             $employeePermission = null;
         }
@@ -202,6 +206,7 @@ class LeaveController extends AccountBaseController
 
         $uniqueId = Str::random(16);
         $employee = User::with('leaveTypes')->findOrFail($request->user_id);
+        abort_403(!$this->canCreateLeaveFor($employee, $this->addPermission));
 
         $employeeLeavesQuotas = $employee->leaveTypes;
         $allowedLeaves = clone $employeeLeavesQuotas;
@@ -512,14 +517,8 @@ class LeaveController extends AccountBaseController
             $q->orWhere('unique_id', $id);
         })->firstOrFail();
 
-        $this->reportingTo = EmployeeDetails::where('reporting_to', user()->id)->first();
-
         $this->viewPermission = user()->permission('view_leave');
-        abort_403(!($this->viewPermission == 'all' || $this->viewPermission == 'branch'
-            || ($this->viewPermission == 'added' && user()->id == $this->leave->added_by)
-            || ($this->viewPermission == 'owned' && user()->id == $this->leave->user_id)
-            || ($this->viewPermission == 'both' && (user()->id == $this->leave->user_id || user()->id == $this->leave->added_by)) || ($this->reportingTo)
-        ));
+        abort_403(!HrAccess::canAccessLeave(user(), $this->leave, $this->viewPermission));
 
         $this->pageTitle = $this->leave->user->name;
         $this->reportingPermission = LeaveSetting::value('manager_permission');
@@ -554,16 +553,12 @@ class LeaveController extends AccountBaseController
     {
         $this->leave = Leave::with('files')->findOrFail($id);
         $this->editPermission = user()->permission('edit_leave');
-        abort_403(!(
-            ($this->editPermission == 'all' || $this->editPermission == 'branch'
-                || ($this->editPermission == 'added' && $this->leave->added_by == user()->id)
-                || ($this->editPermission == 'owned' && $this->leave->user_id == user()->id)
-                || ($this->editPermission == 'both' && ($this->leave->user_id == user()->id || $this->leave->added_by == user()->id))
-            )
-            && ($this->leave->status == 'pending')));
+        abort_403(!HrAccess::canAccessLeave(user(), $this->leave, $this->editPermission, false) || $this->leave->status !== 'pending');
 
-        if(in_array($this->editPermission, ['all','branch']) ){
-            $employeePermission = $this->editPermission;
+        if ($this->editPermission === 'all' || HrAccess::hasAllBranchAccess(user(), 'leave')) {
+            $employeePermission = 'all';
+        } elseif ($this->editPermission === 'branch') {
+            $employeePermission = 'branch';
         } else{
             $employeePermission = null;
         }
@@ -617,11 +612,10 @@ class LeaveController extends AccountBaseController
         $leave = Leave::findOrFail($id);
         $this->editPermission = user()->permission('edit_leave');
 
-        abort_403(!($this->editPermission == 'all'
-            || ($this->editPermission == 'added' && $leave->added_by == user()->id)
-            || ($this->editPermission == 'owned' && $leave->user_id == user()->id)
-            || ($this->editPermission == 'both' && ($leave->user_id == user()->id || $leave->added_by == user()->id))
-        ));
+        abort_403(!HrAccess::canAccessLeave(user(), $leave, $this->editPermission, false));
+
+        $targetEmployee = User::withoutGlobalScope(ActiveScope::class)->findOrFail($request->user_id);
+        abort_403(!$this->canCreateLeaveFor($targetEmployee, $this->editPermission));
 
         /* check leave limit for the selected leave type start */
         $leaveStartYear = Carbon::parse(now()->format((now(company()->timezone)->year) . '-'. company()->year_starts_from . '-01'));
@@ -703,11 +697,8 @@ class LeaveController extends AccountBaseController
         $this->deletePermission = user()->permission('delete_leave');
         $this->deleteApproveLeavePermission = user()->permission('delete_approve_leaves');
 
-        abort_403(!($this->deletePermission == 'all'
-            || ($this->deletePermission == 'added' && $leave->added_by == user()->id)
-            || ($this->deletePermission == 'owned' && $leave->user_id == user()->id)
-            || ($this->deletePermission == 'both' && ($leave->user_id == user()->id || $leave->added_by == user()->id) || ($this->deleteApproveLeavePermission == 'none'))
-        ));
+        abort_403(!HrAccess::canAccessLeave(user(), $leave, $this->deletePermission, false));
+        abort_403($leave->status === 'approved' && !HrAccess::canAccessLeave(user(), $leave, $this->deleteApproveLeavePermission, false));
 
         if(!is_null(request()->uniId) && request()->duration == 'multiple')
         {
@@ -878,16 +869,20 @@ class LeaveController extends AccountBaseController
 
     public function leaveAction(ActionLeave $request)
     {
-        $this->reportingTo = EmployeeDetails::where('reporting_to', user()->id)->first();
-
-        abort_403(!($this->reportingTo) && user()->permission('approve_or_reject_leaves') == 'none');
+        $permission = user()->permission('approve_or_reject_leaves');
 
         if($request->type == 'single'){
             $leave = Leave::findOrFail($request->leaveId);
+            abort_403(!HrAccess::canApproveLeave(user(), $leave, $permission));
             $this->leaveStore($leave, $request);
         }
         else {
             $leaves = Leave::where('unique_id', $request->leaveId)->where('status', 'pending')->get();
+
+            foreach($leaves as $leave)
+            {
+                abort_403(!HrAccess::canApproveLeave(user(), $leave, $permission));
+            }
 
             foreach($leaves as $leave)
             {
@@ -918,9 +913,8 @@ class LeaveController extends AccountBaseController
 
     public function preApprove(Request $request)
     {
-        $this->reportingTo = EmployeeDetails::where('reporting_to', user()->id)->first();
-
         $leave = Leave::findOrFail($request->leaveId);
+        abort_403(!HrAccess::canApproveLeave(user(), $leave, user()->permission('approve_or_reject_leaves')));
         $leave->manager_status_permission = $request->action;
 
         $leave->save();
@@ -930,9 +924,8 @@ class LeaveController extends AccountBaseController
 
     public function approveLeave(Request $request)
     {
-        $this->reportingTo = EmployeeDetails::where('reporting_to', user()->id)->first();
-
-        abort_403(!($this->reportingTo) && (user()->permission('approve_or_reject_leaves') == 'none'));
+        $leave = Leave::findOrFail($request->leave_id);
+        abort_403(!HrAccess::canApproveLeave(user(), $leave, user()->permission('approve_or_reject_leaves')));
 
         $this->leaveAction = $request->leave_action;
         $this->leaveID = $request->leave_id;
@@ -943,9 +936,8 @@ class LeaveController extends AccountBaseController
 
     public function rejectLeave(Request $request)
     {
-        $this->reportingTo = EmployeeDetails::where('reporting_to', user()->id)->first();
-
-        abort_403(!($this->reportingTo) && (user()->permission('approve_or_reject_leaves') == 'none'));
+        $leave = Leave::findOrFail($request->leave_id);
+        abort_403(!HrAccess::canApproveLeave(user(), $leave, user()->permission('approve_or_reject_leaves')));
 
         $this->leaveAction = $request->leave_action;
         $this->leaveID = $request->leave_id;
@@ -1038,6 +1030,7 @@ class LeaveController extends AccountBaseController
         $this->approveRejectPermission = user()->permission('approve_or_reject_leaves');
         $this->deleteApproveLeavePermission = user()->permission('delete_approve_leaves');
         $this->multipleLeaves = Leave::with('type', 'user')->where('unique_id', $request->uniqueId)->orderBy('leave_date', 'DESC')->get();
+        abort_403($this->multipleLeaves->isEmpty() || $this->multipleLeaves->contains(fn ($leave) => !HrAccess::canAccessLeave(user(), $leave, user()->permission('view_leave'))));
         $this->pendingCountLeave = $this->multipleLeaves->where('status', 'pending')->count();
 
         $this->viewType = 'model';
@@ -1055,6 +1048,19 @@ class LeaveController extends AccountBaseController
         }
 
         $this->userRole = $userRole;
+    }
+
+    private function canCreateLeaveFor(User $employee, string|bool $permission): bool
+    {
+        if ($permission === 'all') {
+            return true;
+        }
+
+        if ($permission === 'branch') {
+            return HrAccess::canAccessEmployeeBranch(user(), $employee, 'leave');
+        }
+
+        return $permission === 'added' && (int) $employee->id === (int) user()->id;
     }
 
 }

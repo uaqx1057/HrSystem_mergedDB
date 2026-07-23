@@ -31,7 +31,7 @@ class AdvanceSalaryController extends AccountBaseController
         abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         if(in_array($viewPermission, ['all','branch']) ){
-            if($viewPermission == 'branch' && user()->branch_id == 6){
+            if($viewPermission == 'branch' && hr_has_all_branch_access('advance_salaries')){
                 $employeePermission = 'all';
             } else{
                 $employeePermission = $viewPermission;
@@ -57,7 +57,7 @@ class AdvanceSalaryController extends AccountBaseController
             $eligibleEmployees = $eligibleEmployees->where('id', user()->id);
         }
 
-        if($this->addPermission == 'branch' && user()->branch_id !== 6){
+        if($this->addPermission == 'branch' && !hr_has_all_branch_access('advance_salaries')){
             $eligibleEmployees = $eligibleEmployees->where('branch_id', user()->branch_id);
         }
 
@@ -148,7 +148,7 @@ class AdvanceSalaryController extends AccountBaseController
         $eligibleEmployees = User::with(['employeeDetails', 'advanceSalary'])->has('employeeDetail');
 
 
-        if($this->editPermission == 'branch' && user()->branch_id !== 6){
+        if($this->editPermission == 'branch' && !hr_has_all_branch_access('advance_salaries')){
             $eligibleEmployees = $eligibleEmployees->where('branch_id', user()->branch_id);
         }
 
@@ -279,7 +279,7 @@ class AdvanceSalaryController extends AccountBaseController
 
     protected function canManageRecord(AdvanceSalary $salary, $permission): bool
     {
-        if ($permission === 'all' || ($permission === 'branch' && user()->branch_id == 6)) {
+        if ($permission === 'all' || ($permission === 'branch' && hr_has_all_branch_access('advance_salaries'))) {
             return true;
         }
 

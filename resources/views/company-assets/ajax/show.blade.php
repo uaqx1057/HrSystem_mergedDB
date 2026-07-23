@@ -95,7 +95,7 @@
                                     if ($viewPermission == 'both') {
                                         $assignments = $assignments->where('employee_id', user()->id)->orWhere('added_by', user()->id);
                                     }
-                                    if ($viewPermission == 'branch' && user()->branch_id !== 6) {
+                                    if ($viewPermission == 'branch' && !hr_has_all_branch_access('company_assets')) {
                                         $assignments = $assignments->where('branch_id', user()->branch_id);
                                     }
                                     $assignments = $assignments->get();

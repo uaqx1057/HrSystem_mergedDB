@@ -85,7 +85,7 @@ class PayrollController extends AccountBaseController
             $this->salarySlips = $this->salarySlips->where('user_id', user()->id)->orWhere('added_by', user()->id);
         }
 
-        if ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+        if ($this->viewPermission == 'branch' && !hr_has_all_branch_access('payroll')) {
             $this->salarySlips = $this->salarySlips->whereHas('user', function ($query) use ($request) {
                 $query->where('branch_id', user()->branch_id);
             });
@@ -116,7 +116,7 @@ class PayrollController extends AccountBaseController
         $this->employeeSetups = PayrollEmployeeSetup::with(['employee:id,name'])
             ->latest('id');
 
-        if ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+        if ($this->viewPermission == 'branch' && !hr_has_all_branch_access('payroll')) {
             $this->employeeSetups = $this->employeeSetups->whereHas('employee', function ($query) use ($request) {
                 $query->where('branch_id', user()->branch_id);
             });
@@ -143,7 +143,7 @@ class PayrollController extends AccountBaseController
         );
 
         if(in_array($this->viewPermission, ['all','branch']) ){
-            if($this->viewPermission == 'branch' && user()->branch_id == 6){
+                if($this->viewPermission == 'branch' && hr_has_all_branch_access('payroll')){
                 $employeePermission = 'all';
             } else{
                 $employeePermission = $this->viewPermission;
@@ -203,7 +203,7 @@ class PayrollController extends AccountBaseController
             $query = $query->where('user_id', user()->id)->orWhere('added_by', user()->id);
         }
 
-        if ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+        if ($this->viewPermission == 'branch' && !hr_has_all_branch_access('payroll')) {
             $query = $query->whereHas('user', function ($query) use ($request) {
                 $query->where('branch_id', user()->branch_id);
             });
@@ -934,7 +934,7 @@ class PayrollController extends AccountBaseController
         abort_403(!in_array($addPayrollPermission, ['all', 'branch']));
 
         if(in_array($addPayrollPermission, ['all','branch']) ){
-            if($addPayrollPermission == 'branch' && user()->branch_id == 6){
+            if($addPayrollPermission == 'branch' && hr_has_all_branch_access('payroll')){
                 $employeePermission = 'all';
             } else{
                 $employeePermission = $addPayrollPermission;

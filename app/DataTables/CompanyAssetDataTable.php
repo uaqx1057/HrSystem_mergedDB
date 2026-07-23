@@ -110,7 +110,7 @@ class CompanyAssetDataTable extends BaseDataTable
 
                 if (
                     $this->editPermission == 'all'
-                    || ($this->editPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->editPermission == 'branch' && hr_has_all_branch_access('company_assets'))
                     || ($this->editPermission == 'branch' && user()->branch_id == $row->branch_id)
                     || ($this->editPermission == 'added' && user()->id == $row->added_by)
                 ) {
@@ -127,7 +127,7 @@ class CompanyAssetDataTable extends BaseDataTable
                 }
                 if (
                     $this->deletePermission == 'all'
-                    || ($this->deletePermission == 'branch' && user()->branch_id == 6)
+                    || ($this->deletePermission == 'branch' && hr_has_all_branch_access('company_assets'))
                     || ($this->deletePermission == 'branch' && user()->branch_id == $row->branch_id)
                     || ($this->deletePermission == 'added' && user()->id == $row->added_by)
                 ) {
@@ -198,7 +198,7 @@ class CompanyAssetDataTable extends BaseDataTable
             })->orWhere('company_assets.added_by', user()->id);
         }
 
-        if ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+        if ($this->viewPermission == 'branch' && !hr_has_all_branch_access('company_assets')) {
             $model->where(function ($query) use ($request) {
                 $query->where('company_assets.branch_id', user()->branch_id);
             });

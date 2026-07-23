@@ -60,7 +60,7 @@ class EmployeeShiftScheduleController extends AccountBaseController
 
         } else {
             if(in_array($this->viewShiftPermission, ['all','branch']) ){
-                if($this->viewShiftPermission == 'branch' && user()->branch_id == 6){
+                if($this->viewShiftPermission == 'branch' && hr_has_all_branch_access('shift_schedules')){
                     $employeePermission = 'all';
                 } else{
                     $employeePermission = $this->viewShiftPermission;
@@ -114,7 +114,7 @@ class EmployeeShiftScheduleController extends AccountBaseController
             $employees = $employees->where('users.id', $request->userId);
         }
 
-        if ($viewShiftPermission == 'branch' && user()->branch_id !== 6) {
+        if ($viewShiftPermission == 'branch' && !hr_has_all_branch_access('shift_schedules')) {
             $employees = $employees->where('users.branch_id', user()->branch_id);
         }
 
@@ -253,7 +253,7 @@ class EmployeeShiftScheduleController extends AccountBaseController
             $employees = $employees->where('users.id', $request->userId);
         }
 
-        if ($viewShiftPermission == 'branch' && user()->branch_id !== 6) {
+        if ($viewShiftPermission == 'branch' && !hr_has_all_branch_access('shift_schedules')) {
             $employees = $employees->where('users.branch_id', user()->branch_id);
         }
 

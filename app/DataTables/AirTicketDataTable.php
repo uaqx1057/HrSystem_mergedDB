@@ -37,7 +37,7 @@ class AirTicketDataTable extends BaseDataTable
 
                 if (
                     $this->viewPermission == 'all'
-                    || ($this->viewPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->viewPermission == 'branch' && hr_has_all_branch_access('air_tickets'))
                     || ($this->viewPermission == 'branch' && user()->branch_id == $row->employee_branch)
                     || ($this->viewPermission == 'added' && user()->id == $row->added_by)
                     || ($this->viewPermission == 'owned' && user()->id == $row->employee_id)
@@ -57,7 +57,7 @@ class AirTicketDataTable extends BaseDataTable
                 // Approve/Reject Buttons (Only if status is pending)
                 if ($row->status == 'pending' &&
                     ($this->approveRejectPermission == 'all'
-                    || ($this->approveRejectPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->approveRejectPermission == 'branch' && hr_has_all_branch_access('air_tickets'))
                     || ($this->approveRejectPermission == 'branch' && user()->branch_id == $row->employee_branch)
                     || ($this->approveRejectPermission == 'added' && user()->id == $row->added_by)
                     || ($this->approveRejectPermission == 'owned' && user()->id == $row->employee_id)
@@ -74,7 +74,7 @@ class AirTicketDataTable extends BaseDataTable
 
                 if (
                     $this->editPermission == 'all'
-                    || ($this->editPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->editPermission == 'branch' && hr_has_all_branch_access('air_tickets'))
                     || ($this->editPermission == 'branch' && user()->branch_id == $row->employee_branch)
                     || ($this->editPermission == 'added' && user()->id == $row->added_by)
                     || ($this->editPermission == 'owned' && user()->id == $row->employee_id)
@@ -89,7 +89,7 @@ class AirTicketDataTable extends BaseDataTable
 
                 if (
                     $this->deletePermission == 'all'
-                    || ($this->deletePermission == 'branch' && user()->branch_id == 6)
+                    || ($this->deletePermission == 'branch' && hr_has_all_branch_access('air_tickets'))
                     || ($this->deletePermission == 'branch' && user()->branch_id == $row->employee_branch)
                     || ($this->deletePermission == 'added' && user()->id == $row->added_by)
                     || ($this->deletePermission == 'owned' && user()->id == $row->employee_id)
@@ -175,7 +175,7 @@ class AirTicketDataTable extends BaseDataTable
             });
         }
 
-        if ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+        if ($this->viewPermission == 'branch' && !hr_has_all_branch_access('air_tickets')) {
             $model->where(function ($query) use ($request) {
                 $query->where('users.branch_id', user()->branch_id);
             });

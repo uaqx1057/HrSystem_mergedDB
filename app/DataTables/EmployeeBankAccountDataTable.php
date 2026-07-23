@@ -35,7 +35,7 @@ class EmployeeBankAccountDataTable extends BaseDataTable
                 $action .= '<div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
                 if (
                     $this->viewPermission == 'all'
-                    || ($this->viewPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->viewPermission == 'branch' && hr_has_all_branch_access('employee_bank_accounts'))
                     || ($this->viewPermission == 'branch' && user()->branch_id == $row->employee?->branch_id)
                     || ($this->viewPermission == 'added' && user()->id == $row->added_by)
                     || ($this->viewPermission == 'owned' && user()->id == $row->employee_id)
@@ -47,7 +47,7 @@ class EmployeeBankAccountDataTable extends BaseDataTable
 
                 if (
                     $this->editPermission == 'all'
-                    || ($this->editPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->editPermission == 'branch' && hr_has_all_branch_access('employee_bank_accounts'))
                     || ($this->editPermission == 'branch' && user()->branch_id == $row->employee?->branch_id)
                     || ($this->editPermission == 'added' && user()->id == $row->added_by)
                     || ($this->editPermission == 'owned' && user()->id == $row->employee_id)
@@ -59,7 +59,7 @@ class EmployeeBankAccountDataTable extends BaseDataTable
 
                 if (
                     $this->deletePermission == 'all'
-                    || ($this->deletePermission == 'branch' && user()->branch_id == 6)
+                    || ($this->deletePermission == 'branch' && hr_has_all_branch_access('employee_bank_accounts'))
                     || ($this->deletePermission == 'branch' && user()->branch_id == $row->employee?->branch_id)
                     || ($this->deletePermission == 'added' && user()->id == $row->added_by)
                     || ($this->deletePermission == 'owned' && user()->id == $row->employee_id)
@@ -125,7 +125,7 @@ class EmployeeBankAccountDataTable extends BaseDataTable
                     ->orWhere('added_by', user()->id);
             });
         }
-        elseif ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+        elseif ($this->viewPermission == 'branch' && !hr_has_all_branch_access('employee_bank_accounts')) {
             $query->whereHas('employee', function ($e) {
                 $e->where('branch_id', user()->branch_id);
             });

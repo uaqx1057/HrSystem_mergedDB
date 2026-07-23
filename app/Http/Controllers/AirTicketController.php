@@ -34,7 +34,7 @@ class AirTicketController extends AccountBaseController
         abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         if(in_array($viewPermission, ['all','branch']) ){
-            if($viewPermission == 'branch' && user()->branch_id == 6){
+            if($viewPermission == 'branch' && hr_has_all_branch_access('air_tickets')){
                 $employeePermission = 'all';
             } else{
                 $employeePermission = $viewPermission;
@@ -66,7 +66,7 @@ class AirTicketController extends AccountBaseController
         if($this->addPermission == 'added'){
             $eligibleEmployees = $eligibleEmployees->where('id', user()->id);
         }
-        if($this->addPermission == 'branch' && user()->branch_id !== 6){
+        if($this->addPermission == 'branch' && !hr_has_all_branch_access('air_tickets')){
             $eligibleEmployees = $eligibleEmployees->where('branch_id', user()->branch_id);
         }
         $this->employees = $eligibleEmployees->get()
@@ -214,7 +214,7 @@ class AirTicketController extends AccountBaseController
             ->whereHas('employeeDetails', function ($query) use ($today) {
                 $query->where('joining_date', '<=', $today->copy()->subYear());
             });
-            if($viewPermission == 'branch' && user()->branch_id !== 6){
+            if($viewPermission == 'branch' && !hr_has_all_branch_access('air_tickets')){
                 $this->employees = $this->employees->where('branch_id', user()->branch_id);
             }
             $this->employees = $this->employees->get()
@@ -370,7 +370,7 @@ class AirTicketController extends AccountBaseController
 
     protected function canManageRecord(AirTicket $airTicket, $permission): bool
     {
-        if ($permission === 'all' || ($permission === 'branch' && user()->branch_id == 6)) {
+        if ($permission === 'all' || ($permission === 'branch' && hr_has_all_branch_access('air_tickets'))) {
             return true;
         }
 

@@ -10,6 +10,7 @@ use App\Console\Commands\AutoStopTimer;
 use App\Console\Commands\BirthdayReminderCommand;
 use App\Console\Commands\CacheTest;
 use App\Console\Commands\ClearNullSessions;
+use App\Console\Commands\ManageHrAccessScope;
 use App\Console\Commands\CreateTranslations;
 use App\Console\Commands\FetchTicketEmails;
 use App\Console\Commands\GenerateMonthlyPayrollSlips;
@@ -64,6 +65,7 @@ class Kernel extends ConsoleKernel
         SendMonthlyAttendanceReport::class,
         SendDailyTimelogReport::class,
         CacheTest::class,
+        ManageHrAccessScope::class,
         SendDailyTimelogReport::class,
         GenerateMonthlyPayrollSlips::class,
         // WORKSUITE SAAS

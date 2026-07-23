@@ -311,7 +311,7 @@
 
                                         @if (
                                                 $editPayrollPermission == 'all'
-                                                || ($editPayrollPermission == 'branch' && user()->branch_id == 6)
+                                                || ($editPayrollPermission == 'branch' && hr_has_all_branch_access('payroll'))
                                                 || ($editPayrollPermission == 'branch' && user()->branch_id == $slip->user->branch_id)
                                                 || ($editPayrollPermission == 'added' && user()->id == $slip->added_by)
                                                 || ($editPayrollPermission == 'owned' && user()->id == $slip->user_id)
@@ -359,7 +359,7 @@
                                         @endif
                                         @if (
                                                 $deletePayrollPermission == 'all'
-                                                || ($deletePayrollPermission == 'branch' && user()->branch_id == 6)
+                                                || ($deletePayrollPermission == 'branch' && hr_has_all_branch_access('payroll'))
                                                 || ($deletePayrollPermission == 'branch' && user()->branch_id == $slip->user->branch_id)
                                                 || ($deletePayrollPermission == 'added' && user()->id == $slip->added_by)
                                                 || ($deletePayrollPermission == 'owned' && user()->id == $slip->user_id)

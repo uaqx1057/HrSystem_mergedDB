@@ -46,7 +46,7 @@
                         </x-forms.input-group>
                     </div>
                     <div class="col-md-6">
-                        @if (in_array($addPermission, ['all']) || user()->branch_id == 6)
+                        @if (in_array($addPermission, ['all']) || ($addPermission === 'branch' && hr_has_all_branch_access('company_assets')))
                             <x-forms.label class="" fieldId="branch_id"
                                 :fieldLabel="__('app.branchName')" fieldRequired="true">
                             </x-forms.label>

@@ -46,7 +46,7 @@ class InsuranceDataTable extends BaseDataTable
                 $action = '<div class="task_view">';
                 if (
                     $this->viewPermission == 'all'
-                    || ($this->viewPermission == 'branch' && user()->branch_id == 6)
+                    || ($this->viewPermission == 'branch' && hr_has_all_branch_access('insurance'))
                     || ($this->viewPermission == 'branch' && user()->branch_id == $row->employee_branch)
                     || ($this->viewPermission == 'added' && user()->id == $row->added_by)
                     || ($this->viewPermission == 'owned' && user()->id == $row->employee_id)
@@ -64,7 +64,7 @@ class InsuranceDataTable extends BaseDataTable
 
                 if (
                     $this->editInsurancePermission == 'all'
-                    || ($this->editInsurancePermission == 'branch' && user()->branch_id == 6)
+                    || ($this->editInsurancePermission == 'branch' && hr_has_all_branch_access('insurance'))
                     || ($this->editInsurancePermission == 'branch' && user()->branch_id == $row->employee_branch)
                     || ($this->editInsurancePermission == 'added' && user()->id == $row->added_by)
                     || ($this->editInsurancePermission == 'owned' && user()->id == $row->employee_id)
@@ -79,7 +79,7 @@ class InsuranceDataTable extends BaseDataTable
 
                 if (
                     $this->deleteInsurancePermission == 'all'
-                    || ($this->deleteInsurancePermission == 'branch' && user()->branch_id == 6)
+                    || ($this->deleteInsurancePermission == 'branch' && hr_has_all_branch_access('insurance'))
                     || ($this->deleteInsurancePermission == 'branch' && user()->branch_id == $row->employee_branch)
                     || ($this->deleteInsurancePermission == 'added' && user()->id == $row->added_by)
                     || ($this->deleteInsurancePermission == 'owned' && user()->id == $row->employee_id)
@@ -182,7 +182,7 @@ class InsuranceDataTable extends BaseDataTable
             });
         }
 
-        if ($this->viewPermission == 'branch' && user()->branch_id !== 6) {
+        if ($this->viewPermission == 'branch' && !hr_has_all_branch_access('insurance')) {
             $model->where(function ($query) use ($request) {
                 $query->where('users.branch_id', user()->branch_id);
             });
