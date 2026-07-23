@@ -1,0 +1,1 @@
+<?php namespace App\Models;class HrAssetCustodyRecord extends BaseModel{protected $table='hr_asset_custody_records';protected $guarded=['id'];protected $casts=['accepted_at'=>'datetime','returned_at'=>'datetime'];}
