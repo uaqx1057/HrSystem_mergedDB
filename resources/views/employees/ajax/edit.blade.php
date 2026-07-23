@@ -916,7 +916,7 @@ $(document).ready(function () {
     ['joining_date', 'iqama_expiry_date', 'national_id_expiry_date', 'passport_expiry_date',
     'sponsorship_transfer_date', 'date_of_birth', 'probation_end_date',
     'notice_period_start_date', 'notice_period_end_date', 'internship_end_date',
-    'contract_end_date', 'last_date'
+    'contract_end_date'
     ].forEach(lockDateField);
     // ── MULTISTEP NAVIGATION ──────────────────────────────
     var currentStep = 1;

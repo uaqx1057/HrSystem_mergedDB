@@ -43,7 +43,7 @@ class StoreRequest extends CoreRequest
             'hourly_rate' => 'nullable|numeric',
             'transfer_number' => 'nullable|numeric',
             'joining_date' => 'required',
-            'last_date' => 'nullable|date_format:"' . $setting->date_format . '"|after_or_equal:joining_date',
+            // 'last_date' => 'nullable|date_format:"' . $setting->date_format . '"|after_or_equal:joining_date',
             'date_of_birth' => 'nullable|date_format:"' . $setting->date_format . '"|before_or_equal:'.now($setting->timezone)->toDateString(),
             'department' => 'required',
             'designation' => 'required',

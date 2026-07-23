@@ -558,13 +558,13 @@ class EmployeeController extends AccountBaseController
 
         $this->employeeData($request, $employee);
 
-        $employee->last_date = null;
+        // $employee->last_date = null;
         $employee->basic_salary = $request->basic_salary;
         $employee->vehicle_allocation = $request->vehicle_allocation;
 
-        if ($request->last_date != '') {
-            $employee->last_date = Carbon::createFromFormat($this->company->date_format, $request->last_date)->format('Y-m-d');
-        }
+        // if ($request->last_date != '') {
+        //     $employee->last_date = Carbon::createFromFormat($this->company->date_format, $request->last_date)->format('Y-m-d');
+        // }
 
         $employee->save();
         try {

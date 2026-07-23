@@ -94,7 +94,7 @@ class EmployeeDetails extends BaseModel
 
     protected $casts = [
         'joining_date' => 'datetime',
-        'last_date' => 'datetime',
+        // 'last_date' => 'datetime',
         'date_of_birth' => 'datetime',
         'calendar_view	' => 'array',
         'marital_status' => MaritalStatus::class,
