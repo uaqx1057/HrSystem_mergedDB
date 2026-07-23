@@ -25,6 +25,7 @@ use App\Console\Commands\SendProjectReminder;
 use App\Console\Commands\UpdateExchangeRates;
 use App\Console\Commands\SendInvoiceReminder;
 use App\Console\Commands\SendMonthlyAttendanceReport;
+use App\Console\Commands\SendHrComplianceReminders;
 use App\Console\Commands\SyncUserPermissions;
 use App\Console\Commands\SendTimeTracker;
 use DateTimeZone;
@@ -68,6 +69,7 @@ class Kernel extends ConsoleKernel
         ManageHrAccessScope::class,
         SendDailyTimelogReport::class,
         GenerateMonthlyPayrollSlips::class,
+        SendHrComplianceReminders::class,
         // WORKSUITE SAAS
         FreeLicenceRenew::class,
         TrialExpire::class,
@@ -121,6 +123,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('log:clear --keep-last')->daily();
 
         $schedule->command('send:expiry-reminders')->daily();
+        $schedule->command('hr:send-compliance-reminders')->dailyAt('08:30');
 
         // Hourly
         $schedule->command('clear-null-session')->hourly();
