@@ -121,6 +121,46 @@
     }
     .ms-nav-buttons .left-btns { display: flex; gap: 8px; }
     .ms-nav-buttons .right-btns { display: flex; gap: 8px; }
+    .datepicker-input {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236c757d'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM5 7V6h14v1H5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 18px 18px;
+        padding-right: 34px !important;
+        cursor: pointer !important;
+        caret-color: transparent; /* hides the text cursor since typing is blocked anyway */
+    }
+
+    .datepicker-input {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236c757d'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM5 7V6h14v1H5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 18px 18px;
+        padding-right: 34px !important;
+        cursor: pointer !important;
+        caret-color: transparent;
+    }
+
+    /* override Bootstrap's greyed-out readonly look */
+    .datepicker-input,
+    .datepicker-input:read-only,
+    .datepicker-input[readonly] {
+        background-color: #fff !important;
+        opacity: 1 !important;
+        color: #212529 !important;
+    }
+    @if(user()->dark_theme)
+    .datepicker-input,
+    .datepicker-input:read-only,
+    .datepicker-input[readonly] {
+        background-color: #1e2136 !important; /* replace with your actual dark input bg */
+        color: #ffffff !important;
+        border-color: #4b4e69 !important;
+    }
+    .datepicker-input {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23adb5bd'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM5 7V6h14v1H5z'/%3E%3C/svg%3E");
+    }
+    @endif
 </style>
 
 <div class="row">
@@ -565,14 +605,7 @@
                             <x-forms.datepicker fieldId="probation_end_date" :fieldLabel="__('modules.employees.probationEndDate')"
                                 fieldName="probation_end_date" :fieldPlaceholder="__('placeholders.date')" :popover="__('messages.probationEndDate')" />
                         </div>
-                        <div class="col-lg-3 col-md-6">
-                            <x-forms.datepicker fieldId="notice_period_start_date" :fieldLabel="__('modules.employees.noticePeriodStartDate')"
-                                fieldName="notice_period_start_date" :fieldPlaceholder="__('placeholders.date')" :popover="__('messages.noticePeriodStartDate')" />
-                        </div>
-                        <div class="col-lg-3 col-md-6">
-                            <x-forms.datepicker fieldId="notice_period_end_date" :fieldLabel="__('modules.employees.noticePeriodEndDate')"
-                                fieldName="notice_period_end_date" :fieldPlaceholder="__('placeholders.date')" :popover="__('messages.noticePeriodEndDate')" />
-                        </div>
+                        
                         <div class="col-lg-3 col-md-6">
                             <x-forms.select fieldId="employment_type" :fieldLabel="__('modules.employees.employmentType')" fieldName="employment_type"
                                 :fieldPlaceholder="__('placeholders.date')">
@@ -690,7 +723,17 @@
 
 <script>
     $(document).ready(function() {
+        function lockDateField(id) {
+            $('#' + id)
+                .addClass('datepicker-input')
+                .attr('placeholder', 'DD-MM-YYYY')
+                .attr('readonly', true)
+                .on('keydown paste', function (e) { e.preventDefault(); });
+        }
 
+        ['iqama_expiry_date', 'national_id_expiry_date', 'passport_expiry_date', 'joining_date',
+        'probation_end_date', 'date_of_birth', 'internship_end_date', 'contract_end_date'
+        ].forEach(lockDateField);
         // ── MULTISTEP NAVIGATION ──────────────────────────────
         var currentStep = 1;
         var totalSteps  = 5;
@@ -828,8 +871,6 @@
         datepicker('#passport_expiry_date',       { position: 'bl', ...datepickerConfig });
         datepicker('#joining_date',               { position: 'bl', ...datepickerConfig });
         datepicker('#probation_end_date',         { position: 'bl', ...datepickerConfig });
-        datepicker('#notice_period_start_date',   { position: 'bl', ...datepickerConfig });
-        datepicker('#notice_period_end_date',     { position: 'bl', ...datepickerConfig });
         datepicker('#date_of_birth',              { position: 'bl', maxDate: new Date(), ...datepickerConfig });
         datepicker('#internship_end_date',        { position: 'bl', ...datepickerConfig });
         datepicker('#contract_end_date',          { position: 'bl', ...datepickerConfig });
@@ -939,7 +980,7 @@
                         <label class="f-14 text-dark-grey">Date of Birth</label>
                         <input type="text" id="dep_dob_${idx}"
                                class="form-control height-35 f-14 dependant-dob"
-                               name="dependants[${idx}][date_of_birth]" placeholder="Date of Birth" autocomplete="off">
+                               name="dependants[${idx}][date_of_birth]" placeholder="DD-MM-YYYY" autocomplete="off">
                     </div>
                     <div class="col-lg-1 col-md-1 mb-2 d-flex align-items-end">
                         <button type="button" class="btn btn-danger btn-sm remove-dependant-btn">

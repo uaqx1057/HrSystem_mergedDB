@@ -20,7 +20,6 @@ use Carbon\Carbon;
 use App\Models\Role;
 use App\Models\Task;
 use App\Models\Team;
-use App\Models\Branch;
 use App\Models\User;
 use App\Helper\Files;
 use App\Helper\Reply;
@@ -87,7 +86,7 @@ class EmployeeController extends AccountBaseController
 
         $viewPermission = user()->permission('view_employees');
 
-        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both']));
 
         if (!request()->ajax()) {
             $this->employees = User::allEmployees();
@@ -112,17 +111,10 @@ class EmployeeController extends AccountBaseController
         $this->pageTitle = __('app.addEmployee');
 
         $addPermission = user()->permission('add_employees');
-        abort_403(!in_array($addPermission, ['all', 'added', 'branch']));
+        abort_403(!in_array($addPermission, ['all', 'added']));
 
         $this->teams = Team::all();
         $this->designations = Designation::allDesignations();
-        if ($addPermission == 'branch') {
-            $currentBranchId = user()->branch_id;
-            abort_403(is_null($currentBranchId));
-            $this->branches = Branch::where('id', $currentBranchId)->get();
-        } else {
-            $this->branches = Branch::get();
-        }
 
         $this->skills = Skill::all()->pluck('name')->toArray();
         $this->countries = countries();
@@ -193,12 +185,7 @@ class EmployeeController extends AccountBaseController
     public function store(StoreRequest $request)
     {
         $addPermission = user()->permission('add_employees');
-        abort_403(!in_array($addPermission, ['all', 'added', 'branch']));
-
-        if ($addPermission == 'branch') {
-            $currentBranchId = user()->branch_id;
-            abort_403(is_null($currentBranchId) || ($request->branch_id && $request->branch_id != $currentBranchId));
-        }
+        abort_403(!in_array($addPermission, ['all', 'added']));
 
         // WORKSUITESAAS
         $company = company();
@@ -222,7 +209,6 @@ class EmployeeController extends AccountBaseController
             $user->gender = $request->gender;
             $user->locale = $request->locale;
             $user->user_auth_id = $userAuth->id;
-            $user->branch_id = $request->branch_id ?? ($addPermission == 'branch' ? user()->branch_id : null);
             $user->dark_theme       = 1;
 
             if ($request->has('login')) {
@@ -380,25 +366,9 @@ class EmployeeController extends AccountBaseController
 
     protected function deleteRecords($request)
     {
-        $deletePermission = user()->permission('delete_employees');
-        $rowIds = explode(',', $request->row_ids);
-        $query = User::withoutGlobalScope(ActiveScope::class)->whereIn('id', $rowIds);
+        abort_403(user()->permission('delete_employees') != 'all');
 
-        if ($deletePermission == 'all') {
-            $users = $query->get();
-        } elseif ($deletePermission == 'added') {
-            $users = $query->whereHas('employeeDetail', function ($q) {
-                $q->where('added_by', user()->id);
-            })->get();
-        } elseif ($deletePermission == 'branch' && !is_null(user()->branch_id)) {
-            $users = $query->where('branch_id', user()->branch_id)->get();
-        } else {
-            abort_403(true);
-        }
-
-        if ($users->count() !== count($rowIds)) {
-            abort_403(true);
-        }
+        $users = User::withoutGlobalScope(ActiveScope::class)->whereIn('id', explode(',', $request->row_ids))->get();
 
         $users->each(function ($user) {
             $this->deleteEmployee($user);
@@ -408,36 +378,9 @@ class EmployeeController extends AccountBaseController
 
     protected function changeStatus($request)
     {
-        $editPermission = user()->permission('edit_employees');
-        $updateIds = explode(',', str_replace('on,', '', $request->row_ids));
-        $query = User::withoutGlobalScope(ActiveScope::class)->whereIn('id', $updateIds);
+        abort_403(user()->permission('edit_employees') != 'all');
 
-        if ($editPermission == 'all') {
-            $users = $query->get();
-        } elseif ($editPermission == 'added') {
-            $users = $query->whereHas('employeeDetail', function ($q) {
-                $q->where('added_by', user()->id);
-            })->get();
-        } elseif ($editPermission == 'owned') {
-            $users = $query->where('id', user()->id)->get();
-        } elseif ($editPermission == 'both') {
-            $users = $query->where(function ($q) {
-                $q->where('id', user()->id)
-                    ->orWhereHas('employeeDetail', function ($q2) {
-                        $q2->where('added_by', user()->id);
-                    });
-            })->get();
-        } elseif ($editPermission == 'branch' && !is_null(user()->branch_id)) {
-            $users = $query->where('branch_id', user()->branch_id)->get();
-        } else {
-            abort_403(true);
-        }
-
-        if ($users->count() !== count($updateIds)) {
-            abort_403(true);
-        }
-
-        User::withoutGlobalScope(ActiveScope::class)->whereIn('id', $users->pluck('id')->toArray())->update(['status' => $request->status]);
+        User::withoutGlobalScope(ActiveScope::class)->whereIn('id', explode(',', $request->row_ids))->update(['status' => $request->status]);
         clearCompanyValidPackageCache(user()->company_id);
     }
 
@@ -466,19 +409,12 @@ class EmployeeController extends AccountBaseController
             || ($this->editPermission == 'added' && $this->employee->employeeDetail->added_by == user()->id)
             || ($this->editPermission == 'owned' && $this->employee->id == user()->id)
             || ($this->editPermission == 'both' && ($this->employee->id == user()->id || $this->employee->employeeDetail->added_by == user()->id))
-            || ($this->editPermission == 'branch' && !is_null(user()->branch_id) && $this->employee->branch_id == user()->branch_id)
         ));
 
         $this->pageTitle = __('app.update') . ' ' . __('app.employee');
         $this->skills = Skill::all()->pluck('name')->toArray();
         $this->teams = Team::allDepartments();
         $this->designations = Designation::allDesignations();
-        if ($this->editPermission == 'branch') {
-            $currentBranchId = user()->branch_id;
-            $this->branches = Branch::where('id', $currentBranchId)->get();
-        } else {
-            $this->branches = Branch::get();
-        }
         $this->countries = countries();
         $this->languages = LanguageSetting::where('status', 'enabled')->get();
         $exceptUsers = [$id];
@@ -526,20 +462,6 @@ class EmployeeController extends AccountBaseController
     public function update(UpdateRequest $request, $id)
     {
         $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
-        $currentUser = user();
-        $editPermission = $currentUser->permission('edit_employees');
-
-        abort_403(!(
-            $editPermission == 'all'
-            || ($editPermission == 'added' && $user->employeeDetail->added_by == $currentUser->id)
-            || ($editPermission == 'owned' && $user->id == $currentUser->id)
-            || ($editPermission == 'both' && ($user->id == $currentUser->id || $user->employeeDetail->added_by == $currentUser->id))
-            || ($editPermission == 'branch' && !is_null($currentUser->branch_id) && $user->branch_id == $currentUser->branch_id)
-        ));
-
-        if ($editPermission == 'branch') {
-            abort_403(is_null($currentUser->branch_id) || ($request->branch_id && $request->branch_id != $currentUser->branch_id));
-        }
 
         $user->name = $request->name;
 
@@ -549,7 +471,6 @@ class EmployeeController extends AccountBaseController
         $user->country_phonecode = $request->country_phonecode;
         $user->gender = $request->gender;
         $user->locale = $request->locale;
-        $user->branch_id = $request->branch_id ?? ($editPermission == 'branch' ? $currentUser->branch_id : null);
 
         if (request()->has('status')) {
 
@@ -667,111 +588,6 @@ class EmployeeController extends AccountBaseController
     }
 
     /**
-     * Persist one section of the edit-employee wizard without requiring the
-     * remaining sections to be valid. This endpoint is not used by create.
-     */
-    public function saveStep(Request $request, $id)
-    {
-        $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
-        $this->authorizeEmployeeStepSave($user);
-
-        $step = (int) $request->input('step');
-        abort_unless(in_array($step, [1, 2, 3, 4, 5], true), 422);
-
-        $employee = EmployeeDetails::firstOrNew(['user_id' => $user->id]);
-        $request->validate($this->employeeStepRules($step, $employee));
-
-        DB::transaction(function () use ($request, $step, $user, $employee) {
-            if ($step === 1) {
-                $user->fill($request->only(['name', 'salutation', 'branch_id']));
-                if ($request->hasFile('image')) {
-                    Files::deleteFile($user->image, 'avatar');
-                    $user->image = Files::uploadLocalOrS3($request->image, 'avatar', 300);
-                }
-                $employee->employee_id = $request->employee_id;
-                $employee->department_id = $request->department;
-                $employee->designation_id = $request->designation;
-            }
-
-            if ($step === 2) {
-                foreach (['employee_type', 'iqama_no', 'iqama_profession', 'national_id', 'transfer_number', 'probation_time', 'passport_no', 'sponsor_kafala'] as $field) {
-                    if ($request->has($field)) $employee->{$field} = $request->input($field);
-                }
-                $this->saveEmployeeStepDates($request, $employee, ['national_id_expiry_date', 'iqama_expiry_date', 'passport_expiry_date', 'sponsorship_transfer_date']);
-                $this->saveEmployeeStepFiles($request, $employee, ['national_id_image' => 'national_id', 'iqama_image' => 'iqama', 'passport_image' => 'passport', 'qiva_contract' => 'contracts', 'company_contract' => 'contracts']);
-            }
-
-            if ($step === 3) {
-                $user->fill($request->only(['mobile', 'country_id', 'country_phonecode', 'gender', 'locale']));
-                foreach (['address', 'about_me', 'reporting_to', 'basic_salary', 'vehicle_allocation'] as $field) {
-                    if ($request->has($field)) $employee->{$field} = $request->input($field);
-                }
-                $this->saveEmployeeStepDates($request, $employee, ['date_of_birth', 'joining_date']);
-            }
-
-            if ($step === 4) {
-                foreach (['login', 'email_notifications', 'telegram_user_id', 'status'] as $field) {
-                    if ($request->has($field) && ($field !== 'login' || $user->id !== user()->id)) $user->{$field} = $request->input($field);
-                }
-                foreach (['slack_username', 'employment_type', 'marital_status', 'no_of_dependants'] as $field) {
-                    if ($request->has($field)) $employee->{$field} = $request->input($field);
-                }
-                $this->saveEmployeeStepDates($request, $employee, ['probation_end_date', 'notice_period_start_date', 'notice_period_end_date', 'internship_end_date', 'contract_end_date']);
-            }
-
-            $user->save();
-            $employee->save();
-
-            if ($step === 4 && $request->boolean('dependants_present')) $this->saveDependants($request, $employee);
-            if ($step === 5 && $request->boolean('allowances_present')) $this->saveAllowances($request, $employee);
-        });
-
-        return Reply::success(__('messages.updateSuccess'));
-    }
-
-    private function authorizeEmployeeStepSave(User $employee): void
-    {
-        $permission = user()->permission('edit_employees');
-        abort_403(!in_array('admin', user_roles()) && $employee->hasRole('admin'));
-        abort_403(!(
-            $permission === 'all'
-            || ($permission === 'added' && optional($employee->employeeDetail)->added_by === user()->id)
-            || ($permission === 'owned' && $employee->id === user()->id)
-            || ($permission === 'both' && ($employee->id === user()->id || optional($employee->employeeDetail)->added_by === user()->id))
-        ));
-    }
-
-    private function employeeStepRules(int $step, EmployeeDetails $employee): array
-    {
-        $date = 'nullable|date_format:"' . $this->company->date_format . '"';
-
-        return match ($step) {
-            1 => ['employee_id' => 'required|max:50|unique:employee_details,employee_id,' . $employee->id . ',id,company_id,' . company()->id, 'name' => 'required|max:50', 'department' => 'required', 'designation' => 'required', 'branch_id' => 'nullable|exists:branches,id', 'image' => 'nullable|image'],
-            2 => ['employee_type' => 'nullable|in:saudi,expat', 'national_id_expiry_date' => $date, 'iqama_expiry_date' => $date, 'passport_expiry_date' => $date, 'sponsorship_transfer_date' => $date, 'transfer_number' => 'nullable|numeric'],
-            3 => ['date_of_birth' => $date, 'joining_date' => $date, 'basic_salary' => 'nullable|numeric'],
-            4 => ['probation_end_date' => $date, 'notice_period_start_date' => $date, 'notice_period_end_date' => $date, 'internship_end_date' => $date, 'contract_end_date' => $date, 'dependants.*.name' => 'required_with:dependants.*.relation', 'dependants.*.relation' => 'required_with:dependants.*.name', 'dependants.*.date_of_birth' => $date],
-            5 => ['allowances.*.name' => 'required_with:allowances.*.amount', 'allowances.*.amount' => 'required_with:allowances.*.name|numeric|min:0'],
-        };
-    }
-
-    private function saveEmployeeStepDates(Request $request, EmployeeDetails $employee, array $fields): void
-    {
-        foreach ($fields as $field) {
-            if ($request->has($field)) $employee->{$field} = filled($request->input($field)) ? Carbon::createFromFormat($this->company->date_format, $request->input($field))->format('Y-m-d') : null;
-        }
-    }
-
-    private function saveEmployeeStepFiles(Request $request, EmployeeDetails $employee, array $fields): void
-    {
-        foreach ($fields as $field => $directory) {
-            if ($request->hasFile($field)) {
-                Files::deleteFile($employee->{$field}, $directory);
-                $employee->{$field} = Files::uploadLocalOrS3($request->file($field), $directory);
-            }
-        }
-    }
-
-    /**
      * @param int $id
      * @return array
      */
@@ -780,11 +596,7 @@ class EmployeeController extends AccountBaseController
         $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
         $this->deletePermission = user()->permission('delete_employees');
 
-        abort_403(!(
-            $this->deletePermission == 'all'
-            || ($this->deletePermission == 'added' && $user->employeeDetail->added_by == user()->id)
-            || ($this->deletePermission == 'branch' && !is_null(user()->branch_id) && $user->branch_id == user()->branch_id)
-        ));
+        abort_403(!($this->deletePermission == 'all' || ($this->deletePermission == 'added' && $user->employeeDetail->added_by == user()->id)));
 
 
         if ($user->hasRole('admin') && !in_array('admin', user_roles())) {
@@ -912,7 +724,6 @@ class EmployeeController extends AccountBaseController
             || ($this->viewPermission == 'added' && $this->employee->employeeDetail->added_by == user()->id)
             || ($this->viewPermission == 'owned' && $this->employee->employeeDetail->user_id == user()->id)
             || ($this->viewPermission == 'both' && ($this->employee->employeeDetail->user_id == user()->id || $this->employee->employeeDetail->added_by == user()->id))
-            || ($this->viewPermission == 'branch' && $this->employee->branch_id == user()->branch_id)
         ) {
 
             if ($tab == '') {  // Works for profile
@@ -1132,16 +943,12 @@ class EmployeeController extends AccountBaseController
         return $data;
     }
 
-    public function byDepartment($id, $permission = null)
+    public function byDepartment($id)
     {
         $users = User::join('employee_details', 'employee_details.user_id', '=', 'users.id');
 
         if ($id != 0) {
             $users = $users->where('employee_details.department_id', $id);
-        }
-
-        if ($permission && $permission == 'branch' && user()->branch_id !== 6) {
-            $users = $users->where('users.branch_id', user()->branch_id);
         }
 
         $users = $users->select('users.*')->get();
@@ -1365,20 +1172,9 @@ class EmployeeController extends AccountBaseController
         $employee->employee_id = $request->employee_id;
         $employee->address = $request->address;
         $employee->slack_username = $request->slack_username;
-        $employee->employee_type = $request->employee_type === 'saudi' ? 'saudi' : 'expat';
         $employee->iqama_no = $request->iqama_no;
         $employee->iqama_designation = $request->iqama_designation;
         $employee->iqama_profession = $request->iqama_profession;
-
-        $employee->national_id = $request->national_id;
-        $employee->national_id_expiry_date = $request->national_id_expiry_date
-            ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->national_id_expiry_date)->format('Y-m-d')
-            : null;
-
-        if ($request->hasFile('national_id_image')) {
-            Files::deleteFile($employee->national_id_image, 'national_id');
-            $employee->national_id_image = Files::uploadLocalOrS3($request->national_id_image, 'national_id');
-        }
 
         $employee->basic_salary = $request->basic_salary;
         $employee->vehicle_allocation = $request->vehicle_allocation;
@@ -1647,8 +1443,8 @@ class EmployeeController extends AccountBaseController
         });
 
         $systemUrl = $system === 'dms'
-            ? config('services.sso.dms_url')
-            : config('services.sso.dobs_url');
+            ? env('DMS_URL', 'https://dms.speedlogi.sa')
+            : env('DOBS_URL', 'https://dobs.speedlogi.sa');
 
         try {
             $hrUser->notify(new \App\Notifications\SystemAccessGranted($system, $request->role, $systemUrl));

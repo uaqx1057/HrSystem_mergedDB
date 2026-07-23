@@ -772,11 +772,11 @@ class AttendanceController extends AccountBaseController
      */
     public function create()
     {
-        $addPermission = user()->permission('add_attendance');
+        $this->addPermission = user()->permission('add_attendance');
 
-        abort_403(!($addPermission == 'all' || $addPermission == 'added' || $addPermission == 'branch'));
-        if(in_array($addPermission, ['all','branch']) ){
-                $employeePermission = $addPermission;
+        abort_403(!($this->addPermission == 'all' || $this->addPermission == 'added' || $this->addPermission == 'branch'));
+        if(in_array($this->addPermission, ['all','branch']) ){
+                $employeePermission = $this->addPermission;
             } else{
                 $employeePermission = null;
             }
