@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up(): void { Schema::create('hr_payroll_preflight_runs', function(Blueprint $table){$table->id();$table->foreignId('company_id')->constrained()->cascadeOnDelete();$table->string('period');$table->json('summary');$table->string('status')->default('open');$table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();$table->timestamp('approved_at')->nullable();$table->timestamps();$table->unique(['company_id','period']);});} public function down():void{Schema::dropIfExists('hr_payroll_preflight_runs');}};
