@@ -10,6 +10,8 @@ This release adds HR-only tables and routes. It does not change DMS/DOBS roles, 
 2. Review `php artisan migrate:status` and ensure the application version includes all `2026_07_23_*` HR migrations.
 3. Confirm at least one HR admin has `edit_employees=all` and payroll admins have `add_payroll=all`.
 4. Put no manual SQL changes into DMS/DOBS tables.
+5. Verify the runtime has the PHP `zip` extension enabled. Laravel bootstrap loads the backup package and cannot run route/test commands without `ZipArchive`.
+6. Clear/rebuild Laravel config cache on the deployment host. A local cached config may contain an absolute path from another machine; never copy `bootstrap/cache/config.php` between environments.
 
 ## Deploy
 
