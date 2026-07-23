@@ -43,6 +43,11 @@ trait EmployeeDashboard
      */
     public function employeeDashboard()
     {
+        $this->managerLifecycleTasks = DB::table('hr_onboarding_tasks')
+            ->join('hr_onboarding_cases', 'hr_onboarding_cases.id', '=', 'hr_onboarding_tasks.case_id')
+            ->join('employee_details', 'employee_details.user_id', '=', 'hr_onboarding_cases.employee_id')
+            ->where('employee_details.reporting_to', user()->id)->where('hr_onboarding_tasks.status', 'pending')->count()
+            + DB::table('hr_offboarding_tasks')->join('hr_offboarding_cases', 'hr_offboarding_cases.id', '=', 'hr_offboarding_tasks.case_id')->join('employee_details', 'employee_details.user_id', '=', 'hr_offboarding_cases.employee_id')->where('employee_details.reporting_to', user()->id)->where('hr_offboarding_tasks.status', 'pending')->count();
 
         $completedTaskColumn = TaskboardColumn::completeColumn();
         $showClockIn = AttendanceSetting::first();

@@ -46,6 +46,9 @@ trait HRDashboard
         $this->totalEmployee = User::allEmployees(null, true)->count();
         $this->totalNewEmployee = EmployeeDetails::whereBetween(DB::raw('DATE(`joining_date`)'), [$startDate, $endDate])->count();
         $this->totalEmployeeExits = EmployeeDetails::whereBetween(DB::raw('DATE(`last_date`)'), [$startDate, $endDate])->count();
+        $this->openOnboardingCases = DB::table('hr_onboarding_cases')->where('company_id', company()->id)->where('status', 'open')->count();
+        $this->openOffboardingCases = DB::table('hr_offboarding_cases')->where('company_id', company()->id)->where('status', 'open')->count();
+        $this->pendingTransfers = DB::table('hr_employee_transfers')->where('company_id', company()->id)->whereIn('status', ['pending', 'approved'])->count();
 
         $attandance = EmployeeDetails::join('users', 'users.id', 'employee_details.user_id')
             ->join('attendances', 'attendances.user_id', 'users.id')

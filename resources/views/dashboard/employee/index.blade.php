@@ -15,6 +15,9 @@
 @section('content')
     <!-- CONTENT WRAPPER START -->
     <div class="px-4 py-2 border-top-0 emp-dashboard">
+        @if (($managerLifecycleTasks ?? 0) > 0)
+            <div class="row pt-3"><div class="col-md-12"><x-alert type="info" icon="tasks">You have {{ $managerLifecycleTasks }} pending onboarding/offboarding task(s) for your direct reports.</x-alert></div></div>
+        @endif
         <!-- WELOCOME START -->
         @if (!is_null($checkTodayLeave))
             <div class="row pt-4">
