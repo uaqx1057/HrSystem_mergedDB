@@ -182,12 +182,12 @@
                                     </x-forms.select>
                                 </div>
                                 <div class="col-lg-4 col-md-6">
-                                    <x-forms.text fieldId="name" :fieldLabel="__('modules.employees.employeeName')" fieldName="name" fieldRequired="true"
+                                    <x-forms.text fieldId="name" :fieldLabel="__('modules.employees.employeeName')" fieldName="name" fieldRequired="true" :fieldValue="$candidate?->name ?? ''"
                                         :fieldPlaceholder="__('placeholders.name')">
                                     </x-forms.text>
                                 </div>
                                 <div class="col-lg-4 col-md-6">
-                                    <x-forms.text fieldId="email" :fieldLabel="__('modules.employees.employeeEmail')" fieldName="email" fieldRequired="true"
+                                    <x-forms.text fieldId="email" :fieldLabel="__('modules.employees.employeeEmail')" fieldName="email" fieldRequired="true" :fieldValue="$candidate?->email ?? ''"
                                         :fieldPlaceholder="__('placeholders.email')">
                                     </x-forms.text>
                                 </div>

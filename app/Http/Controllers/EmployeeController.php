@@ -135,6 +135,9 @@ class EmployeeController extends AccountBaseController
         $this->employees = User::allEmployees(null, true);
         $this->languages = LanguageSetting::where('status', 'enabled')->get();
         $this->salutations = Salutation::cases();
+        $this->candidate = request('candidate_id')
+            ? HrCandidate::whereKey(request('candidate_id'))->where('company_id', user()->company_id)->where('status', 'handoff')->first()
+            : null;
 
         $userRoles = user()->roles->pluck('name')->toArray();
 
