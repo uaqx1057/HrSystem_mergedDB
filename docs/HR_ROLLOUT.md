@@ -24,13 +24,13 @@ php artisan queue:restart
 
 ## Smoke test
 
-1. HR admin: open `/hr-worklist`, `/hr-lifecycle`, `/hr-compliance`, and `/hr-candidates`.
+1. HR admin: open `/account/hr-worklist`, `/account/hr-lifecycle`, `/account/hr-compliance`, and `/account/hr-candidates`.
 2. Finance user: open the Finance dashboard and verify the Payroll worklist shortcut; confirm a salary-slip action is blocked until the selected period's preflight is approved.
 3. Employee: open the employee dashboard, submit an HR request, and verify the pending count/link; confirm the employee cannot view another employee's attachment.
-4. IT admin: open `/hr-role-worklists/it` and verify pending DMS/DOBS revocation tasks are limited to the current company.
+4. IT admin: open `/account/hr-role-worklists/it` and verify pending DMS/DOBS revocation tasks are limited to the current company.
 2. Manager: create a dated leave delegation; verify the delegate can act only for direct reports.
 3. Employee: submit an attendance exception, self-service request, and asset acknowledgement.
-4. Payroll admin: open `/hr-payroll-preflight`, approve the current period, then create one employee salary slip.
+4. Payroll admin: open `/account/hr-payroll-preflight`, approve the current period, then create one employee salary slip.
 5. Candidate: stage candidate, hand off to employee creation, save employee, verify candidate is converted and onboarding appears.
 6. Branch user: verify cross-branch HR records return 403 unless an explicit `hr_access_scopes` entry exists.
 
