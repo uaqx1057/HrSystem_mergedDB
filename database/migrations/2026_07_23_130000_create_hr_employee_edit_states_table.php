@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('hr_employee_edit_states', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('company_id');
+            $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
             $table->foreignId('employee_id')->constrained('users')->cascadeOnDelete();
             $table->unsignedInteger('last_saved_step')->nullable();
             $table->unsignedBigInteger('version')->default(0);

@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('hr_access_scopes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('company_id');
+            $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('module', 100);
             $table->string('scope', 20)->default('all');

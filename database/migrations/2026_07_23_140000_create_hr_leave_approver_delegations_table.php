@@ -10,7 +10,8 @@ return new class extends Migration
     {
         Schema::create('hr_leave_approver_delegations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('company_id');
+            $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
             $table->foreignId('manager_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('delegate_id')->constrained('users')->cascadeOnDelete();
             $table->date('starts_at');

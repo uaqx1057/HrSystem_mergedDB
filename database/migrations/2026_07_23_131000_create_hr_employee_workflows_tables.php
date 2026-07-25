@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('hr_onboarding_cases', function (Blueprint $table) {
-            $table->id(); $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->id(); $table->unsignedInteger('company_id'); $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
             $table->foreignId('employee_id')->constrained('users')->cascadeOnDelete();
             $table->string('template_name')->default('standard'); $table->string('status')->default('open');
             $table->date('due_date')->nullable(); $table->foreignId('initiated_by')->nullable()->constrained('users')->nullOnDelete();
@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('status')->default('pending'); $table->date('due_date')->nullable(); $table->timestamp('completed_at')->nullable(); $table->text('notes')->nullable(); $table->timestamps();
         });
         Schema::create('hr_offboarding_cases', function (Blueprint $table) {
-            $table->id(); $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->id(); $table->unsignedInteger('company_id'); $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
             $table->foreignId('employee_id')->constrained('users')->cascadeOnDelete();
             $table->string('reason'); $table->string('status')->default('open'); $table->date('last_working_date');
             $table->foreignId('initiated_by')->nullable()->constrained('users')->nullOnDelete(); $table->timestamp('completed_at')->nullable(); $table->timestamps();
@@ -33,7 +33,7 @@ return new class extends Migration
             $table->string('status')->default('pending'); $table->date('due_date')->nullable(); $table->timestamp('completed_at')->nullable(); $table->text('notes')->nullable(); $table->timestamps();
         });
         Schema::create('hr_employee_transfers', function (Blueprint $table) {
-            $table->id(); $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            $table->id(); $table->unsignedInteger('company_id'); $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
             $table->foreignId('employee_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('from_branch_id')->nullable()->constrained('branches')->nullOnDelete(); $table->foreignId('to_branch_id')->constrained('branches')->cascadeOnDelete();
             $table->foreignId('from_department_id')->nullable()->constrained('teams')->nullOnDelete(); $table->foreignId('to_department_id')->nullable()->constrained('teams')->nullOnDelete();
