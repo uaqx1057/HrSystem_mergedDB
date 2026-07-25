@@ -36,7 +36,7 @@ return new class extends Migration
             $table->id(); $table->unsignedInteger('company_id'); $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
             $table->foreignId('employee_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('from_branch_id')->nullable()->constrained('branches')->nullOnDelete(); $table->foreignId('to_branch_id')->constrained('branches')->cascadeOnDelete();
-            $table->foreignId('from_department_id')->nullable()->constrained('teams')->nullOnDelete(); $table->foreignId('to_department_id')->nullable()->constrained('teams')->nullOnDelete();
+            $table->unsignedInteger('from_department_id')->nullable(); $table->foreign('from_department_id')->references('id')->on('teams')->nullOnDelete(); $table->unsignedInteger('to_department_id')->nullable(); $table->foreign('to_department_id')->references('id')->on('teams')->nullOnDelete();
             $table->foreignId('from_manager_id')->nullable()->constrained('users')->nullOnDelete(); $table->foreignId('to_manager_id')->nullable()->constrained('users')->nullOnDelete();
             $table->date('effective_date'); $table->string('status')->default('pending'); $table->text('reason')->nullable();
             $table->foreignId('requested_by')->nullable()->constrained('users')->nullOnDelete(); $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete(); $table->timestamp('applied_at')->nullable(); $table->timestamps();
