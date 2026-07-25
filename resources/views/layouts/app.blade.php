@@ -31,7 +31,7 @@
     <!-- Template CSS -->
     <link type="text/css" rel="stylesheet" media="all" href="{{ asset('css/main.css') }}">
 
-    <title>@lang($pageTitle)</title>
+    <title>@lang($pageTitle ?? 'app.menu.dashboard')</title>
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="{{ companyOrGlobalSetting()->favicon_url }}">
     <meta name="theme-color" content="#ffffff">

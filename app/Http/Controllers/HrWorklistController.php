@@ -1,4 +1,44 @@
 <?php
+
 namespace App\Http\Controllers;
-use App\Models\HrAttendanceException;use App\Models\HrCertification;use App\Models\HrCertificationRule;use App\Models\HrEmployeeRequest;use App\Models\HrOffboardingCase;use App\Models\HrOnboardingCase;use App\Models\HrProbationReview;use App\Models\User;
-class HrWorklistController extends AccountBaseController {public function index(){abort_403(!in_array(user()->permission('edit_employees'),['all','branch'],true));$company=user()->company_id;$employees=User::allEmployees(null,false,'all',$company)->load('employeeDetail');$missingCertificationCount=HrCertificationRule::missingForEmployees($employees,HrCertificationRule::where('company_id',$company)->where('is_active',true)->get(),HrCertification::where('company_id',$company)->get())->count();$this->items=collect();foreach([['Onboarding',HrOnboardingCase::where('company_id',$company)->where('status','open')->count()],['Offboarding',HrOffboardingCase::where('company_id',$company)->where('status','open')->count()],['Attendance exceptions',HrAttendanceException::where('company_id',$company)->where('status','pending')->count()],['Employee requests',HrEmployeeRequest::where('company_id',$company)->where('status','pending')->count()],['Probation reviews',HrProbationReview::where('company_id',$company)->where('status','pending')->count()],['Expired certifications',HrCertification::where('company_id',$company)->whereDate('expires_at','<',today())->count()],['Missing required certifications',$missingCertificationCount]] as [$label,$count])$this->items->push(compact('label','count'));return view('hr-worklist.index',$this->data);}}
+
+use App\Models\HrAttendanceException;
+use App\Models\HrCertification;
+use App\Models\HrCertificationRule;
+use App\Models\HrEmployeeRequest;
+use App\Models\HrOffboardingCase;
+use App\Models\HrOnboardingCase;
+use App\Models\HrProbationReview;
+use App\Models\User;
+
+class HrWorklistController extends AccountBaseController
+{
+    public function index()
+    {
+        $this->pageTitle = 'HR worklist';
+        abort_403(!in_array(user()->permission('edit_employees'), ['all', 'branch'], true));
+
+        $company = user()->company_id;
+        $employees = User::allEmployees(null, false, 'all', $company)->load('employeeDetail');
+        $missingCertificationCount = HrCertificationRule::missingForEmployees(
+            $employees,
+            HrCertificationRule::where('company_id', $company)->where('is_active', true)->get(),
+            HrCertification::where('company_id', $company)->get()
+        )->count();
+
+        $this->items = collect();
+        foreach ([
+            ['Onboarding', HrOnboardingCase::where('company_id', $company)->where('status', 'open')->count()],
+            ['Offboarding', HrOffboardingCase::where('company_id', $company)->where('status', 'open')->count()],
+            ['Attendance exceptions', HrAttendanceException::where('company_id', $company)->where('status', 'pending')->count()],
+            ['Employee requests', HrEmployeeRequest::where('company_id', $company)->where('status', 'pending')->count()],
+            ['Probation reviews', HrProbationReview::where('company_id', $company)->where('status', 'pending')->count()],
+            ['Expired certifications', HrCertification::where('company_id', $company)->whereDate('expires_at', '<', today())->count()],
+            ['Missing required certifications', $missingCertificationCount],
+        ] as [$label, $count]) {
+            $this->items->push(compact('label', 'count'));
+        }
+
+        return view('hr-worklist.index', $this->data);
+    }
+}
