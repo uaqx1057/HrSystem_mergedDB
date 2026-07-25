@@ -70,7 +70,9 @@
     @endif
 
 <!-- NAV ITEM - HR COLLAPASE MENU -->
-    @php($canAccessHrWorklist = in_array(user()->permission('edit_employees'), ['all', 'branch'], true))
+    @php
+        $canAccessHrWorklist = in_array(user()->permission('edit_employees'), ['all', 'branch'], true);
+    @endphp
     @if (!in_array('client', user_roles()) && (in_array('employees', user_modules()) || in_array('leaves', user_modules()) || in_array('attendance', user_modules()) || in_array('holidays', user_modules()) || in_array('drivers', user_modules()) || $canAccessHrWorklist) && (in_array(user()->permission('view_employees'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_leave'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_attendance'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_holiday'), ['all', 'added']) || in_array(user()->permission('view_company_assets'), ['all', 'added', 'owned', 'both','branch']) || in_array(user()->permission('view_appreciation'), ['all', 'added', 'owned', 'both']) || in_array(user()->permission('view_department'), ['all', 'added', 'owned', 'both']) || in_array(user()->permission('view_designation'), ['all']) || in_array(user()->permission('view_insurance'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_drivers'), ['all', 'branch']) || in_array(user()->permission('view_air_tickets'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_advance_salary'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_shift_roster'), ['all', 'owned', 'branch']) || $canAccessHrWorklist))
         <x-menu-item icon="people" :text="__('app.menu.hr')">
             <x-slot name="iconPath">
