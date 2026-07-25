@@ -4,7 +4,7 @@
 
     <!-- NAVBAR LEFT(MOBILE MENU COLLAPSE) START-->
     <div class="navbar-left float-left d-flex align-items-center">
-        <x-app-title class="d-none d-lg-flex" :pageTitle="__($pageTitle)"></x-app-title>
+        <x-app-title class="d-none d-lg-flex" :pageTitle="__($pageTitle ?? 'app.menu.dashboard')"></x-app-title>
 
         <div class="d-block d-lg-none menu-collapse cursor-pointer position-relative" onclick="openMobileMenu()">
             <div class="mc-wrap">

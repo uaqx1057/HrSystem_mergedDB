@@ -18,6 +18,7 @@ class HrLifecycleController extends AccountBaseController
 {
     public function index(Request $request)
     {
+        $this->pageTitle = 'HR lifecycle';
         $permission = user()->permission('edit_employees');
         abort_403(!in_array($permission, ['all', 'branch'], true));
         $this->status = $request->input('status', 'open');
