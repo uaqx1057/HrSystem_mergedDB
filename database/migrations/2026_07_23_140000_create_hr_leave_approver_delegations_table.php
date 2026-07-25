@@ -19,7 +19,7 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
-            $table->index(['manager_id', 'delegate_id', 'is_active']);
+            $table->index(['manager_id', 'delegate_id', 'is_active'], 'hr_leave_delegate_active_idx');
         });
     }
 
