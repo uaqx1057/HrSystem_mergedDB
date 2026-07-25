@@ -159,7 +159,7 @@
 
         @yield('filter-section')
 
-        <x-app-title class="d-block d-lg-none" :pageTitle="__($pageTitle)"></x-app-title>
+        <x-app-title class="d-block d-lg-none" :pageTitle="__($pageTitle ?? 'app.menu.dashboard')"></x-app-title>
 
         @yield('content')
 
