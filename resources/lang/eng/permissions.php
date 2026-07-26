@@ -454,4 +454,10 @@ return array (
     'upload_signature_assign_company_assets_to_employee' => 'Upload Signature Assign Company Asset to Employee',
     'view_assign_company_assets_to_employee' => 'View Assign Company Asset to Employee',
     'view_system_access' => 'View System Access',
+    'manage_termination_employees' => 'Manage Termination Employees',
+    'view_pending_termination_employees' => 'View Pending Termination Employees',
+    'view_terminated_employees' => 'View Terminated Employees',
+    
+        'manage_it_clearance' => 'Manage IT Clearance',
+        'manage_finance_clearance' => 'Manage Finance Clearance',
 );

@@ -734,6 +734,34 @@ class User extends BaseModel
         return $users->get();
     }
 
+    /**
+     * Get all active users (within the given company) who have been granted
+     * the given permission (any type other than "none").
+     *
+     * @param string $permissionName
+     * @param int|null $companyId
+     * @return Collection
+     */
+    public static function usersWithPermission($permissionName, $companyId = null)
+    {
+        $companyId = $companyId ?: (company() ? company()->id : null);
+
+        $userIds = UserPermission::join('permissions', 'user_permissions.permission_id', '=', 'permissions.id')
+            ->join('permission_types', 'user_permissions.permission_type_id', '=', 'permission_types.id')
+            ->where('permissions.name', $permissionName)
+            ->where('permission_types.name', '!=', 'none')
+            ->pluck('user_permissions.user_id');
+
+        return self::withoutGlobalScope(ActiveScope::class)
+            ->withOut('clientDetails')
+            ->whereIn('id', $userIds)
+            ->where('status', 'active')
+            ->when($companyId, function ($query) use ($companyId) {
+                $query->where('users.company_id', $companyId);
+            })
+            ->get();
+    }
+
     public static function departmentUsers($teamId)
     {
         $users = User::join('employee_details', 'employee_details.user_id', '=', 'users.id')

@@ -73,7 +73,7 @@
     @php
         $canAccessHrWorklist = in_array(user()->permission('edit_employees'), ['all', 'branch'], true);
     @endphp
-    @if (!in_array('client', user_roles()) && (in_array('employees', user_modules()) || in_array('leaves', user_modules()) || in_array('attendance', user_modules()) || in_array('holidays', user_modules()) || in_array('drivers', user_modules()) || $canAccessHrWorklist) && (in_array(user()->permission('view_employees'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_leave'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_attendance'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_holiday'), ['all', 'added']) || in_array(user()->permission('view_company_assets'), ['all', 'added', 'owned', 'both','branch']) || in_array(user()->permission('view_appreciation'), ['all', 'added', 'owned', 'both']) || in_array(user()->permission('view_department'), ['all', 'added', 'owned', 'both']) || in_array(user()->permission('view_designation'), ['all']) || in_array(user()->permission('view_insurance'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_drivers'), ['all', 'branch']) || in_array(user()->permission('view_air_tickets'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_advance_salary'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_shift_roster'), ['all', 'owned', 'branch']) || $canAccessHrWorklist))
+    @if (!in_array('client', user_roles()) && (in_array('employees', user_modules()) || in_array('leaves', user_modules()) || in_array('attendance', user_modules()) || in_array('holidays', user_modules()) || in_array('drivers', user_modules()) || $canAccessHrWorklist) && (in_array(user()->permission('view_employees'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_pending_termination_employees'), ['all', 'branch']) || in_array(user()->permission('view_terminated_employees'), ['all', 'branch']) || in_array(user()->permission('view_leave'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_attendance'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_holiday'), ['all', 'added']) || in_array(user()->permission('view_company_assets'), ['all', 'added', 'owned', 'both','branch']) || in_array(user()->permission('view_appreciation'), ['all', 'added', 'owned', 'both']) || in_array(user()->permission('view_department'), ['all', 'added', 'owned', 'both']) || in_array(user()->permission('view_designation'), ['all']) || in_array(user()->permission('view_insurance'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_drivers'), ['all', 'branch']) || in_array(user()->permission('view_air_tickets'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_advance_salary'), ['all', 'added', 'owned', 'both', 'branch']) || in_array(user()->permission('view_shift_roster'), ['all', 'owned', 'branch']) || $canAccessHrWorklist))
         <x-menu-item icon="people" :text="__('app.menu.hr')">
             <x-slot name="iconPath">
                 <path
@@ -85,8 +85,20 @@
                     <x-sub-menu-item :link="route('hr-worklist.index')" text="HR Worklist" />
                 @endif
 
-                @if (in_array('employees', user_modules()) && in_array(user()->permission('view_employees'), ['all', 'added', 'owned', 'both','branch']))
-                    <x-sub-menu-item :link="route('employees.index')" :text="__('app.menu.employees')" />
+                @php
+                    $viewEmployee = user()->permission('view_employees');
+                    $viewPendingTermination = user()->permission('view_pending_termination_employees');
+                    if($viewEmployee == 'none'){
+                        $employeeRoute = route('employees.index').'?tab=pending-termination';
+                    } elseif($viewPendingTermination == 'none'){
+                        $employeeRoute = route('employees.index').'?tab=terminated';
+                    } else{
+                        $employeeRoute = route('employees.index');
+                    }
+                @endphp
+
+                @if (in_array('employees', user_modules()) && (in_array(user()->permission('view_employees'), ['all', 'added', 'owned', 'both','branch']) || in_array(user()->permission('view_pending_termination_employees'), ['all', 'branch']) || in_array(user()->permission('view_terminated_employees'), ['all', 'branch'])))
+                    <x-sub-menu-item :link="$employeeRoute" :text="__('app.menu.employees')" />
                 @endif
 
                 @if (in_array(user()->permission('view_insurance'), ['all', 'added', 'owned', 'both','branch']))

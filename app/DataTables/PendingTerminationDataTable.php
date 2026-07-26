@@ -16,7 +16,7 @@ use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
 use Illuminate\Support\Facades\DB;
 
-class EmployeesDataTable extends BaseDataTable
+class PendingTerminationDataTable extends BaseDataTable
 {
 
     private $editEmployeePermission;
@@ -24,6 +24,8 @@ class EmployeesDataTable extends BaseDataTable
     private $viewEmployeePermission;
     private $changeEmployeeRolePermission;
     private $terminateEmployeePermission;
+    private $itClearancePermission;
+    private $financeClearancePermission;
     private $assignRole;
 
     public function __construct()
@@ -34,6 +36,8 @@ class EmployeesDataTable extends BaseDataTable
         $this->viewEmployeePermission = user()->permission('view_employees');
         $this->changeEmployeeRolePermission = user()->permission('change_employee_role');
         $this->terminateEmployeePermission = user()->permission('manage_termination_employees');
+        $this->itClearancePermission = user()->permission('manage_it_clearance');
+        $this->financeClearancePermission = user()->permission('manage_finance_clearance');
 
         $this->assignRole = user()->roles->pluck('name')->toArray();
     }
@@ -49,13 +53,13 @@ class EmployeesDataTable extends BaseDataTable
 
         $roles = Role::where('name', '<>', 'client')->get();
         $datatables = datatables()->eloquent($query);
-        $datatables->addColumn('check', function ($row) {
-            if (!$row->hasRole('admin') && $row->id != user()->id) {
-                return '<input type="checkbox" class="select-table-row" id="datatable-row-' . $row->id . '"  name="datatable_ids[]" value="' . $row->id . '" onclick="dataTableRowCheck(' . $row->id . ')">';
-            }
+        // $datatables->addColumn('check', function ($row) {
+        //     if (!$row->hasRole('admin') && $row->id != user()->id) {
+        //         return '<input type="checkbox" class="select-table-row" id="datatable-row-' . $row->id . '"  name="datatable_ids[]" value="' . $row->id . '" onclick="dataTableRowCheck(' . $row->id . ')">';
+        //     }
 
-            return '--';
-        });
+        //     return '--';
+        // });
 
         $datatables->editColumn('current_role_name', function ($row) {
             $userRole = $row->roles->pluck('name')->toArray();
@@ -128,45 +132,20 @@ class EmployeesDataTable extends BaseDataTable
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
 
-            $action .= '<a href="' . route('employees.show', [$row->id]) . '" class="dropdown-item"><i class="fa fa-eye mr-2"></i>' . __('app.view') . '</a>';
+            $action .= '<a href="' . route('employees.show-terminate-pending', [$row->id]) . '" class="dropdown-item"><i class="fa fa-eye mr-2"></i>' . __('app.view') . '</a>';
 
-            $canEdit = $this->editEmployeePermission == 'all'
-                || ($this->editEmployeePermission == 'added' && user()->id == $row->added_by)
-                || ($this->editEmployeePermission == 'owned' && user()->id == $row->id)
-                || ($this->editEmployeePermission == 'both' && (user()->id == $row->id || user()->id == $row->added_by))
-                || ($this->editEmployeePermission == 'branch' && !is_null(user()->branch_id) && $row->branch_id == user()->branch_id);
+            $canManageIt = $this->itClearancePermission == 'all'
+                || ($this->itClearancePermission == 'branch' && !is_null(user()->branch_id) && $row->branch_id == user()->branch_id);
 
-            if ($canEdit) {
-                if (!in_array('admin', $userRole) || (in_array('admin', $userRole) && in_array('admin', user_roles()))) {
-                    $action .= '<a class="dropdown-item openRightModal" href="' . route('employees.edit', [$row->id]) . '">
-                                <i class="fa fa-edit mr-2"></i>
-                                ' . trans('app.edit') . '
-                            </a>';
-                }
+            if ($canManageIt) {
+                $action .= '<a href="' . route('employees.it-clearance', [$row->id]) . '" class="dropdown-item"><i class="fa fa-laptop mr-2"></i>IT Clearance</a>';
             }
 
-            $canTerminate = $this->terminateEmployeePermission == 'all'
-                || ($this->terminateEmployeePermission == 'branch' && user()->branch_id == 6)
-                || ($this->terminateEmployeePermission == 'branch' && !is_null(user()->branch_id) && $row->branch_id == user()->branch_id);
+            $canManageFinance = $this->financeClearancePermission == 'all'
+                || ($this->financeClearancePermission == 'branch' && !is_null(user()->branch_id) && $row->branch_id == user()->branch_id);
 
-            if ($canTerminate) {
-                $action .= '<a class="dropdown-item terminate-table-row" href="javascript:;" data-user-id="' . $row->id . '">
-                            <i class="fa fa-user-times mr-2"></i>
-                            ' . trans('app.terminate') . '
-                        </a>';
-            }
-
-            $canDelete = $this->deleteEmployeePermission == 'all'
-                || ($this->deleteEmployeePermission == 'added' && user()->id == $row->added_by)
-                || ($this->deleteEmployeePermission == 'branch' && !is_null(user()->branch_id) && $row->branch_id == user()->branch_id);
-
-            if ($canDelete) {
-                if ((!in_array('admin', $userRole) && user()->id !== $row->id) || (user()->id !== $row->id && in_array('admin', $userRole) && in_array('admin', user_roles()))) {
-                    $action .= '<a class="dropdown-item delete-table-row" href="javascript:;" data-user-id="' . $row->id . '">
-                                <i class="fa fa-trash mr-2"></i>
-                                ' . trans('app.delete') . '
-                            </a>';
-                }
+            if ($canManageFinance) {
+                $action .= '<a href="' . route('employees.finance-clearance', [$row->id]) . '" class="dropdown-item"><i class="fa fa-money mr-2"></i>Finance Clearance</a>';
             }
 
             $action .= '</div>
@@ -188,12 +167,7 @@ class EmployeesDataTable extends BaseDataTable
         $datatables->editColumn(
             'status',
             function ($row) {
-                if ($row->status == 'Active') {
-                    return ' <i class="fa fa-circle mr-1 text-light-green f-10"></i>' . __('app.active');
-                }
-
-                return '<i class="fa fa-circle mr-1 text-red f-10"></i>' . __('app.inactive');
-
+                return ' <i class="fa fa-circle mr-1 text-warning f-10"></i>' . __('app.pendingTerminate');
             }
         );
         $datatables->editColumn('name', function ($row) {
@@ -246,10 +220,11 @@ class EmployeesDataTable extends BaseDataTable
             ->join('roles', 'roles.id', '=', 'role_user.role_id')
             ->select('users.id', 'users.branch_id', 'employee_details.added_by', 'users.salutation', 'users.name', 'users.email', 'users.created_at', 'roles.name as roleName', 'roles.id as roleId', 'users.image', 'users.gender', 'users.status', DB::raw('(select user_roles.role_id from role_user as user_roles where user_roles.user_id = users.id ORDER BY user_roles.role_id DESC limit 1) as `current_role`'), DB::raw('(select roles.name from roles as roles where roles.id = current_role limit 1) as `current_role_name`'), 'designations.name as designation_name', 'employee_details.employee_id', 'employee_details.joining_date','employee_details.iqama_no','employee_details.iqama_expiry_date','employee_details.sponsor_kafala')
             ->onlyEmployee()
-            ->whereNotExists(function ($query) {
+            ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('employee_terminations')
-                    ->whereColumn('employee_terminations.user_id', 'users.id');
+                    ->whereColumn('employee_terminations.user_id', 'users.id')
+                    ->where('employee_terminations.status', 'pending');
             });
 
 
@@ -381,13 +356,13 @@ class EmployeesDataTable extends BaseDataTable
     {
 
         $data = [
-            'check' => [
-                'title' => '<input type="checkbox" name="select_all_table" id="select-all-table" onclick="selectAllTable(this)">',
-                'exportable' => false,
-                'orderable' => false,
-                'searchable' => false
-            ],
-            '#' => ['data' => 'DT_RowIndex', 'orderable' => false, 'searchable' => false, 'visible' => false, 'title' => '#'],
+            // 'check' => [
+            //     'title' => '<input type="checkbox" name="select_all_table" id="select-all-table" onclick="selectAllTable(this)">',
+            //     'exportable' => false,
+            //     'orderable' => false,
+            //     'searchable' => false
+            // ],
+            // '#' => ['data' => 'DT_RowIndex', 'orderable' => false, 'searchable' => false, 'visible' => false, 'title' => '#'],
             __('app.id') => ['data' => 'id', 'name' => 'id', 'title' => __('app.id'), 'visible' => false],
             __('modules.employees.employeeId') => ['data' => 'employee_id', 'name' => 'employee_id', 'title' => __('modules.employees.employeeId')],
             __('app.name') => ['data' => 'name', 'name' => 'name', 'exportable' => false, 'title' => __('app.name')],
@@ -410,7 +385,7 @@ class EmployeesDataTable extends BaseDataTable
                 'name' => 'sponsor_kafala',
                 'title' => 'Sponsor'
             ],
-            __('app.role') => ['data' => 'role', 'name' => 'role', 'width' => '20%', 'orderable' => false, 'exportable' => false, 'title' => __('app.role'), 'visible' => ($this->changeEmployeeRolePermission == 'all')],
+            // __('app.role') => ['data' => 'role', 'name' => 'role', 'width' => '20%', 'orderable' => false, 'exportable' => false, 'title' => __('app.role'), 'visible' => ($this->changeEmployeeRolePermission == 'all')],
             __('modules.employees.role') => ['data' => 'current_role_name', 'name' => 'current_role_name', 'visible' => false, 'title' => __('modules.employees.role')],
             __('modules.employees.joiningDate') => ['data' => 'joining_date', 'name' => 'joining_date', 'visible' => false, 'title' => __('modules.employees.joiningDate')],
             __('app.status') => ['data' => 'status', 'name' => 'status', 'title' => __('app.status')]

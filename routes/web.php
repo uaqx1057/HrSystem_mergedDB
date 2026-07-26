@@ -270,6 +270,21 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('hr-lifecycle/employees/{employee}/transfers', [\App\Http\Controllers\HrLifecycleController::class, 'requestTransfer'])->name('hr-lifecycle.transfer.request');
     Route::post('hr-lifecycle/transfers/{transfer}/approve', [\App\Http\Controllers\HrLifecycleController::class, 'approveTransfer'])->name('hr-lifecycle.transfer.approve');
     Route::post('hr-lifecycle/transfers/{transfer}/apply', [\App\Http\Controllers\HrLifecycleController::class, 'applyTransfer'])->name('hr-lifecycle.transfer.apply');
+    Route::post('employees/terminate-pending/{id}', [EmployeeController::class, 'terminatePending'])->name('employees.terminate-pending');
+    Route::get('employees/terminate-pending/show/{id}', [EmployeeController::class, 'showTerminatePending'])->name('employees.show-terminate-pending');
+    Route::post('employees/complete-termination/{id}', [EmployeeController::class, 'completeTermination'])->name('employees.complete-termination');
+    Route::get('employees/terminated/show/{id}', [EmployeeController::class, 'showTerminated'])->name('employees.show-terminated');
+
+    Route::get('employees/it-clearance/{id}', [\App\Http\Controllers\TerminationClearanceController::class, 'itView'])->name('employees.it-clearance');
+    Route::post('employees/it-clearance/{id}/reminder', [\App\Http\Controllers\TerminationClearanceController::class, 'itSendReminder'])->name('employees.it-clearance.reminder');
+    Route::post('employees/it-clearance/{id}/issue', [\App\Http\Controllers\TerminationClearanceController::class, 'itIssueClearance'])->name('employees.it-clearance.issue');
+    Route::get('employees/it-clearance/{id}/letter', [\App\Http\Controllers\TerminationClearanceController::class, 'itClearanceLetterPdf'])->name('employees.it-clearance.letter');
+
+    Route::get('employees/finance-clearance/{id}', [\App\Http\Controllers\TerminationClearanceController::class, 'financeView'])->name('employees.finance-clearance');
+    Route::post('employees/finance-clearance/{id}/reminder', [\App\Http\Controllers\TerminationClearanceController::class, 'financeSendReminder'])->name('employees.finance-clearance.reminder');
+    Route::post('employees/finance-clearance/{id}/issue', [\App\Http\Controllers\TerminationClearanceController::class, 'financeIssueClearance'])->name('employees.finance-clearance.issue');
+    Route::get('employees/finance-clearance/{id}/letter', [\App\Http\Controllers\TerminationClearanceController::class, 'financeClearanceLetterPdf'])->name('employees.finance-clearance.letter');
+
     Route::resource('employees', EmployeeController::class);
 
     Route::post('employees/{id}/grant-system-access',  [EmployeeController::class, 'grantSystemAccess'])->name('employees.grant_system_access');

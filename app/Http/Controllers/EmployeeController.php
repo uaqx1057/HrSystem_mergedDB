@@ -7,6 +7,8 @@ use App\DataTables\EmployeeBankAccountDataTable;
 use App\DataTables\EmployeesDataTable;
 use App\DataTables\InsuranceDataTable;
 use App\DataTables\LeaveDataTable;
+use App\DataTables\PendingTerminationDataTable;
+use App\DataTables\TerminatedDataTable;
 use App\DataTables\ProjectsDataTable;
 use App\DataTables\TasksDataTable;
 use App\DataTables\TicketDataTable;
@@ -58,12 +60,19 @@ use App\Models\UserActivity;
 use App\Models\UserInvitation;
 use App\Models\VisaDetail;
 use App\Models\EmployeeDependant;
+use App\Models\EmployeeTermination;
+use App\Models\AssetAssignment;
+use App\Models\AdvanceSalary;
+use App\Mail\TerminationClearanceRequestMail;
+use App\Mail\TerminationCompletedMail;
 use App\Services\EmployeeLifecycle;
 use App\Services\HrAccess;
 
 use App\Traits\ImportExcel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use App\Models\UserAuth;
 use Symfony\Component\Mailer\Exception\TransportException;
 use App\Models\PackageUpdateNotify;
@@ -83,26 +92,80 @@ class EmployeeController extends AccountBaseController
         });
     }
 
-    /**
-     * @param EmployeesDataTable $dataTable
-     * @return mixed|void
-     */
-    public function index(EmployeesDataTable $dataTable)
+    public function index()
     {
+        $tab = request('tab');
+        $this->activeTab = $tab ?: 'employee';
 
-        $viewPermission = user()->permission('view_employees');
+        switch ($tab) {
+            case 'pending-termination':
+                return $this->pendingTerminationList();
 
-        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
+            case 'terminated':
+                return $this->terminatedList();
 
-        if (!request()->ajax()) {
-            $this->employees = User::allEmployees();
-            $this->skills = Skill::all();
-            $this->departments = Team::all();
-            $this->designations = Designation::allDesignations();
-            $this->totalEmployees = count($this->employees);
-            $this->roles = Role::where('name', '<>', 'client')
-                ->orderBy('id')->get();
+            default:
+                return $this->employeesList();
         }
+    }
+
+    public function employeesList()
+    {
+        $viewPermission = user()->permission('view_employees');
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both', 'branch']));
+
+        $this->activeTab = 'employee';
+        $this->employees = User::allEmployees();
+        $this->skills = Skill::all();
+        $this->departments = Team::all();
+        $this->designations = Designation::allDesignations();
+        $this->totalEmployees = count($this->employees);
+        $this->roles = Role::where('name', '<>', 'client')->orderBy('id')->get();
+        $this->view = 'employees.ajax.employee-list';
+        $dataTable = new EmployeesDataTable();
+
+        return $dataTable->render('employees.index', $this->data);
+    }
+
+    public function pendingTerminationList()
+    {
+        $viewPermission = user()->permission('view_pending_termination_employees');
+        $itPermission = user()->permission('manage_it_clearance');
+        $financePermission = user()->permission('manage_finance_clearance');
+
+        abort_403(
+            !in_array($viewPermission, ['all', 'added', 'owned', 'both', 'branch'])
+            && !in_array($itPermission, ['all', 'branch'])
+            && !in_array($financePermission, ['all', 'branch'])
+        );
+
+        $this->activeTab = 'pending-termination';
+        $this->employees = User::allEmployees();
+        $this->skills = Skill::all();
+        $this->departments = Team::all();
+        $this->designations = Designation::allDesignations();
+        $this->totalEmployees = count($this->employees);
+        $this->roles = Role::where('name', '<>', 'client')->orderBy('id')->get();
+        $this->view = 'employees.ajax.pending-termination-list';
+        $dataTable = new PendingTerminationDataTable();
+
+        return $dataTable->render('employees.index', $this->data);
+    }
+
+    public function terminatedList()
+    {
+        $viewPermission = user()->permission('view_terminated_employees');
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both', 'branch']));
+
+        $this->activeTab = 'terminated';
+        $this->employees = User::allEmployees();
+        $this->skills = Skill::all();
+        $this->departments = Team::all();
+        $this->designations = Designation::allDesignations();
+        $this->totalEmployees = count($this->employees);
+        $this->roles = Role::where('name', '<>', 'client')->orderBy('id')->get();
+        $this->view = 'employees.ajax.terminated-list';
+        $dataTable = new TerminatedDataTable();
 
         return $dataTable->render('employees.index', $this->data);
     }
@@ -1804,6 +1867,211 @@ class EmployeeController extends AccountBaseController
             : in_array($role, ['FleetManager', 'FinanceManager', 'HR', 'OpsManager', 'OpsSupervisor', 'SuperAdmin'], true);
 
         abort_unless($valid, 422, 'The selected system role is not allowed.');
+    }
+
+    public function terminatePending($id)
+    {
+        $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
+        $this->terminatePermission = user()->permission('manage_termination_employees');
+
+        abort_403(!(
+            $this->terminatePermission == 'all'
+            || ($this->terminatePermission == 'branch' && user()->branch_id == 6)
+            || ($this->terminatePermission == 'branch' && !is_null(user()->branch_id) && $user->branch_id == user()->branch_id)
+        ));
+
+        if ($user->status == 'Terminated') {
+            return Reply::error(__('messages.assignmentAlreadyProcessed'));
+        }
+
+        $existingPending = EmployeeTermination::where('user_id', $user->id)
+            ->where('status', EmployeeTermination::STATUS_PENDING)
+            ->exists();
+
+        if ($existingPending) {
+            return Reply::error(__('messages.assignmentAlreadyProcessed'));
+        }
+
+        $termination = EmployeeTermination::create([
+            'user_id' => $user->id,
+            'company_id' => $user->company_id,
+            'initiated_by' => user()->id,
+            'reason' => request('reason'),
+            'status' => EmployeeTermination::STATUS_PENDING,
+        ]);
+
+        $itUsers = User::usersWithPermission('manage_it_clearance', $user->company_id);
+        $financeUsers = User::usersWithPermission('manage_finance_clearance', $user->company_id);
+
+        foreach ($itUsers as $itUser) {
+            try {
+                Mail::to($itUser->email)->send(new TerminationClearanceRequestMail($termination, 'IT'));
+            } catch (\Exception $e) {
+                Log::error('Failed to send IT clearance request email: ' . $e->getMessage());
+            }
+        }
+
+        foreach ($financeUsers as $financeUser) {
+            try {
+                Mail::to($financeUser->email)->send(new TerminationClearanceRequestMail($termination, 'Finance'));
+            } catch (\Exception $e) {
+                Log::error('Failed to send Finance clearance request email: ' . $e->getMessage());
+            }
+        }
+
+        return Reply::success(__('messages.pendingTermination'));
+
+    }
+
+    public function showTerminatePending($id)
+    {
+        $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
+
+        $viewPermission = user()->permission('view_pending_termination_employees');
+        $itPermission = user()->permission('manage_it_clearance');
+        $financePermission = user()->permission('manage_finance_clearance');
+
+        abort_403(!(
+            in_array($viewPermission, ['all', 'added', 'owned', 'both', 'branch'])
+            || in_array($itPermission, ['all', 'branch'])
+            || in_array($financePermission, ['all', 'branch'])
+        ));
+
+        $this->employee = User::with([
+            'employeeDetail',
+            'employeeDetail.designation',
+            'employeeDetail.department',
+            'appreciations',
+            'appreciations.award',
+            'appreciations.award.awardIcon',
+            'employeeDetail.reportingTo',
+            'country',
+            'emergencyContacts',
+            'reportingTeam' => function ($query) {
+                $query->join('users', 'users.id', '=', 'employee_details.user_id');
+                $query->where('users.status', '=', 'active');
+            },
+            'reportingTeam.user',
+            'leaveTypes',
+            'leaveTypes.leaveType',
+            'appreciationsGrouped',
+            'appreciationsGrouped.award',
+            'appreciationsGrouped.award.awardIcon'
+        ])
+            ->withoutGlobalScope(ActiveScope::class)
+            ->withOut('clientDetails', 'role')
+            ->withCount('member', 'agents', 'openTasks')
+            ->findOrFail($id);
+
+        $this->termination = EmployeeTermination::where('user_id', $id)
+            ->latest('id')
+            ->first();
+
+        $this->assignedAssets = AssetAssignment::with('asset')
+            ->where('employee_id', $id)
+            ->where('status', 'Assigned')
+            ->get();
+
+        $this->pendingAdvances = AdvanceSalary::where('employee_id', $id)
+            ->whereIn('status', ['pending', 'approved'])
+            ->get();
+
+        $this->canManageTermination = $this->terminatePendingCompletePermission($user);
+        $this->canManageItClearance = in_array($itPermission, ['all', 'branch']);
+        $this->canManageFinanceClearance = in_array($financePermission, ['all', 'branch']);
+
+        if (request()->ajax()) {
+            $html = view('employees.ajax.show-pending-terminate', $this->data)->render();
+            return Reply::dataOnly(['status' => 'success', 'html' => $html, 'title' => $this->pageTitle]);
+        }
+
+        $this->view = 'employees.ajax.show-pending-terminate';
+        return view('employees.create', $this->data);
+
+    }
+
+    private function terminatePendingCompletePermission(User $user)
+    {
+        $permission = user()->permission('manage_termination_employees');
+
+        return $permission == 'all'
+            || ($permission == 'branch' && user()->branch_id == 6)
+            || ($permission == 'branch' && !is_null(user()->branch_id) && $user->branch_id == user()->branch_id);
+    }
+
+    public function completeTermination(Request $request, $id)
+    {
+        $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
+
+        abort_403(!$this->terminatePendingCompletePermission($user));
+
+        $termination = EmployeeTermination::where('user_id', $id)
+            ->latest('id')
+            ->first();
+
+        if (!$termination) {
+            return Reply::error(__('messages.employeeNotFound'));
+        }
+
+        if (!$termination->isFullyCleared()) {
+            return Reply::error('Both IT and Finance clearance must be issued before completing termination.');
+        }
+
+        $user->status = 'deactive';
+        $user->save();
+
+        if ($user->employeeDetail) {
+            $user->employeeDetail->last_date = now();
+            $user->employeeDetail->save();
+        }
+
+        $termination->status = EmployeeTermination::STATUS_COMPLETED;
+        $termination->completed_by = user()->id;
+        $termination->completed_at = now();
+        $termination->save();
+
+        $recipients = collect([$user])
+            ->merge(User::usersWithPermission('manage_it_clearance', $user->company_id))
+            ->merge(User::usersWithPermission('manage_finance_clearance', $user->company_id))
+            ->unique('email');
+
+        foreach ($recipients as $recipient) {
+            try {
+                Mail::to($recipient->email)->send(new TerminationCompletedMail($termination));
+            } catch (\Exception $e) {
+                Log::error('Failed to send termination completed email: ' . $e->getMessage());
+            }
+        }
+
+        return Reply::success(__('messages.updateSuccess'));
+    }
+
+    public function showTerminated($id)
+    {
+        $viewPermission = user()->permission('view_terminated_employees');
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both', 'branch']));
+
+        $this->employee = User::with([
+            'employeeDetail',
+            'employeeDetail.designation',
+            'employeeDetail.department',
+            'country',
+        ])
+            ->withoutGlobalScope(ActiveScope::class)
+            ->withOut('clientDetails', 'role')
+            ->findOrFail($id);
+
+        $this->termination = EmployeeTermination::where('user_id', $id)
+            ->latest('id')
+            ->first();
+
+        if (request()->ajax()) {
+            $html = view('employees.ajax.show-terminated', $this->data)->render();
+            return Reply::dataOnly(['status' => 'success', 'html' => $html, 'title' => $this->pageTitle]);
+        }
+
+        $this->view = 'employees.ajax.show-terminated';
+        return view('employees.create', $this->data);
     }
 
 }
