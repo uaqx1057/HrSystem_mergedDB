@@ -33,7 +33,7 @@ class PendingTerminationDataTable extends BaseDataTable
         parent::__construct();
         $this->editEmployeePermission = user()->permission('edit_employees');
         $this->deleteEmployeePermission = user()->permission('delete_employees');
-        $this->viewEmployeePermission = user()->permission('view_employees');
+        $this->viewEmployeePermission = user()->permission('view_pending_termination_employees');
         $this->changeEmployeeRolePermission = user()->permission('change_employee_role');
         $this->terminateEmployeePermission = user()->permission('manage_termination_employees');
         $this->itClearancePermission = user()->permission('manage_it_clearance');
@@ -292,7 +292,9 @@ class PendingTerminationDataTable extends BaseDataTable
             $currentBranchId = user()->branch_id;
 
             if (!is_null($currentBranchId)) {
-                $users = $users->where('users.branch_id', $currentBranchId);
+                if($currentBranchId !== 6){
+                    $users = $users->where('users.branch_id', $currentBranchId);
+                }
             } else {
                 $users = $users->whereRaw('1 = 0');
             }

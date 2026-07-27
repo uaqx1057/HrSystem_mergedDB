@@ -19,6 +19,16 @@
                     <x-cards.data-row :label="__('app.email')" :value="$employee->email" />
                     <x-cards.data-row :label="__('app.designation')" :value="$employee->employeeDetail->designation->name ?? '--'" />
                     <x-cards.data-row :label="__('app.department')" :value="$employee->employeeDetail->department->team_name ?? '--'" />
+                    <x-cards.data-row label="Notice Period Start" :value="$employee->employeeDetail->notice_period_start_date
+                        ? \Carbon\Carbon::parse($employee->employeeDetail->notice_period_start_date)->translatedFormat(
+                            company()->date_format,
+                        )
+                        : '--'" />
+                    <x-cards.data-row label="Notice Period End" :value="$employee->employeeDetail->notice_period_end_date
+                        ? \Carbon\Carbon::parse($employee->employeeDetail->notice_period_end_date)->translatedFormat(
+                            company()->date_format,
+                        )
+                        : '--'" />
                     <x-cards.data-row label="Status" value="Terminated" />
                 </div>
             </div>

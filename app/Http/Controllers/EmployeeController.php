@@ -2013,17 +2013,26 @@ class EmployeeController extends AccountBaseController
             return Reply::error(__('messages.employeeNotFound'));
         }
 
+        $request->validate([
+            'notice_period_start_date' => 'required|date',
+            'notice_period_end_date' => 'required|date|after_or_equal:notice_period_start_date',
+        ]);
+
         if (!$termination->isFullyCleared()) {
             return Reply::error('Both IT and Finance clearance must be issued before completing termination.');
         }
 
+        if (!$user->employeeDetail) {
+            return Reply::error('Employee detail record not found.');
+        }
+
+        $user->employeeDetail->notice_period_start_date = Carbon::parse($request->notice_period_start_date)->format('Y-m-d');
+        $user->employeeDetail->notice_period_end_date = Carbon::parse($request->notice_period_end_date)->format('Y-m-d');
+        $user->employeeDetail->last_date = now();
+        $user->employeeDetail->save();
+
         $user->status = 'deactive';
         $user->save();
-
-        if ($user->employeeDetail) {
-            $user->employeeDetail->last_date = now();
-            $user->employeeDetail->save();
-        }
 
         $termination->status = EmployeeTermination::STATUS_COMPLETED;
         $termination->completed_by = user()->id;

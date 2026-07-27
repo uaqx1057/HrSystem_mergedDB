@@ -237,17 +237,44 @@
 
         Swal.fire({
             title: "@lang('messages.sweetAlertTitle')",
-            text: 'Complete the termination process for this employee?',
+            html:
+                '<div class="form-group text-left">' +
+                    '<label for="notice_period_start_date">Notice Period Start</label>' +
+                    '<input id="notice_period_start_date" type="date" class="form-control" />' +
+                '</div>' +
+                '<div class="form-group text-left">' +
+                    '<label for="notice_period_end_date">Notice Period End</label>' +
+                    '<input id="notice_period_end_date" type="date" class="form-control" />' +
+                '</div>',
             icon: 'warning',
             showCancelButton: true,
             focusConfirm: false,
-            confirmButtonText: 'Yes, complete it!',
+            confirmButtonText: 'Submit',
             cancelButtonText: "@lang('app.cancel')",
             customClass: {
                 confirmButton: 'btn btn-primary mr-3',
                 cancelButton: 'btn btn-secondary'
             },
-            buttonsStyling: false
+            buttonsStyling: false,
+            preConfirm: function() {
+                var startDate = document.getElementById('notice_period_start_date').value;
+                var endDate = document.getElementById('notice_period_end_date').value;
+
+                if (!startDate || !endDate) {
+                    Swal.showValidationMessage('Both notice period dates are required.');
+                    return false;
+                }
+
+                if (new Date(startDate) > new Date(endDate)) {
+                    Swal.showValidationMessage('Notice period end date must be the same or after the start date.');
+                    return false;
+                }
+
+                return {
+                    notice_period_start_date: startDate,
+                    notice_period_end_date: endDate
+                };
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 var url = "{{ route('employees.complete-termination', ':id') }}".replace(':id', id);
@@ -257,7 +284,9 @@
                     url: url,
                     blockUI: true,
                     data: {
-                        '_token': "{{ csrf_token() }}"
+                        '_token': "{{ csrf_token() }}",
+                        notice_period_start_date: result.value.notice_period_start_date,
+                        notice_period_end_date: result.value.notice_period_end_date
                     },
                     success: function(response) {
                         if (response.status == 'success') {
