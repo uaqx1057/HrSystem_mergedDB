@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helper\Reply;
+use App\Mail\TerminationIssueClearedMail;
 use App\Mail\TerminationReminderMail;
 use App\Models\AdvanceSalary;
 use App\Models\AssetAssignment;
@@ -131,6 +132,18 @@ class TerminationClearanceController extends AccountBaseController
         $termination->it_clearance_issued_at = now();
         $termination->save();
 
+        $recipients = collect(User::usersWithPermission('manage_termination_employees', $employee->company_id))
+            ->whereNotNull('email')
+            ->unique('email');
+
+        foreach ($recipients as $recipient) {
+            try {
+                Mail::to($recipient->email)->send(new TerminationIssueClearedMail($termination, 'IT'));
+            } catch (\Exception $e) {
+                Log::error('Failed to send IT issue cleared email: ' . $e->getMessage());
+            }
+        }
+
         return Reply::success('IT clearance letter generated successfully.');
     }
 
@@ -230,6 +243,18 @@ class TerminationClearanceController extends AccountBaseController
         $termination->finance_clearance_issued_by = user()->id;
         $termination->finance_clearance_issued_at = now();
         $termination->save();
+
+        $recipients = collect(User::usersWithPermission('manage_termination_employees', $employee->company_id))
+            ->whereNotNull('email')
+            ->unique('email');
+
+        foreach ($recipients as $recipient) {
+            try {
+                Mail::to($recipient->email)->send(new TerminationIssueClearedMail($termination, 'Finance'));
+            } catch (\Exception $e) {
+                Log::error('Failed to send Finance issue cleared email: ' . $e->getMessage());
+            }
+        }
 
         return Reply::success('Finance clearance letter generated successfully.');
     }
