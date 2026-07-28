@@ -46,7 +46,7 @@ class EmployeeSystemSyncService
                         'probation_end_date'       => optional($employeeDetail)->probation_end_date,
                         'notice_period_start_date' => optional($employeeDetail)->notice_period_start_date,
                         'notice_period_end_date'   => optional($employeeDetail)->notice_period_end_date,
-                        'is_login_allowed'         => $hrUser->status === 'active' ? 1 : 0,
+                        'is_login_allowed'         => strtolower((string) $hrUser->status) === 'active' ? 1 : 0,
                         'updated_at'               => now(),
                     ]);
                 } elseif ($access->system === 'dobs') {
