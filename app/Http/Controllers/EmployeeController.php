@@ -24,6 +24,7 @@ use App\Models\Task;
 use App\Models\Team;
 use App\Models\Branch;
 use App\Models\User;
+use App\Services\EmployeeSystemSyncService;
 use App\Helper\Files;
 use App\Helper\Reply;
 use App\Http\Requests\Admin\Employee\ImportProcessRequest;
@@ -834,6 +835,8 @@ class EmployeeController extends AccountBaseController
             $editState->update(['last_saved_step' => $step, 'version' => $editState->version + 1, 'last_saved_by' => user()->id, 'last_saved_at' => now()]);
             $nextVersion = $editState->version;
         });
+
+        app(EmployeeSystemSyncService::class)->syncEmployeeProfileToLinkedSystems($user->fresh());
 
         return Reply::successWithData(__('messages.updateSuccess'), ['editVersion' => $nextVersion]);
     }
@@ -1761,6 +1764,8 @@ class EmployeeController extends AccountBaseController
             );
         });
 
+        app(EmployeeSystemSyncService::class)->syncEmployeeProfileToLinkedSystems($hrUser);
+
         $systemUrl = $system === 'dms'
             ? config('services.sso.dms_url')
             : config('services.sso.dobs_url');
@@ -2038,6 +2043,9 @@ class EmployeeController extends AccountBaseController
         $termination->completed_by = user()->id;
         $termination->completed_at = now();
         $termination->save();
+
+        // Revoke DMS/DOBS login and push the final notice-period dates to any linked accounts.
+        app(EmployeeSystemSyncService::class)->syncEmployeeProfileToLinkedSystems($user->fresh());
 
         $recipients = collect([$user])
             ->merge(User::usersWithPermission('manage_it_clearance', $user->company_id))
