@@ -44,6 +44,7 @@ class RegisterController extends Controller
 
         $this->salutations = Salutation::cases();
         $this->countries = countries();
+        $this->companies = Company::where('status', 'active')->orderBy('id')->get();
 
         return view('auth.invitation', $this->data);
     }

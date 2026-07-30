@@ -1119,7 +1119,6 @@ class EmployeeController extends AccountBaseController
             case 'employee-bank-account':
                 return $this->employeeBankAccounts($id);
 
-                
             case 'tasks':
                 return $this->tasks();
             case 'leaves':
@@ -1294,7 +1293,7 @@ class EmployeeController extends AccountBaseController
 
     public function getAirTicketStats(int $employeeId): array
     {
-        $employee = User::with(['employeeDetails', 'airTicket'])
+        $employee = User::withoutGlobalScopes()->with(['employeeDetails', 'airTicket'])
             ->findOrFail($employeeId);
 
         $joiningDate = $employee->employeeDetails?->joining_date;
