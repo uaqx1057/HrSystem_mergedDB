@@ -1119,6 +1119,7 @@ class EmployeeController extends AccountBaseController
             case 'employee-bank-account':
                 return $this->employeeBankAccounts($id);
 
+                
             case 'tasks':
                 return $this->tasks();
             case 'leaves':
