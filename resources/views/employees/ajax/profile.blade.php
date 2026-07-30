@@ -145,12 +145,6 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                             @endif
                         </x-cards.user>
 
-                        @if ($employee->employeeDetail->about_me != '')
-                            <x-cards.data :title="__('app.about')" class="mt-4">
-                                <div>{{ $employee->employeeDetail->about_me }}</div>
-                            </x-cards.data>
-                        @endif
-
                         {{-- ── PROFILE INFO ──────────────────────────────────────── --}}
                         <x-cards.data :title="__('modules.client.profileInfo')" class="mt-4">
                             <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.employeeId')"
@@ -244,6 +238,13 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                     :value="$employee->employeeDetail->vehicle_allocation
                                         ? __($employee->employeeDetail->vehicle_allocation)
                                         : '--'" />
+
+                                @if ($employee->employeeDetail->vehicle_allocation && $employee->employeeDetail->vehicle_allocation == 'yes')
+                                    <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.vehicle')"
+                                    :value="$employee?->employeeDetail?->vehicle?->registration_number
+                                        ? __($employee?->employeeDetail?->vehicle?->registration_number)
+                                        : '--'" />
+                                @endif
 
                                 @if($employee->employeeDetail->employment_type == 'internship')
                                     <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.internshipEndDate')"
@@ -372,7 +373,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 @if (($employee->employeeDetail->employee_type ?? 'expat') !== 'saudi')
                                     {{-- SPONSOR --}}
                                     <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.Sponsor / kafala')"
-                                        :value="$employee->employeeDetail->sponsor_kafala ?? '--'" />
+                                        :value="$employee->employeeDetail?->sponserKafala?->company_name ?? '--'" />
 
                                     <x-cards.data-row :background="'text-darkest-white'" :label="__('modules.employees.sponsorship_transfer_date')"
                                         :value="$employee->employeeDetail->sponsorship_transfer_date

@@ -19,6 +19,7 @@ class AssetAssignment extends Model
         'branch_id',
         'qty',
         'added_by',
+        'serial_no',
     ];
 
     public function employee()

@@ -84,7 +84,7 @@
         <div class="title">Payslip</div>
         <div class="subtitle">Slip #{{ $salarySlip->id }} | {{ strtoupper($salarySlip->month) }} {{ $salarySlip->year }}</div>
     </div>
-    <div class="subtitle">Generated: {{ now()->format('Y-m-d H:i') }}</div>
+    <div class="subtitle">Generated: {{ now()->format('d-m-Y H:i') }}</div>
 </div>
 
 <div class="section">
@@ -115,21 +115,21 @@
             </td>
         </tr>
         <tr>
-            <th>Salary Group</th>
-            <td>{{ optional($salarySlip->salaryGroup)->group_name ?? '-' }}</td>
             <th>Payroll Cycle</th>
             <td>{{ optional($salarySlip->cycle)->cycle ?? '-' }}</td>
-        </tr>
-        <tr>
             <th>Payment Method</th>
             <td>{{ optional($salarySlip->paymentMethod)->payment_method ?? '-' }}</td>
+        </tr>
+        <tr>
             <th>Paid On</th>
-            <td>{{ optional($salarySlip->paid_on)->format('Y-m-d') ?? '-' }}</td>
+            <td>{{ optional($salarySlip->paid_on)->format('d-m-Y') ?? '-' }}</td>
+            @if (strtolower(optional($salarySlip->paymentMethod)->payment_method) !== 'cash')
+                <th>Bank Name</th>
+                <td>{{ optional($salarySlip->bankAccount)->bank_name ?? '-' }}</td>
+            @endif
         </tr>
         @if (strtolower(optional($salarySlip->paymentMethod)->payment_method) !== 'cash')
             <tr>
-                <th>Bank Name</th>
-                <td>{{ optional($salarySlip->bankAccount)->bank_name ?? '-' }}</td>
                 <th>Iban Number</th>
                 <td>{{ optional($salarySlip->bankAccount)->iban_number ?? '-' }}</td>
             </tr>
@@ -153,23 +153,30 @@
             <td class="text-right">{{ number_format((float) $salarySlip->net_salary, 2) }}</td>
         </tr>
         <tr>
+            <th>Advance Salary Deducted</th>
+            @if ($salarySlip->advanceSalaries->count())
+                <td class="text-right">{{ number_format($salarySlip->advanceSalaries->sum('pivot.deducted_amount'), 2) }}</td>
+            @else
+                <td class="text-right"></td>
+            @endif
             <th>Total Deductions</th>
             <td class="text-right">{{ number_format((float) $salarySlip->total_deductions, 2) }}</td>
+        </tr>
+        <tr>
             <th>TDS</th>
             <td class="text-right">{{ number_format((float) $salarySlip->tds, 2) }}</td>
-        </tr>
-        <tr>
             <th>Expense Claims</th>
             <td class="text-right">{{ number_format((float) $salarySlip->expense_claims, 2) }}</td>
-            <th>Pay Days</th>
-            <td class="text-right">{{ (int) $salarySlip->pay_days }}</td>
+
         </tr>
         <tr>
+            <th>Pay Days</th>
+            <td class="text-right">{{ (int) $salarySlip->pay_days }}</td>
             <th>Salary Period</th>
-            <td colspan="3">
-                {{ optional($salarySlip->salary_from)->format('Y-m-d') ?? '-' }}
+            <td class="text-right">
+                {{ optional($salarySlip->salary_from)->format('d-m-Y') ?? '-' }}
                 to
-                {{ optional($salarySlip->salary_to)->format('Y-m-d') ?? '-' }}
+                {{ optional($salarySlip->salary_to)->format('d-m-Y') ?? '-' }}
             </td>
         </tr>
     </table>

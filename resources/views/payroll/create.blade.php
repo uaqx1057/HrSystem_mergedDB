@@ -120,7 +120,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            {{-- <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Salary Group</label>
                                     <select name="salary_group_id" class="form-control select-picker height-35"
@@ -131,7 +131,7 @@
                                         @endforeach
                                     </select>
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Pay Days</label>
@@ -139,7 +139,7 @@
                                         class="form-control height-35" data-size="8" placeholder="e.g. 30">
                                 </div>
                             </div>
-                            <div class="col-md-3 mt-2">
+                            <div class="col-md-4 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Month</label>
                                     <select name="month" id="salary_month" class="form-control height-35" data-size="8"
@@ -151,7 +151,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-3 mt-2">
+                            <div class="col-md-4 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Year</label>
                                     <select name="year" id="salary_year" class="form-control height-35" data-size="8"
@@ -163,14 +163,14 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-3 mt-2">
+                            <div class="col-md-4 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Salary From</label>
                                     <input type="date" id="salary_from" name="salary_from"
                                         class="form-control height-35" data-size="8" readonly>
                                 </div>
                             </div>
-                            <div class="col-md-3 mt-2">
+                            <div class="col-md-4 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Salary To</label>
                                     <input type="date" id="salary_to" name="salary_to" class="form-control height-35"
@@ -232,6 +232,16 @@
                                 </div>
                             </div>
                         </div>
+                        {{-- inside #tab-deductions, after the TDS row --}}
+                        <div class="row mt-2">
+                            <div class="col-md-12">
+                                <label class="f-14 f-w-500">Advance Salary Deductions</label>
+                                <div id="advance-salary-list" class="border rounded p-2">
+                                    <span class="text-muted f-13">Select an employee to load pending advances.</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="d-flex justify-content-between mt-3">
                             <button type="button" class="btn btn-primary btn-prev"
                                 data-prev="#tab-allowances-link">Previous</button>
@@ -461,6 +471,91 @@
                 });
             });
 
+            const advanceListUrl = "{{ url('account/payroll/employees') }}";
+            const advanceListContainer = $('#advance-salary-list');
+
+            function loadPendingAdvances(empId) {
+                if (!empId) {
+                    advanceListContainer.html('<span class="text-muted f-13">Select an employee to load pending advances.</span>');
+                    return;
+                }
+
+                advanceListContainer.html('<span class="text-muted f-13">Loading...</span>');
+
+                $.get(`${advanceListUrl}/${empId}/pending-advances`, function (advances) {
+                    if (!advances.length) {
+                        advanceListContainer.html('<span class="text-muted f-13">No pending advances.</span>');
+                        return;
+                    }
+
+                    let html = '';
+                    advances.forEach(function (adv) {
+                        html += `
+                            <div class="d-flex align-items-center mb-2 advance-row" data-id="${adv.id}" data-balance="${adv.balance}">
+                                <div class="custom-control custom-checkbox mr-2">
+                                    <input type="checkbox" class="custom-control-input advance-check" id="adv-${adv.id}">
+                                    <label class="custom-control-label f-13" for="adv-${adv.id}">
+                                        ${adv.date} — Balance: ${adv.balance.toFixed(2)}
+                                    </label>
+                                </div>
+                                <input type="number" class="form-control form-control-sm advance-amount ml-auto"
+                                    style="width:120px" min="0" max="${adv.balance}" step="0.01"
+                                    value="${adv.balance}" disabled>
+                            </div>`;
+                    });
+
+                    advanceListContainer.html(html);
+                }).fail(function () {
+                    advanceListContainer.html('<span class="text-danger f-13">Failed to load advances.</span>');
+                });
+            }
+
+            // hook into the employee change handler you already have
+            employeeId.on('change', function () {
+                loadPendingAdvances($(this).val());
+            });
+
+            // enable/disable amount input alongside checkbox, cap at balance
+            $(document).on('change', '.advance-check', function () {
+                const row = $(this).closest('.advance-row');
+                const amountInput = row.find('.advance-amount');
+                amountInput.prop('disabled', !this.checked);
+                recalcNetSalary();
+            });
+
+            $(document).on('input', '.advance-amount', function () {
+                const row = $(this).closest('.advance-row');
+                const balance = parseFloat(row.data('balance'));
+                let val = parseFloat($(this).val()) || 0;
+                if (val > balance) $(this).val(balance);
+                if (val < 0) $(this).val(0);
+                recalcNetSalary();
+            });
+
+            function totalAdvanceDeduction() {
+                let total = 0;
+                $('.advance-row').each(function () {
+                    if ($(this).find('.advance-check').is(':checked')) {
+                        total += parseFloat($(this).find('.advance-amount').val()) || 0;
+                    }
+                });
+                return total;
+            }
+
+            function recalcNetSalary() {
+                const basic = parseFloat($('[name="basic_salary"]').val()) || 0;
+                const expenseClaims = parseFloat($('[name="expense_claims"]').val()) || 0;
+                const otherDeductions = parseFloat($('[name="total_deductions"]').val()) || 0;
+                const tds = parseFloat($('[name="tds"]').val()) || 0;
+                const advanceDeduction = totalAdvanceDeduction();
+
+                const gross = basic + expenseClaims;
+                const net = gross - otherDeductions - tds - advanceDeduction;
+
+                $('[name="gross_salary"]').val(gross.toFixed(2));
+                $('[name="net_salary"]').val(net > 0 ? net.toFixed(2) : 0);
+            }
+
             // 3. Date Logic (Salary From/To)
             const syncSalaryPeriod = function() {
                 const month = parseInt(salaryMonth.val(), 10);
@@ -501,6 +596,20 @@
 
                 $('#payment_type_name').val(paymentMethodName);
 
+            });
+
+            $('#save-salary-form').on('submit', function () {
+                $('input[name^="advance_deductions"]').remove(); // clear stale ones
+
+                $('.advance-row').each(function () {
+                    if ($(this).find('.advance-check').is(':checked')) {
+                        const id = $(this).data('id');
+                        const amount = $(this).find('.advance-amount').val();
+                        $(this).closest('form').append(
+                            `<input type="hidden" name="advance_deductions[${id}]" value="${amount}">`
+                        );
+                    }
+                });
             });
         });
     </script>

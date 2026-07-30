@@ -148,6 +148,17 @@ class PendingTerminationDataTable extends BaseDataTable
                 $action .= '<a href="' . route('employees.finance-clearance', [$row->id]) . '" class="dropdown-item"><i class="fa fa-money mr-2"></i>Finance Clearance</a>';
             }
 
+            $canRevert = $this->terminateEmployeePermission == 'all'
+                || ($this->terminateEmployeePermission == 'branch' && user()->branch_id == 6)
+                || ($this->terminateEmployeePermission == 'branch' && !is_null(user()->branch_id) && $row->branch_id == user()->branch_id);
+
+            if ($canRevert) {
+                $action .= '<a class="dropdown-item revert-termination-row" href="javascript:;" data-user-id="' . $row->id . '">
+                            <i class="fa fa-undo mr-2"></i>
+                            ' . __('app.revertTermination') . '
+                        </a>';
+            }
+
             $action .= '</div>
                     </div>
                 </div>';

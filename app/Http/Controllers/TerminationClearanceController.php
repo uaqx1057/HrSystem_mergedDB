@@ -177,7 +177,8 @@ class TerminationClearanceController extends AccountBaseController
         $this->employee = $employee;
         $this->termination = $termination;
         $this->pendingAdvances = AdvanceSalary::where('employee_id', $employee->id)
-            ->whereIn('status', ['pending', 'approved'])
+            ->where('status', 'approved')
+            ->whereColumn('deducted_amount', '<', 'advance_salary')
             ->get();
 
         if (request()->ajax()) {
@@ -196,14 +197,17 @@ class TerminationClearanceController extends AccountBaseController
         $this->checkPermission('manage_finance_clearance', $employee);
 
         $pendingAdvances = AdvanceSalary::where('employee_id', $employee->id)
-            ->whereIn('status', ['pending', 'approved'])
+            ->where('status', 'approved')
+            ->whereColumn('deducted_amount', '<', 'advance_salary')
             ->get();
 
         if ($pendingAdvances->isEmpty()) {
             return Reply::error('No pending dues found.');
         }
 
-        $totalDue = $pendingAdvances->sum('advance_salary');
+        $totalAdvance = $pendingAdvances->sum('advance_salary');
+        $totalDeducted = $pendingAdvances->sum('deducted_amount');
+        $totalDue = $totalAdvance - $totalDeducted;
 
         $reasonMessage = 'You have an outstanding advance salary / due amount of ' . number_format($totalDue, 2) . '. Please clear the pending dues at the earliest to proceed with your Finance clearance.';
 
@@ -232,7 +236,8 @@ class TerminationClearanceController extends AccountBaseController
         $this->checkPermission('manage_finance_clearance', $employee);
 
         $pendingDues = AdvanceSalary::where('employee_id', $employee->id)
-            ->whereIn('status', ['pending', 'approved'])
+            ->where('status', 'approved')
+            ->whereColumn('deducted_amount', '<', 'advance_salary')
             ->exists();
 
         if ($pendingDues) {

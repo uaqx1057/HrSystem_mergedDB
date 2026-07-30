@@ -5,9 +5,9 @@
                 <h4 class="mb-0 p-20 f-21 form-heading-background font-weight-normal text-capitalize border-bottom-grey">
                     Edit Assign Company Asset</h4>
                 <div class="row p-20">
-
+                    <input type="hidden" name="id" value="{{ $assignment->id }}">
                     <div class="col-md-6">
-                        <x-forms.label class="my-3" fieldId="employee"
+                        <x-forms.label class="" fieldId="employee"
                             :fieldLabel="__('app.employee')" fieldRequired="true">
                         </x-forms.label>
                         <x-forms.input-group>
@@ -20,11 +20,28 @@
                             </select>
                         </x-forms.input-group>
                     </div>
-                    <div class="col-md-6">
+                    {{-- <div class="col-md-6">
                         <x-forms.number fieldId="asset_qty" :fieldLabel="__('app.qty')" fieldName="qty"
                                       fieldRequired="true" :fieldValue="$assignment ? $assignment->qty : 1" :fieldPlaceholder="__('placeholders.qty')">
                         </x-forms.number>
                         <small class="form-text text-muted">@lang('messages.availableQty'): {{ $asset->available_qty }}</small>
+                    </div> --}}
+
+                    <input type="hidden" name="qty" value="{{ $assignment ? $assignment->qty : 1 }}">
+
+                    <div class="col-md-6">
+                        <x-forms.label class="" fieldId="serial_no"
+                            :fieldLabel="__('app.serialNo')" fieldRequired="true">
+                        </x-forms.label>
+                        <x-forms.input-group>
+                            <select class="form-control select-picker" name="serial_no"
+                                id="serial_no" data-live-search="true">
+                                <option value="">--</option>
+                                @foreach ($serials as $serial)
+                                    <option value="{{ $serial->serial_no }}" {{ ($assignment->serial_no == $serial->serial_no) ? 'selected' : '' }}>{{ $serial->serial_no }}</option>
+                                @endforeach
+                            </select>
+                        </x-forms.input-group>
                     </div>
 
                 </div>

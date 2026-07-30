@@ -41,7 +41,6 @@ class StoreRequest extends CoreRequest
             'email' => 'required|email:rfc|unique:users,email,null,id,company_id,' . company()->id.'|max:100|check_superadmin',
             'slack_username' => 'nullable|unique:employee_details,slack_username,null,id,company_id,' . company()->id.'|max:30',
             'hourly_rate' => 'nullable|numeric',
-            'transfer_number' => 'nullable|numeric',
             'joining_date' => 'required',
             // 'last_date' => 'nullable|date_format:"' . $setting->date_format . '"|after_or_equal:joining_date',
             'date_of_birth' => 'nullable|date_format:"' . $setting->date_format . '"|before_or_equal:'.now($setting->timezone)->toDateString(),
@@ -53,6 +52,11 @@ class StoreRequest extends CoreRequest
             // 'notice_period_end_date' => 'nullable|required_with:notice_period_start_date|date_format:"' . $setting->date_format . '"|after_or_equal:notice_period_start_date',
             'internship_end_date' => 'nullable|date_format:"' . $setting->date_format . '"|after_or_equal:joining_date',
             'contract_end_date' => 'nullable|date_format:"' . $setting->date_format . '"|after_or_equal:joining_date',
+            'bank_accounts.*.bank_name' => 'required_with:bank_accounts.*.iban_number,bank_accounts.*.account_number,bank_accounts.*.swift_code|string|max:255',
+            'bank_accounts.*.iban_number' => 'required_with:bank_accounts.*.bank_name,bank_accounts.*.account_number,bank_accounts.*.swift_code|string|max:255',
+            'bank_accounts.*.account_number' => 'nullable|string|max:255',
+            'bank_accounts.*.swift_code' => 'nullable|string|max:255',
+            'bank_accounts.*.is_main_account' => 'nullable|boolean',
             'password' => 'required|string|min:8',
         ];
 
@@ -69,6 +73,8 @@ class StoreRequest extends CoreRequest
             $rules['iqama_no'] = 'required|string|max:50';
             $rules['iqama_profession'] = 'required|string|max:100';
             $rules['iqama_expiry_date'] = 'required|date_format:"' . $setting->date_format . '"';
+            $rules['iqama_image'] = 'required|image';
+            $rules['passport_no'] = 'required|string|max:50';
         }
 
         $rules = $this->customFieldRules($rules);

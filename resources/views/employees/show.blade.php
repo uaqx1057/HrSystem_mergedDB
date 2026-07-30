@@ -92,6 +92,17 @@ if ($viewPermission == 'all'
                         </li>
                     @endif
 
+                    @if (
+                        in_array(user()->permission('view_company_assets'), ['all', 'added', 'owned', 'both', 'branch'])
+                        || in_array(user()->permission('assign_company_asset_to_employee'), ['all', 'added', 'branch'])
+                        || in_array(user()->permission('view_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both', 'branch'])
+                        || in_array(user()->permission('upload_signature_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both', 'branch'])
+                    )
+                        <li>
+                            <x-tab :href="route('employees.show', $employee->id) . '?tab=company-assets'" :text="'Assign company asset'" ajax="false" class="company-assets" />
+                        </li>
+                    @endif
+
                     @if ($showFullProfile && ($manageEmergencyContact == 'all' || $employee->id == user()->id))
                         <li>
                             <x-tab :href="route('employees.show', $employee->id) . '?tab=emergency-contacts'" :text="__('modules.emergencyContact.emergencyContact')" class="emergency-contacts" />

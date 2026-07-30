@@ -73,4 +73,11 @@ class SalarySlip extends BaseModel
 
         return optional($this->user)->name ?: ('Employee #' . $this->user_id);
     }
+
+    public function advanceSalaries()
+    {
+        return $this->belongsToMany(AdvanceSalary::class, 'salary_slip_advance_salary')
+            ->withPivot('deducted_amount')
+            ->withTimestamps();
+    }
 }

@@ -6,6 +6,69 @@ $editDocumentPermission = user()->permission('edit_documents');
 @endphp
 
 <style>
+    .docs-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        background: #f8fafc;
+    }
+
+    .docs-toolbar-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .docs-add-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 12px;
+        border-radius: 8px;
+        background: #0f766e;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .docs-add-btn:hover {
+        color: #fff;
+        text-decoration: none;
+        background: #115e59;
+    }
+
+    .docs-upload-panel {
+        margin-top: 12px;
+        padding: 14px;
+        border: 1px dashed #ced4da;
+        border-radius: 10px;
+        background: #fff;
+    }
+
+    #task-file-list.docs-grid {
+        gap: 14px;
+    }
+
+    .docs-empty-state {
+        width: 100%;
+        border: 1px dashed #cbd5e1;
+        border-radius: 10px;
+        background: #f8fafc;
+        padding: 24px 16px;
+        text-align: center;
+        color: #64748b;
+    }
+
+    .docs-empty-state i {
+        font-size: 22px;
+        color: #94a3b8;
+    }
+
     .file-action {
         visibility: hidden;
     }
@@ -22,15 +85,16 @@ $editDocumentPermission = user()->permission('edit_documents');
 
         @if ($addDocumentPermission == 'all' || $addDocumentPermission == 'added')
 
-            <div class="row">
-                <div class="col-md-12">
-                    <a class="f-15 f-w-500" href="javascript:;" id="add-task-file"><i
-                            class="icons icon-plus font-weight-bold mr-1"></i>@lang('modules.lead.addFile')
-                        </a>
+            <div class="docs-toolbar" id="docs-toolbar-row">
+                <div class="docs-toolbar-title">@lang('messages.fileFormat.multipleImageFile')</div>
+                <div>
+                    <a class="docs-add-btn" href="javascript:;" id="add-task-file">
+                        <i class="icons icon-plus font-weight-bold"></i>@lang('modules.lead.addFile')
+                    </a>
                 </div>
             </div>
 
-            <x-form id="save-taskfile-data-form" class="d-none">
+            <x-form id="save-taskfile-data-form" class="d-none docs-upload-panel">
                 <input type="hidden" name="user_id" value="{{ $employee->id }}">
                 <div class="row">
                     <div class="col-md-12">
@@ -55,7 +119,7 @@ $editDocumentPermission = user()->permission('edit_documents');
             </x-form>
         @endif
 
-        <div class="d-flex flex-wrap mt-3" id="task-file-list">
+        <div class="d-flex flex-wrap mt-3 docs-grid" id="task-file-list">
             @php
                 $totalDocuments = ($user->clientDocuments) ? count($user->clientDocuments) : 0;
                 $permission = 0; // assuming we do have permission for all uploaded files
@@ -119,21 +183,15 @@ $editDocumentPermission = user()->permission('edit_documents');
                     @endphp
                 @endif
             @empty
-                <div class="align-items-center d-flex flex-column text-lightest p-20 w-100">
-                    <i class="fa fa-file f-21 w-100"></i>
-
-                    <div class="f-15 mt-4">
-                        - @lang('messages.noFileUploaded')
-                    </div>
+                <div class="docs-empty-state">
+                    <i class="fa fa-file"></i>
+                    <div class="f-15 mt-2">@lang('messages.noFileUploaded')</div>
                 </div>
             @endforelse
             @if (isset($user->clientDocuments) && $totalDocuments > 0 && $totalDocuments == $permission)
-                <div class="align-items-center d-flex flex-column text-lightest p-20 w-100">
-                    <i class="fa fa-file-excel f-21 w-100"></i>
-
-                    <div class="f-15 mt-4">
-                        - @lang('messages.noFileUploaded') -
-                    </div>
+                <div class="docs-empty-state">
+                    <i class="fa fa-file-o"></i>
+                    <div class="f-15 mt-2">@lang('messages.noFileUploaded')</div>
                 </div>
             @endif
         </div>
@@ -143,7 +201,7 @@ $editDocumentPermission = user()->permission('edit_documents');
 
 <script>
     $('#add-task-file').click(function() {
-        $(this).closest('.row').addClass('d-none');
+        $('#docs-toolbar-row').addClass('d-none');
         $('#save-taskfile-data-form').removeClass('d-none');
     });
 
@@ -158,7 +216,7 @@ $editDocumentPermission = user()->permission('edit_documents');
 
     $('#cancel-document').click(function() {
         $('#save-taskfile-data-form').addClass('d-none');
-        $('#add-task-file').closest('.row').removeClass('d-none');
+        $('#docs-toolbar-row').removeClass('d-none');
     });
 
     $('#submit-document').click(function() {

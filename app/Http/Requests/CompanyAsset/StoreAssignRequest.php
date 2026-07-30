@@ -27,6 +27,7 @@ class StoreAssignRequest extends CoreRequest
         return [
             'employee' => 'required',
             'qty' => 'required|integer|min:1',
+            'serial_no' => 'required',
         ];
     }
 }

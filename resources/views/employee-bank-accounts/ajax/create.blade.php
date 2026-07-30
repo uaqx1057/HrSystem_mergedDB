@@ -4,8 +4,9 @@
             <div class="add-client bg-white rounded">
                 <h4 class="mb-0 p-20 f-21 form-heading-background font-weight-normal text-capitalize border-bottom-grey">
                     @lang('app.add')</h4>
+                <input type="hidden" id="redirect_url" name="redirect_url" value="{{ $redirectUrl }}">
                 <div class="row p-20">
-                    <div class="col-md-6">
+                    {{-- <div class="col-md-6">
                         @if (in_array($addPermission, ['all', 'branch']))
                             <x-forms.label class="" fieldId="employee_id" :fieldLabel="__('app.employee')" fieldRequired="true">
                             </x-forms.label>
@@ -18,13 +19,16 @@
                                     @endforeach
                                 </select>
                             </x-forms.input-group>
+                        @elseif (request()->has('employeeId'))
+                            <input type="hidden" value="{{ request('employeeId') }}" name="employee_id">
                         @else
                             <input type="hidden" value="{{ user()->id }}" name="employee_id">
                             <x-forms.text fieldId="basic_salary" :fieldLabel="__('app.employee')" fieldName="basic_salary"
                                 fieldRequired="true" :fieldPlaceholder="__('placeholders.basic_salary')" :fieldValue="user()->name" :fieldReadOnly="true">
                             </x-forms.text>
                         @endif
-                    </div>
+                    </div> --}}
+                    <input type="hidden" value="{{ request('employeeId') }}" name="employee_id">
                     <div class="col-md-6">
                         <x-forms.text fieldId="bank_name" :fieldLabel="__('app.bankName')" fieldName="bank_name" fieldRequired="true" :fieldPlaceholder="__('placeholders.name')"></x-forms.text>
                     </div>

@@ -4,6 +4,7 @@ namespace App\DataTables;
 
 use App\Models\BaseModel;
 use App\Models\EmployeeDetails;
+use App\Models\EmployeeTermination;
 use App\Scopes\ActiveScope;
 use Carbon\Carbon;
 use App\Models\Role;
@@ -249,7 +250,11 @@ class EmployeesDataTable extends BaseDataTable
             ->whereNotExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('employee_terminations')
-                    ->whereColumn('employee_terminations.user_id', 'users.id');
+                    ->whereColumn('employee_terminations.user_id', 'users.id')
+                    ->whereIn('employee_terminations.status', [
+                        \App\Models\EmployeeTermination::STATUS_PENDING,
+                        \App\Models\EmployeeTermination::STATUS_COMPLETED,
+                    ]);
             });
 
 

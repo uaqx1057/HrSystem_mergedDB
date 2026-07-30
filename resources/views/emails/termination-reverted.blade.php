@@ -22,16 +22,22 @@
     <div class="wrapper">
         <div class="container">
             <div class="content">
-                <div class="header-text">{{ $department }} Clearance Required</div>
+                <div class="header-text">
+                    {{ $wasCompleted ? 'Termination Reverted — Employee Reactivated' : 'Pending Termination Cancelled' }}
+                </div>
 
-                <p>Dear {{ $department }} Team,</p>
+                <p>Dear Team,</p>
 
-                <p>The employee below has been marked for termination and is now pending clearance from your department. Please review the assigned {{ $department == 'IT' ? 'company assets' : 'financial dues / advance salary' }} and issue clearance once verified.</p>
+                @if($wasCompleted)
+                    <p>The termination for the employee below has been <strong>reverted</strong>. Their account has been reactivated and they have been restored to active employee status.</p>
+                @else
+                    <p>The pending termination process for the employee below has been <strong>cancelled</strong> before completion. No further clearance action is required.</p>
+                @endif
 
                 <table class="details-table">
                     <tr>
                         <td class="label">Employee Name:</td>
-                        <td class="value">{{ $termination->employee->name }}</td>
+                        <td class="value">{{ $termination->employee->name ?? 'N/A' }}</td>
                     </tr>
                     <tr>
                         <td class="label">Employee ID:</td>
@@ -39,24 +45,28 @@
                     </tr>
                     <tr>
                         <td class="label">Email:</td>
-                        <td class="value">{{ $termination->employee->email }}</td>
+                        <td class="value">{{ $termination->employee->email ?? 'N/A' }}</td>
                     </tr>
                     <tr>
-                        <td class="label">Termination Initiated By:</td>
-                        <td class="value">{{ $termination->initiatedBy->name ?? 'N/A' }}</td>
+                        <td class="label">Reverted By:</td>
+                        <td class="value">{{ $termination->revertedBy->name ?? 'N/A' }}</td>
                     </tr>
-                    @if($termination->terminate_reason)
+                    <tr>
+                        <td class="label">Reverted On:</td>
+                        <td class="value">{{ optional($termination->reverted_at)->format('d M Y, h:i A') ?? 'N/A' }}</td>
+                    </tr>
+                    @if($termination->revert_reason)
                         <tr>
                             <td class="label">Reason:</td>
-                            <td class="value">{{ $termination->terminate_reason }}</td>
+                            <td class="value">{{ $termination->revert_reason }}</td>
                         </tr>
                     @endif
                 </table>
 
-                <p>Please log in to the HR system to view details and issue the {{ $department }} clearance letter.</p>
+                <p>Please log in to the HR system to view the employee's current status.</p>
 
                 <div class="btn-container">
-                    <a href="{{ route('employees.index') }}?tab=pending-termination" class="btn">View Pending Termination</a>
+                    <a href="{{ route('employees.index') }}" class="btn">View Employee</a>
                 </div>
 
                 <p style="margin-top: 30px;">

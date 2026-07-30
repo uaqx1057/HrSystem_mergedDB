@@ -9,6 +9,7 @@ use App\Models\Branch;
 use App\Models\CompanyAsset;
 use App\Helper\Reply;
 use App\Http\Controllers\Controller;
+use App\Models\CompanyAssetSerial;
 use App\Models\Department;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf; // This is the Facade
@@ -86,9 +87,16 @@ class CompanyAssetController extends AccountBaseController
         $asset->branch_id = $request->branch_id;
         $asset->qty = $request->qty;
         $asset->available_qty = $request->qty;
-        $asset->status = 'available';
+        $asset->status = 'Available';
         $asset->added_by = user()->id;
         $asset->save();
+
+        foreach ($request->serial_no as $serialNo) {
+            $asset->serials()->create([
+                'serial_no' => trim($serialNo),
+                'status'    => 'available',
+            ]);
+        }
 
         $redirectUrl = urldecode($request->redirect_url);
 
@@ -108,6 +116,7 @@ class CompanyAssetController extends AccountBaseController
         abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
 
         $this->asset = CompanyAsset::findOrFail($id);
+        $this->serials = $this->asset->serials()->orderBy('id')->get();
 
         if (!$this->canManageRecord($this->asset, $viewPermission)) {
             abort(403);
@@ -128,7 +137,7 @@ class CompanyAssetController extends AccountBaseController
     public function edit($id)
     {
         $viewPermission = user()->permission('edit_company_assets');
-        abort_403(!in_array($viewPermission, ['all', 'added','branch']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'branch']));
 
         $this->asset = CompanyAsset::findOrFail($id);
 
@@ -138,6 +147,7 @@ class CompanyAssetController extends AccountBaseController
 
         $this->departments = Department::orderBy('name')->get();
         $this->branches = Branch::latest()->get();
+        $this->serials = $this->asset->serials()->orderBy('id')->get();
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.edit', $this->data)->render();
@@ -154,7 +164,7 @@ class CompanyAssetController extends AccountBaseController
     public function update(UpdateRequest $request, $id)
     {
         $viewPermission = user()->permission('edit_company_assets');
-        abort_403(!in_array($viewPermission, ['all', 'added','branch']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'branch']));
 
         $asset = CompanyAsset::findOrFail($id);
         $asset->name = $request->name;
@@ -165,8 +175,39 @@ class CompanyAssetController extends AccountBaseController
         $asset->department_id = $request->department_id;
         $asset->branch_id = $request->branch_id;
         $asset->qty = $request->qty;
-        $asset->available_qty = $request->qty;
-        $asset->status = 'available';
+        $asset->save();
+
+        $submittedIds = [];
+
+        foreach ($request->serial_no as $i => $serialNo) {
+            $serialId = $request->serial_id[$i] ?? null;
+
+            if ($serialId) {
+                // existing serial — update (readonly on frontend for assigned ones, but re-save is harmless)
+                $serial = CompanyAssetSerial::find($serialId);
+                if ($serial && $serial->company_asset_id == $asset->id) {
+                    $serial->serial_no = trim($serialNo);
+                    $serial->save();
+                    $submittedIds[] = $serial->id;
+                }
+            } else {
+                // new serial
+                $newSerial = $asset->serials()->create([
+                    'serial_no' => trim($serialNo),
+                    'status'    => 'available',
+                ]);
+                $submittedIds[] = $newSerial->id;
+            }
+        }
+
+        // remove serials that were dropped (only safe ones — never delete assigned)
+        $asset->serials()
+            ->whereNotIn('id', $submittedIds)
+            ->where('status', 'available')
+            ->delete();
+
+        // recompute available_qty from actual remaining 'available' serials
+        $asset->available_qty = $asset->serials()->where('status', 'available')->count();
         $asset->save();
 
         $redirectUrl = route('company-assets.index');
@@ -251,7 +292,10 @@ class CompanyAssetController extends AccountBaseController
         }
         $this->employees = User::allEmployees(null, true, $employeePermission);
         $this->company_asset_id = $id;
+        $this->employeeId = request('employee_id');
         $this->asset = CompanyAsset::findOrFail($id);
+        $notAvailableSerials = AssetAssignment::where('company_asset_id', $id)->pluck('serial_no')->toArray();
+        $this->serials = $this->asset->serials()->whereNotIn('serial_no',$notAvailableSerials)->orderBy('id')->get();
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.assign', $this->data)->render();
@@ -281,21 +325,9 @@ class CompanyAssetController extends AccountBaseController
             $assign->status = 'Pending';
             $assign->branch_id = $asset->branch_id;
             $assign->qty = $qtyAssigned;
+            $assign->serial_no = $request->serial_no;
             $assign->added_by = user()->id;
             $assign->save();
-
-            // NOTE: available_qty is NOT reduced here. It is only reduced when the
-            // assignment is approved (signature uploaded) in storeSignature().
-
-            AssetAssignmentHistory::create([
-                'company_asset_id' => $asset->id,
-                'employee_id' => $request->employee,
-                'action_type' => 'Pending',
-                'qty' => $qtyAssigned,
-                'asset_assignment_id' => $assign->id,
-                'added_by' => user()->id,
-                'action_at' => now(),
-            ]);
 
             DB::commit();
         } catch (\Exception $e) {
@@ -306,7 +338,11 @@ class CompanyAssetController extends AccountBaseController
         $redirectUrl = urldecode($request->redirect_url);
 
         if ($redirectUrl == '') {
-            $redirectUrl = route('company-assets.show', $asset->id);
+            if ($request->filled('employee_id')) {
+                $redirectUrl = route('employees.show', [$request->employee_id, 'tab' => 'company-assets']);
+            } else {
+                $redirectUrl = route('company-assets.show', $asset->id);
+            }
         }
 
         return Reply::successWithData(__('messages.recordSaved'), ['redirectUrl' => $redirectUrl]);
@@ -314,11 +350,20 @@ class CompanyAssetController extends AccountBaseController
 
     public function editAssignAsset($id)
     {
-        $asset = CompanyAsset::findOrFail($id);
-        $assignment = $asset->assignments()->first();
+        $assignment = AssetAssignment::find($id);
+        $asset = $assignment->asset;
+
+        if ($assignment->status === 'Assigned') {
+            abort_403(true);
+        }
+
         $this->asset = $asset;
         $this->assignment = $assignment;
+        $this->employeeId = request('employee_id', $assignment->employee_id);
         $this->employees = User::allEmployees();
+
+        $notAvailableSerials = AssetAssignment::where('company_asset_id', $asset->id)->where('serial_no','<>', $assignment->serial_no)->pluck('serial_no')->toArray();
+        $this->serials = $this->asset->serials()->whereNotIn('serial_no',$notAvailableSerials)->orderBy('id')->get();
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.edit-assign', $this->data)->render();
@@ -331,8 +376,8 @@ class CompanyAssetController extends AccountBaseController
 
     public function updateAssignAsset(StoreAssignRequest $request, $id)
     {
-        $asset = CompanyAsset::findOrFail($id);
-        $assignment = AssetAssignment::where('company_asset_id', $id)->firstOrFail();
+        $assignment = AssetAssignment::findOrFail($request->id);
+        $asset = $assignment->asset;
 
         $newQty = (int) $request->qty;
         $delta = $newQty - $assignment->qty;
@@ -344,25 +389,11 @@ class CompanyAssetController extends AccountBaseController
         DB::beginTransaction();
 
         try {
+
             $assignment->employee_id = $request->employee;
             $assignment->qty = $newQty;
+            $assignment->serial_no = $request->serial_no;
             $assignment->save();
-
-            // Only adjust available_qty if the assignment is already approved/assigned.
-            // While Pending, available_qty is untouched (reduced only on approval).
-            if ($assignment->status === 'Assigned') {
-                $asset->available_qty -= $delta;
-                $asset->status = $asset->available_qty == 0 ? 'Assigned' : 'Available';
-                $asset->save();
-            }
-
-            AssetAssignmentHistory::create([
-                'company_asset_id' => $asset->id,
-                'employee_id' => $request->employee,
-                'action_type' => 'assigned',
-                'qty' => $newQty,
-                'action_at' => now(),
-            ]);
 
             DB::commit();
         } catch (\Exception $e) {
@@ -370,7 +401,11 @@ class CompanyAssetController extends AccountBaseController
             return Reply::error($e->getMessage());
         }
 
-        $redirectUrl = route('company-assets.index');
+        $redirectUrl = route('company-assets.show', $id);
+
+        if ($request->filled('employee_id')) {
+            $redirectUrl = route('employees.show', [$request->employee_id, 'tab' => 'company-assets']);
+        }
 
         return Reply::successWithData(__('messages.recordSaved'), ['redirectUrl' => $redirectUrl]);
     }
@@ -381,7 +416,10 @@ class CompanyAssetController extends AccountBaseController
         $this->assignment = AssetAssignment::find($id);
         $asset = CompanyAsset::findOrFail($this->assignment->company_asset_id);
         $this->asset = $asset;
+        $this->employeeId = request('employee_id', $this->assignment->employee_id);
         $this->employees = User::allEmployees();
+
+        $this->serials = $this->asset->serials()->orderBy('id')->get();
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.return', $this->data)->render();
@@ -419,23 +457,19 @@ class CompanyAssetController extends AccountBaseController
             AssetAssignmentHistory::create([
                 'company_asset_id' => $asset->id,
                 'employee_id' => $assignment->employee_id,
+                'serial_no' => $assignment->serial_no,
                 'action_type' => 'Returned',
                 'qty' => $qtyReturned,
                 'signed_document' => $path,
-                'asset_assignment_id' => $assignment->id,
                 'added_by' => user()->id,
                 'action_at' => now(),
             ]);
 
-            // Attach the return document to the latest approved (Assigned) record.
-            $assignmentHistory = AssetAssignmentHistory::where('asset_assignment_id', $assignment->id)
-                ->where('action_type', 'Assigned')
-                ->latest('action_at')
-                ->first();
-
-            if ($assignmentHistory) {
-                $assignmentHistory->signed_document = $path;
-                $assignmentHistory->save();
+            $assetSerial = CompanyAssetSerial::where('company_asset_id', $assignment->company_asset_id)->where('serial_no', $assignment->serial_no)->where('status', 'assigned')->first();
+            if($assetSerial){
+                $assetSerial->update([
+                    'status' => 'available'
+                ]);
             }
 
             // Return the quantity back to the available pool.
@@ -456,7 +490,12 @@ class CompanyAssetController extends AccountBaseController
             }
         }
 
-        return redirect()->route('company-assets.show', $id)->with('success', __('messages.recordSaved'));
+        $redirectUrl = route('company-assets.show', $id);
+        if ($request->filled('employee_id')) {
+            $redirectUrl = route('employees.show', [$request->employee_id, 'tab' => 'company-assets']);
+        }
+
+        return redirect($redirectUrl)->with('success', __('messages.recordSaved'));
     }
 
     public function generatePdf($id)
@@ -482,6 +521,7 @@ class CompanyAssetController extends AccountBaseController
         $this->assignment = AssetAssignment::find($id);
         $asset = CompanyAsset::findOrFail($this->assignment->company_asset_id);
         $this->asset = $asset;
+        $this->employeeId = request('employee_id', $this->assignment->employee_id);
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.upload-signature', $this->data)->render();
@@ -531,12 +571,23 @@ class CompanyAssetController extends AccountBaseController
             $asset->status = $asset->available_qty == 0 ? 'Assigned' : 'Available';
             $asset->save();
 
-            $assignmentHistory = AssetAssignmentHistory::where('asset_assignment_id', $assignment->id)->where('action_type','Pending')->first();
+            AssetAssignmentHistory::create([
+                'company_asset_id' => $assignment->company_asset_id,
+                'employee_id' => $assignment->employee_id,
+                'action_type' => 'Assigned',
+                'qty' => $assignment->qty,
+                'serial_no' => $assignment->serial_no,
+                'signed_document' => $path,
+                'added_by' => user()->id,
+                'action_at' => now(),
+            ]);
 
-            $assignmentHistory->signed_document = $path;
-            $assignmentHistory->action_type = 'Assigned';
-            $assignmentHistory->action_at = now();
-            $assignmentHistory->save();
+            $assetSerial = CompanyAssetSerial::where('company_asset_id', $assignment->company_asset_id)->where('serial_no', $assignment->serial_no)->where('status', 'available')->first();
+            if($assetSerial){
+                $assetSerial->update([
+                    'status' => 'assigned'
+                ]);
+            }
 
             // Send the email to the employee
             try {
@@ -547,14 +598,37 @@ class CompanyAssetController extends AccountBaseController
             }
         }
 
-        return redirect()->route('company-assets.show', $id)->with('success', __('messages.recordSaved'));
+        $redirectUrl = route('company-assets.show', $id);
+        if ($request->filled('employee_id')) {
+            $redirectUrl = route('employees.show', [$request->employee_id, 'tab' => 'company-assets']);
+        }
+
+        return redirect($redirectUrl)->with('success', __('messages.recordSaved'));
     }
 
     public function viewAssign($id)
     {
-        $this->asset = CompanyAsset::with(['assignments.employee', 'history.employee'])->findOrFail($id);
+        $employeeId = request('employee_id');
+
+        $this->asset = CompanyAsset::with([
+            'assignments' => function ($query) use ($employeeId) {
+                if ($employeeId) {
+                    $query->where('employee_id', $employeeId);
+                }
+                $query->orderByDesc('id');
+            },
+            'assignments.employee',
+            'history' => function ($query) use ($employeeId) {
+                if ($employeeId) {
+                    $query->where('employee_id', $employeeId);
+                }
+                $query->orderByDesc('action_at');
+            },
+            'history.employee',
+        ])->findOrFail($id);
+
         $this->assignment = $this->asset->assignments->first();
-        $this->history = $this->asset->history()->orderBy('action_at', 'desc')->get();
+        $this->history = $this->asset->history;
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.show-assign', $this->data)->render();

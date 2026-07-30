@@ -37,8 +37,12 @@ class EmployeeBankAccountController extends AccountBaseController
         return $dataTable->render('employee-bank-accounts.index', $this->data);
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        $this->redirectUrl = $request->filled('employeeId')
+        ? route('employees.show', $request->input('employeeId')) . '?tab=employee-bank-account'
+        : route('employee-bank-accounts.index');
+
         $this->addPermission = user()->permission('add_employee_bank_account');
         abort_403(!in_array($this->addPermission, ['all','added', 'branch']));
 
@@ -174,7 +178,8 @@ class EmployeeBankAccountController extends AccountBaseController
                 ->update(['is_main_account' => false]);
         }
 
-        $redirectUrl = route('employee-bank-accounts.index');
+        $redirectUrl = route('employees.show', $request->input('employee_id')) . '?tab=employee-bank-account';
+
 
         return Reply::successWithData(__('messages.updateSuccess'), ['redirectUrl' => $redirectUrl]);
     }

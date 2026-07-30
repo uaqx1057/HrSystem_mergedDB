@@ -11,6 +11,51 @@
 
         </div>
 
+        <div class="card mb-3">
+            <div class="card-body">
+                <form method="GET" action="{{ route('driver-documents.index') }}">
+                    <div class="row align-items-end">
+
+                        <div class="col-md-4">
+                            <label class="f-14 f-w-500">Driver</label>
+                            <select name="driver_id" class="form-control select-picker" data-live-search="true">
+                                <option value="">-- All Drivers --</option>
+                                @foreach ($drivers as $driver)
+                                    <option value="{{ $driver->id }}"
+                                        {{ request('driver_id') == $driver->id ? 'selected' : '' }}>
+                                        {{ $driver->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="f-14 f-w-500">Document Type</label>
+                            <select name="document_type" class="form-control select-picker">
+                                <option value="">-- All Types --</option>
+                                @foreach (['iqama' => 'Iqama', 'passport' => 'Passport', 'visa' => 'Visa', 'license' => 'License', 'medical' => 'Medical', 'contract' => 'Contract', 'mobile' => 'Mobile', 'other' => 'Other'] as $value => $label)
+                                    <option value="{{ $value }}"
+                                        {{ request('document_type') == $value ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary mr-2">
+                                <i class="fa fa-filter mr-1"></i> Filter
+                            </button>
+                            <a href="{{ route('driver-documents.index') }}" class="btn btn-secondary">
+                                <i class="fa fa-times mr-1"></i> Reset
+                            </a>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header form-heading-background d-flex justify-content-between align-items-center">
                 <span>Driver Documents</span>
@@ -61,10 +106,14 @@
                                             <i class="fa fa-trash mr-2"></i>
                                         </a> --}}
 
-                                        <form method="POST" action="{{ route('driver-documents.destroy', [$document->id]) }}" onsubmit="return confirm('Delete this document?');">
+                                        <form method="POST"
+                                            action="{{ route('driver-documents.destroy', [$document->id]) }}"
+                                            onsubmit="return confirm('Delete this document?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="" style="color: rgb(184, 11, 11) !important; background: transparent !important;"><i class="fa fa-trash mr-2"></i></button>
+                                            <button type="submit" class=""
+                                                style="color: rgb(184, 11, 11) !important; background: transparent !important;"><i
+                                                    class="fa fa-trash mr-2"></i></button>
                                         </form>
                                     </div>
                                 </td>

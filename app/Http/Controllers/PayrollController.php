@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdvanceSalary;
 use App\Models\Currency;
 use App\Models\Driver;
 use App\Models\EmployeeBankAccount;
@@ -50,17 +51,22 @@ class PayrollController extends AccountBaseController
             $this->viewPermission = user()->permission('view_payroll');
             abort_403(user()->permission('view_payroll') == 'none');
         } elseif($tab == 'salary-groups'){
+            $this->viewPermission = user()->permission('manage_salary_group');
             abort_403(!in_array(user()->permission('manage_salary_group'), ['all']));
         } elseif($tab == 'salary-components'){
+            $this->viewPermission = user()->permission('manage_salary_component');
             abort_403(!in_array(user()->permission('manage_salary_component'), ['all']));
         } elseif($tab == 'salary-setups'){
             $this->viewPermission = user()->permission('manage_employee_salary');
             abort_403(!in_array(user()->permission('manage_employee_salary'),  ['all', 'branch']));
         } elseif($tab == 'payroll-cycles'){
+            $this->viewPermission = user()->permission('add_payroll');
             abort_403(!in_array(user()->permission('add_payroll'), ['all']));
         } elseif($tab == 'payment-methods'){
+            $this->viewPermission = user()->permission('manage_salary_payment_method');
             abort_403(!in_array(user()->permission('manage_salary_payment_method'), ['all']));
         } elseif($tab == 'settings'){
+            $this->viewPermission = user()->permission('manage_salary_tds');
             abort_403(!in_array(user()->permission('manage_salary_tds'), ['all']));
         }
 
@@ -222,6 +228,8 @@ class PayrollController extends AccountBaseController
             $query->where('year', $year);
         }
 
+        $query->latest('id');
+
         $fileName = 'salary-slips-' . now()->format('Ymd-His') . '.csv';
 
         return response()->streamDownload(function () use ($query) {
@@ -245,11 +253,11 @@ class PayrollController extends AccountBaseController
                 'Net Salary',
                 'Gross Salary',
                 'Monthly Salary',
+                'Advance Salary Deducted',
                 'Total Deductions',
                 'TDS',
                 'Expense Claims',
                 'Pay Days',
-                'Group',
                 'Payment Method',
                 'Payroll Cycle',
                 'Paid On',
@@ -267,14 +275,14 @@ class PayrollController extends AccountBaseController
                         $slip->net_salary,
                         $slip->gross_salary,
                         $slip->monthly_salary,
+                        $slip->advanceSalaries->sum('pivot.deducted_amount'),
                         $slip->total_deductions,
                         $slip->tds,
                         $slip->expense_claims,
                         $slip->pay_days,
-                        optional($slip->salaryGroup)->group_name,
                         optional($slip->paymentMethod)->payment_method,
                         optional($slip->cycle)->cycle,
-                        $slip->paid_on ? $slip->paid_on->format('Y-m-d') : '',
+                        $slip->paid_on ? $slip->paid_on->format('d-m-Y') : '',
                     ]);
                 }
             });
@@ -406,9 +414,45 @@ class PayrollController extends AccountBaseController
             'payee_type' => $payeeType,
         ]));
 
-        SalarySlip::create($validated);
+        return DB::transaction(function () use ($request, $validated, $payeeId, $payeeType) {
+            $slip = SalarySlip::create($validated);
 
-        return redirect()->route('payroll.index', ['tab' => 'salary-slips'])->with('success', __('messages.recordSaved'));
+            if ($request->filled('advance_deductions')) {
+                foreach ($request->advance_deductions as $advanceId => $amount) {
+                    $amount = (float) $amount;
+                    if ($amount <= 0) {
+                        continue;
+                    }
+
+                    $advance = AdvanceSalary::where('employee_id', $payeeId)
+                        ->where('status', 'approved')
+                        ->lockForUpdate()
+                        ->find($advanceId);
+
+                    if (!$advance) {
+                        continue; // skip silently, or collect an error to report back
+                    }
+
+                    $balance = $advance->advance_salary - $advance->deducted_amount;
+                    $amount = min($amount, $balance);
+
+                    if ($amount <= 0) {
+                        continue;
+                    }
+
+                    $slip->advanceSalaries()->attach($advanceId, ['deducted_amount' => $amount]);
+
+                    $advance->deducted_amount += $amount;
+                    if ($advance->deducted_amount >= $advance->advance_salary) {
+                        // $advance->status = 'adjusted';
+                    }
+                    $advance->save();
+                }
+            }
+
+            return redirect()->route('payroll.index', ['tab' => 'salary-slips'])
+                ->with('success', __('messages.recordSaved'));
+        });
     }
 
     public function updateSalarySlip(Request $request, SalarySlip $salarySlip): RedirectResponse
@@ -416,7 +460,7 @@ class PayrollController extends AccountBaseController
         $isImpersonatingCompany = session()->has('impersonate');
         abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added', 'owned', 'both','branch']));
 
-        
+
         $validated = $request->validate([
             'payee_type' => 'nullable|in:employee,driver',
             'employee_id' => 'nullable|exists:users,id',
@@ -955,7 +999,7 @@ class PayrollController extends AccountBaseController
             $employeePermission = null;
         }
         $this->employees = User::allEmployees(null, true, $employeePermission);
-        $this->allGroups = SalaryGroup::orderBy('group_name')->get(['id', 'group_name']);
+        // $this->allGroups = SalaryGroup::orderBy('group_name')->get(['id', 'group_name']);
         $this->allCycles = PayrollCycle::orderBy('cycle')->get(['id', 'cycle']);
         $this->allPaymentMethods = SalaryPaymentMethod::orderBy('payment_method')->get(['id', 'payment_method']);
 
@@ -970,5 +1014,24 @@ class PayrollController extends AccountBaseController
             ->get(['id', 'bank_name', 'account_number', 'iban_number', 'is_main_account']);
 
         return response()->json($accounts);
+    }
+
+    public function pendingAdvances(User $employee)
+    {
+        $advances = AdvanceSalary::where('employee_id', $employee->id)
+            ->where('status', 'approved')
+            ->whereColumn('deducted_amount', '<', 'advance_salary')
+            ->orderBy('date')
+            ->get(['id', 'date', 'advance_salary', 'deducted_amount']);
+
+        return response()->json($advances->map(function ($a) {
+            return [
+                'id' => $a->id,
+                'date' => $a->date->format('d-m-Y'),
+                'advance_salary' => (float) $a->advance_salary,
+                'deducted_amount' => (float) $a->deducted_amount,
+                'balance' => (float) ($a->advance_salary - $a->deducted_amount),
+            ];
+        }));
     }
 }

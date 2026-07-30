@@ -51,8 +51,8 @@
                     </tr>
 
                     <tr>
-                        <td class="label">Qty:</td>
-                        <td class="value">{{ $assignment->qty ?? 'N/A' }}</td>
+                        <td class="label">Serial Number:</td>
+                        <td class="value">{{ $assignment->serial_no ?? 'N/A' }}</td>
                     </tr>
 
                     <tr>

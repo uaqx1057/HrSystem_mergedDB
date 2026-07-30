@@ -170,6 +170,35 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23adb5bd'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM5 7V6h14v1H5z'/%3E%3C/svg%3E");
     }
     @endif
+
+    .step5-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        background: #ffffff;
+        padding: 16px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+
+    .step5-subtitle {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+
+    .allowance-row,
+    .bank-account-row {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        background: #f8fafc;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .step5-action-btn {
+        border-radius: 8px;
+        padding: 6px 12px;
+        font-weight: 600;
+    }
 </style>
 
 <div class="row">
@@ -322,149 +351,136 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                     <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey form-heading-background">
                         @lang('modules.employees.documentDetails')</h4>
                     <div class="row p-20">
+                        <div class="col-lg-12">
+                            <div class="row">
+                                {{-- EMPLOYEE TYPE --}}
+                                <div class="col-lg-3 col-md-6">
+                                    <x-forms.select fieldId="employee_type" :fieldLabel="__('modules.employees.employeeType')" fieldName="employee_type" fieldRequired="true">
+                                        <option value="expat" @if (($employee->employeeDetail->employee_type ?? 'expat') === 'expat') selected @endif>@lang('modules.employees.expat')</option>
+                                        <option value="saudi" @if (($employee->employeeDetail->employee_type ?? 'expat') === 'saudi') selected @endif>@lang('modules.employees.saudi')</option>
+                                    </x-forms.select>
+                                </div>
 
-                        {{-- EMPLOYEE TYPE --}}
-                        <div class="col-lg-4 col-md-6">
-                            <x-forms.select fieldId="employee_type" :fieldLabel="__('modules.employees.employeeType')" fieldName="employee_type"
-                                fieldRequired="true">
-                                <option value="expat" @if (($employee->employeeDetail->employee_type ?? 'expat') === 'expat') selected @endif>@lang('modules.employees.expat')</option>
-                                <option value="saudi" @if (($employee->employeeDetail->employee_type ?? 'expat') === 'saudi') selected @endif>@lang('modules.employees.saudi')</option>
-                            </x-forms.select>
-                        </div>
+                                {{-- EXPAT ONLY: IQAMA --}}
+                                <div class="col-lg-3 col-md-6 expat-only-field">
+                                    <x-forms.text fieldId="iqama_no" :fieldLabel="__('modules.employees.Iqama No')" fieldName="iqama_no" fieldRequired="true"
+                                        :fieldPlaceholder="__('placeholders.iqama')" :fieldValue="$employee->employeeDetail->iqama_no">
+                                    </x-forms.text>
+                                </div>
 
-                        {{-- EXPAT ONLY: IQAMA --}}
-                        <div class="col-lg-4 col-md-6 expat-only-field">
-                            <x-forms.text fieldId="iqama_no" :fieldLabel="__('modules.employees.Iqama No')"
-                                fieldName="iqama_no" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama')" :fieldValue="$employee->employeeDetail->iqama_no">
-                            </x-forms.text>
-                        </div>
-                        <div class="col-lg-4 col-md-6 expat-only-field">
-                            <x-forms.text fieldId="iqama_profession" :fieldLabel="__('modules.employees.iqama_profession')"
-                                fieldName="iqama_profession" fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama_profession')" :fieldValue="$employee->employeeDetail->iqama_profession">
-                            </x-forms.text>
-                        </div>
-                        <div class="col-lg-4 col-md-6 expat-only-field">
-                            <x-forms.datepicker
-                                fieldId="iqama_expiry_date"
-                                :fieldLabel="__('modules.employees.iqama_expiry_date')"
-                                fieldName="iqama_expiry_date"
-                                :fieldPlaceholder="__('placeholders.iqama_expiry_date')"
-                                :fieldValue="optional($employee->employeeDetail->iqama_expiry_date)->format(company()->date_format)"
-                            />
-                        </div>
-                        <div class="col-lg-4 col-md-6 expat-only-field">
-                            <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp"
-                                class="mr-0 mr-lg-2 mr-md-2 cropper"
-                                :fieldLabel="__('modules.employees.iqama_image')"
-                                fieldName="iqama_image"
-                                fieldId="iqama_image"
-                                fieldHeight="119"
-                                :fieldValue="($employee->employeeDetail->iqama_image ? asset('user-uploads/iqama/' . $employee->employeeDetail->iqama_image) : null)"
-                                 />
-                        </div>
+                                <div class="col-lg-3 col-md-6 expat-only-field">
+                                    <x-forms.text fieldId="iqama_profession" :fieldLabel="__('modules.employees.iqama_profession')" fieldName="iqama_profession"
+                                        fieldRequired="true" :fieldPlaceholder="__('placeholders.iqama_profession')" :fieldValue="$employee->employeeDetail->iqama_profession">
+                                    </x-forms.text>
+                                </div>
 
-                        {{-- SAUDI ONLY: NATIONAL ID --}}
-                        <div class="col-lg-4 col-md-6 saudi-only-field d-none">
-                            <x-forms.text fieldId="national_id" :fieldLabel="__('modules.employees.national_id')"
-                                fieldName="national_id" fieldRequired="true" :fieldPlaceholder="__('placeholders.national_id')" :fieldValue="$employee->employeeDetail->national_id">
-                            </x-forms.text>
-                        </div>
-                        <div class="col-lg-4 col-md-6 saudi-only-field d-none">
-                            <x-forms.datepicker
-                                fieldId="national_id_expiry_date"
-                                :fieldLabel="__('modules.employees.national_id_expiry_date')"
-                                fieldName="national_id_expiry_date"
-                                :fieldPlaceholder="__('placeholders.national_id_expiry_date')"
-                                :fieldValue="optional($employee->employeeDetail->national_id_expiry_date)->format(company()->date_format)"
-                            />
-                        </div>
-                        <div class="col-lg-4 col-md-6 saudi-only-field d-none">
-                            <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp"
-                                class="mr-0 mr-lg-2 mr-md-2 cropper"
-                                :fieldLabel="__('modules.employees.national_id_image')"
-                                fieldName="national_id_image"
-                                fieldId="national_id_image"
-                                fieldHeight="119"
-                                :fieldValue="($employee->employeeDetail->national_id_image ? asset('user-uploads/national_id/' . $employee->employeeDetail->national_id_image) : null)"
-                                 />
-                        </div>
+                                <div class="col-lg-3 col-md-6 expat-only-field">
+                                    <x-forms.datepicker fieldId="iqama_expiry_date" :fieldLabel="__('modules.employees.iqama_expiry_date')" fieldName="iqama_expiry_date"
+                                        :fieldPlaceholder="__('placeholders.iqama_expiry_date')" :fieldValue="optional($employee->employeeDetail->iqama_expiry_date)->format(company()->date_format)" fieldRequired="true"/>
+                                </div>
 
-                        {{-- PASSPORT --}}
-                        <div class="col-lg-4 col-md-6">
-                            <x-forms.text fieldId="passport_no" :fieldLabel="__('modules.employees.passport_no')"
-                                fieldName="passport_no" fieldRequired="true" :fieldPlaceholder="__('placeholders.passport_no')" :fieldValue="$employee->employeeDetail->passport_no">
-                            </x-forms.text>
-                        </div>
-                        <div class="col-lg-4 col-md-6">
-                            <x-forms.datepicker
-                                fieldId="passport_expiry_date"
-                                :fieldLabel="__('modules.employees.passport_expiry_date')"
-                                fieldName="passport_expiry_date"
-                                :fieldPlaceholder="__('placeholders.passport_expiry_date')"
-                                :fieldValue="optional($employee->employeeDetail->passport_expiry_date)->format(company()->date_format)"
-                            />
-                        </div>
-                        <div class="col-lg-4 col-md-6">
-                            <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp"
-                                class="mr-0 mr-lg-2 mr-md-2 cropper"
-                                :fieldLabel="__('modules.employees.passport_image')"
-                                fieldName="passport_image"
-                                fieldId="passport_image"
-                                fieldHeight="119"
-                                :fieldValue="($employee->employeeDetail->passport_image ? asset('user-uploads/passport/' . $employee->employeeDetail->passport_image) : null)"
-                                 />
-                        </div>
+                                {{-- SAUDI ONLY: NATIONAL ID --}}
+                                <div class="col-lg-3 col-md-6 saudi-only-field d-none">
+                                    <x-forms.text fieldId="national_id" :fieldLabel="__('modules.employees.national_id')" fieldName="national_id" fieldRequired="true"
+                                        :fieldPlaceholder="__('placeholders.national_id')" :fieldValue="$employee->employeeDetail->national_id">
+                                    </x-forms.text>
+                                </div>
+                                <div class="col-lg-3 col-md-6 saudi-only-field d-none">
+                                    <x-forms.datepicker fieldId="national_id_expiry_date" :fieldLabel="__('modules.employees.national_id_expiry_date')"
+                                        fieldName="national_id_expiry_date" :fieldPlaceholder="__('placeholders.national_id_expiry_date')" fieldRequired="true" :fieldValue="optional($employee->employeeDetail->national_id_expiry_date)->format(
+                                            company()->date_format,
+                                        )" />
+                                </div>
 
-                        {{-- EXPAT ONLY: SPONSOR --}}
-                        <div class="col-lg-4 col-md-6 expat-only-field">
-                            <x-forms.text fieldId="sponsor_kafala" :fieldLabel="__('modules.employees.Sponsor / kafala')"
-                                fieldName="sponsor_kafala" fieldRequired="true" :fieldPlaceholder="__('placeholders.sponsor_kafala')"
-                                :fieldValue="$employee->employeeDetail->sponsor_kafala">
-                            </x-forms.text>
-                        </div>
-                        <div class="col-lg-4 col-md-6 expat-only-field">
-                            <x-forms.datepicker
-                                fieldId="sponsorship_transfer_date"
-                                :fieldLabel="__('modules.employees.sponsorship_transfer_date')"
-                                fieldName="sponsorship_transfer_date"
-                                :fieldPlaceholder="__('placeholders.sponsorship_transfer_date')"
-                                :fieldValue="optional($employee->employeeDetail->sponsorship_transfer_date)->format(company()->date_format)"
-                            />
-                        </div>
+                                {{-- PASSPORT --}}
+                                <div class="col-lg-3 col-md-6">
+                                    <x-forms.text fieldId="passport_no" :fieldLabel="__('modules.employees.passport_no')" fieldName="passport_no" fieldRequired="true"
+                                        :fieldPlaceholder="__('placeholders.passport_no')" :fieldValue="$employee->employeeDetail->passport_no">
+                                    </x-forms.text>
+                                </div>
+                                <div class="col-lg-3 col-md-6">
+                                    <x-forms.datepicker fieldId="passport_expiry_date" :fieldLabel="__('modules.employees.passport_expiry_date')" fieldName="passport_expiry_date"
+                                        :fieldPlaceholder="__('placeholders.passport_expiry_date')" :fieldValue="optional($employee->employeeDetail->passport_expiry_date)->format(
+                                            company()->date_format,
+                                        )" />
+                                </div>
 
-                        {{-- EXPAT ONLY: Transfer Number --}}
-                        <div class="col-lg-4 col-md-6 expat-only-field">
-                            <x-forms.text fieldId="transfer_number" :fieldLabel="__('modules.employees.transfer_number')"
-                                fieldName="transfer_number" :fieldPlaceholder="__('placeholders.transfer_number')"
-                                :fieldValue="$employee->employeeDetail->transfer_number">
-                            </x-forms.text>
-                        </div>
+                                {{-- EXPAT ONLY: SPONSOR --}}
+                                <div class="col-lg-3 col-md-6 expat-only-field">
 
-                        {{-- NEW: Probation Time --}}
-                        <div class="col-lg-4 col-md-6">
-                            <x-forms.text fieldId="probation_time" :fieldLabel="__('modules.employees.probation_time')"
-                                fieldName="probation_time" :fieldPlaceholder="__('placeholders.probation_time')"
-                                :fieldValue="$employee->employeeDetail->probation_time">
-                            </x-forms.text>
-                        </div>
+                                    <x-forms.select fieldId="sponsor_kafala" :fieldLabel="__('modules.employees.Sponsor / kafala')" fieldName="sponsor_kafala" search="true">
+                                        <option value="">--</option>
+                                        @foreach ($companies as $company)
+                                            <option @if ($employee->employeeDetail->sponsor_kafala == $company->id) selected @endif value="{{ $company->id }}">
+                                                {{ $company->company_name }}</option>
+                                        @endforeach
+                                    </x-forms.select>
+                                </div>
 
-                        {{-- EXPAT ONLY: Qiva Contract --}}
-                        <div class="col-lg-4 col-md-6 expat-only-field">
-                            <x-forms.file allowedFileExtensions="pdf png jpg jpeg bmp" class="mr-0 mr-lg-2 mr-md-2"
-                                :fieldLabel="__('modules.employees.qiva_contract')" fieldName="qiva_contract" fieldId="qiva_contract"
-                                :fieldValue="($employee->employeeDetail->qiva_contract ? asset('user-uploads/contracts/' . $employee->employeeDetail->qiva_contract) : null)"
-                                 />
-                        </div>
+                                <div class="col-lg-3 col-md-6 expat-only-field">
+                                    <x-forms.datepicker fieldId="sponsorship_transfer_date" :fieldLabel="__('modules.employees.sponsorship_transfer_date')"
+                                        fieldName="sponsorship_transfer_date" :fieldPlaceholder="__('placeholders.sponsorship_transfer_date')" :fieldValue="optional($employee->employeeDetail->sponsorship_transfer_date)->format(
+                                            company()->date_format,
+                                        )" />
+                                </div>
 
-                        {{-- NEW: Company Contract --}}
-                        <div class="col-lg-4 col-md-6">
-                            <x-forms.file allowedFileExtensions="pdf png jpg jpeg bmp" class="mr-0 mr-lg-2 mr-md-2"
-                                :fieldLabel="__('modules.employees.company_contract')" fieldName="company_contract" fieldId="company_contract"
-                                :fieldValue="($employee->employeeDetail->company_contract ? asset('user-uploads/contracts/' . $employee->employeeDetail->company_contract) : null)"
-                                 />
-                        </div>
+                                {{-- NEW: Probation Time --}}
+                                <div class="col-lg-3 col-md-6">
+                                    <x-forms.text fieldId="probation_time" :fieldLabel="__('modules.employees.probation_time')" fieldName="probation_time" :fieldPlaceholder="__('placeholders.probation_time')"
+                                        :fieldValue="$employee->employeeDetail->probation_time">
+                                    </x-forms.text>
+                                </div>
 
+
+
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+
+                            <div class="row">
+
+                                <div class="col-lg-3 col-md-6 expat-only-field">
+                                    <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
+                                        :fieldLabel="__('modules.employees.iqama_image')" fieldName="iqama_image" fieldId="iqama_image" :fieldValue="$employee->employeeDetail->iqama_image
+                                            ? asset('user-uploads/iqama/' . $employee->employeeDetail->iqama_image)
+                                            : null" />
+                                </div>
+
+                                <div class="col-lg-3 col-md-6 saudi-only-field d-none">
+                                    <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
+                                        :fieldLabel="__('modules.employees.national_id_image')" fieldName="national_id_image" fieldId="national_id_image" :fieldValue="$employee->employeeDetail->national_id_image
+                                            ? asset('user-uploads/national_id/' . $employee->employeeDetail->national_id_image)
+                                            : null" />
+                                </div>
+
+                                <div class="col-lg-3 col-md-6">
+                                    <x-forms.file allowedFileExtensions="png jpg jpeg svg bmp" class="mr-0 mr-lg-2 mr-md-2 cropper"
+                                        :fieldLabel="__('modules.employees.passport_image')" fieldName="passport_image" fieldId="passport_image" :fieldValue="$employee->employeeDetail->passport_image
+                                            ? asset('user-uploads/passport/' . $employee->employeeDetail->passport_image)
+                                            : null" />
+                                </div>
+
+                                {{-- EXPAT ONLY: Qiwa Contract --}}
+                                <div class="col-lg-3 col-md-6 expat-only-field">
+                                    <x-forms.file allowedFileExtensions="pdf png jpg jpeg bmp" class="mr-0 mr-lg-2 mr-md-2"
+                                        :fieldLabel="__('modules.employees.qiva_contract')" fieldName="qiva_contract" fieldId="qiva_contract" :fieldValue="$employee->employeeDetail->qiva_contract
+                                            ? asset('user-uploads/contracts/' . $employee->employeeDetail->qiva_contract)
+                                            : null" />
+                                </div>
+
+                                {{-- NEW: Company Contract --}}
+                                <div class="col-lg-3 col-md-6 ">
+                                    <x-forms.file allowedFileExtensions="pdf png jpg jpeg bmp" class="mr-0 mr-lg-2 mr-md-2"
+                                        :fieldLabel="__('modules.employees.company_contract')" fieldName="company_contract" fieldId="company_contract" :fieldValue="$employee->employeeDetail->company_contract
+                                            ? asset('user-uploads/contracts/' . $employee->employeeDetail->company_contract)
+                                            : null" />
+                                </div>
+
+                            </div>
+
+                        </div>
                     </div>
+
 
                     {{-- Step 2 nav --}}
                     <div class="ms-nav-buttons">
@@ -494,7 +510,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             <x-forms.select fieldId="country" :fieldLabel="__('app.country')" fieldName="country" search="true">
                                 <option value="">--</option>
                                 @foreach ($countries as $item)
-                                    <option @if ($employee->country_id == $item->id) selected @endif
+                                    <option @selected(($employee->country_id ?? null) ? ((int) $employee->country_id === (int) $item->id) : (strtoupper($item->iso) === 'SA'))
                                         data-mobile="{{ $employee->mobile }}" data-tokens="{{ $item->iso3 }}"
                                         data-phonecode="{{ $item->phonecode }}"
                                         data-content="<span class='flag-icon flag-icon-{{ strtolower($item->iso) }} flag-icon-squared'></span> {{ $item->nicename }}"
@@ -507,7 +523,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             <x-forms.input-group style="margin-top:-4px">
                                 <x-forms.select fieldId="country_phonecode" fieldName="country_phonecode" search="true">
                                     @foreach ($countries as $item)
-                                        <option @selected($employee->country_phonecode == $item->phonecode)
+                                        <option @selected(($employee->country_phonecode ?? null) ? ((string) $employee->country_phonecode === (string) $item->phonecode) : (strtoupper($item->iso) === 'SA'))
                                                 data-tokens="{{ $item->name }}"
                                                 data-content="{{ $item->flagSpanCountryCode() }}"
                                                 value="{{ $item->phonecode }}">{{ $item->phonecode }}
@@ -550,15 +566,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                 @endforeach
                             </x-forms.select>
                         </div>
-                        <div class="col-md-4 col-lg-3">
-                            <x-forms.select fieldId="locale" :fieldLabel="__('app.language')" fieldName="locale" search="true">
-                                @foreach ($languages as $language)
-                                    <option @if ($employee->locale == $language->language_code) selected @endif
-                                        data-content="<span class='flag-icon flag-icon-{{ ($language->flag_code == 'en') ? 'gb' : $language->flag_code }} flag-icon-squared'></span> {{ $language->language_name }}"
-                                        value="{{ $language->language_code }}">{{ $language->language_name }}</option>
-                                @endforeach
-                            </x-forms.select>
-                        </div>
+
 
                         @if (
                             ((in_array('admin', $userRoles) && in_array('admin', user_roles()))
@@ -595,21 +603,24 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </div>
                         </div>
 
+                        <div class="col-lg-3 col-md-4 vehicle-div">
+                            <x-forms.select fieldId="vehicle_id" :fieldLabel="__('modules.employees.vehicle')" fieldName="vehicle_id" search="true">
+                                <option value="">--</option>
+                                @foreach ($vehicles as $vehicle)
+                                    <option @if ($employee->employeeDetail->vehicle_id == $vehicle->id) selected @endif value="{{ $vehicle->id }}">{{ $vehicle->registration_number }}</option>
+                                @endforeach
+                            </x-forms.select>
+                        </div>
+
                         <div class="col-md-12">
                             <div class="form-group my-3">
                                 <x-forms.textarea class="mr-0 mr-lg-2 mr-md-2" :fieldLabel="__('app.address')"
                                     :fieldValue="$employee->employeeDetail->address" fieldName="address" fieldId="address"
-                                    :fieldPlaceholder="__('placeholders.address')">
+                                    fieldPlaceholder="Saudia Arabia">
                                 </x-forms.textarea>
                             </div>
                         </div>
-                        <div class="col-md-12">
-                            <div class="form-group my-3">
-                                <x-forms.textarea class="mr-0 mr-lg-2 mr-md-2" :fieldLabel="__('app.about')"
-                                    fieldName="about_me" fieldId="about_me" fieldPlaceholder="" :fieldValue="$employee->employeeDetail->about_me">
-                                </x-forms.textarea>
-                            </div>
-                        </div>
+
 
                     </div>
 
@@ -719,7 +730,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                 :fieldValue="$employee->employeeDetail->probation_end_date ? Carbon\Carbon::parse($employee->employeeDetail->probation_end_date)->format(company()->date_format) : ''"
                                 :popover="__('messages.probationEndDate')"/>
                         </div>
-                        
+
                         <div class="col-lg-3 col-md-4">
                             <x-forms.select fieldId="employment_type" :fieldLabel="__('modules.employees.employmentType')"
                                 fieldName="employment_type">
@@ -841,7 +852,9 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                 ══════════════════════════════════════ --}}
                 <div class="form-step" id="form-step-5">
                     <div class="col-md-12 allowances-rows-wrapper p-20">
-                        <h4 class="mb-3 f-21 font-weight-normal text-capitalize">@lang('modules.employees.allowances')</h4>
+                        <div class="step5-card">
+                        <h4 class="mb-1 f-21 font-weight-normal text-capitalize">@lang('modules.employees.allowances')</h4>
+                        <div class="step5-subtitle">Review and update monthly allowance components.</div>
                         <div id="allowances-rows">
                             @foreach($existingAllowances as $alIdx => $allowance)
                                 <div class="row allowance-row p-2 mb-2" data-index="{{ $alIdx }}">
@@ -868,9 +881,65 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                 </div>
                             @endforeach
                         </div>
-                        <button type="button" id="add-allowances-btn" class="btn btn-outline-primary btn-sm my-2">
+                        <button type="button" id="add-allowances-btn" class="btn btn-outline-primary btn-sm my-2 step5-action-btn">
                             <i class="fa fa-plus mr-1"></i> @lang('modules.employees.addAllowance')
                         </button>
+                        </div>
+                    </div>
+                    <div class="col-md-12 p-20 pt-0">
+                        <div class="step5-card">
+                        <h4 class="mb-1 f-21 font-weight-normal text-capitalize">@lang('app.menu.employeebankaccount')</h4>
+                        <div class="step5-subtitle">Maintain salary transfer accounts and primary account selection.</div>
+                        <div id="bank-accounts-rows">
+                            @foreach($existingBankAccounts as $bankIdx => $bankAccount)
+                                <div class="row bank-account-row p-2 mb-2" data-index="{{ $bankIdx }}">
+                                    <input type="hidden" name="bank_accounts[{{ $bankIdx }}][id]" value="{{ $bankAccount->id }}">
+                                    <div class="col-lg-3 col-md-6 mb-2">
+                                        <label class="f-14 text-dark-grey">@lang('app.bankName') <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control height-35 f-14"
+                                            name="bank_accounts[{{ $bankIdx }}][bank_name]"
+                                            value="{{ $bankAccount->bank_name }}"
+                                            placeholder="@lang('placeholders.bankDetails.bankName')" required>
+                                    </div>
+                                    <div class="col-lg-3 col-md-6 mb-2">
+                                        <label class="f-14 text-dark-grey">@lang('app.ibanNumber') <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control height-35 f-14"
+                                            name="bank_accounts[{{ $bankIdx }}][iban_number]"
+                                            value="{{ $bankAccount->iban_number }}"
+                                            placeholder="@lang('app.ibanNumber')" required>
+                                    </div>
+                                    <div class="col-lg-2 col-md-6 mb-2">
+                                        <label class="f-14 text-dark-grey">@lang('app.accountNumber')</label>
+                                        <input type="text" class="form-control height-35 f-14"
+                                            name="bank_accounts[{{ $bankIdx }}][account_number]"
+                                            value="{{ $bankAccount->account_number }}"
+                                            placeholder="@lang('placeholders.bankDetails.accountNumber')">
+                                    </div>
+                                    <div class="col-lg-2 col-md-6 mb-2">
+                                        <label class="f-14 text-dark-grey">@lang('app.swiftCode')</label>
+                                        <input type="text" class="form-control height-35 f-14"
+                                            name="bank_accounts[{{ $bankIdx }}][swift_code]"
+                                            value="{{ $bankAccount->swift_code }}"
+                                            placeholder="@lang('app.swiftCode')">
+                                    </div>
+                                    <div class="col-lg-1 col-md-6 mb-2 d-flex align-items-center">
+                                        <div class="form-check mt-4">
+                                            <input class="form-check-input main-bank-checkbox" type="checkbox" name="bank_accounts[{{ $bankIdx }}][is_main_account]" value="1" @checked((bool) $bankAccount->is_main_account)>
+                                            <label class="form-check-label f-12">@lang('app.mainAccount')</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-1 col-md-6 mb-2 d-flex align-items-end">
+                                        <button type="button" class="btn btn-danger btn-sm remove-bank-account-btn">
+                                            <i class="fa fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                        <button type="button" id="add-bank-account-btn" class="btn btn-outline-primary btn-sm my-2 step5-action-btn">
+                            <i class="fa fa-plus mr-1"></i> @lang('app.add') @lang('app.menu.employeebankaccount')
+                        </button>
+                        </div>
                     </div>
 
                     {{-- Step 5 nav + Save buttons --}}
@@ -1324,6 +1393,110 @@ $(document).ready(function () {
         return allValid;
     }
 
+    // ── Bank account rows logic ───────────────────────────
+    var bankAccountIndex = {{ $existingBankAccounts->count() }};
+
+    function addBankAccountRow() {
+        var row = `
+        <div class="row bank-account-row p-2 mb-2" data-index="${bankAccountIndex}">
+            <div class="col-lg-3 col-md-6 mb-2">
+                <label class="f-14 text-dark-grey">@lang('app.bankName') <span class="text-danger">*</span></label>
+                <input type="text" class="form-control height-35 f-14"
+                    name="bank_accounts[${bankAccountIndex}][bank_name]" placeholder="@lang('placeholders.bankDetails.bankName')" required>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-2">
+                <label class="f-14 text-dark-grey">@lang('app.ibanNumber') <span class="text-danger">*</span></label>
+                <input type="text" class="form-control height-35 f-14"
+                    name="bank_accounts[${bankAccountIndex}][iban_number]" placeholder="@lang('app.ibanNumber')" required>
+            </div>
+            <div class="col-lg-2 col-md-6 mb-2">
+                <label class="f-14 text-dark-grey">@lang('app.accountNumber')</label>
+                <input type="text" class="form-control height-35 f-14"
+                    name="bank_accounts[${bankAccountIndex}][account_number]" placeholder="@lang('placeholders.bankDetails.accountNumber')">
+            </div>
+            <div class="col-lg-2 col-md-6 mb-2">
+                <label class="f-14 text-dark-grey">@lang('app.swiftCode')</label>
+                <input type="text" class="form-control height-35 f-14"
+                    name="bank_accounts[${bankAccountIndex}][swift_code]" placeholder="@lang('app.swiftCode')">
+            </div>
+            <div class="col-lg-1 col-md-6 mb-2 d-flex align-items-center">
+                <div class="form-check mt-4">
+                    <input class="form-check-input main-bank-checkbox" type="checkbox" name="bank_accounts[${bankAccountIndex}][is_main_account]" value="1">
+                    <label class="form-check-label f-12">@lang('app.mainAccount')</label>
+                </div>
+            </div>
+            <div class="col-lg-1 col-md-6 mb-2 d-flex align-items-end">
+                <button type="button" class="btn btn-danger btn-sm remove-bank-account-btn">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+        </div>`;
+        $('#bank-accounts-rows').append(row);
+        bankAccountIndex++;
+    }
+
+    $('#add-bank-account-btn').on('click', function () { addBankAccountRow(); });
+
+    $(document).on('change', '.main-bank-checkbox', function () {
+        if ($(this).is(':checked')) {
+            $('.main-bank-checkbox').not(this).prop('checked', false);
+        }
+    });
+
+    $(document).on('click', '.remove-bank-account-btn', function () {
+        $(this).closest('.bank-account-row').remove();
+        $('#bank-accounts-rows .bank-account-row').each(function (i) {
+            $(this).attr('data-index', i);
+            $(this).find('[name]').each(function () {
+                var newName = $(this).attr('name').replace(/\[\d+\]/, '[' + i + ']');
+                $(this).attr('name', newName);
+            });
+        });
+        bankAccountIndex = $('#bank-accounts-rows .bank-account-row').length;
+    });
+
+    function validateBankAccounts() {
+        var allValid = true;
+        $('#bank-accounts-rows .bank-account-row').each(function () {
+            var bankNameInput = $(this).find('input[name$="[bank_name]"]');
+            var ibanInput = $(this).find('input[name$="[iban_number]"]');
+            var accountNumberInput = $(this).find('input[name$="[account_number]"]');
+            var swiftCodeInput = $(this).find('input[name$="[swift_code]"]');
+            var hasAnyValue = bankNameInput.val().trim() !== '' || ibanInput.val().trim() !== '' || accountNumberInput.val().trim() !== '' || swiftCodeInput.val().trim() !== '';
+
+            if (!hasAnyValue) {
+                bankNameInput.removeClass('is-invalid');
+                ibanInput.removeClass('is-invalid');
+                return;
+            }
+
+            if (bankNameInput.val().trim() === '') {
+                bankNameInput.addClass('is-invalid');
+                allValid = false;
+            } else {
+                bankNameInput.removeClass('is-invalid');
+            }
+
+            if (ibanInput.val().trim() === '') {
+                ibanInput.addClass('is-invalid');
+                allValid = false;
+            } else {
+                ibanInput.removeClass('is-invalid');
+            }
+        });
+
+        if (!allValid) {
+            Swal.fire({
+                icon: 'error', text: 'Bank Name and IBAN are required for each employee bank account row.',
+                toast: true, position: 'top-end', timer: 3000,
+                timerProgressBar: true, showConfirmButton: false,
+                showClass: { popup: 'swal2-noanimation', backdrop: 'swal2-noanimation' },
+            });
+        }
+
+        return allValid;
+    }
+
     // ── Save form ─────────────────────────────────────────
     function stepFormData(step) {
         var data = new FormData();
@@ -1344,7 +1517,47 @@ $(document).ready(function () {
         data.append('edit_version', $('#edit_version').val());
         if (step === 4) data.append('dependants_present', '1');
         if (step === 5) data.append('allowances_present', '1');
+        if (step === 5) data.append('bank_accounts_present', '1');
         return data;
+    }
+
+    function getStepForField(fieldName) {
+        if (!fieldName) return 1;
+        if (fieldName.startsWith('allowances.') || fieldName.startsWith('bank_accounts.')) return 5;
+        if (fieldName.startsWith('dependants.') || ['login', 'email_notifications', 'slack_username', 'telegram_user_id', 'status', 'probation_end_date', 'employment_type', 'marital_status', 'no_of_dependants', 'internship_end_date', 'contract_end_date', 'notice_period_start_date', 'notice_period_end_date'].includes(fieldName)) return 4;
+        if (['country', 'mobile', 'country_phonecode', 'gender', 'joining_date', 'basic_salary', 'reporting_to', 'locale', 'role', 'vehicle_allocation', 'vehicle_id', 'address', 'date_of_birth'].includes(fieldName)) return 3;
+        if (['employee_type', 'iqama_no', 'iqama_profession', 'iqama_expiry_date', 'iqama_image', 'national_id', 'national_id_expiry_date', 'national_id_image', 'passport_no', 'passport_expiry_date', 'passport_image', 'sponsor_kafala', 'sponsorship_transfer_date', 'probation_time', 'qiva_contract', 'company_contract'].includes(fieldName)) return 2;
+        return 1;
+    }
+
+    function escapeHtml(text) {
+        return $('<div/>').text(text || '').html();
+    }
+
+    function showValidationErrorList(xhr) {
+        var errorBag = xhr && xhr.responseJSON && xhr.responseJSON.errors ? xhr.responseJSON.errors : null;
+        if (!errorBag) return;
+
+        var firstField = Object.keys(errorBag)[0] || null;
+        var firstStep = getStepForField(firstField);
+        goToStep(firstStep);
+
+        var listItems = [];
+        Object.keys(errorBag).forEach(function (field) {
+            errorBag[field].forEach(function (message) {
+                listItems.push('<li>' + escapeHtml(message) + '</li>');
+            });
+        });
+
+        if (!listItems.length) return;
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Please fix the following errors',
+            html: '<ul class="text-left pl-3 mb-0">' + listItems.join('') + '</ul>',
+            showConfirmButton: true,
+            confirmButtonText: '@lang('app.ok')'
+        });
     }
 
     function displayStepErrors(xhr) {
@@ -1366,6 +1579,7 @@ $(document).ready(function () {
 
         if (step === 4 && !validateDependants()) return;
         if (step === 5 && !validateAllowances()) return;
+        if (step === 5 && !validateBankAccounts()) return;
 
         $button.prop('disabled', true);
         $.ajax({
@@ -1410,6 +1624,7 @@ $(document).ready(function () {
     $('#save-form').click(function () {
         if (!validateDependants()) return;
         if (!validateAllowances()) return;
+        if (!validateBankAccounts()) return;
         const url = "{{ route('employees.update', $employee->id) }}";
         $.easyAjax({
             url: url,
@@ -1424,6 +1639,9 @@ $(document).ready(function () {
                 if (response.status == 'success') {
                     window.location.href = response.redirectUrl;
                 }
+            },
+            error: function (xhr) {
+                showValidationErrorList(xhr);
             }
         });
     });
@@ -1445,6 +1663,23 @@ $(document).ready(function () {
         var phonecode = $(this).find(':selected').data('phonecode');
         $('#country_phonecode').val(phonecode);
         $('.select-picker').selectpicker('refresh');
+    });
+
+    function toggleVehicleDiv() {
+        if ($('input[name="vehicle_allocation"]:checked').val() === 'yes') {
+            $('.vehicle-div').show();
+        } else {
+            $('.vehicle-div').hide();
+            $('#vehicle_id').val('').trigger('change'); // Optional: reset selected vehicle
+        }
+    }
+
+    // Run on page load
+    toggleVehicleDiv();
+
+    // Run when radio button changes
+    $('input[name="vehicle_allocation"]').on('change', function () {
+        toggleVehicleDiv();
     });
 
     <x-forms.custom-field-filejs/>

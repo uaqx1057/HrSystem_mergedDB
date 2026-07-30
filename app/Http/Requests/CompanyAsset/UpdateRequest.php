@@ -6,22 +6,11 @@ use App\Http\Requests\CoreRequest;
 
 class UpdateRequest extends CoreRequest
 {
-
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize()
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules()
     {
         return [
@@ -33,6 +22,34 @@ class UpdateRequest extends CoreRequest
             'department_id' => 'required|exists:departments,id',
             'branch_id' => 'required|exists:branches,id',
             'qty' => 'required|integer|min:1',
+            'serial_no'     => 'required|array',
+            'serial_no.*'   => 'required|string|max:255|distinct',
+            'serial_id'     => 'required|array',
+            'serial_id.*'   => 'nullable|integer|exists:company_asset_serials,id',
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $qty = (int) $this->qty;
+            $serials = is_array($this->serial_no) ? $this->serial_no : [];
+
+            if (count($serials) !== $qty) {
+                $validator->errors()->add('serial_no', __('messages.serialCountMismatch'));
+            }
+
+            foreach ($serials as $i => $serialNo) {
+                $ignoreId = $this->serial_id[$i] ?? null;
+
+                $exists = \App\Models\CompanyAssetSerial::where('serial_no', trim($serialNo))
+                    ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+                    ->exists();
+
+                // if ($exists) {
+                //     $validator->errors()->add("serial_no.$i", __('messages.serialAlreadyExists', ['serial' => $serialNo]));
+                // }
+            }
+        });
     }
 }
