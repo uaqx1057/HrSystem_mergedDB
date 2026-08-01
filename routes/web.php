@@ -853,6 +853,8 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
 
         Route::get('employees/{employee}/pending-advances', [PayrollController::class, 'pendingAdvances'])->name('employees.pending-advances');
 
+        Route::get('employees/{employee}/allowances', [PayrollController::class, 'employeeAllowances']);
+
         Route::post('settings', [PayrollController::class, 'updateSettings'])->name('settings.update');
     });
 

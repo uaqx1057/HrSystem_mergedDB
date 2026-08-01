@@ -139,7 +139,7 @@
                                         class="form-control height-35" data-size="8" placeholder="e.g. 30">
                                 </div>
                             </div>
-                            <div class="col-md-4 mt-2">
+                            <div class="col-md-4 ">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Month</label>
                                     <select name="month" id="salary_month" class="form-control height-35" data-size="8"
@@ -189,14 +189,14 @@
                 <div class="tab-pane fade" id="tab-allowances" role="tabpanel">
                     <div class="rounded bg-white p-4 shadow-sm">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Basic Salary</label>
                                     <input type="number" step="0.01" min="0" name="basic_salary"
                                         class="form-control height-35" data-size="8" required value="0">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 d-none">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Expense Claims</label>
                                     <input type="number" step="0.01" min="0" name="expense_claims"
@@ -204,6 +204,13 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="row mt-2" id="employee-allowances-list">
+                            <div class="col-md-12">
+                                <span class="text-muted f-13">Select an employee to load allowances.</span>
+                            </div>
+                        </div>
+
                         <div class="d-flex justify-content-between mt-3">
                             <button type="button" class="btn btn-primary btn-prev"
                                 data-prev="#tab-working-days-link">Previous</button>
@@ -542,14 +549,67 @@
                 return total;
             }
 
+            const allowancesUrl = "{{ url('account/payroll/employees') }}";
+            const allowancesContainer = $('#employee-allowances-list');
+
+            function loadEmployeeAllowances(empId) {
+                if (!empId) {
+                    allowancesContainer.html('<div class="col-md-12"><span class="text-muted f-13">Select an employee to load allowances.</span></div>');
+                    recalcNetSalary();
+                    return;
+                }
+
+                allowancesContainer.html('<div class="col-md-12"><span class="text-muted f-13">Loading...</span></div>');
+
+                $.get(`${allowancesUrl}/${empId}/allowances`, function (allowances) {
+                    if (!allowances.length) {
+                        allowancesContainer.html('<div class="col-md-12"><span class="text-muted f-13">No allowances found.</span></div>');
+                        recalcNetSalary();
+                        return;
+                    }
+
+                    let html = '';
+                    allowances.forEach(function (a) {
+                        html += `
+                            <div class="col-md-6 mt-2 allowance-row" data-id="${a.id}">
+                                <div class="form-group">
+                                    <label class="f-14 f-w-500">${a.name}</label>
+                                    <input type="number" step="0.01" min="0"
+                                        name="allowances[${a.id}]"
+                                        class="form-control height-35 allowance-amount"
+                                        value="${a.amount}" readonly>
+                                </div>
+                            </div>`;
+                    });
+
+                    allowancesContainer.html(html);
+                    recalcNetSalary();
+                }).fail(function () {
+                    allowancesContainer.html('<div class="col-md-12"><span class="text-danger f-13">Failed to load allowances.</span></div>');
+                });
+            }
+
+            employeeId.on('change', function () {
+                loadEmployeeAllowances($(this).val());
+            });
+
+            function totalAllowances() {
+                let total = 0;
+                $('.allowance-amount').each(function () {
+                    total += parseFloat($(this).val()) || 0;
+                });
+                return total;
+            }
+
             function recalcNetSalary() {
                 const basic = parseFloat($('[name="basic_salary"]').val()) || 0;
                 const expenseClaims = parseFloat($('[name="expense_claims"]').val()) || 0;
+                const allowances = totalAllowances();
                 const otherDeductions = parseFloat($('[name="total_deductions"]').val()) || 0;
                 const tds = parseFloat($('[name="tds"]').val()) || 0;
                 const advanceDeduction = totalAdvanceDeduction();
 
-                const gross = basic + expenseClaims;
+                const gross = basic + expenseClaims + allowances;
                 const net = gross - otherDeductions - tds - advanceDeduction;
 
                 $('[name="gross_salary"]').val(gross.toFixed(2));
@@ -610,6 +670,8 @@
                         );
                     }
                 });
+
+                // No allowance handling needed anymore — inputs submit natively as allowances[id]
             });
         });
     </script>

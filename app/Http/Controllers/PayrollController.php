@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AdvanceSalary;
 use App\Models\Currency;
 use App\Models\Driver;
+use App\Models\EmployeeAllowance;
 use App\Models\EmployeeBankAccount;
 use App\Models\HrPayrollPreflightRun;
 use App\Models\EmployeeSalaryGroup;
@@ -256,7 +257,6 @@ class PayrollController extends AccountBaseController
                 'Advance Salary Deducted',
                 'Total Deductions',
                 'TDS',
-                'Expense Claims',
                 'Pay Days',
                 'Payment Method',
                 'Payroll Cycle',
@@ -278,7 +278,6 @@ class PayrollController extends AccountBaseController
                         $slip->advanceSalaries->sum('pivot.deducted_amount'),
                         $slip->total_deductions,
                         $slip->tds,
-                        $slip->expense_claims,
                         $slip->pay_days,
                         optional($slip->paymentMethod)->payment_method,
                         optional($slip->cycle)->cycle,
@@ -1031,6 +1030,21 @@ class PayrollController extends AccountBaseController
                 'advance_salary' => (float) $a->advance_salary,
                 'deducted_amount' => (float) $a->deducted_amount,
                 'balance' => (float) ($a->advance_salary - $a->deducted_amount),
+            ];
+        }));
+    }
+
+    public function employeeAllowances(User $employee)
+    {
+        $allowances = EmployeeAllowance::where('employee_id', $employee->id)
+            ->orderBy('name')
+            ->get(['id', 'name', 'amount']);
+
+        return response()->json($allowances->map(function ($a) {
+            return [
+                'id'     => $a->id,
+                'name'   => $a->name,
+                'amount' => (float) $a->amount,
             ];
         }));
     }

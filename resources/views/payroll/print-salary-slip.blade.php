@@ -48,6 +48,7 @@
             border: 1px solid #ddd;
             padding: 8px;
             font-size: 13px;
+            width: 25%;
         }
 
         th {
@@ -91,9 +92,9 @@
     <h3>Employee Details</h3>
     <table>
         <tr>
-            <th style="width: 25%">Name</th>
+            <th >Name</th>
             <td>{{ $salarySlip->payee_name ?? '-' }}</td>
-            <th style="width: 25%">Status</th>
+            <th >Status</th>
             <td>{{ ucfirst($salarySlip->status) }}</td>
         </tr>
         <tr>
@@ -142,38 +143,36 @@
     <table>
         <tr>
             <th>Basic Salary</th>
-            <td class="text-right">{{ number_format((float) $salarySlip->basic_salary, 2) }}</td>
+            <td >{{ number_format((float) $salarySlip->basic_salary, 2) }}</td>
             <th>Gross Salary</th>
-            <td class="text-right">{{ number_format((float) $salarySlip->gross_salary, 2) }}</td>
+            <td >{{ number_format((float) $salarySlip->gross_salary, 2) }}</td>
         </tr>
         <tr>
             <th>Monthly Salary</th>
-            <td class="text-right">{{ number_format((float) $salarySlip->monthly_salary, 2) }}</td>
+            <td >{{ number_format((float) $salarySlip->monthly_salary, 2) }}</td>
             <th>Net Salary</th>
-            <td class="text-right">{{ number_format((float) $salarySlip->net_salary, 2) }}</td>
+            <td >{{ number_format((float) $salarySlip->net_salary, 2) }}</td>
         </tr>
         <tr>
             <th>Advance Salary Deducted</th>
             @if ($salarySlip->advanceSalaries->count())
-                <td class="text-right">{{ number_format($salarySlip->advanceSalaries->sum('pivot.deducted_amount'), 2) }}</td>
+                <td >{{ number_format($salarySlip->advanceSalaries->sum('pivot.deducted_amount'), 2) }}</td>
             @else
-                <td class="text-right"></td>
+                <td ></td>
             @endif
             <th>Total Deductions</th>
-            <td class="text-right">{{ number_format((float) $salarySlip->total_deductions, 2) }}</td>
+            <td >{{ number_format((float) $salarySlip->total_deductions, 2) }}</td>
         </tr>
         <tr>
             <th>TDS</th>
-            <td class="text-right">{{ number_format((float) $salarySlip->tds, 2) }}</td>
-            <th>Expense Claims</th>
-            <td class="text-right">{{ number_format((float) $salarySlip->expense_claims, 2) }}</td>
+            <td >{{ number_format((float) $salarySlip->tds, 2) }}</td>
+            <th>Pay Days</th>
+            <td >{{ (int) $salarySlip->pay_days }}</td>
 
         </tr>
         <tr>
-            <th>Pay Days</th>
-            <td class="text-right">{{ (int) $salarySlip->pay_days }}</td>
             <th>Salary Period</th>
-            <td class="text-right">
+            <td >
                 {{ optional($salarySlip->salary_from)->format('d-m-Y') ?? '-' }}
                 to
                 {{ optional($salarySlip->salary_to)->format('d-m-Y') ?? '-' }}
