@@ -504,7 +504,7 @@
                 }
 
                 if (step === 2) {
-                    var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+                    var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,})?$/;
                     @if (!is_null($invite->email_restriction))
                         var emailUser = $.trim($('#email_address').val());
                         if (emailUser === '') {
