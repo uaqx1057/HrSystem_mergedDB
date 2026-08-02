@@ -894,45 +894,57 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             @foreach($existingBankAccounts as $bankIdx => $bankAccount)
                                 <div class="row bank-account-row p-2 mb-2" data-index="{{ $bankIdx }}">
                                     <input type="hidden" name="bank_accounts[{{ $bankIdx }}][id]" value="{{ $bankAccount->id }}">
-                                    <div class="col-lg-3 col-md-6 mb-2">
-                                        <label class="f-14 text-dark-grey">@lang('app.bankName') <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control height-35 f-14"
-                                            name="bank_accounts[{{ $bankIdx }}][bank_name]"
-                                            value="{{ $bankAccount->bank_name }}"
-                                            placeholder="@lang('placeholders.bankDetails.bankName')" required>
-                                    </div>
-                                    <div class="col-lg-3 col-md-6 mb-2">
-                                        <label class="f-14 text-dark-grey">@lang('app.ibanNumber') <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control height-35 f-14"
-                                            name="bank_accounts[{{ $bankIdx }}][iban_number]"
-                                            value="{{ $bankAccount->iban_number }}"
-                                            placeholder="@lang('app.ibanNumber')" required>
-                                    </div>
-                                    <div class="col-lg-2 col-md-6 mb-2">
-                                        <label class="f-14 text-dark-grey">@lang('app.accountNumber')</label>
-                                        <input type="text" class="form-control height-35 f-14"
-                                            name="bank_accounts[{{ $bankIdx }}][account_number]"
-                                            value="{{ $bankAccount->account_number }}"
-                                            placeholder="@lang('placeholders.bankDetails.accountNumber')">
-                                    </div>
-                                    <div class="col-lg-2 col-md-6 mb-2">
-                                        <label class="f-14 text-dark-grey">@lang('app.swiftCode')</label>
-                                        <input type="text" class="form-control height-35 f-14"
-                                            name="bank_accounts[{{ $bankIdx }}][swift_code]"
-                                            value="{{ $bankAccount->swift_code }}"
-                                            placeholder="@lang('app.swiftCode')">
-                                    </div>
-                                    <div class="col-lg-1 col-md-6 mb-2 d-flex align-items-center">
-                                        <div class="form-check mt-4">
-                                            <input class="form-check-input main-bank-checkbox" type="checkbox" name="bank_accounts[{{ $bankIdx }}][is_main_account]" value="1" @checked((bool) $bankAccount->is_main_account)>
-                                            <label class="form-check-label f-12">@lang('app.mainAccount')</label>
+                                    <div class="col-lg-10">
+                                        <div class="row">
+                                            <div class="col-lg-3 col-md-6 mb-2 px-1">
+                                                <label class="f-14 text-dark-grey">@lang('app.bankName') <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control height-35 f-14"
+                                                    name="bank_accounts[{{ $bankIdx }}][bank_name]"
+                                                    value="{{ $bankAccount->bank_name }}"
+                                                    placeholder="@lang('app.bankName')" required>
+                                            </div>
+                                            <div class="col-lg-3 col-md-6 mb-2 px-1">
+                                                <label class="f-14 text-dark-grey">@lang('app.ibanNumber') <span class="text-danger">*</span></label>
+                                                <input type="text" class="form-control height-35 f-14"
+                                                    name="bank_accounts[{{ $bankIdx }}][iban_number]"
+                                                    value="{{ $bankAccount->iban_number }}"
+                                                    placeholder="@lang('app.ibanNumber')" required>
+                                            </div>
+                                            <div class="col-lg-3 col-md-6 mb-2 px-1">
+                                                <label class="f-14 text-dark-grey">@lang('app.accountNumber')</label>
+                                                <input type="text" class="form-control height-35 f-14"
+                                                    name="bank_accounts[{{ $bankIdx }}][account_number]"
+                                                    value="{{ $bankAccount->account_number }}"
+                                                    placeholder="@lang('app.accountNumber')">
+                                            </div>
+                                            <div class="col-lg-3 col-md-6 mb-2 px-1">
+                                                <label class="f-14 text-dark-grey">@lang('app.swiftCode')</label>
+                                                <input type="text" class="form-control height-35 f-14"
+                                                    name="bank_accounts[{{ $bankIdx }}][swift_code]"
+                                                    value="{{ $bankAccount->swift_code }}"
+                                                    placeholder="@lang('app.swiftCode')">
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="col-lg-1 col-md-6 mb-2 d-flex align-items-end">
-                                        <button type="button" class="btn btn-danger btn-sm remove-bank-account-btn">
-                                            <i class="fa fa-times"></i>
-                                        </button>
+
+                                    <div class="col-lg-2">
+                                        <div class="row mt-4">
+                                            <div class="col-lg-9 col-md-9 px-1 d-flex align-items-center">
+                                                <div class="form-check">
+                                                    <input class="form-check-input main-bank-checkbox" type="checkbox" name="bank_accounts[{{ $bankIdx }}][is_main_account]" value="1" @checked((bool) $bankAccount->is_main_account)>
+                                                    <label class="form-check-label f-12 pt-1 ml-2">@lang('app.mainAccount')</label>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-lg-3 col-md-3 px-1 d-flex align-items-end">
+                                                <button type="button" class="btn btn-danger btn-sm remove-bank-account-btn">
+                                                    <i class="fa fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
+
+
                                 </div>
                             @endforeach
                         </div>
@@ -1399,36 +1411,50 @@ $(document).ready(function () {
     function addBankAccountRow() {
         var row = `
         <div class="row bank-account-row p-2 mb-2" data-index="${bankAccountIndex}">
-            <div class="col-lg-3 col-md-6 mb-2">
-                <label class="f-14 text-dark-grey">@lang('app.bankName') <span class="text-danger">*</span></label>
-                <input type="text" class="form-control height-35 f-14"
-                    name="bank_accounts[${bankAccountIndex}][bank_name]" placeholder="@lang('placeholders.bankDetails.bankName')" required>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-2">
-                <label class="f-14 text-dark-grey">@lang('app.ibanNumber') <span class="text-danger">*</span></label>
-                <input type="text" class="form-control height-35 f-14"
-                    name="bank_accounts[${bankAccountIndex}][iban_number]" placeholder="@lang('app.ibanNumber')" required>
-            </div>
-            <div class="col-lg-2 col-md-6 mb-2">
-                <label class="f-14 text-dark-grey">@lang('app.accountNumber')</label>
-                <input type="text" class="form-control height-35 f-14"
-                    name="bank_accounts[${bankAccountIndex}][account_number]" placeholder="@lang('placeholders.bankDetails.accountNumber')">
-            </div>
-            <div class="col-lg-2 col-md-6 mb-2">
-                <label class="f-14 text-dark-grey">@lang('app.swiftCode')</label>
-                <input type="text" class="form-control height-35 f-14"
-                    name="bank_accounts[${bankAccountIndex}][swift_code]" placeholder="@lang('app.swiftCode')">
-            </div>
-            <div class="col-lg-1 col-md-6 mb-2 d-flex align-items-center">
-                <div class="form-check mt-4">
-                    <input class="form-check-input main-bank-checkbox" type="checkbox" name="bank_accounts[${bankAccountIndex}][is_main_account]" value="1">
-                    <label class="form-check-label f-12">@lang('app.mainAccount')</label>
+            <div class="col-lg-10">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-2 px-1">
+                        <label class="f-14 text-dark-grey">@lang('app.bankName') <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control height-35 f-14"
+                            name="bank_accounts[${bankAccountIndex}][bank_name]"
+                            placeholder="@lang('app.bankName')" required>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-2 px-1">
+                        <label class="f-14 text-dark-grey">@lang('app.ibanNumber') <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control height-35 f-14"
+                            name="bank_accounts[${bankAccountIndex}][iban_number]"
+                            placeholder="@lang('app.ibanNumber')" required>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-2 px-1">
+                        <label class="f-14 text-dark-grey">@lang('app.accountNumber')</label>
+                        <input type="text" class="form-control height-35 f-14"
+                            name="bank_accounts[${bankAccountIndex}][account_number]"
+                            placeholder="@lang('app.accountNumber')">
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-2 px-1">
+                        <label class="f-14 text-dark-grey">@lang('app.swiftCode')</label>
+                        <input type="text" class="form-control height-35 f-14"
+                            name="bank_accounts[${bankAccountIndex}][swift_code]"
+                            placeholder="@lang('app.swiftCode')">
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-1 col-md-6 mb-2 d-flex align-items-end">
-                <button type="button" class="btn btn-danger btn-sm remove-bank-account-btn">
-                    <i class="fa fa-times"></i>
-                </button>
+
+            <div class="col-lg-2">
+                <div class="row mt-4">
+                    <div class="col-lg-9 col-md-9 px-1 d-flex align-items-center">
+                        <div class="form-check">
+                            <input class="form-check-input main-bank-checkbox" type="checkbox" name="bank_accounts[${bankAccountIndex}][is_main_account]" value="1">
+                            <label class="form-check-label f-12 pt-1 ml-2">@lang('app.mainAccount')</label>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-3 px-1 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger btn-sm remove-bank-account-btn">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>`;
         $('#bank-accounts-rows').append(row);

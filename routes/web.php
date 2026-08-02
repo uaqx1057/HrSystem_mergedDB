@@ -855,6 +855,8 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
 
         Route::get('employees/{employee}/allowances', [PayrollController::class, 'employeeAllowances']);
 
+        Route::get('employees/{employee}/basic-salary', [PayrollController::class, 'employeeBasicSalary']);
+
         Route::post('settings', [PayrollController::class, 'updateSettings'])->name('settings.update');
     });
 

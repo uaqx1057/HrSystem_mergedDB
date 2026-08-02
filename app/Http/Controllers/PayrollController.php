@@ -7,6 +7,7 @@ use App\Models\Currency;
 use App\Models\Driver;
 use App\Models\EmployeeAllowance;
 use App\Models\EmployeeBankAccount;
+use App\Models\EmployeeDetails;
 use App\Models\HrPayrollPreflightRun;
 use App\Models\EmployeeSalaryGroup;
 use App\Models\Order;
@@ -1047,5 +1048,17 @@ class PayrollController extends AccountBaseController
                 'amount' => (float) $a->amount,
             ];
         }));
+    }
+
+    public function employeeBasicSalary(User $employee)
+    {
+        $detail = EmployeeDetails::where('user_id', $employee->id)
+            ->first(['basic_salary']);
+
+        return response()->json([
+            'basic_salary' => $detail && !is_null($detail->basic_salary)
+                ? (float) $detail->basic_salary
+                : 0,
+        ]);
     }
 }
