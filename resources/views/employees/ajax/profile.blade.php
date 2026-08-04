@@ -334,7 +334,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
 
                                     @if ($employee->employeeDetail->iqama_image)
                                         <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
-                                            <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                                            <p class="mb-0 text-darkest-white f-14 w-30 d-inline-block text-capitalize">
                                                 @lang('modules.employees.iqama_image')</p>
                                             <p class="mb-0 text-dark-grey f-14 w-70">
                                                 <a href="{{ asset('user-uploads/iqama/' . $employee->employeeDetail->iqama_image) }}"
@@ -440,7 +440,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                 <div class="col-6">
                                     <p class="f-14 text-darkest-white">@lang('modules.employees.reportingTo')</p>
                                     @if ($employee->employeeDetail->reportingTo)
-                                        <x-employee :user="$employee->employeeDetail->reportingTo" />
+                                        <x-employee background="text-darkest-white" :user="$employee->employeeDetail->reportingTo" />
                                     @else
                                         --
                                     @endif

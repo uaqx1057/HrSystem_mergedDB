@@ -86,10 +86,10 @@
                     :value="$earningTotal" icon="coins" />
             </div>
 
-            {{-- <div class="col-lg-6 col-md-6 col-sm-12">
+            <div class="col-lg-6 col-md-6 col-sm-12">
                 <x-cards.widget :title="__('modules.dashboard.totalUnpaidInvoices')"
                     :value="$clientStats->totalUnpaidInvoices" icon="file-invoice-dollar" />
-            </div> --}}
+            </div>
         </div>
     </div>
     <!--  WIDGETS END -->

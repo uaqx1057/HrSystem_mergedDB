@@ -15,7 +15,7 @@
         <div class="col-xl-4 col-lg-6 col-md-6 mb-3"><a href="{{ route('hr-compliance.index') }}"><x-cards.widget title="Compliance" value="Reviews" icon="shield-alt" /></a></div>
     @endif
     @if (in_array('leaves', user_modules()) && in_array('total_leaves_approved', $activeWidgets))
-        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-3">
 
             <a href="javascript:;" id="total-leaves-approved">
                 <x-cards.widget :title="__('modules.dashboard.totalLeavesApproved')" :value="$totalLeavesApproved"
@@ -54,7 +54,7 @@
     @endif
 
     @if (in_array('employees', user_modules()) && in_array('total_employee_exits', $activeWidgets))
-        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-3">
             <a href="javascript:;" id="total-ex-employees">
                 <x-cards.widget :title="__('modules.dashboard.totalEmployeeExits')" :value="$totalEmployeeExits"
                     icon="sign-out-alt" :info="__('messages.employeeExitInfo')" />
@@ -63,7 +63,7 @@
     @endif
 
     @if (in_array('attendance', user_modules()) && in_array('total_today_attendance', $activeWidgets))
-        <div class="col-xl-3 col-lg-6 col-md-6">
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-3">
             <a href="{{ route('attendances.index') }}">
                 <x-cards.widget :title="__('modules.dashboard.totalTodayAttendance')"
                     :value="$counts->totalTodayAttendance.'/'.$counts->totalEmployees" icon="calendar-check">
@@ -73,7 +73,7 @@
     @endif
 
     @if (in_array('attendance', user_modules()) && in_array('average_attendance', $activeWidgets))
-        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+        <div class="col-xl-4 col-lg-6 col-md-6 mb-3">
             <a href="{{ route('attendances.index') }}">
                 <x-cards.widget :title="__('modules.dashboard.averageAttendance')" :value="$averageAttendance"
                 icon="fingerprint" />
@@ -177,7 +177,7 @@
                             </span>
                             </td>
                             <td class="pr-20" align="right">
-                                @php
+                                <?php
                                     $currentYear = now(company()->timezone)->year;
                                     $year = $birthday->date_of_birth->timezone(company()->timezone)->year(date('Y'));
                                     $dateBirth = $birthday->date_of_birth->format($currentYear . '-m-d');
@@ -188,7 +188,7 @@
                                         'options' => \Carbon\Carbon::JUST_NOW | \Carbon\Carbon::ONE_DAY_WORDS | \Carbon\Carbon::TWO_DAY_WORDS,
                                     ]);
 
-                                @endphp
+                                ?>
 
                                 @if ($dateBirth->isToday())
                                     <span class="badge badge-light text-success p-2"><i class="fa fa-smile"></i> @lang('app.today')</span>

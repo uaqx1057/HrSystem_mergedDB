@@ -12,7 +12,7 @@
             @if($driver_iqama)
                 <x-slot name="action">
                     <div class="dropdown">
-                        <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
+                        <button class="btn f-14 px-0 py-0 text-darkest-white dropdown-toggle" type="button"
                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fa fa-ellipsis-h"></i>
                         </button>
@@ -28,14 +28,14 @@
 
                 <x-cards.data-row :label="__('modules.drivers.expiryDate')" :value=" $driver_iqama->expires_at  ? $driver_iqama->expires_at->format(company()->date_format) : '--'" />
                 <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
-                    <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                    <p class="mb-0 text-darkest-white f-14 w-30 d-inline-block text-capitalize">
                         @lang('modules.employees.scanCopy')</p>
-                    <p class="mb-0 text-dark-grey f-14 w-70">
+                    <p class="mb-0 text-darkest-white f-14 w-70">
                         @if($driver_iqama->original_name)
                             @php
                                 $file_url =  route('driver-documents.preview', $driver_iqama->id);
                             @endphp
-                            <a target="_blank" class="text-dark-grey"
+                            <a target="_blank" class="text-darkest-white"
                                 href="{{ $file_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
                         @else
                         --
@@ -67,7 +67,7 @@
             @if($driver_license)
                 <x-slot name="action">
                     <div class="dropdown">
-                        <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
+                        <button class="btn f-14 px-0 py-0 text-darkest-white dropdown-toggle" type="button"
                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fa fa-ellipsis-h"></i>
                         </button>
@@ -83,14 +83,14 @@
 
                 <x-cards.data-row :label="__('modules.drivers.expiryDate')" :value=" $driver_license->expires_at  ? $driver_license->expires_at->format(company()->date_format) : '--'" />
                 <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
-                    <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                    <p class="mb-0 text-darkest-white f-14 w-30 d-inline-block text-capitalize">
                         @lang('modules.employees.scanCopy')</p>
-                    <p class="mb-0 text-dark-grey f-14 w-70">
+                    <p class="mb-0 text-darkest-white f-14 w-70">
                         @if($driver_license->original_name)
                             @php
                                 $file_url =  route('driver-documents.preview', $driver_license->id);
                             @endphp
-                            <a target="_blank" class="text-dark-grey"
+                            <a target="_blank" class="text-darkest-white"
                                 href="{{ $file_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
                         @else
                         --
@@ -122,7 +122,7 @@
             @if($driver_medical)
                 <x-slot name="action">
                     <div class="dropdown">
-                        <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
+                        <button class="btn f-14 px-0 py-0 text-darkest-white dropdown-toggle" type="button"
                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fa fa-ellipsis-h"></i>
                         </button>
@@ -137,14 +137,14 @@
                 </x-slot>
 
                 <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
-                    <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                    <p class="mb-0 text-darkest-white f-14 w-30 d-inline-block text-capitalize">
                         @lang('modules.employees.scanCopy')</p>
-                    <p class="mb-0 text-dark-grey f-14 w-70">
+                    <p class="mb-0 text-darkest-white f-14 w-70">
                         @if($driver_medical->original_name)
                             @php
                                 $file_url =  route('driver-documents.preview', $driver_medical->id);
                             @endphp
-                            <a target="_blank" class="text-dark-grey"
+                            <a target="_blank" class="text-darkest-white"
                                 href="{{ $file_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
                         @else
                         --
@@ -176,7 +176,7 @@
             @if($driver_contract)
                 <x-slot name="action">
                     <div class="dropdown">
-                        <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
+                        <button class="btn f-14 px-0 py-0 text-darkest-white dropdown-toggle" type="button"
                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fa fa-ellipsis-h"></i>
                         </button>
@@ -191,14 +191,14 @@
                 </x-slot>
 
                 <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
-                    <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                    <p class="mb-0 text-darkest-white f-14 w-30 d-inline-block text-capitalize">
                         @lang('modules.employees.scanCopy')</p>
-                    <p class="mb-0 text-dark-grey f-14 w-70">
+                    <p class="mb-0 text-darkest-white f-14 w-70">
                         @if($driver_contract->original_name)
                             @php
                                 $file_url =  route('driver-documents.preview', $driver_contract->id);
                             @endphp
-                            <a target="_blank" class="text-dark-grey"
+                            <a target="_blank" class="text-darkest-white"
                                 href="{{ $file_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
                         @else
                         --
@@ -230,7 +230,7 @@
             @if($driver_mobile)
                 <x-slot name="action">
                     <div class="dropdown">
-                        <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
+                        <button class="btn f-14 px-0 py-0 text-darkest-white dropdown-toggle" type="button"
                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fa fa-ellipsis-h"></i>
                         </button>
@@ -245,14 +245,14 @@
                 </x-slot>
 
                 <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
-                    <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                    <p class="mb-0 text-darkest-white f-14 w-30 d-inline-block text-capitalize">
                         @lang('modules.employees.scanCopy')</p>
-                    <p class="mb-0 text-dark-grey f-14 w-70">
+                    <p class="mb-0 text-darkest-white f-14 w-70">
                         @if($driver_mobile->original_name)
                             @php
                                 $file_url =  route('driver-documents.preview', $driver_mobile->id);
                             @endphp
-                            <a target="_blank" class="text-dark-grey"
+                            <a target="_blank" class="text-darkest-white"
                                 href="{{ $file_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
                         @else
                         --
@@ -284,7 +284,7 @@
             @if($driver_other)
                 <x-slot name="action">
                     <div class="dropdown">
-                        <button class="btn f-14 px-0 py-0 text-dark-grey dropdown-toggle" type="button"
+                        <button class="btn f-14 px-0 py-0 text-darkest-white dropdown-toggle" type="button"
                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fa fa-ellipsis-h"></i>
                         </button>
@@ -299,14 +299,14 @@
                 </x-slot>
 
                 <div class="col-12 px-0 pb-3 d-block d-lg-flex d-md-flex">
-                    <p class="mb-0 text-lightest f-14 w-30 d-inline-block text-capitalize">
+                    <p class="mb-0 text-darkest-white f-14 w-30 d-inline-block text-capitalize">
                         @lang('modules.employees.scanCopy')</p>
-                    <p class="mb-0 text-dark-grey f-14 w-70">
+                    <p class="mb-0 text-darkest-white f-14 w-70">
                         @if($driver_other->original_name)
                             @php
                                 $file_url =  route('driver-documents.preview', $driver_other->id);
                             @endphp
-                            <a target="_blank" class="text-dark-grey"
+                            <a target="_blank" class="text-darkest-white"
                                 href="{{ $file_url }}"><i class="fa fa-external-link-alt"></i> <u>@lang('app.viewScanCopy')</u></a>
                         @else
                         --

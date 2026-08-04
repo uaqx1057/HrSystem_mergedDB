@@ -345,7 +345,7 @@ class TimelogController extends AccountBaseController
         $activeTimer = ProjectTimeLog::with('user')
             ->whereNull('end_time')
             ->join('users', 'users.id', '=', 'project_time_logs.user_id')
-            ->where('user_id', $this->user->id)->first();
+            ->where('project_time_logs.user_id', $this->user->id)->first();
 
         if (is_null($activeTimer)) {
             $this->tasks = Task::join('task_users', 'task_users.task_id', '=', 'tasks.id')
