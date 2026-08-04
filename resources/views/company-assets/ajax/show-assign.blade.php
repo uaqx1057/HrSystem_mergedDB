@@ -45,47 +45,36 @@
                     <x-cards.data-row :label="__('app.qty')" :value="$asset->qty" />
                     <x-cards.data-row :label="__('app.availableQty')" :value="$asset->available_qty" />
                     <x-cards.data-row :label="__('app.status')" :value="ucfirst($asset->status)" />
-                    <h4>Assignment Details</h4>
-                    @if ($assignment)
-                        <x-cards.data-row :label="__('Employee')" :value="$assignment->employee->name ?? 'N/A'" />
-                        <x-cards.data-row :label="__('app.qty')" :value="$assignment->qty ?? 'N/A'" />
-                        <x-cards.data-row :label="__('Branch')" :value="$assignment->branch->name ?? 'N/A'" />
-                        <x-cards.data-row :label="__('Status')" :value="$assignment->status ?? 'N/A'" />
-                        <div class="col-12 px-0 pb-3 d-lg-flex d-md-flex d-block">
-                            <p class="mb-0 text-lightest f-14 w-30 text-capitalize">Signature</p>
-                            <p class="mb-0 text-dark-grey f-14 w-70 text-wrap">
-                                @if ($signatureFile)
-                                    <a href="{{ $signatureFile }}" target="_blank">View Signature</a>
-                                @else
-                                    --
-                                @endif
-                            </p>
-                        </div>
-                    @else
-                        <x-cards.data-row :label="__('Employee')" :value="'N/A'" />
-                        <x-cards.data-row :label="__('app.qty')" :value="'N/A'" />
-                        <x-cards.data-row :label="__('Branch')" :value="'N/A'" />
-                        <x-cards.data-row :label="__('Status')" :value="'N/A'" />
-                    @endif
 
                     <h4>Assignment History</h4>
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
+                                    <th>@lang('app.serialNo')</th>
                                     <th>@lang('app.employee')</th>
                                     <th>@lang('app.action')</th>
-                                    <th>@lang('app.qty')</th>
+                                    <th>@lang('app.signature')</th>
                                     <th>@lang('app.date')</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($history as $record)
+                                    @php
+                                        $signatureFile = ($record && $record->signed_document) ? asset_url_local_s3('asset' . '/' . $record->signed_document) : '';
+                                    @endphp
                                     <tr>
+                                        <td>{{ $record->serial_no ?? 'N/A' }}</td>
                                         <td>{{ $record->employee->name ?? 'N/A' }}</td>
                                         <td>{{ ucfirst($record->action_type) }}</td>
-                                        <td>{{ $record->qty }}</td>
-                                        <td>{{ $record->action_at ? $record->action_at->format('Y-m-d H:i') : 'N/A' }}</td>
+                                        <td>
+                                            @if ($signatureFile)
+                                                <a href="{{ $signatureFile }}" target="_blank">View Signature</a>
+                                            @else
+                                                --
+                                            @endif
+                                        </td>
+                                        <td>{{ $record->action_at ? $record->action_at->format('d-m-Y H:i') : 'N/A' }}</td>
                                     </tr>
                                 @empty
                                     <tr>

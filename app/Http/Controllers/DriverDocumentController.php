@@ -18,9 +18,24 @@ class DriverDocumentController extends AccountBaseController
         $this->pageTitle = 'Driver Document';
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $this->documents = DriverDocument::with('driver')->latest()->paginate(20);
+        $query = DriverDocument::with('driver');
+
+        if ($request->filled('driver_id')) {
+            $query->where('driver_id', $request->driver_id);
+        }
+
+        if ($request->filled('document_type')) {
+            $query->where('document_type', $request->document_type);
+        }
+
+        $this->documents = $query->latest()
+            ->paginate(20)
+            ->appends($request->query()); // keeps filters in pagination links
+
+        // needed to populate the driver filter dropdown
+        $this->drivers = Driver::withoutGlobalScopes()->select('id', 'name')->get();
 
         return view('driver-documents.index', $this->data);
     }

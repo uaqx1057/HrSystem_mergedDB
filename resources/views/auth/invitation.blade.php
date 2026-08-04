@@ -359,10 +359,22 @@
                            accept=".png,.jpg,.jpeg,.svg,.bmp">
                 </div>
 
-                <div class="inv-field">
+                {{-- <div class="inv-field">
                     <label class="text-left" >@lang('modules.employees.Sponsor / kafala') <sup>*</sup></label>
                     <input type="text" name="sponsor_kafala" id="sponsor_kafala"
                            placeholder="@lang('placeholders.sponsor_kafala')">
+                </div> --}}
+
+                <div class="inv-field">
+                    <label class="text-left" >@lang('modules.employees.Sponsor / kafala')</label>
+                    <select name="sponsor_kafala" id="sponsor_kafala">
+                        <option value="">-- Select --</option>
+                        @foreach ($companies as $company)
+                            <option value="{{ $company->id }}">
+                                {{ $company->company_name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="inv-nav">
@@ -438,10 +450,10 @@
                         <span>Passport Expiry</span>
                         <span id="rev-passport-exp">—</span>
                     </div>
-                    <div class="inv-review-row">
+                    {{-- <div class="inv-review-row">
                         <span>Sponsor / Kafala</span>
                         <span id="rev-sponsor">—</span>
-                    </div>
+                    </div> --}}
                 </div>
 
                 <div class="inv-nav">
@@ -582,13 +594,13 @@
                         }
                     }
 
-                    if(ok == true){
-                        var sponsor = $.trim($('#sponsor_kafala').val());
-                        if (sponsor === '') {
-                            highlightError('#sponsor_kafala', 'Sponsor / Kafala is required.');
-                            ok = false;
-                        }
-                    }
+                    // if(ok == true){
+                    //     var sponsor = $.trim($('#sponsor_kafala').val());
+                    //     if (sponsor === '') {
+                    //         highlightError('#sponsor_kafala', 'Sponsor / Kafala is required.');
+                    //         ok = false;
+                    //     }
+                    // }
                 }
 
                 return ok;
@@ -653,7 +665,7 @@
                 $('#rev-iqama-exp').text($('#iqama_expiry_date').val() || '—');
                 $('#rev-passport-no').text($('#passport_no').val() || '—');
                 $('#rev-passport-exp').text($('#passport_expiry_date').val() || '—');
-                $('#rev-sponsor').text($('#sponsor_kafala').val()  || '—');
+                // $('#rev-sponsor').text($('#sponsor_kafala').val()  || '—');
             }
 
             // ── SUBMIT ────────────────────────────────────────────

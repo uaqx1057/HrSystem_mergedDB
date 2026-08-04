@@ -4,12 +4,13 @@
             enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="id" value="{{ $assignment->id }}">
+            <input type="hidden" name="employee_id" value="{{ $employeeId ?? $assignment->employee_id ?? '' }}">
             <div class="add-client bg-white rounded">
                 <h4 class="mb-0 p-20 f-21 form-heading-background font-weight-normal text-capitalize border-bottom-grey">
                     @lang('app.returnCompanyAsset')</h4>
                 <div class="row p-20">
                     <div class="col-lg-12 text-right">
-                        <a href="{{ route('company-assets.show', $asset->id) }}" class="btn btn-sm btn-primary">Back</a>
+                        <a href="{{ !empty($employeeId) ? route('employees.show', [$employeeId, 'tab' => 'company-assets']) : route('company-assets.show', $asset->id) }}" class="btn btn-sm btn-primary">Back</a>
                     </div>
 
                     <div class="col-lg-12">
@@ -27,21 +28,28 @@
                                     </select>
                                 </x-forms.input-group>
                             </div>
+
+                            <input type="hidden" name="qty" value="{{ $assignment->qty }}">
+
                             <div class="col-md-6">
-                                <x-forms.number fieldId="asset_qty" :fieldLabel="__('app.qty')" fieldName="qty"
-                                    fieldRequired="true" :fieldPlaceholder="__('placeholders.qty')" fieldValue="{{ $assignment->qty }}"  maxValue="{{ $assignment->qty }}">
-                                </x-forms.number>
-                                @error('qty')
-                                    <div class="invalid-feedback d-block mt-1" style="color: red">
-                                        {{ $message }}
-                                    </div>
-                                @enderror
+                                <x-forms.label class="" fieldId="serial_no"
+                                    :fieldLabel="__('app.serialNo')" fieldRequired="true">
+                                </x-forms.label>
+                                <x-forms.input-group>
+                                    <select class="form-control select-picker" name="serial_no"
+                                        id="serial_no" data-live-search="true" disabled>
+                                        <option value="">--</option>
+                                        @foreach ($serials as $serial)
+                                            <option value="{{ $serial->serial_no }}" {{ ($assignment->serial_no == $serial->serial_no) ? 'selected' : '' }}>{{ $serial->serial_no }}</option>
+                                        @endforeach
+                                    </select>
+                                </x-forms.input-group>
                             </div>
                         </div>
 
                     </div>
 
-                    <div class="col-lg-12">
+                    <div class="col-lg-12 mt-3">
                         <a href="{{ route('company-assets.return-pdf', $assignment->id) }}" target="_blank"
                             rel="noopener noreferrer">
                             Download Return Form
@@ -62,7 +70,7 @@
 
                 <div class="pl-3 pb-2">
                     <input type="submit" class="btn btn-primary rounded" value="Save">
-                    <x-forms.button-cancel :link="route('company-assets.show', $asset->id)" class="border-0">@lang('app.cancel')
+                    <x-forms.button-cancel :link="!empty($employeeId) ? route('employees.show', [$employeeId, 'tab' => 'company-assets']) : route('company-assets.show', $asset->id)" class="border-0">@lang('app.cancel')
                     </x-forms.button-cancel>
                 </div>
 

@@ -120,7 +120,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            {{-- <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Salary Group</label>
                                     <select name="salary_group_id" class="form-control select-picker height-35"
@@ -131,7 +131,7 @@
                                         @endforeach
                                     </select>
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Pay Days</label>
@@ -139,7 +139,7 @@
                                         class="form-control height-35" data-size="8" placeholder="e.g. 30">
                                 </div>
                             </div>
-                            <div class="col-md-3 mt-2">
+                            <div class="col-md-4 ">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Month</label>
                                     <select name="month" id="salary_month" class="form-control height-35" data-size="8"
@@ -151,7 +151,7 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-3 mt-2">
+                            <div class="col-md-4 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Year</label>
                                     <select name="year" id="salary_year" class="form-control height-35" data-size="8"
@@ -163,14 +163,14 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-3 mt-2">
+                            <div class="col-md-4 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Salary From</label>
                                     <input type="date" id="salary_from" name="salary_from"
                                         class="form-control height-35" data-size="8" readonly>
                                 </div>
                             </div>
-                            <div class="col-md-3 mt-2">
+                            <div class="col-md-4 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Salary To</label>
                                     <input type="date" id="salary_to" name="salary_to" class="form-control height-35"
@@ -189,14 +189,16 @@
                 <div class="tab-pane fade" id="tab-allowances" role="tabpanel">
                     <div class="rounded bg-white p-4 shadow-sm">
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Basic Salary</label>
-                                    <input type="number" step="0.01" min="0" name="basic_salary"
-                                        class="form-control height-35" data-size="8" required value="0">
+                                    <input type="number" step="0.01" min="0" name="basic_salary" id="basic_salary"
+                                        class="form-control height-35" data-size="8" required value="0" readonly>
+                                    <small class="text-muted f-12">Auto-loaded from employee record. Not
+                                        editable.</small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-6 d-none">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Expense Claims</label>
                                     <input type="number" step="0.01" min="0" name="expense_claims"
@@ -204,6 +206,13 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="row mt-2" id="employee-allowances-list">
+                            <div class="col-md-12">
+                                <span class="text-muted f-13">Select an employee to load allowances.</span>
+                            </div>
+                        </div>
+
                         <div class="d-flex justify-content-between mt-3">
                             <button type="button" class="btn btn-primary btn-prev"
                                 data-prev="#tab-working-days-link">Previous</button>
@@ -232,6 +241,16 @@
                                 </div>
                             </div>
                         </div>
+                        {{-- inside #tab-deductions, after the TDS row --}}
+                        <div class="row mt-2">
+                            <div class="col-md-12">
+                                <label class="f-14 f-w-500">Advance Salary Deductions</label>
+                                <div id="advance-salary-list" class="border rounded p-2">
+                                    <span class="text-muted f-13">Select an employee to load pending advances.</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="d-flex justify-content-between mt-3">
                             <button type="button" class="btn btn-primary btn-prev"
                                 data-prev="#tab-allowances-link">Previous</button>
@@ -249,21 +268,21 @@
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Monthly Salary</label>
                                     <input type="number" step="0.01" name="monthly_salary"
-                                        class="form-control height-35" data-size="8" value="0">
+                                        class="form-control height-35" data-size="8" value="0" readonly>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Gross Salary</label>
                                     <input type="number" step="0.01" name="gross_salary"
-                                        class="form-control height-35" data-size="8" value="0">
+                                        class="form-control height-35" data-size="8" value="0" readonly>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500 text-success">Net Salary</label>
                                     <input type="number" step="0.01" name="net_salary"
-                                        class="form-control height-35" data-size="8" required value="0">
+                                        class="form-control height-35" data-size="8" required value="0" readonly>
                                 </div>
                             </div>
 
@@ -292,7 +311,7 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6 mt-2">
+                            {{-- <div class="col-md-4 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Payroll Cycle</label>
                                     <select name="payroll_cycle_id" class="form-control select-picker height-35"
@@ -303,8 +322,8 @@
                                         @endforeach
                                     </select>
                                 </div>
-                            </div>
-                            <div class="col-md-6 mt-2">
+                            </div> --}}
+                            <div class="col-md-4 mt-2">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Payment Method</label>
                                     <select name="salary_payment_method_id" class="form-control select-picker height-35"
@@ -319,7 +338,7 @@
 
                             <input type="hidden" name="payment_type_name" id="payment_type_name" value="bank">
                             {{-- NEW: Bank Account field --}}
-                            <div class="col-md-6 mt-2" id="employee_bank">
+                            <div class="col-md-4 mt-2" id="employee_bank">
                                 <div class="form-group">
                                     <label class="f-14 f-w-500">Bank Account</label>
                                     <select name="employee_bank_account_id" id="employee_bank_account_id"
@@ -353,9 +372,16 @@
             const salaryYear = $('#salary_year');
             const salaryFrom = $('#salary_from');
             const salaryTo = $('#salary_to');
+            const payDays = $('#pay_days');
+            const basicSalaryInput = $('#basic_salary');
 
             const bankAccountSelect = $('#employee_bank_account_id');
             const bankAccountsUrl = "{{ url('account/payroll/employees') }}"; // base URL, employee id appended below
+            const advanceListUrl = "{{ url('account/payroll/employees') }}";
+            const advanceListContainer = $('#advance-salary-list');
+            const allowancesUrl = "{{ url('account/payroll/employees') }}";
+            const allowancesContainer = $('#employee-allowances-list');
+            const basicSalaryUrl = "{{ url('account/payroll/employees') }}";
 
             // 1. Step Navigation logic
             $('.btn-next').click(function() {
@@ -409,13 +435,40 @@
             });
             $('#pay_days').on('input', function() {
                 $(this).removeClass('is-invalid');
+                recalcSalary();
             });
 
             $('.btn-prev').click(function() {
                 $($(this).data('prev')).tab('show');
             });
 
-            // 2. Sync hidden employee_id
+            // ---------- Days in selected month ----------
+            function getDaysInMonth() {
+                const month = parseInt(salaryMonth.val(), 10);
+                const year = parseInt(salaryYear.val(), 10);
+                if (isNaN(month) || isNaN(year)) return 30;
+                return new Date(year, month, 0).getDate(); // last day of month = day count
+            }
+
+            // ---------- Basic salary fetch ----------
+            function loadBasicSalary(empId) {
+                if (!empId) {
+                    basicSalaryInput.val('0.00');
+                    recalcSalary();
+                    return;
+                }
+
+                $.get(`${basicSalaryUrl}/${empId}/basic-salary`, function(res) {
+                    const basic = parseFloat(res.basic_salary) || 0;
+                    basicSalaryInput.val(basic.toFixed(2));
+                    recalcSalary();
+                }).fail(function() {
+                    basicSalaryInput.val('0.00');
+                    recalcSalary();
+                });
+            }
+
+            // 2. Sync hidden employee_id + dependent data
             employeeId.on('change', function() {
                 const empId = $(this).val();
                 payeeUserId.val(empId);
@@ -426,40 +479,185 @@
                 if (!empId) {
                     bankAccountSelect.append('<option value="">-- Select Employee First --</option>');
                     bankAccountSelect.selectpicker('refresh');
+                } else {
+                    bankAccountSelect.append('<option value="">-- Loading... --</option>');
+                    bankAccountSelect.selectpicker('refresh');
+
+                    $.get(`${bankAccountsUrl}/${empId}/bank-accounts`, function(accounts) {
+                        bankAccountSelect.empty();
+
+                        if (!accounts.length) {
+                            bankAccountSelect.append('<option value="">No bank accounts found</option>');
+                        } else {
+                            bankAccountSelect.append('<option value="">--</option>');
+                            accounts.forEach(function(acc) {
+                                let label = acc.bank_name || 'Unnamed Bank';
+                                if (acc.account_number) label += ' - ' + acc.account_number;
+                                if (acc.is_main_account) label += ' (Main)';
+
+                                const opt = $('<option></option>')
+                                    .val(acc.id)
+                                    .text(label);
+
+                                if (acc.is_main_account) opt.prop('selected', true);
+
+                                bankAccountSelect.append(opt);
+                            });
+                        }
+
+                        bankAccountSelect.selectpicker('refresh');
+                    }).fail(function() {
+                        bankAccountSelect.empty().append('<option value="">Failed to load accounts</option>');
+                        bankAccountSelect.selectpicker('refresh');
+                    });
+                }
+
+                loadPendingAdvances(empId);
+                loadEmployeeAllowances(empId);
+                loadBasicSalary(empId); // will call recalcSalary() once loaded
+            });
+
+            function loadPendingAdvances(empId) {
+                if (!empId) {
+                    advanceListContainer.html('<span class="text-muted f-13">Select an employee to load pending advances.</span>');
+                    recalcSalary();
                     return;
                 }
 
-                bankAccountSelect.append('<option value="">-- Loading... --</option>');
-                bankAccountSelect.selectpicker('refresh');
+                advanceListContainer.html('<span class="text-muted f-13">Loading...</span>');
 
-                $.get(`${bankAccountsUrl}/${empId}/bank-accounts`, function(accounts) {
-                    bankAccountSelect.empty();
-
-                    if (!accounts.length) {
-                        bankAccountSelect.append('<option value="">No bank accounts found</option>');
-                    } else {
-                        bankAccountSelect.append('<option value="">--</option>');
-                        accounts.forEach(function(acc) {
-                            let label = acc.bank_name || 'Unnamed Bank';
-                            if (acc.account_number) label += ' - ' + acc.account_number;
-                            if (acc.is_main_account) label += ' (Main)';
-
-                            const opt = $('<option></option>')
-                                .val(acc.id)
-                                .text(label);
-
-                            if (acc.is_main_account) opt.prop('selected', true);
-
-                            bankAccountSelect.append(opt);
-                        });
+                $.get(`${advanceListUrl}/${empId}/pending-advances`, function (advances) {
+                    if (!advances.length) {
+                        advanceListContainer.html('<span class="text-muted f-13">No pending advances.</span>');
+                        recalcSalary();
+                        return;
                     }
 
-                    bankAccountSelect.selectpicker('refresh');
-                }).fail(function() {
-                    bankAccountSelect.empty().append('<option value="">Failed to load accounts</option>');
-                    bankAccountSelect.selectpicker('refresh');
+                    let html = '';
+                    advances.forEach(function (adv) {
+                        html += `
+                            <div class="d-flex align-items-center mb-2 advance-row" data-id="${adv.id}" data-balance="${adv.balance}">
+                                <div class="custom-control custom-checkbox mr-2">
+                                    <input type="checkbox" class="custom-control-input advance-check" id="adv-${adv.id}">
+                                    <label class="custom-control-label f-13" for="adv-${adv.id}">
+                                        ${adv.date} — Balance: ${adv.balance.toFixed(2)}
+                                    </label>
+                                </div>
+                                <input type="number" class="form-control form-control-sm advance-amount ml-auto"
+                                    style="width:120px" min="0" max="${adv.balance}" step="0.01"
+                                    value="${adv.balance}" disabled>
+                            </div>`;
+                    });
+
+                    advanceListContainer.html(html);
+                    recalcSalary();
+                }).fail(function () {
+                    advanceListContainer.html('<span class="text-danger f-13">Failed to load advances.</span>');
+                    recalcSalary();
                 });
+            }
+
+            // enable/disable amount input alongside checkbox, cap at balance
+            $(document).on('change', '.advance-check', function () {
+                const row = $(this).closest('.advance-row');
+                const amountInput = row.find('.advance-amount');
+                amountInput.prop('disabled', !this.checked);
+                recalcSalary();
             });
+
+            $(document).on('input', '.advance-amount', function () {
+                const row = $(this).closest('.advance-row');
+                const balance = parseFloat(row.data('balance'));
+                let val = parseFloat($(this).val()) || 0;
+                if (val > balance) $(this).val(balance);
+                if (val < 0) $(this).val(0);
+                recalcSalary();
+            });
+
+            function totalAdvanceDeduction() {
+                let total = 0;
+                $('.advance-row').each(function () {
+                    if ($(this).find('.advance-check').is(':checked')) {
+                        total += parseFloat($(this).find('.advance-amount').val()) || 0;
+                    }
+                });
+                return total;
+            }
+
+            function loadEmployeeAllowances(empId) {
+                if (!empId) {
+                    allowancesContainer.html('<div class="col-md-12"><span class="text-muted f-13">Select an employee to load allowances.</span></div>');
+                    recalcSalary();
+                    return;
+                }
+
+                allowancesContainer.html('<div class="col-md-12"><span class="text-muted f-13">Loading...</span></div>');
+
+                $.get(`${allowancesUrl}/${empId}/allowances`, function (allowances) {
+                    if (!allowances.length) {
+                        allowancesContainer.html('<div class="col-md-12"><span class="text-muted f-13">No allowances available.</span></div>');
+                        recalcSalary();
+                        return;
+                    }
+
+                    let html = '';
+                    allowances.forEach(function (a) {
+                        html += `
+                            <div class="col-md-6 mt-2 allowance-row" data-id="${a.id}">
+                                <div class="form-group">
+                                    <label class="f-14 f-w-500">${a.name}</label>
+                                    <input type="number" step="0.01" min="0"
+                                        name="allowances[${a.id}]"
+                                        class="form-control height-35 allowance-amount"
+                                        value="${a.amount}" readonly>
+                                </div>
+                            </div>`;
+                    });
+
+                    allowancesContainer.html(html);
+                    recalcSalary();
+                }).fail(function () {
+                    allowancesContainer.html('<div class="col-md-12"><span class="text-danger f-13">Failed to load allowances.</span></div>');
+                    recalcSalary();
+                });
+            }
+
+            function totalAllowances() {
+                let total = 0;
+                $('.allowance-amount').each(function () {
+                    total += parseFloat($(this).val()) || 0;
+                });
+                return total;
+            }
+
+            // ---------- Master calculation ----------
+            // monthly_salary = (basic_salary / days_in_selected_month) * pay_days
+            // gross_salary   = monthly_salary + allowances
+            // net_salary     = gross_salary - total_deductions - tds - advance_deductions
+            function recalcSalary() {
+                const basicSalary = parseFloat(basicSalaryInput.val()) || 0;
+                const days = parseFloat(payDays.val()) || 0;
+                const daysInMonth = getDaysInMonth();
+
+                const perDaySalary = daysInMonth > 0 ? basicSalary / daysInMonth : 0;
+                const monthlySalary = perDaySalary * days;
+
+                const allowances = totalAllowances();
+                const totalDeductions = parseFloat($('[name="total_deductions"]').val()) || 0;
+                const tds = parseFloat($('[name="tds"]').val()) || 0;
+                const advanceDeduction = totalAdvanceDeduction();
+
+                const gross = monthlySalary + allowances;
+                const net = gross - totalDeductions - tds - advanceDeduction;
+
+                $('[name="monthly_salary"]').val(monthlySalary.toFixed(2));
+                $('[name="gross_salary"]').val(gross.toFixed(2));
+                $('[name="net_salary"]').val(net > 0 ? net.toFixed(2) : 0);
+            }
+
+            // Recalculate whenever deductions / TDS change
+            $('[name="total_deductions"]').on('input', recalcSalary);
+            $('[name="tds"]').on('input', recalcSalary);
 
             // 3. Date Logic (Salary From/To)
             const syncSalaryPeriod = function() {
@@ -481,6 +679,8 @@
                 salaryFrom.val(formatDate(startDate));
                 salaryTo.val(formatDate(endDate));
                 salaryTo.attr('min', salaryFrom.val());
+
+                recalcSalary(); // days-in-month may have changed, so re-prorate
             };
 
             salaryMonth.on('change', syncSalaryPeriod);
@@ -501,6 +701,22 @@
 
                 $('#payment_type_name').val(paymentMethodName);
 
+            });
+
+            $('#save-salary-form').on('submit', function () {
+                $('input[name^="advance_deductions"]').remove(); // clear stale ones
+
+                $('.advance-row').each(function () {
+                    if ($(this).find('.advance-check').is(':checked')) {
+                        const id = $(this).data('id');
+                        const amount = $(this).find('.advance-amount').val();
+                        $(this).closest('form').append(
+                            `<input type="hidden" name="advance_deductions[${id}]" value="${amount}">`
+                        );
+                    }
+                });
+
+                // No allowance handling needed anymore — inputs submit natively as allowances[id]
             });
         });
     </script>

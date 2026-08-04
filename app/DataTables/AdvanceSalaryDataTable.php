@@ -221,6 +221,7 @@ class AdvanceSalaryDataTable extends BaseDataTable
                 'title' => __('app.employee')
             ],
             __('modules.advanceSalary.amount') => ['data' => 'advance_salary', 'name' => 'advance_salary', 'title' => __('modules.advanceSalary.amount')],
+            __('modules.advanceSalary.deducted') => ['data' => 'deducted_amount', 'name' => 'deducted_amount', 'title' => __('modules.advanceSalary.deducted')],
             __('modules.advanceSalary.date') => ['data' => 'date', 'name' => 'date', 'title' => __('modules.advanceSalary.date')],
             __('app.status') => ['data' => 'status', 'name' => 'status', 'title' => __('app.status')],
 

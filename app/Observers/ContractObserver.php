@@ -68,26 +68,26 @@ class ContractObserver
         \App\Models\Notification::deleteNotification($notifyData, $contract->id);
 
         /* Start of deleting event from google calendar */
-        $google = new Google();
-        $googleAccount = company();
+        // $google = new Google();
+        // $googleAccount = company();
 
-        if (company()->google_calendar_status == 'active' && $googleAccount->google_calendar_verification_status == 'verified' && $googleAccount->token) {
-            $google->connectUsing($googleAccount->token);
-            try {
-                if ($contract->event_id) {
-                    $google->service('Calendar')->events->delete('primary', $contract->event_id);
-                }
-            } catch (\Google\Service\Exception $error) {
-                if (is_null($error->getErrors())) {
-                    // Delete google calendar connection data i.e. token, name, google_id
-                    $googleAccount->name = null;
-                    $googleAccount->token = null;
-                    $googleAccount->google_id = null;
-                    $googleAccount->google_calendar_verification_status = 'non_verified';
-                    $googleAccount->save();
-                }
-            }
-        }
+        // if (company()->google_calendar_status == 'active' && $googleAccount->google_calendar_verification_status == 'verified' && $googleAccount->token) {
+        //     $google->connectUsing($googleAccount->token);
+        //     try {
+        //         if ($contract->event_id) {
+        //             $google->service('Calendar')->events->delete('primary', $contract->event_id);
+        //         }
+        //     } catch (\Google\Service\Exception $error) {
+        //         if (is_null($error->getErrors())) {
+        //             // Delete google calendar connection data i.e. token, name, google_id
+        //             $googleAccount->name = null;
+        //             $googleAccount->token = null;
+        //             $googleAccount->google_id = null;
+        //             $googleAccount->google_calendar_verification_status = 'non_verified';
+        //             $googleAccount->save();
+        //         }
+        //     }
+        // }
 
         /* End of deleting event from google calendar */
     }

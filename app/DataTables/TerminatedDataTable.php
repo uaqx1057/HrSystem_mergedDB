@@ -20,11 +20,13 @@ class TerminatedDataTable extends BaseDataTable
 {
 
     private $viewEmployeePermission;
+    private $terminateEmployeePermission;
 
     public function __construct()
     {
         parent::__construct();
         $this->viewEmployeePermission = user()->permission('view_terminated_employees');
+        $this->terminateEmployeePermission = user()->permission('manage_termination_employees');
     }
 
     /**
@@ -64,6 +66,17 @@ class TerminatedDataTable extends BaseDataTable
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
 
             $action .= '<a href="' . route('employees.show-terminated', [$row->id]) . '" class="dropdown-item"><i class="fa fa-eye mr-2"></i>' . __('app.view') . '</a>';
+
+            $canRevert = $this->terminateEmployeePermission == 'all'
+                || ($this->terminateEmployeePermission == 'branch' && user()->branch_id == 6)
+                || ($this->terminateEmployeePermission == 'branch' && !is_null(user()->branch_id) && $row->branch_id == user()->branch_id);
+
+            if ($canRevert) {
+                $action .= '<a class="dropdown-item revert-termination-row" href="javascript:;" data-user-id="' . $row->id . '">
+                            <i class="fa fa-undo mr-2"></i>
+                            ' . __('app.revertTermination') . '
+                        </a>';
+            }
 
             $action .= '</div>
                     </div>

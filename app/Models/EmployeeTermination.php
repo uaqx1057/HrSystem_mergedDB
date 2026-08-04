@@ -17,6 +17,8 @@ class EmployeeTermination extends Model
     const CLEARANCE_PENDING = 'pending';
     const CLEARANCE_ISSUED = 'issued';
 
+    const STATUS_REVERTED = 'reverted';   // add alongside existing STATUS_PENDING / STATUS_COMPLETED
+
     protected $fillable = [
         'user_id',
         'company_id',
@@ -33,6 +35,10 @@ class EmployeeTermination extends Model
         'finance_reminder_sent_at',
         'completed_by',
         'completed_at',
+        'reverted_by',
+        'reverted_at',
+        'revert_reason',
+        'terminate_reason',
     ];
 
     protected $casts = [
@@ -41,6 +47,7 @@ class EmployeeTermination extends Model
         'finance_clearance_issued_at' => 'datetime',
         'finance_reminder_sent_at' => 'datetime',
         'completed_at' => 'datetime',
+        'reverted_at' => 'datetime',
     ];
 
     public function employee(): BelongsTo
@@ -72,5 +79,15 @@ class EmployeeTermination extends Model
     {
         return $this->it_clearance_status === self::CLEARANCE_ISSUED
             && $this->finance_clearance_status === self::CLEARANCE_ISSUED;
+    }
+
+    public function revertedBy()
+    {
+        return $this->belongsTo(User::class, 'reverted_by');
+    }
+
+    public function isReverted()
+    {
+        return $this->status === self::STATUS_REVERTED;
     }
 }

@@ -299,6 +299,8 @@
         Swal.fire({
             title: "@lang('messages.sweetAlertTitle')",
             text: "@lang('messages.terminateRecord')",
+            input: 'textarea',
+            inputPlaceholder: "@lang('app.terminateReasonOptional')",
             icon: 'warning',
             showCancelButton: true,
             focusConfirm: false,
@@ -326,7 +328,8 @@
                     blockUI: true,
                     data: {
                         '_token': token,
-                        '_method': 'POST'
+                        '_method': 'POST',
+                        'terminate_reason': result.value
                     },
                     success: function(response) {
                         if (response.status == "success") {

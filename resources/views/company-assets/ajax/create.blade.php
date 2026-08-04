@@ -71,6 +71,11 @@
                                       fieldRequired="true" :fieldPlaceholder="__('placeholders.qty')" fieldValue="1">
                         </x-forms.number>
                     </div>
+
+                    <div class="col-md-12 mt-2" id="serial-numbers-wrapper" style="display:none;">
+                        <label class="f-14 text-dark-grey">Serial Numbers</label>
+                        <div class="row" id="serial-numbers-container"></div>
+                    </div>
                 </div>
 
                 <x-form-actions>
@@ -88,6 +93,48 @@
 
 <script>
     $(document).ready(function () {
+
+        function generateSerialFields() {
+            let qty = parseInt($('#asset_qty').val()) || 0;
+            const maxQty = 200; // sane upper limit, adjust as needed
+
+            if (qty > maxQty) {
+                qty = maxQty;
+                $('#asset_qty').val(maxQty);
+            }
+
+            const container = $('#serial-numbers-container');
+            const existing = container.find('input').length;
+
+            // Keep already-typed values if qty increased, trim if decreased
+            const currentValues = container.find('input').map(function () {
+                return $(this).val();
+            }).get();
+
+            container.empty();
+
+            if (qty > 0) {
+                for (let i = 1; i <= qty; i++) {
+                    const val = currentValues[i - 1] ? currentValues[i - 1] : '';
+                    container.append(`
+                        <div class="col-md-6 mb-2">
+                            <input type="text" class="form-control height-35 f-14" name="serial_no[]"
+                                   value="${val}"
+                                   placeholder="serial number ${i}" required>
+                        </div>
+                    `);
+                }
+                $('#serial-numbers-wrapper').show();
+            } else {
+                $('#serial-numbers-wrapper').hide();
+            }
+        }
+
+        // regenerate on qty change/typing
+        $(document).on('input change', '#asset_qty', generateSerialFields);
+
+        // generate initial fields for default qty value
+        generateSerialFields();
 
         $('#save-company-asset-form').click(function () {
 

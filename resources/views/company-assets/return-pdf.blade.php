@@ -26,6 +26,7 @@
         }
 
         .header table { width: 100%; }
+        .header-logo { width: 120px; }
         .brand-name { font-size: 24px; color: #2c3e50; font-weight: bold; text-transform: uppercase; }
         .doc-title { text-align: right; font-size: 18px; color: #7f8c8d; }
 
@@ -89,7 +90,7 @@
     <div class="header">
         <table>
             <tr>
-                <td class="brand-name"></td>
+                <td><img src="{{ asset('img/logo.jpeg') }}" alt="Logo" class="header-logo"></td>
                 <td class="doc-title">ASSET ASSIGNMENT RETURN FORM</td>
             </tr>
         </table>
@@ -106,22 +107,22 @@
         <div class="section-title">ASSET INFORMATION</div>
         <table class="info-table">
             <tr>
+                <th>Serial Number</th>
+                <td>{{ $assignment->serial_no ?? 'N/A' }}</td>
                 <th>Asset Name</th>
                 <td>{{ $asset->name }}</td>
+            </tr>
+            <tr>
                 <th>Type / Category</th>
                 <td>{{ $asset->type }}</td>
-            </tr>
-            <tr>
                 <th>SKU Number</th>
                 <td>{{ $asset->sku_no }}</td>
-                <th>Brand</th>
-                <td>{{ $asset->brand }}</td>
             </tr>
             <tr>
+                <th>Brand</th>
+                <td>{{ $asset->brand }}</td>
                 <th>Catalog</th>
                 <td >{{ $asset->catalog }}</td>
-                <th>Qty</th>
-                <td >{{ $assignment->qty }}</td>
             </tr>
         </table>
 
@@ -133,18 +134,15 @@
                 <th>Employee Name</th>
                 <td>{{ $assignment->employee->name ?? 'N/A' }}</td>
                 <th>Branch</th>
-                <td>{{ $assignment->branch->name ?? 'N/A' }}</td>
+                <td>{{ $assignment->employee?->branch?->name ?? 'N/A' }}</td>
             </tr>
             <tr>
-                <th>Iqama / National ID</th>
-                <td>{{ $assignment->employee->employeeDetail->iqama_no ?? 'N/A' }}</td>
-                <th>Iqama Expiry</th>
-                <td>{{ $assignment->employee->employeeDetail->iqama_expiry_date ?? 'N/A' }}</td>
+                <th>Department</th>
+                <td>{{ $assignment->employee?->employeeDetail?->department?->team_name ?? 'N/A' }}</td>
+                <th>Date</th>
+                <td>{{ now()->format('d-m-Y H:i') }}</td>
             </tr>
-            <tr>
-                <th>Passport Number</th>
-                <td>{{ $assignment->employee->employeeDetail->passport_no ?? 'N/A' }}</td>
-            </tr>
+
         </table>
 
         <!-- Terms -->

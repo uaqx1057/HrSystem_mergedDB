@@ -63,6 +63,11 @@
                                       fieldRequired="true" :fieldValue="$asset->qty" :fieldPlaceholder="__('placeholders.qty')">
                         </x-forms.number>
                     </div>
+
+                    <div class="col-md-12 mt-2" id="serial-numbers-wrapper">
+                        <label class="f-14 text-dark-grey">Serial Numbers</label>
+                        <div class="row" id="serial-numbers-container"></div>
+                    </div>
                 </div>
 
                 <x-form-actions>
@@ -80,6 +85,62 @@
 
 <script>
     $(document).ready(function () {
+
+        const existingSerials = {!! json_encode($serials->map(fn($s) => [
+            'id' => $s->id,
+            'serial_no' => $s->serial_no,
+            'status' => $s->status,
+        ])) !!};
+
+        function renderSerialFields() {
+            let qty = parseInt($('#asset_qty').val()) || 0;
+            const maxQty = 200;
+
+            const assignedCount = existingSerials.filter(s => s.status === 'assigned').length;
+
+            // never allow qty below number of already-assigned serials
+            if (qty < assignedCount) {
+                qty = assignedCount;
+                $('#asset_qty').val(assignedCount);
+            }
+            if (qty > maxQty) {
+                qty = maxQty;
+                $('#asset_qty').val(maxQty);
+            }
+
+            const container = $('#serial-numbers-container');
+            container.empty();
+
+            for (let i = 0; i < qty; i++) {
+                const existing = existingSerials[i];
+
+                if (existing) {
+                    const isAssigned = existing.status === 'assigned';
+                    container.append(`
+                        <div class="col-md-6 mb-2">
+                            <input type="hidden" name="serial_id[]" value="${existing.id}">
+                            <input type="text" class="form-control height-35 f-14" name="serial_no[]"
+                                   value="${existing.serial_no}"
+                                   placeholder="serial number ${i + 1}"
+                                   ${isAssigned ? 'readonly title="Assigned - cannot edit"' : ''}
+                                   required>
+                        </div>
+                    `);
+                } else {
+                    container.append(`
+                        <div class="col-md-6 mb-2">
+                            <input type="hidden" name="serial_id[]" value="">
+                            <input type="text" class="form-control height-35 f-14" name="serial_no[]"
+                                   value=""
+                                   placeholder="serial number ${i + 1}" required>
+                        </div>
+                    `);
+                }
+            }
+        }
+
+        $(document).on('input change', '#asset_qty', renderSerialFields);
+        renderSerialFields();
 
         $('#update-company-asset-form').click(function () {
 

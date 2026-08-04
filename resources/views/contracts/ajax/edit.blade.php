@@ -13,8 +13,8 @@ $addClientPermission = user()->permission('add_clients');
                 <div class="row p-20">
                                     <!-- CONTRACT NUMBER START -->
                 <div class="col-md-2">
-                    <div class="form-group mb-lg-0 mb-md-0 mb-4">
-                        <x-forms.label class="mb-12" fieldId="contract_number"
+                    <div class="form-group">
+                        <x-forms.label class="" fieldId="contract_number"
                             :fieldLabel="__('modules.contracts.contractNumber')" fieldRequired="true">
                         </x-forms.label>
                         <input type="text" name="contract_number" id="contract_number" class="form-control height-35 f-15 readonly-background" readonly
@@ -22,7 +22,7 @@ $addClientPermission = user()->permission('add_clients');
                     </div>
                 </div>
                 <!-- CONTRACT NUMBER END -->
-                    <div class="col-md-10" style="margin-top: -16px">
+                    <div class="col-md-10" >
                         <x-forms.text fieldId="subject" :fieldLabel="__('app.subject')" fieldName="subject"
                             :fieldValue="$contract->subject" fieldRequired="true"></x-forms.text>
                     </div>
@@ -66,7 +66,7 @@ $addClientPermission = user()->permission('add_clients');
                     </div>
 
                     <div class="col-md-6 col-lg-3">
-                        <x-forms.label class="mt-3" fieldId="contractType"
+                        <x-forms.label class="" fieldId="contractType"
                             :fieldLabel="__('modules.contracts.contractType')" fieldRequired="true"></x-forms.label>
                         <x-forms.input-group>
                             <select class="form-control select-picker" name="contract_type" id="contractType"
@@ -89,7 +89,7 @@ $addClientPermission = user()->permission('add_clients');
                     </div>
 
                     <div class="col-md-6 col-lg-3">
-                        <x-forms.label class="mt-3" fieldId="amount"
+                        <x-forms.label class="" fieldId="amount"
                             :fieldLabel="__('modules.contracts.contractValue')"
                             :popover="__('modules.contracts.setZero')" fieldRequired="true"></x-forms.label>
                         <x-forms.input-group>

@@ -6,7 +6,8 @@
     <div class="row">
         <div class="col-sm-12">
             <div class="card bg-white border-0 b-shadow-4">
-                <div class="card-header form-heading-background border-bottom-grey text-capitalize justify-content-between p-20">
+                <div
+                    class="card-header form-heading-background border-bottom-grey text-capitalize justify-content-between p-20">
                     <div class="row">
                         <div class="col-md-10 col-10">
                             <h3 class="heading-h1">Finance Clearance</h3>
@@ -15,7 +16,8 @@
                 </div>
                 <div class="card-body">
                     <div class="text-right d-flex justify-content-end mb-3">
-                        <a href="{{ route('employees.index') }}?tab=pending-termination" class="btn btn-sm btn-secondary">Back</a>
+                        <a href="{{ route('employees.index') }}?tab=pending-termination"
+                            class="btn btn-sm btn-secondary">Back</a>
                     </div>
 
                     <x-cards.data-row :label="__('modules.employees.employeeId')" :value="$employee->employeeDetail->employee_id ?? '--'" />
@@ -55,8 +57,10 @@
                             <tbody>
                                 @forelse ($pendingAdvances as $advance)
                                     <tr>
-                                        <td>{{ $advance->date }}</td>
-                                        <td>{{ company()->currency->currency_symbol ?? '' }}{{ number_format($advance->advance_salary, 2) }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($advance->date)->translatedFormat(company()->date_format) }}
+                                        </td>
+                                        <td>{{ company()->currency->currency_symbol ?? '' }}{{ number_format($advance->advance_salary - $advance->deducted_amount, 2) }}
+                                        </td>
                                         <td>{{ ucfirst($advance->status) }}</td>
                                     </tr>
                                 @empty
@@ -69,7 +73,8 @@
                     </div>
 
                     @if ($termination && $termination->finance_clearance_status == 'issued')
-                        <a href="{{ route('employees.finance-clearance.letter', $employee->id) }}" class="btn btn-sm btn-primary mt-2">
+                        <a href="{{ route('employees.finance-clearance.letter', $employee->id) }}"
+                            class="btn btn-sm btn-primary mt-2">
                             <i class="fa fa-file-pdf-o mr-1"></i> Download Clearance Letter
                         </a>
                     @endif

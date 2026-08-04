@@ -66,17 +66,21 @@
                     <x-cards.data-row :label="__('app.availableQty')" :value="$asset->available_qty" />
                     <x-cards.data-row :label="__('app.status')" :value="ucfirst($asset->status)" />
 
+                    <h4>Serial Numbers</h4>
+                    @foreach ($serials as $serial)
+                        <x-cards.data-row :label="$serial->serial_no" :value="ucfirst($serial->status)" />
+                    @endforeach
                     {{-- Assignment Assets  --}}
                     <h4>@lang('app.assignment')</h4>
-                  
+
                     <br>
                     <br>
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
+                                    <th>@lang('app.serialNo')</th>
                                     <th>@lang('app.employee')</th>
-                                    <th>@lang('app.qty')</th>
                                     <th>@lang('app.signature')</th>
                                     <th>@lang('app.status')</th>
                                     <th>@lang('app.action')</th>
@@ -105,8 +109,8 @@
                                         $signatureFile = ($assignment->signed_document) ? asset_url_local_s3('asset' . '/' . $assignment->signed_document) : '';
                                     @endphp
                                     <tr>
+                                        <td>{{ $assignment->serial_no }}</td>
                                         <td>{{ $assignment->employee->name ?? 'N/A' }}</td>
-                                        <td>{{ $assignment->qty }}</td>
                                         <td>
                                             @if ($assignment->signed_document)
                                                 <a href="{{ $signatureFile }}" target="_blank">
@@ -118,28 +122,28 @@
                                         </td>
                                         <td>{{ $assignment->status }}</td>
                                         <td>
-                                            @if (in_array(user()->permission('edit_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both','branch']))
-                                                <a href="{{ route('company-assets.edit-assign', [$asset->id]) }}" class="btn btn-sm btn-primary openRightModal">
+                                            @if (in_array(user()->permission('edit_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both','branch']) && $assignment->status === 'Pending')
+                                                <a href="{{ route('company-assets.edit-assign', [$assignment->id]) }}" class="btn btn-sm btn-primary openRightModal">
                                                     <i class="fa fa-edit mr-2"></i>
                                                     @lang('app.edit')
                                                 </a>
                                             @endif
 
-                                            @if (in_array(user()->permission('edit_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both','branch']))
+                                            @if (in_array(user()->permission('edit_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both','branch']) && $assignment->status === 'Pending')
                                                 <a href="javascript:;" class="btn btn-sm btn-danger delete-assignment" data-assignment-id="{{ $assignment->id }}">
                                                     <i class="fa fa-trash mr-2"></i>
                                                     @lang('app.delete')
                                                 </a>
                                             @endif
                                             @if (in_array(user()->permission('upload_signature_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both','branch']) == 'all' && !$assignment->signed_document)
-                                                <a href="{{ route('company-assets.upload-signature', [$assignment->id]) }}" class="btn btn-sm btn-primary openRightModal">
+                                                <a href="{{ route('company-assets.upload-signature', [$assignment->id]) }}" class="btn btn-sm btn-primary ">
                                                     <i class="fa fa-upload mr-2"></i>
                                                     Upload Signature
                                                 </a>
                                             @endif
 
                                             @if (in_array(user()->permission('upload_signature_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both','branch']) == 'all' && $assignment->signed_document)
-                                                <a href="{{ route('company-assets.return', [$assignment->id]) }}" class="btn btn-sm btn-primary openRightModal">
+                                                <a href="{{ route('company-assets.return', [$assignment->id]) }}" class="btn btn-sm btn-primary ">
                                                     <i class="fa fa-undo mr-2"></i>
                                                     Return Asset
                                                 </a>

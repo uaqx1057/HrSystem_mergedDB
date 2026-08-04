@@ -15,8 +15,8 @@
 
                                     <!-- CONTRACT NUMBER START -->
                         <div class="col-md-2">
-                            <div class="form-group mb-lg-0 mb-md-0 mb-4">
-                                <x-forms.label class="mb-12" fieldId="contract_number"
+                            <div class="form-group">
+                                <x-forms.label class="" fieldId="contract_number"
                                     :fieldLabel="__('modules.contracts.contractNumber')" fieldRequired="true">
                                 </x-forms.label>
                                 <x-forms.input-group>
@@ -31,7 +31,7 @@
                         </div>
 
                                         <!-- CONTRACT NUMBER END -->
-                        <div class="col-md-10" style="margin-top: -16px">
+                        <div class="col-md-10" >
                                 <x-forms.text fieldId="subject" :fieldLabel="__('app.subject')" fieldName="subject"
                                 :fieldValue="($contractTemplate ? $contractTemplate->subject : '')"
                                 fieldRequired="true"></x-forms.text>
@@ -77,15 +77,15 @@
                                             :fieldPlaceholder="__('placeholders.date')"/>
                     </div>
 
-                    <div class="col-md-2 col-lg-2 pt-5">
-                        <x-forms.checkbox class="mr-0 mr-lg-2 mr-md-2"
+                    <div class="col-md-2 col-lg-2" style="padding-top: 24px;">
+                        <x-forms.checkbox class=""
                                           :checked="$contract ? is_null($contract->end_date) : ''"
                                           :fieldLabel="__('app.withoutDueDate')"
                                           fieldName="without_duedate" fieldId="without_duedate" fieldValue="yes"/>
                     </div>
 
                     <div class="col-md-6 col-lg-3">
-                        <x-forms.label class="mt-3" fieldId="contractType"
+                        <x-forms.label class="" fieldId="contractType"
                                        :fieldLabel="__('modules.contracts.contractType')"
                                        fieldRequired="true"></x-forms.label>
                         <x-forms.input-group>
@@ -150,7 +150,7 @@
                 <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-top-grey">
                     @lang('modules.client.clientDetails')</h4>
                 <div class="row p-20">
-                    <div class="col-md-6 col-lg-4 my-3" id="client_list_ids">
+                    <div class="col-md-6 col-lg-4" id="client_list_ids">
                         <x-client-selection-dropdown :clients="$clients" />
                     </div>
 

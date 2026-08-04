@@ -286,6 +286,9 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::get('employees/finance-clearance/{id}/letter', [\App\Http\Controllers\TerminationClearanceController::class, 'financeClearanceLetterPdf'])->name('employees.finance-clearance.letter');
 
     Route::resource('employees', EmployeeController::class);
+    Route::get('employees/{id}/assign-company-asset', [EmployeeController::class, 'assignCompanyAsset'])->name('employees.assign-company-asset');
+    Route::post('employees/{id}/revert-termination', [EmployeeController::class, 'revertTermination'])
+    ->name('employees.revert-termination');
 
     Route::post('employees/{id}/grant-system-access',  [EmployeeController::class, 'grantSystemAccess'])->name('employees.grant_system_access');
     Route::post('employees/{id}/revoke-system-access', [EmployeeController::class, 'revokeSystemAccess'])->name('employees.revoke_system_access');
@@ -847,6 +850,12 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
         Route::post('payment-methods', [PayrollController::class, 'storePaymentMethod'])->name('payment-methods.store');
         Route::put('payment-methods/{salaryPaymentMethod}', [PayrollController::class, 'updatePaymentMethod'])->name('payment-methods.update');
         Route::delete('payment-methods/{salaryPaymentMethod}', [PayrollController::class, 'destroyPaymentMethod'])->name('payment-methods.destroy');
+
+        Route::get('employees/{employee}/pending-advances', [PayrollController::class, 'pendingAdvances'])->name('employees.pending-advances');
+
+        Route::get('employees/{employee}/allowances', [PayrollController::class, 'employeeAllowances']);
+
+        Route::get('employees/{employee}/basic-salary', [PayrollController::class, 'employeeBasicSalary']);
 
         Route::post('settings', [PayrollController::class, 'updateSettings'])->name('settings.update');
     });

@@ -30,4 +30,16 @@ class AdvanceSalary extends Model
     {
         return $this->belongsTo(User::class, 'approved_by')->withoutGlobalScope(ActiveScope::class)->withOut('clientDetails');
     }
+
+    public function salarySlips()
+    {
+        return $this->belongsToMany(SalarySlip::class, 'salary_slip_advance_salary')
+            ->withPivot('deducted_amount')
+            ->withTimestamps();
+    }
+
+    public function getBalanceAttribute()
+    {
+        return $this->advance_salary - $this->deducted_amount;
+    }
 }

@@ -26,13 +26,14 @@
 
 @section('filter-section')
     <!-- FILTER START -->
-    <div class="d-flex d-lg-block filter-box project-header bg-white">
-        <div class="mobile-close-overlay w-100 h-100" id="close-client-overlay"></div>
+    <div class="d-flex filter-box project-header bg-white">
 
-        <div class="project-menu" id="mob-client-detail">
-            <a class="d-none close-it" href="javascript:;" id="close-client-detail">
-                <i class="fa fa-times"></i>
-            </a>
+            <div class="mobile-close-overlay w-100 h-100" id="close-client-overlay"></div>
+            <div class="project-menu d-lg-flex" id="mob-client-detail">
+
+                <a class="d-none close-it" href="javascript:;" id="close-client-detail">
+                    <i class="fa fa-times"></i>
+                </a>
 
             <nav class="tabs">
                 <ul class="-primary">
@@ -44,37 +45,37 @@
                         </li>
                     @endif
 
-                    @if (in_array(user()->permission('manage_salary_group'), ['all']))
+                    {{-- @if (in_array(user()->permission('manage_salary_group'), ['all']))
                     <li>
                         <x-tab :href="route('payroll.index', ['tab' => 'salary-groups'])"
                             :text="__('Salary Groups')"
                             class="salary-groups" ajax="false" />
                     </li>
-                    @endif
+                    @endif --}}
 
-                    @if (in_array(user()->permission('manage_salary_component'), ['all']))
+                    {{-- @if (in_array(user()->permission('manage_salary_component'), ['all']))
                     <li>
                         <x-tab :href="route('payroll.index', ['tab' => 'salary-components'])"
                             :text="__('Salary Components')"
                             class="salary-components" ajax="false" />
                     </li>
-                    @endif
+                    @endif --}}
 
-                    @if (in_array(user()->permission('manage_employee_salary'), ['all', 'branch']))
+                    {{-- @if (in_array(user()->permission('manage_employee_salary'), ['all', 'branch']))
                     <li>
                         <x-tab :href="route('payroll.index', ['tab' => 'salary-setups'])"
                             :text="__('Salary Setups')"
                             class="salary-setups" ajax="false" />
                     </li>
-                    @endif
+                    @endif --}}
 
-                    @if (in_array($addPayrollPermission, ['all']))
+                    {{-- @if (in_array($addPayrollPermission, ['all']))
                     <li>
                         <x-tab :href="route('payroll.index', ['tab' => 'payroll-cycles'])"
                             :text="__('Payroll Cycles')"
                             class="payroll-cycles" ajax="false" />
                     </li>
-                    @endif
+                    @endif --}}
 
                     @if (in_array(user()->permission('manage_salary_payment_method'), ['all']))
                     <li>
@@ -285,9 +286,10 @@
                                 <th>Paid</th>
                                 <th>Balance</th>
                                 <th>Status</th>
-                                <th>Group</th>
+                                {{-- <th>Group</th> --}}
                                 <th>Method</th>
-                                <th>Cycle</th>
+                                {{-- <th>Cycle</th> --}}
+                                <th>Advance Salary Deducted</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -302,9 +304,14 @@
                                     <td>{{ $slip->paid_amount ?? 0 }}</td>
                                     <td>{{ $slip->balance_amount ?? $slip->net_salary }}</td>
                                     <td>{{ ucfirst($slip->status) }}</td>
-                                    <td>{{ optional($slip->salaryGroup)->group_name }}</td>
+                                    {{-- <td>{{ optional($slip->salaryGroup)->group_name }}</td> --}}
                                     <td>{{ optional($slip->paymentMethod)->payment_method }}</td>
-                                    <td>{{ optional($slip->cycle)->cycle }}</td>
+                                    {{-- <td>{{ optional($slip->cycle)->cycle }}</td> --}}
+                                    @if ($slip->advanceSalaries->count())
+                                        <td>{{ number_format($slip->advanceSalaries->sum('pivot.deducted_amount'), 2) }}</td>
+                                    @else
+                                        <td></td>
+                                    @endif
                                     <td class="d-flex">
                                         <a href="{{ route('payroll.salary-slips.print', $slip->id) }}" target="_blank" class="btn btn-sm btn-primary mr-1">Print</a>
                                         <a href="{{ route('payroll.salary-slips.pdf', $slip->id) }}" class="btn btn-sm btn-primary mr-1">Download PDF</a>
@@ -317,7 +324,7 @@
                                                 || ($editPayrollPermission == 'owned' && user()->id == $slip->user_id)
                                                 || ($editPayrollPermission == 'both' && (user()->id == $row->user_id
                                                 || user()->id == $row->added_by))
-                                            ) 
+                                            )
                                             <form method="POST" action="{{ route('payroll.salary-slips.update', $slip->id) }}" class="mr-1 d-flex align-items-center salary-slip-update-form">
                                                 @csrf
                                                 @method('PUT')
@@ -365,7 +372,7 @@
                                                 || ($deletePayrollPermission == 'owned' && user()->id == $slip->user_id)
                                                 || ($deletePayrollPermission == 'both' && (user()->id == $row->user_id
                                                 || user()->id == $row->added_by))
-                                            ) 
+                                            )
                                             <form method="POST" action="{{ route('payroll.salary-slips.destroy', $slip->id) }}" onsubmit="return confirm('Delete this salary slip?');">
                                                 @csrf
                                                 @method('DELETE')
@@ -607,9 +614,9 @@
             </div>
         @endif
 
-        @if ($activeTab === 'salary-groups')
+        {{-- @if ($activeTab === 'salary-groups')
             <div class="row">
-                {{-- @if (in_array($addPayrollPermission, ['all', 'added'])) --}}
+                @if (in_array($addPayrollPermission, ['all', 'added']))
                     <div class="col-md-4 mb-3">
                         <div class="card">
                             <div class="card-header form-heading-background">Add Salary Group</div>
@@ -641,7 +648,7 @@
                             </div>
                         </div>
                     </div>
-                {{-- @endif --}}
+                @endif
 
                 <div class="col-md-8">
                     <div class="card">
@@ -662,7 +669,7 @@
                                         <tr>
                                             <td>{{ $group->id }}</td>
                                             <td>
-                                                {{-- @if (in_array($editPayrollPermission, ['all', 'added'])) --}}
+                                                @if (in_array($editPayrollPermission, ['all', 'added']))
                                                     <form method="POST" action="{{ route('payroll.salary-groups.update', $group->id) }}" class="d-flex">
                                                         @csrf
                                                         @method('PUT')
@@ -671,20 +678,20 @@
                                                         <input type="hidden" name="employee_ids[]" value="">
                                                         <button type="submit" class="btn btn-sm btn-secondary">Update</button>
                                                     </form>
-                                                {{-- @else
+                                                @else
                                                     {{ $group->group_name }}
-                                                @endif --}}
+                                                @endif
                                             </td>
                                             <td>{{ $group->employees_count }}</td>
                                             <td>{{ $group->components_count }}</td>
                                             <td>
-                                                {{-- @if ($deletePayrollPermission != 'none' && $deletePayrollPermission != 5) --}}
+                                                @if ($deletePayrollPermission != 'none' && $deletePayrollPermission != 5)
                                                     <form method="POST" action="{{ route('payroll.salary-groups.destroy', $group->id) }}" onsubmit="return confirm('Delete this salary group?');">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                                                     </form>
-                                                {{-- @endif --}}
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty
@@ -699,7 +706,7 @@
                     </div>
                 </div>
             </div>
-        @endif
+        @endif --}}
 
         @if ($activeTab === 'salary-components')
             <div class="row">
@@ -1038,79 +1045,79 @@
         const activeTab = "{{ $activeTab }}";
         $('.project-menu .' + activeTab).addClass('active');
 
-        const container = document.querySelector('.tabs');
-        const primary = container.querySelector('.-primary');
-        const primaryItems = container.querySelectorAll('.-primary > li:not(.-more)');
+        // const container = document.querySelector('.tabs');
+        // const primary = container.querySelector('.-primary');
+        // const primaryItems = container.querySelectorAll('.-primary > li:not(.-more)');
 
-        if (container) {
-            container.classList.add('--jsfied');
+        // if (container) {
+        //     container.classList.add('--jsfied');
 
-            primary.insertAdjacentHTML('beforeend', `
-            <li class="-more">
-                <button type="button" class="px-4 h-100 bg-grey d-none d-lg-flex align-items-center" aria-haspopup="true" aria-expanded="false">
-                {{__('app.more')}} <span>&darr;</span>
-                </button>
-                <ul class="-secondary" id="hide-project-menues">
-                ${primary.innerHTML}
-                </ul>
-            </li>
-            `);
+        //     primary.insertAdjacentHTML('beforeend', `
+        //     <li class="-more">
+        //         <button type="button" class="px-4 h-100 bg-grey d-none d-lg-flex align-items-center" aria-haspopup="true" aria-expanded="false">
+        //         {{__('app.more')}} <span>&darr;</span>
+        //         </button>
+        //         <ul class="-secondary" id="hide-project-menues">
+        //         ${primary.innerHTML}
+        //         </ul>
+        //     </li>
+        //     `);
 
-            const secondary = container.querySelector('.-secondary');
-            const secondaryItems = secondary.querySelectorAll('li');
-            const allItems = container.querySelectorAll('li');
-            const moreLi = primary.querySelector('.-more');
-            const moreBtn = moreLi.querySelector('button');
+        //     const secondary = container.querySelector('.-secondary');
+        //     const secondaryItems = secondary.querySelectorAll('li');
+        //     const allItems = container.querySelectorAll('li');
+        //     const moreLi = primary.querySelector('.-more');
+        //     const moreBtn = moreLi.querySelector('button');
 
-            moreBtn.addEventListener('click', e => {
-                e.preventDefault();
-                container.classList.toggle('--show-secondary');
-                moreBtn.setAttribute('aria-expanded', container.classList.contains('--show-secondary'));
-            });
+        //     moreBtn.addEventListener('click', e => {
+        //         e.preventDefault();
+        //         container.classList.toggle('--show-secondary');
+        //         moreBtn.setAttribute('aria-expanded', container.classList.contains('--show-secondary'));
+        //     });
 
-            const doAdapt = () => {
-                allItems.forEach(item => {
-                    item.classList.remove('--hidden');
-                });
+        //     const doAdapt = () => {
+        //         allItems.forEach(item => {
+        //             item.classList.remove('--hidden');
+        //         });
 
-                let stopWidth = moreBtn.offsetWidth;
-                let hiddenItems = [];
-                const primaryWidth = primary.offsetWidth;
-                primaryItems.forEach((item, i) => {
-                    if (primaryWidth >= stopWidth + item.offsetWidth) {
-                        stopWidth += item.offsetWidth;
-                    } else {
-                        item.classList.add('--hidden');
-                        hiddenItems.push(i);
-                    }
-                });
+        //         let stopWidth = moreBtn.offsetWidth;
+        //         let hiddenItems = [];
+        //         const primaryWidth = primary.offsetWidth;
+        //         primaryItems.forEach((item, i) => {
+        //             if (primaryWidth >= stopWidth + item.offsetWidth) {
+        //                 stopWidth += item.offsetWidth;
+        //             } else {
+        //                 item.classList.add('--hidden');
+        //                 hiddenItems.push(i);
+        //             }
+        //         });
 
-                if (!hiddenItems.length) {
-                    moreLi.classList.add('--hidden');
-                    container.classList.remove('--show-secondary');
-                    moreBtn.setAttribute('aria-expanded', false);
-                } else {
-                    secondaryItems.forEach((item, i) => {
-                        if (!hiddenItems.includes(i)) {
-                            item.classList.add('--hidden');
-                        }
-                    });
-                }
-            };
+        //         if (!hiddenItems.length) {
+        //             moreLi.classList.add('--hidden');
+        //             container.classList.remove('--show-secondary');
+        //             moreBtn.setAttribute('aria-expanded', false);
+        //         } else {
+        //             secondaryItems.forEach((item, i) => {
+        //                 if (!hiddenItems.includes(i)) {
+        //                     item.classList.add('--hidden');
+        //                 }
+        //             });
+        //         }
+        //     };
 
-            doAdapt();
-            window.addEventListener('resize', doAdapt);
+        //     doAdapt();
+        //     window.addEventListener('resize', doAdapt);
 
-            document.addEventListener('click', e => {
-                let el = e.target;
-                while (el) {
-                    if (el === secondary || el === moreBtn) return;
-                    el = el.parentNode;
-                }
-                container.classList.remove('--show-secondary');
-                moreBtn.setAttribute('aria-expanded', false);
-            });
-        }
+        //     document.addEventListener('click', e => {
+        //         let el = e.target;
+        //         while (el) {
+        //             if (el === secondary || el === moreBtn) return;
+        //             el = el.parentNode;
+        //         }
+        //         container.classList.remove('--show-secondary');
+        //         moreBtn.setAttribute('aria-expanded', false);
+        //     });
+        // }
 
     </script>
     <script>

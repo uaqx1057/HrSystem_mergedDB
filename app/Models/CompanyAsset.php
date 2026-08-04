@@ -49,4 +49,9 @@ class CompanyAsset extends Model
     {
         return $this->belongsTo(User::class, 'added_by')->withoutGlobalScope(ActiveScope::class)->withOut('clientDetails');
     }
+
+    public function serials()
+    {
+        return $this->hasMany(CompanyAssetSerial::class);
+    }
 }

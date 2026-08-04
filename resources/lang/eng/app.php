@@ -483,6 +483,7 @@ return array(
     'employeeDetail' => 'Employee Detail',
     'branchName' => 'Branch',
     'qty' => 'Qty',
+    'serialNo' => 'Serial Number',
     'dms' => 'DMS',
     'complete' => 'Complete',
     'approved' => 'Approved',
@@ -1021,6 +1022,7 @@ return array(
     'googleCalender' => 'Enable Google Calender',
     'saveAddMore' => 'Save & Add More',
     'department' => 'Department',
+    'serialNo' => 'Serial No',
     'awardDate' => 'Award Date',
     'loading' => 'Loading...',
     'createNew' => 'Create new',
@@ -1306,6 +1308,10 @@ return array(
     'availableQty' => 'Available Qty',
     'assignment' => 'Assignment Asset',
     'returnCompanyAsset' => 'Return Company Asset',
-    'assignmentHistory'> 'Assignment History'
+    'assignmentHistory'> 'Assignment History',
+    'revertTermination' => 'Revert Termination',
+    'revertReasonOptional' => 'Reason (optional)',
+    'ok' => 'Ok',
+    'terminateReasonOptional' => 'Reason for termination (optional)',
 );
 

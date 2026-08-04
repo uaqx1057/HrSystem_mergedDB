@@ -33,6 +33,20 @@ class StoreRequest extends CoreRequest
             'department_id' => 'required|exists:departments,id',
             'branch_id' => 'required|exists:branches,id',
             'qty' => 'required|integer|min:1',
+            'serial_no'     => 'required|array',
+            'serial_no.*'   => 'required|string|max:255|distinct',
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $qty = (int) $this->qty;
+            $serials = is_array($this->serial_no) ? $this->serial_no : [];
+
+            if (count($serials) !== $qty) {
+                $validator->errors()->add('serial_no', __('messages.serialCountMismatch'));
+            }
+        });
     }
 }

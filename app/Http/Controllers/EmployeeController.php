@@ -16,6 +16,7 @@ use App\DataTables\TimeLogsDataTable;
 use App\Enums\Salutation;
 use App\Models\Company;
 use App\Models\EmployeeAllowance;
+use App\Models\Vehicle;
 use App\Scopes\ActiveScope;
 use App\Scopes\CompanyScope;
 use Carbon\Carbon;
@@ -61,8 +62,10 @@ use App\Models\UserActivity;
 use App\Models\UserInvitation;
 use App\Models\VisaDetail;
 use App\Models\EmployeeDependant;
+use App\Models\EmployeeBankAccount;
 use App\Models\EmployeeTermination;
 use App\Models\AssetAssignment;
+use App\Models\CompanyAsset;
 use App\Models\AdvanceSalary;
 use App\Mail\TerminationClearanceRequestMail;
 use App\Mail\TerminationCompletedMail;
@@ -78,6 +81,7 @@ use App\Models\UserAuth;
 use Symfony\Component\Mailer\Exception\TransportException;
 use App\Models\PackageUpdateNotify;
 use Illuminate\Support\Facades\Hash;
+use App\Mail\TerminationRevertedMail;
 class EmployeeController extends AccountBaseController
 {
     use ImportExcel;
@@ -206,6 +210,10 @@ class EmployeeController extends AccountBaseController
 
         $userRoles = user()->roles->pluck('name')->toArray();
 
+        $this->companies = Company::where('status', 'active')->orderBy('id')->get();
+        $this->vehicles = Vehicle::orderBy('id')->get();
+        // dd($this->vehicles);
+
         if (in_array('admin', $userRoles)) {
             $this->roles = Role::where('name', '<>', 'client')->get();
         } else {
@@ -292,7 +300,7 @@ class EmployeeController extends AccountBaseController
             $user->salutation = $request->salutation;
             $user->country_phonecode = $request->country_phonecode;
             $user->gender = $request->gender;
-            $user->locale = $request->locale;
+            $user->locale = 'en';
             $user->user_auth_id = $userAuth->id;
             $user->branch_id = $request->branch_id ?? ($addPermission == 'branch' ? user()->branch_id : null);
             $user->dark_theme       = 1;
@@ -343,6 +351,7 @@ class EmployeeController extends AccountBaseController
                 }
                 $this->saveDependants($request, $employee);
                 $this->saveAllowances($request, $employee);
+                $this->saveEmployeeBankAccounts($request, $employee);
 
                 // To add custom fields data
                 if ($request->custom_fields_data) {
@@ -574,6 +583,9 @@ class EmployeeController extends AccountBaseController
         $this->userRoles = $this->employee->roles->pluck('name')->toArray();
         $this->salutations = Salutation::cases();
 
+        $this->companies = Company::where('status', 'active')->orderBy('id')->get();
+        $this->vehicles = Vehicle::orderBy('id')->get();
+
         /** @phpstan-ignore-next-line */
         if (count($this->employee->reportingTeam) > 0) {
             /** @phpstan-ignore-next-line */
@@ -583,6 +595,7 @@ class EmployeeController extends AccountBaseController
         $this->employees = User::allEmployees($exceptUsers, true);
 
         $this->existingAllowances = EmployeeAllowance::where('employee_id', $this->employee->id)->get();
+        $this->existingBankAccounts = EmployeeBankAccount::where('employee_id', $this->employee->id)->get();
         $this->editState = HrEmployeeEditState::firstOrCreate(
             ['company_id' => $this->employee->company_id, 'employee_id' => $this->employee->id],
             ['version' => 0]
@@ -645,7 +658,7 @@ class EmployeeController extends AccountBaseController
         $user->salutation = $request->salutation;
         $user->country_phonecode = $request->country_phonecode;
         $user->gender = $request->gender;
-        $user->locale = $request->locale;
+        $user->locale = 'en';
         $user->branch_id = $request->branch_id ?? ($editPermission == 'branch' ? $currentUser->branch_id : null);
 
         if (request()->has('status')) {
@@ -756,6 +769,7 @@ class EmployeeController extends AccountBaseController
         }
         $this->saveDependants($request, $employee);
         $this->saveAllowances($request, $employee);
+        $this->saveEmployeeBankAccounts($request, $employee);
 
         // To add custom fields data
         if ($request->custom_fields_data) {
@@ -802,7 +816,7 @@ class EmployeeController extends AccountBaseController
             }
 
             if ($step === 2) {
-                foreach (['employee_type', 'iqama_no', 'iqama_profession', 'national_id', 'transfer_number', 'probation_time', 'passport_no', 'sponsor_kafala'] as $field) {
+                foreach (['employee_type', 'iqama_no', 'iqama_profession', 'national_id', 'probation_time', 'passport_no', 'sponsor_kafala'] as $field) {
                     if ($request->has($field)) $employee->{$field} = $request->input($field);
                 }
                 $this->saveEmployeeStepDates($request, $employee, ['national_id_expiry_date', 'iqama_expiry_date', 'passport_expiry_date', 'sponsorship_transfer_date']);
@@ -811,7 +825,7 @@ class EmployeeController extends AccountBaseController
 
             if ($step === 3) {
                 $user->fill($request->only(['mobile', 'country_id', 'country_phonecode', 'gender', 'locale']));
-                foreach (['address', 'about_me', 'reporting_to', 'basic_salary', 'vehicle_allocation'] as $field) {
+                foreach (['address', 'reporting_to', 'basic_salary', 'vehicle_allocation'] as $field) {
                     if ($request->has($field)) $employee->{$field} = $request->input($field);
                 }
                 $this->saveEmployeeStepDates($request, $employee, ['date_of_birth', 'joining_date']);
@@ -832,6 +846,7 @@ class EmployeeController extends AccountBaseController
 
             if ($step === 4 && $request->boolean('dependants_present')) $this->saveDependants($request, $employee);
             if ($step === 5 && $request->boolean('allowances_present')) $this->saveAllowances($request, $employee);
+            if ($step === 5 && $request->boolean('bank_accounts_present')) $this->saveEmployeeBankAccounts($request, $employee);
             $editState->update(['last_saved_step' => $step, 'version' => $editState->version + 1, 'last_saved_by' => user()->id, 'last_saved_at' => now()]);
             $nextVersion = $editState->version;
         });
@@ -862,10 +877,18 @@ class EmployeeController extends AccountBaseController
 
         return match ($step) {
             1 => ['employee_id' => 'required|max:50|unique:employee_details,employee_id,' . $employee->id . ',id,company_id,' . company()->id, 'name' => 'required|max:50', 'department' => 'required', 'designation' => 'required', 'branch_id' => 'nullable|exists:branches,id', 'image' => 'nullable|image'],
-            2 => array_merge(['employee_type' => 'required|in:saudi,expat', 'national_id_expiry_date' => $date, 'iqama_expiry_date' => $date, 'passport_expiry_date' => $date, 'sponsorship_transfer_date' => $date, 'transfer_number' => 'nullable|numeric'], request()->input('employee_type') === 'saudi' ? ['national_id' => 'required|string|max:50', 'national_id_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"'] : ['iqama_no' => 'required|string|max:50', 'iqama_profession' => 'required|string|max:100', 'iqama_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"']),
+            2 => array_merge(['employee_type' => 'required|in:saudi,expat', 'national_id_expiry_date' => $date, 'iqama_expiry_date' => $date, 'passport_expiry_date' => $date, 'sponsorship_transfer_date' => $date], $request()->input('employee_type') === 'saudi' ? ['national_id' => 'required|string|max:50', 'national_id_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"'] : ['iqama_no' => 'required|string|max:50', 'iqama_profession' => 'required|string|max:100', 'iqama_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"']),
             3 => ['date_of_birth' => $date, 'joining_date' => $date, 'basic_salary' => 'nullable|numeric'],
             4 => ['probation_end_date' => $date, 'notice_period_start_date' => $date, 'notice_period_end_date' => $date, 'internship_end_date' => $date, 'contract_end_date' => $date, 'dependants.*.name' => 'required_with:dependants.*.relation', 'dependants.*.relation' => 'required_with:dependants.*.name', 'dependants.*.date_of_birth' => $date],
-            5 => ['allowances.*.name' => 'required_with:allowances.*.amount', 'allowances.*.amount' => 'required_with:allowances.*.name|numeric|min:0'],
+            5 => [
+                'allowances.*.name' => 'required_with:allowances.*.amount',
+                'allowances.*.amount' => 'required_with:allowances.*.name|numeric|min:0',
+                'bank_accounts.*.bank_name' => 'required_with:bank_accounts.*.iban_number,bank_accounts.*.account_number,bank_accounts.*.swift_code|string|max:255',
+                'bank_accounts.*.iban_number' => 'required_with:bank_accounts.*.bank_name,bank_accounts.*.account_number,bank_accounts.*.swift_code|string|max:255',
+                'bank_accounts.*.account_number' => 'nullable|string|max:255',
+                'bank_accounts.*.swift_code' => 'nullable|string|max:255',
+                'bank_accounts.*.is_main_account' => 'nullable|boolean',
+            ],
         };
     }
 
@@ -1109,6 +1132,29 @@ class EmployeeController extends AccountBaseController
                 abort_403(($viewDocumentPermission == 'none'));
                 $this->view = 'employees.ajax.documents';
                 break;
+            case 'company-assets':
+                $viewCompanyAssetPermission = user()->permission('view_company_assets');
+                $assignCompanyAssetPermission = user()->permission('assign_company_asset_to_employee');
+                $viewAssignmentPermission = user()->permission('view_assign_company_assets_to_employee');
+                $uploadSignaturePermission = user()->permission('upload_signature_assign_company_assets_to_employee');
+
+                abort_403(
+                    !in_array($viewCompanyAssetPermission, ['all', 'added', 'owned', 'both', 'branch'])
+                    && !in_array($assignCompanyAssetPermission, ['all', 'added', 'branch'])
+                    && !in_array($viewAssignmentPermission, ['all', 'added', 'owned', 'both', 'branch'])
+                    && !in_array($uploadSignaturePermission, ['all', 'added', 'owned', 'both', 'branch'])
+                );
+
+                $this->employeeAssetAssignments = AssetAssignment::with([
+                    'asset.branch',
+                    'asset.department',
+                ])
+                    ->where('employee_id', $id)
+                    ->orderByDesc('id')
+                    ->get();
+                $this->companyAssetEmployeeId = $id;
+                $this->view = 'employees.ajax.company-assets';
+                break;
             case 'emergency-contacts':
                 $this->view = 'employees.ajax.emergency-contacts';
                 break;
@@ -1183,9 +1229,74 @@ class EmployeeController extends AccountBaseController
         return view('employees.show', $this->data);
     }
 
+    public function assignCompanyAsset($id)
+    {
+        $assignPermission = user()->permission('assign_company_asset_to_employee');
+        abort_403(!in_array($assignPermission, ['all', 'added', 'branch']));
+
+        $employee = User::allEmployees()->where('id', $id)->first();
+        abort_if(is_null($employee), 404);
+
+        $assetsQuery = CompanyAsset::with(['branch', 'serials'])
+            ->where('available_qty', '>', 0)
+            ->orderBy('name');
+
+        if ($assignPermission == 'added') {
+            $assetsQuery->where('added_by', user()->id);
+        }
+
+        if ($assignPermission == 'branch' && !hr_has_all_branch_access('company_assets')) {
+            $assetsQuery->where('branch_id', user()->branch_id);
+        }
+
+        $assets = $assetsQuery->get();
+        $assignedSerials = AssetAssignment::whereIn('company_asset_id', $assets->pluck('id'))
+            ->get()
+            ->groupBy('company_asset_id')
+            ->map(function ($rows) {
+                return $rows->pluck('serial_no')->all();
+            });
+
+        $this->assignableAssets = $assets->map(function ($asset) use ($assignedSerials) {
+            $usedSerials = $assignedSerials->get($asset->id, []);
+            $serials = $asset->serials
+                ->whereNotIn('serial_no', $usedSerials)
+                ->pluck('serial_no')
+                ->values()
+                ->all();
+
+            return [
+                'id' => $asset->id,
+                'name' => $asset->name,
+                'catalog' => $asset->catalog,
+                'branch' => $asset->branch?->name,
+                'serials' => $serials,
+            ];
+        })->filter(function ($asset) {
+            return !empty($asset['serials']);
+        })->values();
+
+        $this->companyAssetEmployeeId = $id;
+        $this->employee = $employee;
+
+        if (request()->ajax()) {
+            $html = view('employees.ajax.assign-company-asset', $this->data)->render();
+
+            return Reply::dataOnly([
+                'status' => 'success',
+                'html' => $html,
+                'title' => __('app.menu.assignCompanyAsset'),
+            ]);
+        }
+
+        $this->view = 'employees.ajax.assign-company-asset';
+
+        return view('employees.show', $this->data);
+    }
+
     public function getAirTicketStats(int $employeeId): array
     {
-        $employee = User::with(['employeeDetails', 'airTicket'])
+        $employee = User::withoutGlobalScopes()->with(['employeeDetails', 'airTicket'])
             ->findOrFail($employeeId);
 
         $joiningDate = $employee->employeeDetails?->joining_date;
@@ -1499,9 +1610,13 @@ class EmployeeController extends AccountBaseController
 
         $employee->basic_salary = $request->basic_salary;
         $employee->vehicle_allocation = $request->vehicle_allocation;
+        if($request->vehicle_allocation == 'yes'){
+            $employee->vehicle_id = $request->vehicle_id;
+        } else{
+            $employee->vehicle_id = null;
+        }
 
         // --- NEW FIELDS (Text) ---
-        $employee->transfer_number = $request->transfer_number;
         $employee->probation_time = $request->probation_time;
 
         // Handle Iqama Image
@@ -1541,7 +1656,6 @@ class EmployeeController extends AccountBaseController
         $employee->department_id = $request->department;
         $employee->designation_id = $request->designation;
         $employee->reporting_to = $request->reporting_to;
-        $employee->about_me = $request->about_me;
         $employee->joining_date = \Carbon\Carbon::createFromFormat($this->company->date_format, $request->joining_date)->format('Y-m-d');
         $employee->date_of_birth = $request->date_of_birth
             ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->date_of_birth)->format('Y-m-d')
@@ -1598,6 +1712,54 @@ class EmployeeController extends AccountBaseController
             EmployeeAllowance::where('employee_id', $employee->user_id)->delete();
         }
     }
+
+    protected function saveEmployeeBankAccounts($request, EmployeeDetails $employee): void
+    {
+        if (!($request->has('bank_accounts') && is_array($request->bank_accounts))) {
+            EmployeeBankAccount::where('employee_id', $employee->user_id)->delete();
+
+            return;
+        }
+
+        $submittedIds = collect($request->bank_accounts)->pluck('id')->filter()->toArray();
+        EmployeeBankAccount::where('employee_id', $employee->user_id)
+            ->whereNotIn('id', $submittedIds)
+            ->delete();
+
+        $mainAccountId = null;
+
+        foreach ($request->bank_accounts as $bankAccount) {
+            if (empty($bankAccount['bank_name']) && empty($bankAccount['iban_number']) && empty($bankAccount['account_number']) && empty($bankAccount['swift_code'])) {
+                continue;
+            }
+
+            $account = EmployeeBankAccount::updateOrCreate(
+                [
+                    'id' => $bankAccount['id'] ?? null,
+                    'employee_id' => $employee->user_id,
+                ],
+                [
+                    'bank_name' => $bankAccount['bank_name'] ?? null,
+                    'iban_number' => $bankAccount['iban_number'] ?? null,
+                    'account_number' => $bankAccount['account_number'] ?? null,
+                    'swift_code' => $bankAccount['swift_code'] ?? null,
+                    'is_main_account' => !empty($bankAccount['is_main_account']),
+                    'added_by' => user()->id,
+                ]
+            );
+
+            if (!empty($bankAccount['is_main_account'])) {
+                $mainAccountId = $account->id;
+            }
+        }
+
+        if ($mainAccountId) {
+            EmployeeBankAccount::where('employee_id', $employee->user_id)
+                ->where('id', '!=', $mainAccountId)
+                ->update(['is_main_account' => false]);
+        }
+    }
+
     private function saveDependants($request, EmployeeDetails $employee): void
     {
         $submitted = $request->input('dependants', []);
@@ -1874,7 +2036,7 @@ class EmployeeController extends AccountBaseController
         abort_unless($valid, 422, 'The selected system role is not allowed.');
     }
 
-    public function terminatePending($id)
+    public function terminatePending(Request $request, $id)
     {
         $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
         $this->terminatePermission = user()->permission('manage_termination_employees');
@@ -1901,7 +2063,7 @@ class EmployeeController extends AccountBaseController
             'user_id' => $user->id,
             'company_id' => $user->company_id,
             'initiated_by' => user()->id,
-            'reason' => request('reason'),
+            'terminate_reason' => $request->terminate_reason,
             'status' => EmployeeTermination::STATUS_PENDING,
         ]);
 
@@ -1978,10 +2140,11 @@ class EmployeeController extends AccountBaseController
             ->get();
 
         $this->pendingAdvances = AdvanceSalary::where('employee_id', $id)
-            ->whereIn('status', ['pending', 'approved'])
+            ->where('status', 'approved')
+            ->whereColumn('deducted_amount', '<', 'advance_salary')
             ->get();
 
-        $this->canManageTermination = $this->terminatePendingCompletePermission($user);
+        $this->canManageTermination = $this->canManageTermination($user);
         $this->canManageItClearance = in_array($itPermission, ['all', 'branch']);
         $this->canManageFinanceClearance = in_array($financePermission, ['all', 'branch']);
 
@@ -1995,7 +2158,7 @@ class EmployeeController extends AccountBaseController
 
     }
 
-    private function terminatePendingCompletePermission(User $user)
+    private function canManageTermination(User $user)
     {
         $permission = user()->permission('manage_termination_employees');
 
@@ -2008,7 +2171,7 @@ class EmployeeController extends AccountBaseController
     {
         $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
 
-        abort_403(!$this->terminatePendingCompletePermission($user));
+        abort_403(!$this->canManageTermination($user));
 
         $termination = EmployeeTermination::where('user_id', $id)
             ->latest('id')
@@ -2061,6 +2224,66 @@ class EmployeeController extends AccountBaseController
         }
 
         return Reply::success(__('messages.updateSuccess'));
+    }
+
+    public function revertTermination(Request $request, $id)
+    {
+        $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
+
+        abort_403(!$this->canManageTermination($user));
+
+        $termination = EmployeeTermination::where('user_id', $id)
+            ->whereIn('status', [EmployeeTermination::STATUS_PENDING, EmployeeTermination::STATUS_COMPLETED])
+            ->latest('id')
+            ->first();
+
+        if (!$termination) {
+            return Reply::error('No active or completed termination found to revert.');
+        }
+
+        $request->validate([
+            'revert_reason' => 'nullable|string|max:1000',
+        ]);
+
+        $wasCompleted = $termination->status === EmployeeTermination::STATUS_COMPLETED;
+
+        DB::transaction(function () use ($termination, $user, $request, $wasCompleted) {
+            $termination->status = EmployeeTermination::STATUS_REVERTED;
+            $termination->reverted_by = user()->id;
+            $termination->reverted_at = now();
+            $termination->revert_reason = $request->revert_reason;
+            $termination->save();
+
+            if ($wasCompleted) {
+                $user->status = 'active';
+                $user->save();
+
+                if ($user->employeeDetail) {
+                    $user->employeeDetail->last_date = null;
+                    $user->employeeDetail->notice_period_start_date = null;
+                    $user->employeeDetail->notice_period_end_date = null;
+                    $user->employeeDetail->save();
+                }
+            }
+        });
+
+        $recipients = collect([$user])
+            ->merge(User::usersWithPermission('manage_it_clearance', $user->company_id))
+            ->merge(User::usersWithPermission('manage_finance_clearance', $user->company_id))
+            ->merge(User::usersWithPermission('manage_termination_employees', $user->company_id))
+            ->unique('email');
+
+        foreach ($recipients as $recipient) {
+            try {
+                Mail::to($recipient->email)->send(new TerminationRevertedMail($termination, $wasCompleted));
+            } catch (\Exception $e) {
+                Log::error('Failed to send termination reverted email: ' . $e->getMessage());
+            }
+        }
+
+        return Reply::success($wasCompleted
+            ? 'Employee reactivated successfully.'
+            : 'Termination reverted successfully.');
     }
 
     public function showTerminated($id)

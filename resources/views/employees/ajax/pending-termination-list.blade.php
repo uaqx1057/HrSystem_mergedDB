@@ -341,6 +341,53 @@
         });
     });
 
+    $('body').on('click', '.revert-termination-row', function() {
+        var id = $(this).data('user-id');
+
+        Swal.fire({
+            title: "@lang('messages.sweetAlertTitle')",
+            text: "@lang('messages.confirmRevertTermination')",
+            input: 'textarea',
+            inputPlaceholder: "@lang('app.revertReasonOptional')",
+            icon: 'warning',
+            showCancelButton: true,
+            focusConfirm: false,
+            confirmButtonText: "@lang('app.revertTermination')",
+            cancelButtonText: "@lang('app.cancel')",
+            customClass: {
+                confirmButton: 'btn btn-primary mr-3',
+                cancelButton: 'btn btn-secondary'
+            },
+            showClass: {
+                popup: 'swal2-noanimation',
+                backdrop: 'swal2-noanimation'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var url = "{{ route('employees.revert-termination', ':id') }}";
+                url = url.replace(':id', id);
+
+                var token = "{{ csrf_token() }}";
+
+                $.easyAjax({
+                    type: 'POST',
+                    url: url,
+                    blockUI: true,
+                    data: {
+                        '_token': token,
+                        'revert_reason': result.value
+                    },
+                    success: function(response) {
+                        if (response.status == "success") {
+                            window.LaravelDataTables["employees-table"].draw(false);
+                        }
+                    }
+                });
+            }
+        });
+    });
+
     const applyQuickAction = () => {
         var rowdIds = $("#employees-table input:checkbox:checked").map(function() {
             return $(this).val();

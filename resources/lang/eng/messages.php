@@ -491,5 +491,6 @@ return array(
     'currencyConvertKeyUpdated' => 'The Currency Converter Key Updated',
     'clientSignUpDisabledByAdmin' => 'Client sign up is disabled by admin.',
     'cantAddFollowup' => 'You can not add followup. If deal is win or lost.',
-    'lowerValue'=> 'Enter lower value than'
+    'lowerValue'=> 'Enter lower value than',
+    'confirmRevertTermination' => 'This will cancel the termination process and restore the employee to active status. Are you sure?',
 );

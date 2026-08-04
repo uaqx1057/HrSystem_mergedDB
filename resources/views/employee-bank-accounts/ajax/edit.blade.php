@@ -5,7 +5,7 @@
                 <h4 class="mb-0 p-20 f-21 form-heading-background font-weight-normal text-capitalize border-bottom-grey">
                     @lang('app.edit')</h4>
                 <div class="row p-20">
-                    <div class="col-md-6">
+                    {{-- <div class="col-md-6">
                         @if (in_array(user()->permission('edit_advance_salary'), ['all', 'added', 'both','branch']))
                             <x-forms.label class="" fieldId="employee_id" :fieldLabel="__('app.employee')" fieldRequired="true">
                             </x-forms.label>
@@ -24,7 +24,8 @@
                                 fieldRequired="true" :fieldPlaceholder="__('placeholders.basic_salary')" :fieldValue="user()->name" :fieldReadOnly="true">
                             </x-forms.text>
                         @endif
-                    </div>
+                    </div> --}}
+                    <input type="hidden" value="{{ $account->employee_id }}" name="employee_id">
                     <div class="col-md-6">
                         <x-forms.text fieldId="bank_name" :fieldLabel="__('app.bankName')" fieldName="bank_name" fieldRequired="true" :fieldValue="$account->bank_name" :fieldPlaceholder="__('placeholders.name')"></x-forms.text>
                     </div>

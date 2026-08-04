@@ -21,6 +21,7 @@ class AssetAssignmentHistory extends Model
         'signed_document',
         'asset_assignment_id',
         'added_by',
+        'serial_no',
     ];
 
     protected $casts = [

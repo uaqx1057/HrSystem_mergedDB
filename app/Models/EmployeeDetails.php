@@ -141,6 +141,16 @@ class EmployeeDetails extends BaseModel
         return $this->belongsTo(Team::class, 'department_id');
     }
 
+    public function sponserKafala(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'sponsor_kafala');
+    }
+
+    public function vehicle(): BelongsTo
+    {
+        return $this->belongsTo(Vehicle::class, 'vehicle_id');
+    }
+
 
 
 }
