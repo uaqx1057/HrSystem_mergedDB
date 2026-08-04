@@ -819,7 +819,7 @@
                 }
 
                 if(ok == true){
-                    var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+                    var emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,})?$/;
                     var email = $.trim($('#email').val());
                     if (email === '') {
                         highlightError('#email', 'Email is required.', false);
