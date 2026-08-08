@@ -68,7 +68,7 @@ class OnboardingDataTable extends BaseDataTable
                 if (!in_array('admin', $userRole) || (in_array('admin', $userRole) && in_array('admin', user_roles()))) {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('employees.edit-onboarding', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
-                                ' . trans('app.edit') . '
+                                ' . trans('app.process') . '
                             </a>';
                 }
             }
@@ -95,7 +95,8 @@ class OnboardingDataTable extends BaseDataTable
         $datatables->editColumn('name', function ($row) {
             return view('components.employee', [
                 'user' => $row,
-                'leave' => true
+                'leave' => true,
+                'disabledLink' => true
             ]);
         });
 

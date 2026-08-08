@@ -323,6 +323,7 @@ class EmployeeController extends AccountBaseController
             $user->country_phonecode = $request->country_phonecode;
             $user->gender = $request->gender;
             $user->locale = 'en';
+            $user->status = $request->status;
             $user->user_auth_id = $userAuth->id;
             $user->branch_id = $request->branch_id ?? ($addPermission == 'branch' ? user()->branch_id : null);
             $user->dark_theme       = 1;
@@ -439,7 +440,7 @@ class EmployeeController extends AccountBaseController
             return Reply::successWithData(__('messages.recordSaved'), ['html' => $html, 'add_more' => true]);
         }
 
-        if ($request->has('for-onboarding')) {
+        if ($request->for_onboarding == 'onboard') {
             return Reply::successWithData(
                 __('messages.recordSaved'),
                 [

@@ -793,7 +793,28 @@
                                     </label>
                                 </div>
 
-                                <input type="hidden" name="for-onboarding" value="yes">
+                                <input type="hidden" name="for_onboarding" value="{{ request('tab') }}">
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 col-lg-12">
+                            <div class="form-group">
+                                <label class="f-14 text-dark-grey mt-3 w-100" for="usr">@lang('app.status')</label>
+                                <div class="d-flex">
+                                    <x-forms.radio fieldId="status-active" :fieldLabel="__('app.active')"
+                                        fieldValue="active" fieldName="status"
+                                    >
+                                    </x-forms.radio>
+                                    <x-forms.radio fieldId="status-inactive" :fieldLabel="__('app.inactive')"
+                                        fieldValue="deactive" fieldName="status"
+                                        >
+                                    </x-forms.radio>
+
+                                    <x-forms.radio fieldId="status-pending-onboarding" fieldLabel="Pending Onboarding"
+                                        fieldValue="Pending Onboarding" fieldName="status"
+                                        :checked="'checked'">
+                                    </x-forms.radio>
+                                </div>
                             </div>
                         </div>
                     </div>

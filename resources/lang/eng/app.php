@@ -22,6 +22,7 @@ return array(
     'lateHalfday' => 'HalfDay , Present( Late )',
     'addNew' => 'Add New',
     'edit' => 'Edit',
+    'process' => 'Process',
     'return' => 'Return',
     'defaultStatus' => 'Default Status',
     'id' => 'Id',

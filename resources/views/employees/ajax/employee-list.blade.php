@@ -114,7 +114,7 @@
             <div id="table-actions" class="d-block d-lg-flex align-items-center">
                 @if (checkCompanyCanAddMoreEmployees(user()->company_id))
                     @if (in_array($addEmployeePermission, ['all', 'added', 'branch']))
-                        <x-forms.link-primary :link="route('employees.create')" class="mr-3 openRightModal" icon="plus">
+                        <x-forms.link-primary :link="route('employees.create').'?tab=employee'" class="mr-3 openRightModal" icon="plus">
                             @lang('app.addEmployee')
                         </x-forms.link-primary>
 
