@@ -255,7 +255,7 @@ class EmployeesDataTable extends BaseDataTable
                         \App\Models\EmployeeTermination::STATUS_PENDING,
                         \App\Models\EmployeeTermination::STATUS_COMPLETED,
                     ]);
-            });
+            })->where('users.status','<>', 'Pending Onboarding');
 
 
         if ($request->status != 'all' && $request->status != '') {

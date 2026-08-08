@@ -226,6 +226,11 @@
                         <div class="ms-step-circle">5</div>
                         <span class="ms-step-label">Allowances</span>
                     </div>
+                    <div class="ms-step-line" id="line-5"></div>
+                    <div class="ms-step" data-step="6">
+                        <div class="ms-step-circle">6</div>
+                        <span class="ms-step-label">On Boarding</span>
+                    </div>
                 </div>
 
                 {{-- ══════════════════════════════════════
@@ -722,10 +727,81 @@
                         </div>
                     </div>
 
-                    {{-- Step 5 nav + Save buttons --}}
+                    {{-- Step 5 nav --}}
                     <div class="ms-nav-buttons">
                         <div class="left-btns">
                             <button type="button" class="btn btn-secondary ms-prev-btn" data-prev="4">
+                                <i class="fa fa-arrow-left"></i> &nbsp;@lang('app.previous')
+                            </button>
+                        </div>
+                        <div class="right-btns">
+                            <button type="button" class="btn btn-primary ms-next-btn" data-next="6">
+                                @lang('app.next') &nbsp;<i class="fa fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ══════════════════════════════════════
+                     STEP 6 — On Boarding
+                ══════════════════════════════════════ --}}
+                <div class="form-step" id="form-step-6">
+                    <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey form-heading-background">
+                        On Boarding</h4>
+                    <div class="row p-20">
+                        <div class="col-md-12">
+                            <div class="step5-card">
+                                <div class="step5-subtitle">Track onboarding progress for this employee.</div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="verify_employee_profile"
+                                           id="verify_employee_profile" value="1">
+                                    <label class="form-check-label f-12 pt-1 ml-2" for="verify_employee_profile">
+                                        Verify Employee Profile
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="setup_bank_and_payroll"
+                                           id="setup_bank_and_payroll" value="1">
+                                    <label class="form-check-label f-12 pt-1 ml-2" for="setup_bank_and_payroll">
+                                        Setup Bank &amp; Payroll
+                                    </label>
+                                </div>
+
+                                {{-- <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="assign_insurance"
+                                           id="assign_insurance" value="1">
+                                    <label class="form-check-label f-12 pt-1 ml-2" for="assign_insurance">
+                                        Assign Insurance
+                                    </label>
+                                </div> --}}
+
+                                {{-- <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="assign_required_assets"
+                                           id="assign_required_assets" value="1">
+                                    <label class="form-check-label f-12 pt-1 ml-2" for="assign_required_assets">
+                                        Assign Required Assets
+                                    </label>
+                                </div> --}}
+
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="manager_confirmation"
+                                           id="manager_confirmation" value="1">
+                                    <label class="form-check-label f-12 pt-1 ml-2" for="manager_confirmation">
+                                        Manager Confirmation
+                                    </label>
+                                </div>
+
+                                <input type="hidden" name="for-onboarding" value="yes">
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Step 6 nav + Save buttons --}}
+                    <div class="ms-nav-buttons">
+                        <div class="left-btns">
+                            <button type="button" class="btn btn-secondary ms-prev-btn" data-prev="5">
                                 <i class="fa fa-arrow-left"></i> &nbsp;@lang('app.previous')
                             </button>
                         </div>
@@ -778,7 +854,7 @@
         ].forEach(lockDateField);
         // ── MULTISTEP NAVIGATION ──────────────────────────────
         var currentStep = 1;
-        var totalSteps  = 5;
+        var totalSteps  = 6;
 
         function goToStep(step) {
             // hide all steps
@@ -1242,6 +1318,7 @@
 
         function getStepForField(fieldName) {
             if (!fieldName) return 1;
+            if (['verify_employee_profile', 'setup_bank_and_payroll', 'assign_insurance', 'assign_required_assets', 'manager_confirmation'].includes(fieldName)) return 6;
             if (fieldName.startsWith('allowances.') || fieldName.startsWith('bank_accounts.')) return 5;
             if (fieldName.startsWith('dependants.') || ['login', 'email_notifications', 'slack_username', 'telegram_user_id', 'status', 'probation_end_date', 'employment_type', 'marital_status', 'no_of_dependants', 'internship_end_date', 'contract_end_date', 'notice_period_start_date', 'notice_period_end_date'].includes(fieldName)) return 4;
             if (['password', 'country', 'mobile', 'country_phonecode', 'gender', 'joining_date', 'basic_salary', 'reporting_to', 'locale', 'role', 'vehicle_allocation', 'vehicle_id', 'address', 'date_of_birth'].includes(fieldName)) return 3;

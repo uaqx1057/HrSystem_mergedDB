@@ -160,6 +160,7 @@ return array(
         'clients' => 'Clients',
         'employees' => 'Employees',
         'pendingTermination' => 'Pending Termination',
+        'onboard' => 'Onboard',
         'terminated' => 'Terminated',
         'insurance' => 'Insurance',
         'airTickets' => 'Air Tickets',

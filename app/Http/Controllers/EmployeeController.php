@@ -7,6 +7,7 @@ use App\DataTables\EmployeeBankAccountDataTable;
 use App\DataTables\EmployeesDataTable;
 use App\DataTables\InsuranceDataTable;
 use App\DataTables\LeaveDataTable;
+use App\DataTables\OnboardingDataTable;
 use App\DataTables\PendingTerminationDataTable;
 use App\DataTables\TerminatedDataTable;
 use App\DataTables\ProjectsDataTable;
@@ -106,6 +107,9 @@ class EmployeeController extends AccountBaseController
             case 'pending-termination':
                 return $this->pendingTerminationList();
 
+            case 'onboard':
+                return $this->onboardList();
+
             case 'terminated':
                 return $this->terminatedList();
 
@@ -153,6 +157,24 @@ class EmployeeController extends AccountBaseController
         $this->roles = Role::where('name', '<>', 'client')->orderBy('id')->get();
         $this->view = 'employees.ajax.pending-termination-list';
         $dataTable = new PendingTerminationDataTable();
+
+        return $dataTable->render('employees.index', $this->data);
+    }
+
+    public function onboardList()
+    {
+        $managePermission = user()->permission('manage_onboarding_employees');
+        abort_403(!in_array($managePermission, ['all', 'added', 'owned', 'both', 'branch']));
+
+        $this->activeTab = 'onboard';
+        $this->employees = User::allEmployees();
+        $this->skills = Skill::all();
+        $this->departments = Team::all();
+        $this->designations = Designation::allDesignations();
+        $this->totalEmployees = count($this->employees);
+        $this->roles = Role::where('name', '<>', 'client')->orderBy('id')->get();
+        $this->view = 'employees.ajax.onboard-list';
+        $dataTable = new OnboardingDataTable();
 
         return $dataTable->render('employees.index', $this->data);
     }
@@ -415,6 +437,15 @@ class EmployeeController extends AccountBaseController
             $html = $this->create();
 
             return Reply::successWithData(__('messages.recordSaved'), ['html' => $html, 'add_more' => true]);
+        }
+
+        if ($request->has('for-onboarding')) {
+            return Reply::successWithData(
+                __('messages.recordSaved'),
+                [
+                    'redirectUrl' => route('employees.index', ['tab' => 'onboard'])
+                ]
+            );
         }
 
         return Reply::successWithData(__('messages.recordSaved'), ['redirectUrl' => route('employees.index')]);
@@ -780,6 +811,14 @@ class EmployeeController extends AccountBaseController
             session()->forget('user');
         }
 
+        if ($request->has('for-onboarding')) {
+            return Reply::successWithData(
+                __('messages.updateSuccess'),
+                [
+                    'redirectUrl' => route('employees.index', ['tab' => 'onboard'])
+                ]
+            );
+        }
         return Reply::successWithData(__('messages.updateSuccess'), ['redirectUrl' => route('employees.index')]);
     }
 
@@ -1616,6 +1655,15 @@ class EmployeeController extends AccountBaseController
             $employee->vehicle_id = null;
         }
 
+        // Onboarding data
+        if ($request->has('for-onboarding')) {
+            $employee->verify_employee_profile = $request->verify_employee_profile ?? false;
+            $employee->setup_bank_and_payroll = $request->setup_bank_and_payroll ?? false;
+            // $employee->assign_insurance = $request->assign_insurance ?? false;
+            // $employee->assign_required_assets = $request->assign_required_assets ?? false;
+            $employee->manager_confirmation = $request->manager_confirmation ?? false;
+        }
+
         // --- NEW FIELDS (Text) ---
         $employee->probation_time = $request->probation_time;
 
@@ -2312,6 +2360,132 @@ class EmployeeController extends AccountBaseController
 
         $this->view = 'employees.ajax.show-terminated';
         return view('employees.create', $this->data);
+    }
+
+    public function showOnboard($id)
+    {
+        $permission = user()->permission('manage_onboarding_employees');
+        abort_403(!in_array($permission, ['all', 'added', 'owned', 'both', 'branch']));
+
+        $this->employee = User::with([
+            'employeeDetail',
+            'employeeDetail.designation',
+            'employeeDetail.department',
+            'country',
+        ])
+            ->withoutGlobalScope(ActiveScope::class)
+            ->withOut('clientDetails', 'role')
+            ->findOrFail($id);
+
+        // abort_403($this->employee->status !== 'onboarding');
+
+        if ($permission == 'added') {
+            abort_403(optional($this->employee->employeeDetail)->added_by !== user()->id);
+        }
+
+        if ($permission == 'owned') {
+            abort_403($this->employee->id !== user()->id);
+        }
+
+        if ($permission == 'both') {
+            abort_403(!(
+                $this->employee->id === user()->id
+                || optional($this->employee->employeeDetail)->added_by === user()->id
+            ));
+        }
+
+        if ($permission == 'branch') {
+            abort_403(is_null(user()->branch_id) || $this->employee->branch_id !== user()->branch_id);
+        }
+
+        $this->pageTitle = __('app.menu.onboard');
+
+        if (request()->ajax()) {
+            $html = view('employees.ajax.show-onboard', $this->data)->render();
+            return Reply::dataOnly(['status' => 'success', 'html' => $html, 'title' => $this->pageTitle]);
+        }
+
+        $this->employeeLifecycle = EmployeeLifecycle::summary($this->employee);
+
+        $this->view = 'employees.ajax.show-onboard';
+        return view('employees.create', $this->data);
+    }
+
+    public function editOnboarding($id)
+    {
+
+        $this->employee = User::withoutGlobalScope(ActiveScope::class)->with('employeeDetail', 'reportingTeam')->findOrFail($id);
+        $this->emailCountInCompanies = User::withoutGlobalScopes([ActiveScope::class, CompanyScope::class])
+            ->where('email', $this->employee->email)
+            ->whereNotNull('email')
+            ->count();
+
+        $this->editPermission = user()->permission('edit_employees');
+
+        $userRoles = $this->employee->roles->pluck('name')->toArray();
+
+        abort_403(!in_array('admin', user_roles()) && in_array('admin', $userRoles));
+
+        abort_403(!($this->editPermission == 'all'
+            || ($this->editPermission == 'added' && $this->employee->employeeDetail->added_by == user()->id)
+            || ($this->editPermission == 'owned' && $this->employee->id == user()->id)
+            || ($this->editPermission == 'both' && ($this->employee->id == user()->id || $this->employee->employeeDetail->added_by == user()->id))
+            || ($this->editPermission == 'branch' && !is_null(user()->branch_id) && $this->employee->branch_id == user()->branch_id)
+        ));
+
+        $this->pageTitle = __('app.update') . ' ' . __('app.employee');
+        $this->skills = Skill::all()->pluck('name')->toArray();
+        $this->teams = Team::allDepartments();
+        $this->designations = Designation::allDesignations();
+        if ($this->editPermission == 'branch') {
+            $currentBranchId = user()->branch_id;
+            $this->branches = Branch::where('id', $currentBranchId)->get();
+        } else {
+            $this->branches = Branch::get();
+        }
+        $this->countries = countries();
+        $this->languages = LanguageSetting::where('status', 'enabled')->get();
+        $exceptUsers = [$id];
+        $this->roles = Role::where('name', '<>', 'client')->get();
+        $this->userRoles = $this->employee->roles->pluck('name')->toArray();
+        $this->salutations = Salutation::cases();
+
+        $this->companies = Company::where('status', 'active')->orderBy('id')->get();
+        $this->vehicles = Vehicle::orderBy('id')->get();
+
+        /** @phpstan-ignore-next-line */
+        if (count($this->employee->reportingTeam) > 0) {
+            /** @phpstan-ignore-next-line */
+            $exceptUsers = array_merge($this->employee->reportingTeam->pluck('user_id')->toArray(), $exceptUsers);
+        }
+
+        $this->employees = User::allEmployees($exceptUsers, true);
+
+        $this->existingAllowances = EmployeeAllowance::where('employee_id', $this->employee->id)->get();
+        $this->existingBankAccounts = EmployeeBankAccount::where('employee_id', $this->employee->id)->get();
+        $this->editState = HrEmployeeEditState::firstOrCreate(
+            ['company_id' => $this->employee->company_id, 'employee_id' => $this->employee->id],
+            ['version' => 0]
+        );
+
+        if (!is_null($this->employee->employeeDetail)) {
+            $this->employeeDetail = $this->employee->employeeDetail->withCustomFields();
+
+            if ($this->employeeDetail->getCustomFieldGroupsWithFields()) {
+                $this->fields = $this->employeeDetail->getCustomFieldGroupsWithFields()->fields;
+            }
+        }
+
+        if (request()->ajax()) {
+            $html = view('employees.ajax.edit-onboarding', $this->data)->render();
+
+            return Reply::dataOnly(['status' => 'success', 'html' => $html, 'title' => $this->pageTitle]);
+        }
+
+        $this->view = 'employees.ajax.edit-onboarding';
+
+        return view('employees.create', $this->data);
+
     }
 
 }

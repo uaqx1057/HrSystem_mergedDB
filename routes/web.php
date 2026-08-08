@@ -274,6 +274,7 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::get('employees/terminate-pending/show/{id}', [EmployeeController::class, 'showTerminatePending'])->name('employees.show-terminate-pending');
     Route::post('employees/complete-termination/{id}', [EmployeeController::class, 'completeTermination'])->name('employees.complete-termination');
     Route::get('employees/terminated/show/{id}', [EmployeeController::class, 'showTerminated'])->name('employees.show-terminated');
+    Route::get('employees/onboard/show/{id}', [EmployeeController::class, 'showOnboard'])->name('employees.show-onboard');
 
     Route::get('employees/it-clearance/{id}', [\App\Http\Controllers\TerminationClearanceController::class, 'itView'])->name('employees.it-clearance');
     Route::post('employees/it-clearance/{id}/reminder', [\App\Http\Controllers\TerminationClearanceController::class, 'itSendReminder'])->name('employees.it-clearance.reminder');
@@ -286,6 +287,7 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::get('employees/finance-clearance/{id}/letter', [\App\Http\Controllers\TerminationClearanceController::class, 'financeClearanceLetterPdf'])->name('employees.finance-clearance.letter');
 
     Route::resource('employees', EmployeeController::class);
+    Route::get('employees/{id}/edit-onboarding', [EmployeeController::class, 'editOnboarding'])->name('employees.edit-onboarding');
     Route::get('employees/{id}/assign-company-asset', [EmployeeController::class, 'assignCompanyAsset'])->name('employees.assign-company-asset');
     Route::post('employees/{id}/revert-termination', [EmployeeController::class, 'revertTermination'])
     ->name('employees.revert-termination');

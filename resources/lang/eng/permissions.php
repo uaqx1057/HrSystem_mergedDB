@@ -457,7 +457,8 @@ return array (
     'manage_termination_employees' => 'Manage Termination Employees',
     'view_pending_termination_employees' => 'View Pending Termination Employees',
     'view_terminated_employees' => 'View Terminated Employees',
-    
-        'manage_it_clearance' => 'Manage IT Clearance',
-        'manage_finance_clearance' => 'Manage Finance Clearance',
+    'manage_onboarding_employees' => 'Manage Onboarding Employees',
+
+    'manage_it_clearance' => 'Manage IT Clearance',
+    'manage_finance_clearance' => 'Manage Finance Clearance',
 );

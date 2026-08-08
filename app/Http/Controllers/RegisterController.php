@@ -82,7 +82,7 @@ class RegisterController extends Controller
 
             // Employee fills their own data — login disabled until HR approves
             $user->login        = 'disable';
-            $user->status       = 'deactive';
+            // $user->status       = 'deactive';
 
             $user->dark_theme       = 1;
 

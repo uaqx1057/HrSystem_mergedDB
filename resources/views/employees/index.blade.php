@@ -12,9 +12,11 @@
         $viewTerminated = user()->permission('view_terminated_employees');
         $manageItClearance = user()->permission('manage_it_clearance');
         $manageFinanceClearance = user()->permission('manage_finance_clearance');
+        $manageOnboarding = user()->permission('manage_onboarding_employees');
         $showPendingTerminationTab = (in_array($viewPendingTermination, ['all', 'added', 'owned', 'both', 'branch']))
             || in_array($manageItClearance, ['all', 'branch'])
             || in_array($manageFinanceClearance, ['all', 'branch']);
+        $showOnboardTab = in_array($manageOnboarding, ['all', 'added', 'owned', 'both', 'branch']);
     @endphp
         <!-- FILTER START -->
         <!-- PROJECT HEADER STARTmplete -->
@@ -27,6 +29,10 @@
                     <i class="fa fa-times"></i>
                 </a>
 
+                @if ($showOnboardTab)
+                    <x-tab :href="route('employees.index').'?tab=onboard'" :text="__('app.menu.onboard') ?? 'Onboard'" ajax="false" class="onboard" />
+                @endif
+
                 @if ($viewEmployee && $viewEmployee != 'none')
                     <x-tab :href="route('employees.index')" :text="__('app.menu.employees')" ajax="false" class="employee" />
                 @endif
@@ -38,7 +44,7 @@
                 @if ($viewTerminated && $viewTerminated != 'none')
                     <x-tab :href="route('employees.index').'?tab=terminated'" :text="__('app.menu.terminated')" ajax="false" class="terminated" />
                 @endif
-                
+
             </div>
 
             <a class="mb-0 d-block d-lg-none text-dark-grey ml-auto mr-2 border-left-grey"

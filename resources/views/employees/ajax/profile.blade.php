@@ -49,7 +49,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
     <div class="w-100 py-0 py-lg-3 py-md-0">
         <!-- ROW START -->
         <div class="row">
-            @if (isset($employeeLifecycle))
+            {{-- @if (isset($employeeLifecycle))
                 <div class="col-12 mb-3">
                     <div class="card border-0 shadow-sm">
                         <div class="card-body py-3">
@@ -67,7 +67,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                         </div>
                     </div>
                 </div>
-            @endif
+            @endif --}}
             <!--  USER CARDS START -->
             <div class="col-lg-12 col-md-12 mb-4 mb-xl-0 mb-lg-4 mb-md-0">
                 <div class="row">
