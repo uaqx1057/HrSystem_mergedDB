@@ -3,3 +3,12 @@ grafel-chats/
 /tmp_*.ps1
 /tmp_live_check/
 /bootstrap/cache/*.php
+.claude/settings.json
+.codex/hooks.json
+.phpunit.result.cache
+AGENTS.md
+CLAUDE.md
+hr_release_20260725_e1c436ff.tar.gz
+hr_release_20260725_e1c436ff_safe.tar.gz
+CLAUDE.md
+AGENTS.md
