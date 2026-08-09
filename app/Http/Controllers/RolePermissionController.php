@@ -75,24 +75,10 @@ class RolePermissionController extends AccountBaseController
 
         $role = Role::with('users', 'users.role')->findOrFail($roleId);
         // Update role's permission
-        $permissionRole = PermissionRole::where('permission_id', $permissionId)
-            ->where('role_id', $roleId)
-            ->first();
-
-        if ($permissionRole) {
-            $permissionRole = PermissionRole::where('permission_id', $permissionId)
-                ->where('role_id', $roleId)
-                ->update(['permission_type_id' => $permissionType]);
-
-        }
-        else {
-            $permissionRole = new PermissionRole();
-            $permissionRole->permission_id = $permissionId;
-            $permissionRole->role_id = $roleId;
-            $permissionRole->permission_type_id = $permissionType;
-            $permissionRole->save();
-
-        }
+        PermissionRole::updateOrCreate(
+            ['permission_id' => $permissionId, 'role_id' => $roleId],
+            ['permission_type_id' => $permissionType]
+        );
 
         // Update user permission with the role
         foreach ($role->users as $roleuser) {
@@ -112,13 +98,18 @@ class RolePermissionController extends AccountBaseController
                 continue;
             }
 
-            $userPermission = UserPermission::firstOrNew([
-                'permission_id' => $permissionId,
-                'user_id' => $roleuser->id,
-            ]);
+            $userPermission = UserPermission::where('permission_id', $permissionId)->where('user_id', $roleuser->id)->first();
 
-            $userPermission->permission_type_id = $permissionType;
-            $userPermission->save();
+            if ($userPermission) {
+                UserPermission::where('permission_id', $permissionId)->where('user_id', $roleuser->id)->update(['permission_type_id' => $permissionType]);
+            } else{
+                $userPermission = new UserPermission();
+                $userPermission->permission_id = $permissionId;
+                $userPermission->user_id = $roleuser->id;
+                $userPermission->permission_type_id = $permissionType;
+                $userPermission->save();
+            }
+
         }
 
         \Illuminate\Support\Facades\Artisan::call('cache:clear');

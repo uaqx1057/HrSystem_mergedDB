@@ -27,7 +27,11 @@ class PermissionRole extends BaseModel
 
     protected $table = 'permission_role';
 
-    protected $fillable = ['role_id', 'permission_id', 'permission_type_id'];
+    protected $primaryKey = 'permission_id';
+    public $incrementing = false;
+    protected $keyType = 'int';
+
+    protected $fillable = ['role_id', 'permission_id', 'permission_type_id', 'company_id'];
 
     public $timestamps = false;
 
