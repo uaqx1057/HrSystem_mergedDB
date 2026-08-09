@@ -138,7 +138,7 @@ class EmployeesDataTable extends BaseDataTable
                 || ($this->editEmployeePermission == 'branch' && !is_null(user()->branch_id) && $row->branch_id == user()->branch_id);
 
             if ($canEdit) {
-                if (!in_array('admin', $userRole) || (in_array('admin', $userRole) && in_array('admin', user_roles()))) {
+                if (!in_array('admin', $userRole) || in_array('admin', user_roles()) || $this->editEmployeePermission == 'all') {
                     $action .= '<a class="dropdown-item openRightModal" href="' . route('employees.edit', [$row->id]) . '">
                                 <i class="fa fa-edit mr-2"></i>
                                 ' . trans('app.edit') . '

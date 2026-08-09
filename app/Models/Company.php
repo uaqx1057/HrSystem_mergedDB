@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Cashier\Billable;
 
@@ -331,7 +332,13 @@ class Company extends BaseModel
 
     public function employees()
     {
-        return $this->hasMany(User::class)->whereHas('employeeDetail');
+        return $this->hasMany(User::class)->whereHas('employeeDetail')
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('employee_terminations')
+                    ->whereColumn('employee_terminations.user_id', 'users.id')
+                    ->where('employee_terminations.status', EmployeeTermination::STATUS_COMPLETED);
+            });
     }
 
     public function getLogoUrlAttribute()

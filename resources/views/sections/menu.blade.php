@@ -88,9 +88,14 @@
                 @php
                     $viewEmployee = user()->permission('view_employees');
                     $viewPendingTermination = user()->permission('view_pending_termination_employees');
-                    if($viewEmployee == 'none'){
+                    $viewTerminated = user()->permission('view_terminated_employees');
+                    $employeeViewTypes = ['all', 'added', 'owned', 'both', 'branch'];
+                    $tabViewTypes = ['all', 'branch'];
+                    if (in_array($viewEmployee, $employeeViewTypes)) {
+                        $employeeRoute = route('employees.index');
+                    } elseif (in_array($viewPendingTermination, $tabViewTypes)) {
                         $employeeRoute = route('employees.index').'?tab=pending-termination';
-                    } elseif($viewPendingTermination == 'none'){
+                    } elseif (in_array($viewTerminated, $tabViewTypes)) {
                         $employeeRoute = route('employees.index').'?tab=terminated';
                     } else{
                         $employeeRoute = route('employees.index');

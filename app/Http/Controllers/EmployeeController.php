@@ -589,7 +589,11 @@ class EmployeeController extends AccountBaseController
 
         $userRoles = $this->employee->roles->pluck('name')->toArray();
 
-        abort_403(!in_array('admin', user_roles()) && in_array('admin', $userRoles));
+        abort_403(
+            in_array('admin', $userRoles)
+            && !in_array('admin', user_roles())
+            && $this->editPermission !== 'all'
+        );
 
         abort_403(!($this->editPermission == 'all'
             || ($this->editPermission == 'added' && $this->employee->employeeDetail->added_by == user()->id)
@@ -900,7 +904,11 @@ class EmployeeController extends AccountBaseController
     {
         $currentUser = user();
         $permission = $currentUser->permission('edit_employees');
-        abort_403(!in_array('admin', user_roles()) && $employee->hasRole('admin'));
+        abort_403(
+            $employee->hasRole('admin')
+            && !in_array('admin', user_roles())
+            && $permission !== 'all'
+        );
         abort_403(!(
             $permission === 'all'
             || ($permission === 'added' && optional($employee->employeeDetail)->added_by === user()->id)
@@ -917,7 +925,7 @@ class EmployeeController extends AccountBaseController
 
         return match ($step) {
             1 => ['employee_id' => 'required|max:50|unique:employee_details,employee_id,' . $employee->id . ',id,company_id,' . company()->id, 'name' => 'required|max:50', 'department' => 'required', 'designation' => 'required', 'branch_id' => 'nullable|exists:branches,id', 'image' => 'nullable|image'],
-            2 => array_merge(['employee_type' => 'required|in:saudi,expat', 'national_id_expiry_date' => $date, 'iqama_expiry_date' => $date, 'passport_expiry_date' => $date, 'sponsorship_transfer_date' => $date], $request()->input('employee_type') === 'saudi' ? ['national_id' => 'required|string|max:50', 'national_id_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"'] : ['iqama_no' => 'required|string|max:50', 'iqama_profession' => 'required|string|max:100', 'iqama_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"']),
+            2 => array_merge(['employee_type' => 'required|in:saudi,expat', 'national_id_expiry_date' => $date, 'iqama_expiry_date' => $date, 'passport_expiry_date' => $date, 'sponsorship_transfer_date' => $date], request()->input('employee_type') === 'saudi' ? ['national_id' => 'required|string|max:50', 'national_id_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"'] : ['iqama_no' => 'required|string|max:50', 'iqama_profession' => 'required|string|max:100', 'iqama_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"']),
             3 => ['date_of_birth' => $date, 'joining_date' => $date, 'basic_salary' => 'nullable|numeric'],
             4 => ['probation_end_date' => $date, 'notice_period_start_date' => $date, 'notice_period_end_date' => $date, 'internship_end_date' => $date, 'contract_end_date' => $date, 'dependants.*.name' => 'required_with:dependants.*.relation', 'dependants.*.relation' => 'required_with:dependants.*.name', 'dependants.*.date_of_birth' => $date],
             5 => [
@@ -2425,7 +2433,11 @@ class EmployeeController extends AccountBaseController
 
         $userRoles = $this->employee->roles->pluck('name')->toArray();
 
-        abort_403(!in_array('admin', user_roles()) && in_array('admin', $userRoles));
+        abort_403(
+            in_array('admin', $userRoles)
+            && !in_array('admin', user_roles())
+            && $this->editPermission !== 'all'
+        );
 
         abort_403(!($this->editPermission == 'all'
             || ($this->editPermission == 'added' && $this->employee->employeeDetail->added_by == user()->id)

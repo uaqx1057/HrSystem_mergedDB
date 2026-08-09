@@ -170,6 +170,11 @@
         box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
     }
 
+    .step5-card h4 {
+        color: #1f2937;
+        font-weight: 600;
+    }
+
     .step5-subtitle {
         font-size: 12px;
         color: #6b7280;
@@ -184,6 +189,28 @@
         padding-top: 10px;
         padding-bottom: 10px;
     }
+
+    @if(user()->dark_theme)
+    .step5-card {
+        background: #181c34;
+        border-color: #2e3357;
+        box-shadow: none;
+    }
+
+    .step5-card h4 {
+        color: #ffffff;
+    }
+
+    .step5-subtitle {
+        color: #9ca3af;
+    }
+
+    .allowance-row,
+    .bank-account-row {
+        background: #1f2440;
+        border-color: #2e3357;
+    }
+    @endif
 
     .step5-action-btn {
         border-radius: 8px;
