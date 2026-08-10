@@ -1893,10 +1893,25 @@ class EmployeeController extends AccountBaseController
 
     public function changePassword(ChangePasswordRequest $request)
     {
+        $employee = User::withoutGlobalScope(ActiveScope::class)->findOrFail($request->integer('employee_id'));
+        $editPermission = user()->permission('edit_employees');
 
-        $userAuth = UserAuth::where('email', $request->email)->first();
-        $userAuth->password = Hash::make($request->password);
-        $userAuth->save();
+        abort_403(!(
+            $editPermission == 'all'
+            || ($editPermission == 'added' && $employee->employeeDetail?->added_by == user()->id)
+            || ($editPermission == 'owned' && $employee->id == user()->id)
+            || ($editPermission == 'both' && ($employee->id == user()->id || $employee->employeeDetail?->added_by == user()->id))
+            || ($editPermission == 'branch' && !is_null(user()->branch_id) && $employee->branch_id == user()->branch_id)
+        ));
+
+        $userAuth = UserAuth::findOrFail($employee->user_auth_id);
+        $userAuth->forceFill([
+            'password' => Hash::make($request->password),
+            'remember_token' => null,
+        ])->save();
+
+        (new AppSettingController())->deleteSessions([$employee->id]);
+
         return Reply::successWithData(__('messages.passwordChanged'), ['html' => '', 'add_more' => true]);
 
     }
