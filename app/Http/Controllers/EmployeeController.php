@@ -1158,7 +1158,7 @@ class EmployeeController extends AccountBaseController
                 $this->systemAccessDms  = \App\Models\EmployeeSystemAccess::where('employee_id', $id)->where('system', 'dms')->first();
                 $this->systemAccessDobs = \App\Models\EmployeeSystemAccess::where('employee_id', $id)->where('system', 'dobs')->first();
                 $this->dmsRoles  = DB::table('roles')->where('name', '!=', 'client')->pluck('name', 'id');
-                $this->dobsRoles = ['FleetManager', 'FinanceManager', 'HR', 'OpsManager', 'OpsSupervisor', 'SuperAdmin'];
+                $this->dobsRoles = DB::table('dobs_role')->orderBy('name')->pluck('name')->all();
                 $this->view = 'employees.ajax.system-access';
                 break;
             case 'tickets':
@@ -2103,7 +2103,7 @@ class EmployeeController extends AccountBaseController
     {
         $valid = $system === 'dms'
             ? DB::table('roles')->where('name', $role)->where('name', '!=', 'client')->exists()
-            : in_array($role, ['FleetManager', 'FinanceManager', 'HR', 'OpsManager', 'OpsSupervisor', 'SuperAdmin'], true);
+            : DB::table('dobs_role')->where('name', $role)->exists();
 
         abort_unless($valid, 422, 'The selected system role is not allowed.');
     }
