@@ -625,7 +625,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                     <x-cards.data :title="__('app.menu.change_password')" padding="false">
                                         <form method="POST" id="save-employee-data-form">
                                             @csrf
-                                            <input type="hidden" name="email" value="{{ $employee->email }}">
+                                            <input type="hidden" name="employee_id" value="{{ $employee->id }}">
                                             <div class="col-lg-12 my-2">
                                                 <x-forms.text textColor="text-darkest-white" fieldId="password"
                                                     :fieldLabel="__('app.menu.new_password')"

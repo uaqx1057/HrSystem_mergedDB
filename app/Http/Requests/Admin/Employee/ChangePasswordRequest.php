@@ -34,7 +34,9 @@ class ChangePasswordRequest extends CoreRequest
         });
 
         $setting = company();
-        $rules = ['password' => 'required|string|min:8',
+        $rules = [
+            'employee_id' => 'required|integer|exists:users,id',
+            'password' => 'required|string|min:8',
         ];
 
         if (request()->telegram_user_id) {
