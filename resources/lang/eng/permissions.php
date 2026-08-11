@@ -461,4 +461,5 @@ return array (
 
     'manage_it_clearance' => 'Manage IT Clearance',
     'manage_finance_clearance' => 'Manage Finance Clearance',
+    'asset_loss_deduction' => 'Asset Loss Deduction',
 );

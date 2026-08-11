@@ -66,6 +66,24 @@
                         @enderror
                     </div>
 
+                    <div class="col-lg-12 form-check mb-3 ml-3">
+                        <input class="form-check-input" type="checkbox" name="assesses_loss_damage"
+                                id="assesses_loss_damage" value="checked">
+                        <label class="form-check-label f-14 text-dark-grey pt-1 ml-2" for="assesses_loss_damage">
+                            Assesses Loss/Damage
+                        </label>
+                    </div>
+                    @error('loss_amount')
+                        <div class="invalid-feedback d-block ml-3" style="color: red">
+                            {{ $message }}
+                        </div>
+                    @enderror
+
+                    <div class="col-md-6 d-none">
+                        <x-forms.number fieldId="loss_amount" :fieldLabel="__('modules.bankaccount.lossAmount')" fieldName="loss_amount"
+                            :fieldPlaceholder="__('placeholders.price')" fieldRequired="true"></x-forms.number>
+                    </div>
+
                 </div>
 
                 <div class="pl-3 pb-2">
@@ -79,3 +97,15 @@
 
     </div>
 </div>
+
+<script>
+    $(document).ready(function () {
+        $('#assesses_loss_damage').on('change', function () {
+            if ($(this).is(':checked')) {
+                $('#loss_amount').closest('.col-md-6').removeClass('d-none');
+            } else {
+                $('#loss_amount').closest('.col-md-6').addClass('d-none');
+            }
+        });
+    });
+</script>

@@ -278,9 +278,9 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                             <tbody>
                                                 @foreach($allowance as $i => $al)
                                                     <tr>
-                                                        <td>{{ $i + 1 }}</td>
-                                                        <td>{{ $al->name }}</td>
-                                                        <td>{{ $al->amount ?? '--' }}</td>
+                                                        <td class="text-darkest-white">{{ $i + 1 }}</td>
+                                                        <td class="text-darkest-white">{{ $al->name }}</td>
+                                                        <td class="text-darkest-white">{{ $al->amount ?? '--' }}</td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -509,7 +509,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                                     <strong>Total Taken:</strong><p>{{ number_format($totalTaken, 1) }} days</p>
                                                 </div>
 
-                                                <div class="col-4 {{ $totalBalance >= 0 ? 'text-success' : 'text-danger' }}">
+                                                <div class="col-4 text-darkest-white">
                                                     <strong>Balance:</strong> <p>{{ number_format($totalBalance, 1) }} days</p>
                                                 </div>
 
@@ -549,7 +549,7 @@ $viewAppreciationPermission = user()->permission('view_appreciation');
                                                         <strong>Total Taken:</strong><p>{{ $ticketHistory['total_used'] }}</p>
                                                     </div>
 
-                                                    <div class="col-4 text-success }}">
+                                                    <div class="col-4 text-darkest-white }}">
                                                         <strong>Remaining:</strong> <p>{{ $ticketHistory['total_remaining'] }}</p>
                                                     </div>
 

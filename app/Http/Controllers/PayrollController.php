@@ -6,6 +6,7 @@ use App\Models\AdvanceSalary;
 use App\Models\Currency;
 use App\Models\Driver;
 use App\Models\EmployeeAllowance;
+use App\Models\EmployeeAssessLoss;
 use App\Models\EmployeeBankAccount;
 use App\Models\EmployeeDetails;
 use App\Models\HrPayrollPreflightRun;
@@ -50,6 +51,9 @@ class PayrollController extends AccountBaseController
 
         $tab = $request->get('tab', 'salary-slips');
         if($tab == 'salary-slips'){
+            $this->viewPermission = user()->permission('view_payroll');
+            abort_403(user()->permission('view_payroll') == 'none');
+        } elseif($tab == 'asset-deduction'){
             $this->viewPermission = user()->permission('view_payroll');
             abort_403(user()->permission('view_payroll') == 'none');
         } elseif($tab == 'salary-groups'){
@@ -181,6 +185,8 @@ class PayrollController extends AccountBaseController
         $this->allComponents = SalaryComponent::orderBy('component_name')->get(['id', 'component_name']);
         $this->allCycles = PayrollCycle::orderBy('cycle')->get(['id', 'cycle']);
         $this->allPaymentMethods = SalaryPaymentMethod::orderBy('payment_method')->get(['id', 'payment_method']);
+
+        $this->assetDeductions = EmployeeAssessLoss::with(['companyAsset','employee','assetLoss'])->orderBy('id','desc')->paginate(25);
 
         return view('payroll.index', $this->data);
     }
@@ -365,6 +371,7 @@ class PayrollController extends AccountBaseController
             'payroll_cycle_id' => 'nullable|exists:payroll_cycles,id',
             'expense_claims' => 'nullable|numeric|min:0',
             'paid_amount' => 'nullable|numeric|min:0',
+            'loss_deductions' => 'nullable|array', // NEW
         ]);
 
         $payeeType = $request->payee_type;
@@ -447,6 +454,40 @@ class PayrollController extends AccountBaseController
                         // $advance->status = 'adjusted';
                     }
                     $advance->save();
+                }
+            }
+
+            // NEW: asset loss deductions
+            if ($request->filled('loss_deductions')) {
+                foreach ($request->loss_deductions as $lossId => $amount) {
+                    $amount = (float) $amount;
+                    if ($amount <= 0) {
+                        continue;
+                    }
+
+                    $loss = EmployeeAssessLoss::where('employee_id', $payeeId)
+                        ->where('status', 'Pending')
+                        ->lockForUpdate()
+                        ->find($lossId);
+
+                    if (!$loss) {
+                        continue;
+                    }
+
+                    $balance = $loss->loss_amount - $loss->deducted_amount;
+                    $amount = min($amount, $balance);
+
+                    if ($amount <= 0) {
+                        continue;
+                    }
+
+                    $slip->assessLosses()->attach($lossId, ['deducted_amount' => $amount]);
+
+                    $loss->deducted_amount += $amount;
+                    if ($loss->deducted_amount >= $loss->loss_amount) {
+                        $loss->status = 'Deducted';
+                    }
+                    $loss->save();
                 }
             }
 
@@ -1060,5 +1101,25 @@ class PayrollController extends AccountBaseController
                 ? (float) $detail->basic_salary
                 : 0,
         ]);
+    }
+
+    public function pendingAssessLosses(User $employee)
+    {
+        $losses = EmployeeAssessLoss::where('employee_id', $employee->id)
+            ->where('status', 'Pending')
+            ->whereColumn('deducted_amount', '<', 'loss_amount')
+            ->orderBy('created_at')
+            ->get(['id', 'created_at', 'loss_amount', 'deducted_amount', 'company_asset_id']);
+
+        return response()->json($losses->map(function ($l) {
+            return [
+                'id' => $l->id,
+                'date' => $l->created_at->format('d-m-Y'),
+                'asset' => optional($l->companyAsset)->name ?? 'Asset',
+                'loss_amount' => (float) $l->loss_amount,
+                'deducted_amount' => (float) $l->deducted_amount,
+                'balance' => (float) ($l->loss_amount - $l->deducted_amount),
+            ];
+        }));
     }
 }

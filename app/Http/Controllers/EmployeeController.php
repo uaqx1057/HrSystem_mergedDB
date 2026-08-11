@@ -17,6 +17,7 @@ use App\DataTables\TimeLogsDataTable;
 use App\Enums\Salutation;
 use App\Models\Company;
 use App\Models\EmployeeAllowance;
+use App\Models\EmployeeAssessLoss;
 use App\Models\Vehicle;
 use App\Scopes\ActiveScope;
 use App\Scopes\CompanyScope;
@@ -2199,6 +2200,11 @@ class EmployeeController extends AccountBaseController
         $this->pendingAdvances = AdvanceSalary::where('employee_id', $id)
             ->where('status', 'approved')
             ->whereColumn('deducted_amount', '<', 'advance_salary')
+            ->get();
+
+        $this->assetDeductions = EmployeeAssessLoss::with(['companyAsset','employee','assetLoss'])->where('employee_id', $id)
+            ->where('status', 'Pending')
+            ->whereColumn('deducted_amount', '<', 'loss_amount')
             ->get();
 
         $this->canManageTermination = $this->canManageTermination($user);

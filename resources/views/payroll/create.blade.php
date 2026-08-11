@@ -251,6 +251,15 @@
                             </div>
                         </div>
 
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <label class="f-14 f-w-500">Asset Loss Deductions</label>
+                                <div id="asset-loss-list" class="border rounded p-2">
+                                    <span class="text-muted f-13">Select an employee to load pending asset losses.</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="d-flex justify-content-between mt-3">
                             <button type="button" class="btn btn-primary btn-prev"
                                 data-prev="#tab-allowances-link">Previous</button>
@@ -383,6 +392,9 @@
             const allowancesContainer = $('#employee-allowances-list');
             const basicSalaryUrl = "{{ url('account/payroll/employees') }}";
 
+            const assetLossListUrl = "{{ url('account/payroll/employees') }}";
+            const assetLossContainer = $('#asset-loss-list');
+
             // 1. Step Navigation logic
             $('.btn-next').click(function() {
                 let nextTabLink = $(this).data('next');
@@ -514,8 +526,76 @@
 
                 loadPendingAdvances(empId);
                 loadEmployeeAllowances(empId);
+                loadPendingAssetLosses(empId); // NEW
                 loadBasicSalary(empId); // will call recalcSalary() once loaded
             });
+
+            function loadPendingAssetLosses(empId) {
+                if (!empId) {
+                    assetLossContainer.html('<span class="text-muted f-13">Select an employee to load pending asset losses.</span>');
+                    recalcSalary();
+                    return;
+                }
+
+                assetLossContainer.html('<span class="text-muted f-13">Loading...</span>');
+
+                $.get(`${assetLossListUrl}/${empId}/pending-asset-losses`, function (losses) {
+                    if (!losses.length) {
+                        assetLossContainer.html('<span class="text-muted f-13">No pending asset losses.</span>');
+                        recalcSalary();
+                        return;
+                    }
+
+                    let html = '';
+                    losses.forEach(function (loss) {
+                        html += `
+                            <div class="d-flex align-items-center mb-2 loss-row" data-id="${loss.id}" data-balance="${loss.balance}">
+                                <div class="custom-control custom-checkbox mr-2">
+                                    <input type="checkbox" class="custom-control-input loss-check" id="loss-${loss.id}">
+                                    <label class="custom-control-label f-13" for="loss-${loss.id}">
+                                        ${loss.date} — ${loss.asset} — Balance: ${loss.balance.toFixed(2)}
+                                    </label>
+                                </div>
+                                <input type="number" class="form-control form-control-sm loss-amount ml-auto"
+                                    style="width:120px" min="0" max="${loss.balance}" step="0.01"
+                                    value="${loss.balance}" disabled>
+                            </div>`;
+                    });
+
+                    assetLossContainer.html(html);
+                    recalcSalary();
+                }).fail(function () {
+                    assetLossContainer.html('<span class="text-danger f-13">Failed to load asset losses.</span>');
+                    recalcSalary();
+                });
+            }
+
+            // enable/disable amount input alongside checkbox, cap at balance
+            $(document).on('change', '.loss-check', function () {
+                const row = $(this).closest('.loss-row');
+                const amountInput = row.find('.loss-amount');
+                amountInput.prop('disabled', !this.checked);
+                recalcSalary();
+            });
+
+            $(document).on('input', '.loss-amount', function () {
+                const row = $(this).closest('.loss-row');
+                const balance = parseFloat(row.data('balance'));
+                let val = parseFloat($(this).val()) || 0;
+                if (val > balance) $(this).val(balance);
+                if (val < 0) $(this).val(0);
+                recalcSalary();
+            });
+
+            function totalLossDeduction() {
+                let total = 0;
+                $('.loss-row').each(function () {
+                    if ($(this).find('.loss-check').is(':checked')) {
+                        total += parseFloat($(this).find('.loss-amount').val()) || 0;
+                    }
+                });
+                return total;
+            }
 
             function loadPendingAdvances(empId) {
                 if (!empId) {
@@ -646,9 +726,10 @@
                 const totalDeductions = parseFloat($('[name="total_deductions"]').val()) || 0;
                 const tds = parseFloat($('[name="tds"]').val()) || 0;
                 const advanceDeduction = totalAdvanceDeduction();
+                const lossDeduction = totalLossDeduction(); // NEW
 
                 const gross = monthlySalary + allowances;
-                const net = gross - totalDeductions - tds - advanceDeduction;
+                const net = gross - totalDeductions - tds - advanceDeduction - lossDeduction; // updated
 
                 $('[name="monthly_salary"]').val(monthlySalary.toFixed(2));
                 $('[name="gross_salary"]').val(gross.toFixed(2));
@@ -704,7 +785,8 @@
             });
 
             $('#save-salary-form').on('submit', function () {
-                $('input[name^="advance_deductions"]').remove(); // clear stale ones
+                $('input[name^="advance_deductions"]').remove();
+                $('input[name^="loss_deductions"]').remove(); // NEW
 
                 $('.advance-row').each(function () {
                     if ($(this).find('.advance-check').is(':checked')) {
@@ -716,7 +798,16 @@
                     }
                 });
 
-                // No allowance handling needed anymore — inputs submit natively as allowances[id]
+                // NEW: loss deductions
+                $('.loss-row').each(function () {
+                    if ($(this).find('.loss-check').is(':checked')) {
+                        const id = $(this).data('id');
+                        const amount = $(this).find('.loss-amount').val();
+                        $(this).closest('form').append(
+                            `<input type="hidden" name="loss_deductions[${id}]" value="${amount}">`
+                        );
+                    }
+                });
             });
         });
     </script>

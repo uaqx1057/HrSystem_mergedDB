@@ -80,4 +80,11 @@ class SalarySlip extends BaseModel
             ->withPivot('deducted_amount')
             ->withTimestamps();
     }
+
+    public function assessLosses()
+    {
+        return $this->belongsToMany(EmployeeAssessLoss::class, 'salary_slip_employee_assess_loss')
+            ->withPivot('deducted_amount')
+            ->withTimestamps();
+    }
 }

@@ -43,6 +43,12 @@
                                 :text="__('Salary Slips')"
                                 class="salary-slips" ajax="false" />
                         </li>
+
+                        {{-- <li>
+                            <x-tab :href="route('payroll.index', ['tab' => 'asset-deduction'])"
+                                :text="__('Asset Loss Deductions')"
+                                class="asset-deduction" ajax="false" />
+                        </li> --}}
                     @endif
 
                     {{-- @if (in_array(user()->permission('manage_salary_group'), ['all']))
@@ -389,6 +395,51 @@
                         </tbody>
                     </table>
                     {{ $salarySlips->links() }}
+                </div>
+            </div>
+        @endif
+
+        @if ($activeTab === 'asset-deduction')
+            <div class="row">
+                <div class="col-12 mb-3">
+                    <div class="card">
+                        <div class="card-header form-heading-background">Asset Loss Deductions</div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Employee</th>
+                                            <th>Company Asset</th>
+                                            <th>Serial No</th>
+                                            <th>Loss Amount</th>
+                                            <th>Deducted Amount</th>
+                                            <th>Remaining</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse ($assetDeductions as $deduction)
+                                            <tr>
+                                                <td>{{ optional($deduction->employee)->name }}</td>
+                                                <td>{{ optional($deduction->companyAsset)->name }}</td>
+                                                <td>{{ optional($deduction->assetLoss)->serial_no }}</td>
+                                                <td>{{ $deduction->loss_amount }}</td>
+                                                <td>{{ $deduction->deducted_amount }}</td>
+                                                <td>{{ $deduction->loss_amount - $deduction->deducted_amount }}</td>
+                                                <td class="{{ $deduction->status == 'Deducted' ? 'text-success' : 'text-warning' }}"><strong>{{ ucfirst($deduction->status) }}</strong></td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="7" class="text-center">Not Available.</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                                {{ $assetDeductions->links() }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         @endif

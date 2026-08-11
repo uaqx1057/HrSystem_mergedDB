@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CompanyAsset\StoreAssignRequest;
+use App\Mail\AssetLossDeductionMail;
 use App\Models\AssetAssignment;
 use App\Models\AssetAssignmentHistory;
 use App\Models\Branch;
@@ -11,6 +12,7 @@ use App\Helper\Reply;
 use App\Http\Controllers\Controller;
 use App\Models\CompanyAssetSerial;
 use App\Models\Department;
+use App\Models\EmployeeAssessLoss;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf; // This is the Facade
 use Illuminate\Http\Request;
@@ -432,29 +434,26 @@ class CompanyAssetController extends AccountBaseController
 
     public function storeReturnAsset(Request $request, $id)
     {
-        // dd($request->all());
         $request->validate([
             'qty' => 'required|integer|min:1',
             'return_document' => 'required',
+            'loss_amount' => 'required_if:assesses_loss_damage,checked|nullable',
         ]);
 
         $assignment = AssetAssignment::find($request->id);
         $asset = CompanyAsset::find($assignment->company_asset_id);
         $qtyReturned = (int) $request->qty;
 
-        // Returned qty cannot exceed the currently assigned qty.
         if ($qtyReturned > $assignment->qty) {
             return redirect()->back()->with('error', __('messages.qtyExceedsAvailable'));
         }
 
         if ($request->hasFile('return_document')) {
-
             $path = \App\Helper\Files::uploadLocalOrS3($request->return_document, 'asset');
 
             $remaining = $assignment->qty - $qtyReturned;
 
-            // Create a dedicated history record for this return.
-            AssetAssignmentHistory::create([
+            $history = AssetAssignmentHistory::create([
                 'company_asset_id' => $asset->id,
                 'employee_id' => $assignment->employee_id,
                 'serial_no' => $assignment->serial_no,
@@ -465,28 +464,47 @@ class CompanyAssetController extends AccountBaseController
                 'action_at' => now(),
             ]);
 
-            $assetSerial = CompanyAssetSerial::where('company_asset_id', $assignment->company_asset_id)->where('serial_no', $assignment->serial_no)->where('status', 'assigned')->first();
-            if($assetSerial){
-                $assetSerial->update([
-                    'status' => 'available'
-                ]);
+            $assetSerial = CompanyAssetSerial::where('company_asset_id', $assignment->company_asset_id)
+                ->where('serial_no', $assignment->serial_no)
+                ->where('status', 'assigned')
+                ->first();
+
+            if ($assetSerial) {
+                $assetSerial->update(['status' => 'available']);
             }
 
-            // Return the quantity back to the available pool.
             $asset->available_qty += $qtyReturned;
             $asset->status = $asset->available_qty == 0 ? 'Assigned' : 'Available';
             $asset->save();
 
-            if ($remaining < 0) {
-                $remaining = 0;
-            }
+            $remaining = max($remaining, 0);
 
             if ($remaining < 1) {
                 $assignment->delete();
             } else {
-                $assignment->update([
-                    'qty' => $remaining
-                ]);
+                $assignment->update(['qty' => $remaining]);
+            }
+        }
+
+        if ($request->has('assesses_loss_damage')) {
+            $assessLoss = EmployeeAssessLoss::create([
+                'company_asset_id' => $asset->id,
+                'employee_id' => $assignment->employee_id,
+                'asset_assignment_history_id' => $history->id,
+                'loss_amount' => $request->loss_amount,
+            ]);
+
+            $financeUsers = User::usersWithPermission('manage_finance_clearance', $assignment->employee->company_id);
+
+            foreach ($financeUsers as $financeUser) {
+                if (!empty($financeUser->email)) {
+                    try {
+                        Mail::to($financeUser->email)
+                            ->send(new AssetLossDeductionMail($assessLoss, $asset, $assignment));
+                    } catch (\Exception $e) {
+                        Log::error("Failed to send asset loss deduction email: " . $e->getMessage());
+                    }
+                }
             }
         }
 

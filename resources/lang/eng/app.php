@@ -166,6 +166,7 @@ return array(
         'insurance' => 'Insurance',
         'airTickets' => 'Air Tickets',
         'advanceSalaries' => 'Advance Salaries',
+        'assetLossDeductions' => 'Asset Loss Deductions',
         'projects' => 'Projects',
         'taskCalendar' => 'Task Calendar',
         'calendar' => 'Calendar',

@@ -72,6 +72,39 @@
                         </table>
                     </div>
 
+                    <h4 class="heading-h4 mb-0">Asset Loss Deductions</h4>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Company Asset</th>
+                                    <th>Serial No</th>
+                                    <th>Loss Amount</th>
+                                    <th>Deducted Amount</th>
+                                    <th>Remaining</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($assetDeductions as $deduction)
+                                    <tr>
+                                        <td>{{ optional($deduction->companyAsset)->name }}</td>
+                                        <td>{{ optional($deduction->assetLoss)->serial_no }}</td>
+                                        <td>{{ $deduction->loss_amount }}</td>
+                                        <td>{{ $deduction->deducted_amount }}</td>
+                                        <td>{{ $deduction->loss_amount - $deduction->deducted_amount }}</td>
+                                        <td class="{{ $deduction->status == 'Deducted' ? 'text-success' : 'text-warning' }}">
+                                            <strong>{{ ucfirst($deduction->status) }}</strong></td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center">Not Available.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+
                     @if ($termination && $termination->finance_clearance_status == 'issued')
                         <a href="{{ route('employees.finance-clearance.letter', $employee->id) }}"
                             class="btn btn-sm btn-primary mt-2">

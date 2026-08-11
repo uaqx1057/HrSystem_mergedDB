@@ -7,6 +7,7 @@ use App\Mail\TerminationIssueClearedMail;
 use App\Mail\TerminationReminderMail;
 use App\Models\AdvanceSalary;
 use App\Models\AssetAssignment;
+use App\Models\EmployeeAssessLoss;
 use App\Models\EmployeeTermination;
 use App\Models\User;
 use App\Scopes\ActiveScope;
@@ -181,6 +182,11 @@ class TerminationClearanceController extends AccountBaseController
             ->whereColumn('deducted_amount', '<', 'advance_salary')
             ->get();
 
+        $this->assetDeductions = EmployeeAssessLoss::with(['companyAsset','employee','assetLoss'])->where('employee_id', $id)
+            ->where('status', 'Pending')
+            ->whereColumn('deducted_amount', '<', 'loss_amount')
+            ->get();
+
         if (request()->ajax()) {
             $html = view('employees.ajax.finance-clearance', $this->data)->render();
             return Reply::dataOnly(['status' => 'success', 'html' => $html, 'title' => 'Finance Clearance']);
@@ -201,13 +207,20 @@ class TerminationClearanceController extends AccountBaseController
             ->whereColumn('deducted_amount', '<', 'advance_salary')
             ->get();
 
-        if ($pendingAdvances->isEmpty()) {
+        $pendingAssetDeductions = EmployeeAssessLoss::with(['companyAsset','employee','assetLoss'])->where('employee_id', $employee->id)
+            ->where('status', 'Pending')
+            ->whereColumn('deducted_amount', '<', 'loss_amount')
+            ->get();
+
+        if ($pendingAdvances->isEmpty() && $pendingAssetDeductions->isEmpty()) {
             return Reply::error('No pending dues found.');
         }
 
         $totalAdvance = $pendingAdvances->sum('advance_salary');
         $totalDeducted = $pendingAdvances->sum('deducted_amount');
-        $totalDue = $totalAdvance - $totalDeducted;
+        $totalAssetIssue = $pendingAssetDeductions->sum('loss_amount');
+        $totalAssetDeducted = $pendingAssetDeductions->sum('deducted_amount');
+        $totalDue = ($totalAdvance + $totalAssetIssue) - ($totalDeducted + $totalAssetDeducted);
 
         $reasonMessage = 'You have an outstanding advance salary / due amount of ' . number_format($totalDue, 2) . '. Please clear the pending dues at the earliest to proceed with your Finance clearance.';
 
@@ -240,7 +253,12 @@ class TerminationClearanceController extends AccountBaseController
             ->whereColumn('deducted_amount', '<', 'advance_salary')
             ->exists();
 
-        if ($pendingDues) {
+        $pendingAssetDeductions = EmployeeAssessLoss::with(['companyAsset','employee','assetLoss'])->where('employee_id', $employee->id)
+            ->where('status', 'Pending')
+            ->whereColumn('deducted_amount', '<', 'loss_amount')
+            ->exists();
+
+        if ($pendingDues && $pendingAssetDeductions) {
             return Reply::error('Financial clearance is pending.');
         }
 

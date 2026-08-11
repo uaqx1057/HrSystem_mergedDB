@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AirTicketController;
 use App\Http\Controllers\AdvanceSalaryController;
+use App\Http\Controllers\AssetLossDeduction;
 use App\Http\Controllers\CompanyAssetController;
 use App\Http\Controllers\CronJobsController;
 use App\Http\Controllers\DriverDocumentController;
@@ -755,6 +756,8 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::get('proposals/add-item', [ProposalController::class, 'addItem'])->name('proposals.add_item');
     Route::resource('proposals', ProposalController::class);
 
+    Route::resource('asset-loss-deductions', AssetLossDeduction::class);
+
     // Proposal Template
     Route::post('proposal-template/apply-quick-action', [ProposalTemplateController::class, 'applyQuickAction'])->name('proposal_template.apply_quick_action');
     Route::get('proposal-template/add-item', [ProposalController::class, 'addItem'])->name('proposal-template.add_item');
@@ -821,6 +824,8 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
         // New route
         Route::get('employees/{employee}/bank-accounts', [PayrollController::class, 'getEmployeeBankAccounts'])
         ->name('employees.bank-accounts');
+
+        Route::get('employees/{employee}/pending-asset-losses', [PayrollController::class, 'pendingAssessLosses']);
 
         Route::get('salary-slips/{salarySlip}/print', [PayrollController::class, 'printSalarySlip'])->name('salary-slips.print');
         Route::get('salary-slips/{salarySlip}/pdf', [PayrollController::class, 'downloadSalarySlipPdf'])->name('salary-slips.pdf');

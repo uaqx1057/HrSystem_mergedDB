@@ -2297,6 +2297,7 @@ return array(
         'accountNumber' => 'Account Number',
         'contactNumber' => 'Contact Number',
         'openingBalance' => 'Opening Balance',
+        'lossAmount' => 'Loss Amount',
         'bankLogo' => 'Bank Logo',
         'cash' => 'Cash',
         'bank' => 'Bank',
