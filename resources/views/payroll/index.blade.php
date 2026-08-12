@@ -296,6 +296,7 @@
                                 <th>Method</th>
                                 {{-- <th>Cycle</th> --}}
                                 <th>Advance Salary Deducted</th>
+                                <th>Asset Loss Deducted</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -315,6 +316,11 @@
                                     {{-- <td>{{ optional($slip->cycle)->cycle }}</td> --}}
                                     @if ($slip->advanceSalaries->count())
                                         <td>{{ number_format($slip->advanceSalaries->sum('pivot.deducted_amount'), 2) }}</td>
+                                    @else
+                                        <td></td>
+                                    @endif
+                                    @if ($slip->assessLosses->count())
+                                        <td>{{ number_format($slip->assessLosses->sum('pivot.deducted_amount'), 2) }}</td>
                                     @else
                                         <td></td>
                                     @endif

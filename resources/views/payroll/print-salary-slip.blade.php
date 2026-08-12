@@ -153,30 +153,33 @@
             <th>Net Salary</th>
             <td >{{ number_format((float) $salarySlip->net_salary, 2) }}</td>
         </tr>
+
         <tr>
-            <th>Advance Salary Deducted</th>
-            @if ($salarySlip->advanceSalaries->count())
-                <td >{{ number_format($salarySlip->advanceSalaries->sum('pivot.deducted_amount'), 2) }}</td>
-            @else
-                <td ></td>
-            @endif
             <th>Total Deductions</th>
             <td >{{ number_format((float) $salarySlip->total_deductions, 2) }}</td>
-        </tr>
-        <tr>
             <th>TDS</th>
             <td >{{ number_format((float) $salarySlip->tds, 2) }}</td>
-            <th>Pay Days</th>
-            <td >{{ (int) $salarySlip->pay_days }}</td>
-
         </tr>
         <tr>
+            <th>Pay Days</th>
+            <td >{{ (int) $salarySlip->pay_days }}</td>
             <th>Salary Period</th>
             <td >
                 {{ optional($salarySlip->salary_from)->format('d-m-Y') ?? '-' }}
                 to
                 {{ optional($salarySlip->salary_to)->format('d-m-Y') ?? '-' }}
             </td>
+        </tr>
+        <tr>
+            @if ($salarySlip->advanceSalaries->count())
+            <th>Advance Salary Deducted</th>
+                <td >{{ number_format($salarySlip->advanceSalaries->sum('pivot.deducted_amount'), 2) }}</td>
+            @endif
+            @if ($salarySlip->assessLosses->count())
+            <th>Asset Loss Deducted</th>
+                <td >{{ number_format($salarySlip->assessLosses->sum('pivot.deducted_amount'), 2) }}</td>
+            @endif
+
         </tr>
     </table>
 </div>
