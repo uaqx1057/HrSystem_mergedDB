@@ -379,9 +379,9 @@ class PayrollController extends AccountBaseController
 
         abort_403(empty($payeeId));
 
-        if ($payeeType === 'employee') {
-            $this->requireApprovedPreflight((int) $validated['year'], (string) $validated['month']);
-        }
+        // if ($payeeType === 'employee') {
+        //     $this->requireApprovedPreflight((int) $validated['year'], (string) $validated['month']);
+        // }
 
         $validated['user_id'] = $payeeId;
         unset($validated['employee_id'], $validated['driver_id'], $validated['payee_type']);

@@ -1340,7 +1340,7 @@ class EmployeeController extends AccountBaseController
 
         $this->view = 'employees.ajax.assign-company-asset';
 
-        return view('employees.show', $this->data);
+        return view('employees.create', $this->data);
     }
 
     public function getAirTicketStats(int $employeeId): array
