@@ -1958,6 +1958,7 @@ class EmployeeController extends AccountBaseController
                 DB::table('users')->where('id', $systemUserId)->update([
                     'role_id'          => $roleId,
                     'is_login_allowed' => 1,
+                    'user_id'          => $this->nextDmsUserId(),
                     'updated_at'       => now(),
                 ]);
             } else {
@@ -2026,6 +2027,23 @@ class EmployeeController extends AccountBaseController
         }
 
         return Reply::success('Access granted successfully.');
+    }
+
+    /**
+     * Mirrors DMS's own CreateEmployee::generateUniqueUserId() so an employee
+     * provisioned into DMS from here gets an ID in the same E{number} series
+     * DMS would have assigned had it created the row itself.
+     */
+    private function nextDmsUserId(): string
+    {
+        $lastUserId = DB::table('users')
+            ->where('user_id', 'LIKE', 'E%')
+            ->orderByRaw('CAST(SUBSTRING(user_id, 2) AS UNSIGNED) DESC')
+            ->value('user_id');
+
+        $lastNumber = $lastUserId ? (int) substr($lastUserId, 1) : 1000;
+
+        return 'E' . ($lastNumber + 1);
     }
 
     public function revokeSystemAccess(Request $request, $id)
