@@ -1911,6 +1911,8 @@ class EmployeeController extends AccountBaseController
             'remember_token' => null,
         ])->save();
 
+        app(EmployeeSystemSyncService::class)->syncPasswordToLinkedSystems($employee, $request->password);
+
         (new AppSettingController())->deleteSessions([$employee->id]);
 
         return Reply::successWithData(__('messages.passwordChanged'), ['html' => '', 'add_more' => true]);
@@ -1935,36 +1937,48 @@ class EmployeeController extends AccountBaseController
                 // DMS users table uses role_id + is_login_allowed
                 $roleId = DB::table('roles')->where('name', $request->role)->value('id');
 
-                $dmsUser = DB::table('users')
-                    ->where('email', $hrUser->email)
-                    ->whereNotNull('role_id')
+                $existingAccess = \App\Models\EmployeeSystemAccess::where('employee_id', $id)
+                    ->where('system', 'dms')
                     ->first();
 
-                if ($dmsUser) {
-                    DB::table('users')->where('id', $dmsUser->id)->update([
-                        'role_id'          => $roleId,
-                        'is_login_allowed' => 1,
-                        'updated_at'       => now(),
-                    ]);
-                    $systemUserId = $dmsUser->id;
+                if (!is_null($hrUser->role_id)) {
+                    $systemUserId = $hrUser->id;
+                } elseif ($existingAccess && !is_null($existingAccess->system_user_id) && (int) $existingAccess->system_user_id !== (int) $hrUser->id) {
+                    $systemUserId = (int) $existingAccess->system_user_id;
                 } else {
-                    $systemUserId = DB::table('users')->insertGetId([
-                        'name'             => $hrUser->name,
-                        'email'            => $hrUser->email,
-                        'password'         => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(16)),
-                        'role_id'          => $roleId,
-                        'is_login_allowed' => 1,
-                        'created_at'       => now(),
-                        'updated_at'       => now(),
-                    ]);
+                    $existingDmsUser = DB::table('users')
+                        ->where('email', $hrUser->email)
+                        ->whereNotNull('role_id')
+                        ->where('id', '!=', $hrUser->id)
+                        ->first();
+
+                    $systemUserId = $existingDmsUser ? (int) $existingDmsUser->id : $hrUser->id;
                 }
+
+                DB::table('users')->where('id', $systemUserId)->update([
+                    'role_id'          => $roleId,
+                    'is_login_allowed' => 1,
+                    'updated_at'       => now(),
+                ]);
             } else {
                 // DOBS uses a separate DB (dobsykjq_dms) and table dobs_user
                 // Role must be lowercase to match DOBS role_redirects map
                 $dobsRole = strtolower($request->role);
                 $dobsDb   = DB::connection('mysql'); // dobs_user is in the same shared DB
 
-                $dobsUser = $dobsDb->table('dobs_user')->where('email', $hrUser->email)->first();
+                $existingAccess = \App\Models\EmployeeSystemAccess::where('employee_id', $id)
+                    ->where('system', 'dobs')
+                    ->first();
+
+                $dobsUser = null;
+
+                if ($existingAccess && !is_null($existingAccess->system_user_id)) {
+                    $dobsUser = $dobsDb->table('dobs_user')->where('id', $existingAccess->system_user_id)->first();
+                }
+
+                if (is_null($dobsUser)) {
+                    $dobsUser = $dobsDb->table('dobs_user')->where('email', $hrUser->email)->first();
+                }
 
                 if ($dobsUser) {
                     $dobsDb->table('dobs_user')->where('id', $dobsUser->id)->update([
@@ -1982,7 +1996,7 @@ class EmployeeController extends AccountBaseController
                         'name'     => $hrUser->name,
                         'email'    => $hrUser->email,
                         'username' => $username,
-                        'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(16)),
+                        'password' => $hrUser->userAuth->password,
                         'role'     => $dobsRole,
                     ]);
                 }

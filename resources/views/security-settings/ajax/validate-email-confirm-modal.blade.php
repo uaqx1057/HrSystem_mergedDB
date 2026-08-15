@@ -29,6 +29,12 @@
 <script>
     $('#submit-login').click(function() {
 
+        const code = $('#reset-password-form .otp-field > input').map(function() {
+            return String($(this).val() || '').replace(/\D/g, '');
+        }).get().join('');
+
+        $('#reset-password-form input[name="code"]').val(code);
+
         var url = "{{ route('two-fa-settings.email_confirm') }}";
         $.easyAjax({
             url: url,

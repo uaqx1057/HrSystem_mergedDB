@@ -92,8 +92,8 @@ class TwoFASettingController extends AccountBaseController
 
     public function confirm(TwoFaCodeValidation $request)
     {
-        $confirmed = $request->user()->confirmTwoFactorAuth($request->code);
-
+        $code = preg_replace('/\D+/', '', (string) $request->code);
+        $confirmed = $request->user()->confirmTwoFactorAuth($code);
         if (!$confirmed) {
             return Reply::error(__('messages.invalid2FaCode'));
         }

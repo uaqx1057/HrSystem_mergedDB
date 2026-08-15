@@ -138,6 +138,7 @@ return [
         Features::updatePasswords(),
         Features::twoFactorAuthentication([
            'confirmPassword' => false,
+              'window' => 2,
         ]),
     ],
 

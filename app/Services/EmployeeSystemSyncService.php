@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\EmployeeSystemAccess;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -16,6 +17,31 @@ use Illuminate\Support\Facades\Log;
  */
 class EmployeeSystemSyncService
 {
+    public function syncPasswordToLinkedSystems(User $employee, string $plaintextPassword): void
+    {
+        $accesses = EmployeeSystemAccess::where('employee_id', $employee->id)
+            ->where('is_active', true)
+            ->get();
+
+        foreach ($accesses as $access) {
+            try {
+                if ($access->system === 'dms') {
+                    DB::table('users')->where('id', $access->system_user_id)->update([
+                        'password' => Hash::make($plaintextPassword),
+                        'updated_at' => now(),
+                    ]);
+                }
+                elseif ($access->system === 'dobs') {
+                    DB::table('dobs_user')->where('id', $access->system_user_id)->update([
+                        'password' => Hash::make($plaintextPassword),
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::error("Failed to sync employee #{$employee->id} password to {$access->system}: " . $e->getMessage());
+            }
+        }
+    }
+
     public function syncEmployeeProfileToLinkedSystems(User $hrUser): void
     {
         $employeeDetail = $hrUser->employeeDetail;

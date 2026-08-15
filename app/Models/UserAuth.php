@@ -24,10 +24,13 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
-use Laravel\Fortify\TwoFactorAuthenticationProvider;
+use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider as TwoFactorAuthenticationProviderContract;
 use Trebol\Entrust\Traits\EntrustUserTrait;
 use App\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Laravel\Fortify\Fortify;
+use PragmaRX\Google2FA\Google2FA;
 /**
  * App\Models\UserAuth
  *
@@ -97,10 +100,33 @@ class UserAuth extends BaseModel implements AuthenticatableContract, Authorizabl
 
     public function confirmTwoFactorAuth($code)
     {
-        $codeIsValid = app(TwoFactorAuthenticationProvider::class)
-            ->verify(decrypt($this->two_factor_secret), $code);
+        $normalizedCode = preg_replace('/\D+/', '', (string) $code);
+
+        if (empty($this->two_factor_secret) || strlen($normalizedCode) !== 6) {
+            return false;
+        }
+
+        try {
+            $secret = Fortify::currentEncrypter()->decrypt($this->two_factor_secret);
+        } catch (\Throwable $e) {
+            try {
+                $secret = decrypt($this->two_factor_secret);
+            } catch (\Throwable $inner) {
+                Log::warning('2FA secret decrypt failed for user_auth_id=' . $this->id);
+                return false;
+            }
+        }
+
+        $codeIsValid = app(TwoFactorAuthenticationProviderContract::class)
+            ->verify($secret, $normalizedCode);
+
+        if (!$codeIsValid) {
+            $window = max((int) config('fortify-options.two-factor-authentication.window', 2), 4);
+            $codeIsValid = app(Google2FA::class)->verifyKey($secret, $normalizedCode, $window);
+        }
 
         if ($codeIsValid) {
+            $this->two_factor_secret = Fortify::currentEncrypter()->encrypt($secret);
             $this->two_factor_confirmed = true;
             $this->save();
 

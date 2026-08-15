@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fortify;
 
+use App\Services\EmployeeSystemSyncService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\ResetsUserPasswords;
@@ -26,6 +27,10 @@ class ResetUserPassword implements ResetsUserPasswords
         $user->forceFill([
             'password' => Hash::make($input['password']),
         ])->save();
+
+        foreach ($user->users as $employee) {
+            app(EmployeeSystemSyncService::class)->syncPasswordToLinkedSystems($employee, $input['password']);
+        }
     }
     
 }

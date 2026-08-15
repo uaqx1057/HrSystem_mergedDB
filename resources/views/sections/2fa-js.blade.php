@@ -1,9 +1,36 @@
 <script>
-    var inputs = document.querySelectorAll(".otp-field > input");
     var button = document.querySelector(".otp-submit");
+
+    if (button) {
+    var form = button.closest('form');
+
+    if (!form) {
+        var modalContent = button.closest('.modal-content');
+
+        if (modalContent) {
+            form = modalContent.querySelector('form');
+        }
+
+        if (!form) {
+            form = document.querySelector('#reset-password-form') || document.querySelector('#two-factor-challenge-form');
+        }
+    }
+
+    var inputs = form ? form.querySelectorAll(".otp-field > input") : [];
+    var codeInput = form ? form.querySelector('input[name="code"]') : null;
+
+    if (inputs.length && codeInput) {
 
     window.addEventListener("load", () => inputs[0].focus());
     button.setAttribute("disabled", "disabled");
+
+    function syncCode() {
+        const code = Array.from(inputs).map(function(input) {
+            return String(input.value || '').replace(/\D/g, '');
+        }).join('');
+
+        codeInput.value = code;
+    }
 
     inputs[0].addEventListener("paste", function (event) {
         event.preventDefault();
@@ -14,15 +41,12 @@
         const otpLength = inputs.length;
 
         for (let i = 0; i < otpLength; i++) {
-            console.log(i,pastedValue.length);
             if (i < pastedValue.length) {
                 inputs[i].value = pastedValue[i];
                 inputs[i].removeAttribute("disabled");
-                inputs[i].focus;
 
             } else {
                 inputs[i].value = ""; // Clear any remaining inputs
-                inputs[i].focus;
             }
             if(i==5){
                 checkInputs();
@@ -32,6 +56,32 @@
     });
 
     inputs.forEach((input, index1) => {
+        input.addEventListener("input", () => {
+            const currentInput = input;
+            const nextInput = input.nextElementSibling;
+
+            currentInput.value = String(currentInput.value || '').replace(/\D/g, '').slice(0, 1);
+
+            if (
+                nextInput &&
+                currentInput.value !== ""
+            ) {
+                nextInput.removeAttribute("disabled");
+                nextInput.focus();
+            }
+
+            button.classList.remove("active");
+            button.setAttribute("disabled", "disabled");
+
+            const inputsNo = inputs.length;
+            syncCode();
+
+            if (!inputs[inputsNo - 1].disabled && inputs[inputsNo - 1].value !== "") {
+                button.classList.add("active");
+                button.removeAttribute("disabled");
+            }
+        });
+
         input.addEventListener("keyup", (e) => {
             const currentInput = input;
             const nextInput = input.nextElementSibling;
@@ -44,7 +94,6 @@
 
             if (
                 nextInput &&
-                nextInput.hasAttribute("disabled") &&
                 currentInput.value !== ""
             ) {
                 nextInput.removeAttribute("disabled");
@@ -66,10 +115,7 @@
 
 
             const inputsNo = inputs.length;
-
-            $('#code').val($('.otp-field>input').map(function () {
-                return $(this).val();
-            }).get().join(''));
+            syncCode();
 
             if (!inputs[inputsNo - 1].disabled && inputs[inputsNo - 1].value !== "") {
                 button.classList.add("active");
@@ -95,7 +141,6 @@
 
             if (
                 nextInput &&
-                nextInput.hasAttribute("disabled") &&
                 currentInput.value !== ""
             ) {
                 nextInput.removeAttribute("disabled");
@@ -109,10 +154,7 @@
 
 
             const inputsNo = inputs.length;
-
-            $('#code').val($('.otp-field>input').map(function () {
-                return $(this).val();
-            }).get().join(''));
+            syncCode();
 
             if (!inputs[inputsNo - 1].disabled && inputs[inputsNo - 1].value !== "") {
                 button.classList.add("active");
@@ -123,5 +165,7 @@
 
 
         });
+    }
+    }
     }
 </script>

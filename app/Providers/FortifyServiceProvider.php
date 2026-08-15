@@ -27,9 +27,12 @@ use App\Models\SuperAdmin\FrontDetail;
 use App\Models\SuperAdmin\FrontWidget;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
+use App\Services\FortifyTwoFactorAuthenticationProvider;
 use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider as TwoFactorAuthenticationProviderContract;
 use App\Actions\Fortify\AttemptToAuthenticate;
 use Illuminate\Validation\ValidationException;
 use App\Actions\Fortify\RedirectIfTwoFactorConfirmed;
@@ -52,6 +55,12 @@ class FortifyServiceProvider extends ServiceProvider
     // WORKSUITESAAS
     public function register()
     {
+        $this->app->bind(TwoFactorAuthenticationProviderContract::class, function ($app) {
+            return new FortifyTwoFactorAuthenticationProvider(
+                $app->make(\PragmaRX\Google2FA\Google2FA::class),
+                $app->make(CacheRepository::class)
+            );
+        });
 
         $this->app->instance(LoginResponse::class, new class implements LoginResponse {
 

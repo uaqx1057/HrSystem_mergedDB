@@ -76,6 +76,14 @@
         @includeIf('sections.2fa-js')
 
         <script>
+            $('#two-factor-challenge-form').on('submit', function () {
+                const code = $(this).find('.otp-field > input').map(function () {
+                    return String($(this).val() || '').replace(/\D/g, '');
+                }).get().join('');
+
+                $(this).find('input[name="code"]').val(code);
+            });
+
             $("form").submit(function () {
                 const button = $('form').find('#submit-login');
 

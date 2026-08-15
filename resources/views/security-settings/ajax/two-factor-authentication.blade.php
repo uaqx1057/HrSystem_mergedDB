@@ -92,8 +92,12 @@
                                 @if ($user->userAuth->two_factor_secret)
                                     <p class="f-w-500">@lang('modules.twofactor.2faBarcode')</p>
                                     <span class="p-2 border rounded w-100 d-table-cell two-factor-bg">
-                                        {{-- {!! $user->userAuth->twoFactorQrCodeSvg() !!} --}}
+                                        {!! $user->userAuth->twoFactorQrCodeSvg() !!}
                                     </span>
+                                    <p class="mt-3 mb-1 f-w-500">APP Secret</p>
+                                    <code class="d-block p-2 border rounded two-factor-bg" style="word-break: break-all; user-select: all;">
+                                        {{ decrypt($user->userAuth->two_factor_secret) }}
+                                    </code>
                                     <div class="my-4 f-12 text-lightest">
                                         <span class="badge badge-primary">@lang('app.note')</span>
                                         @lang('modules.twofactor.2faAppWarning')
