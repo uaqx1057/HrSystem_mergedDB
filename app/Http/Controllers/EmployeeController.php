@@ -1954,6 +1954,12 @@ class EmployeeController extends AccountBaseController
                         'password'         => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(16)),
                         'role_id'          => $roleId,
                         'is_login_allowed' => 1,
+                        // DMS's own employee-create screen assigns this via the same
+                        // E{number} scheme (CreateEmployee::generateUniqueUserId());
+                        // this insert bypassed that and always left it NULL, so every
+                        // employee provisioned into DMS through this flow showed a
+                        // blank "Employee ID" on DMS's employee list.
+                        'user_id'          => $this->nextDmsUserId(),
                         'created_at'       => now(),
                         'updated_at'       => now(),
                     ]);
@@ -2012,6 +2018,23 @@ class EmployeeController extends AccountBaseController
         }
 
         return Reply::success('Access granted successfully.');
+    }
+
+    /**
+     * Mirrors DMS's own CreateEmployee::generateUniqueUserId() so an employee
+     * provisioned into DMS from here gets an ID in the same E{number} series
+     * DMS would have assigned had it created the row itself.
+     */
+    private function nextDmsUserId(): string
+    {
+        $lastUserId = DB::table('users')
+            ->where('user_id', 'LIKE', 'E%')
+            ->orderByRaw('CAST(SUBSTRING(user_id, 2) AS UNSIGNED) DESC')
+            ->value('user_id');
+
+        $lastNumber = $lastUserId ? (int) substr($lastUserId, 1) : 1000;
+
+        return 'E' . ($lastNumber + 1);
     }
 
     public function revokeSystemAccess(Request $request, $id)
