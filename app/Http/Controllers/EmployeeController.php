@@ -1956,13 +1956,23 @@ class EmployeeController extends AccountBaseController
                     $systemUserId = $existingDmsUser ? (int) $existingDmsUser->id : $hrUser->id;
                 }
 
-                DB::table('users')->where('id', $systemUserId)->update([
+                $targetUpdate = [
                     'role_id'          => $roleId,
                     'is_login_allowed' => 1,
                     'password'         => $hrUser->userAuth->password,
-                    'user_id'          => $this->nextDmsUserId(),
                     'updated_at'       => now(),
-                ]);
+                ];
+
+                // Only assign a DMS-style E{number} ID the first time this row is
+                // provisioned — nextDmsUserId() always picks "highest + 1", so
+                // running it on every re-grant/role-update would reassign a new,
+                // different ID to an employee who already has one.
+                $currentUserId = DB::table('users')->where('id', $systemUserId)->value('user_id');
+                if (empty($currentUserId)) {
+                    $targetUpdate['user_id'] = $this->nextDmsUserId();
+                }
+
+                DB::table('users')->where('id', $systemUserId)->update($targetUpdate);
             } else {
                 // DOBS uses a separate DB (dobsykjq_dms) and table dobs_user
                 // Role must be lowercase to match DOBS role_redirects map
