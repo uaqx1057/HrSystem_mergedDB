@@ -7,14 +7,44 @@ use App\Helper\Reply;
 use App\Http\Requests\User\UpdateProfile;
 use App\Models\EmployeeDetails;
 use App\Models\User;
+use App\Notifications\PasswordChanged;
 use App\Scopes\ActiveScope;
 use App\Scopes\CompanyScope;
+use App\Services\EmployeeSystemSyncService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends AccountBaseController
 {
+
+    public function changePassword()
+    {
+        return view('profile-settings.change-password');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = user();
+
+        if (!Hash::check($request->current_password, $user->userAuth->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['The current password is incorrect.'],
+            ]);
+        }
+
+        $user->userAuth->update(['password' => Hash::make($request->password)]);
+        app(EmployeeSystemSyncService::class)->syncPasswordToLinkedSystems($user, $request->password);
+        $user->notify(new PasswordChanged($request->password));
+
+        return Reply::success(__('messages.passwordChanged'));
+    }
 
     // phpcs:ignore
     public function update(UpdateProfile $request, $id)
@@ -77,6 +107,8 @@ class ProfileController extends AccountBaseController
 
         if (!is_null($request->password)) {
             $user->userAuth->update(['password' => Hash::make($request->password)]);
+            app(EmployeeSystemSyncService::class)->syncPasswordToLinkedSystems($user, $request->password);
+            $user->notify(new PasswordChanged($request->password));
         }
 
         if ($user->clientDetails) {

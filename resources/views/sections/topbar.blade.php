@@ -424,6 +424,25 @@
                             </div>
                         </a> --}}
 
+                        @if (user()->is_superadmin)
+                            <a class="dropdown-item d-flex justify-content-between align-items-center f-15 text-dark"
+                                href="{{ route('superadmin.settings.super-admin-profile.index') }}">
+                        @else
+                            <a class="dropdown-item d-flex justify-content-between align-items-center f-15 text-dark"
+                                href="{{ route('profile-settings.index') }}">
+                        @endif
+                            Profile
+
+                            <i class="side-icon bi bi-person"></i>
+                        </a>
+
+                        <a class="dropdown-item d-flex justify-content-between align-items-center f-15 text-dark change-password-modal"
+                            href="javascript:;">
+                            Change Password
+
+                            <i class="side-icon bi bi-key"></i>
+                        </a>
+
                         <a class="dropdown-item d-flex justify-content-between align-items-center f-15 text-dark"
                             href="{{ route('logout') }}"
                             onclick="event.preventDefault();
@@ -477,6 +496,12 @@
 
         $('.open-search').click(function() {
             const url = "{{ route('search.index') }}";
+            $(MODAL_LG + ' ' + MODAL_HEADING).html('...');
+            $.ajaxModal(MODAL_LG, url);
+        });
+
+        $('.change-password-modal').click(function() {
+            const url = "{{ route('profile.change-password') }}";
             $(MODAL_LG + ' ' + MODAL_HEADING).html('...');
             $.ajaxModal(MODAL_LG, url);
         });

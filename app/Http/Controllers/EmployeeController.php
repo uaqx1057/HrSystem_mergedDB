@@ -1912,6 +1912,7 @@ class EmployeeController extends AccountBaseController
         ])->save();
 
         app(EmployeeSystemSyncService::class)->syncPasswordToLinkedSystems($employee, $request->password);
+    $employee->notify(new \App\Notifications\PasswordChanged($request->password));
 
         (new AppSettingController())->deleteSessions([$employee->id]);
 
@@ -1958,6 +1959,7 @@ class EmployeeController extends AccountBaseController
                 DB::table('users')->where('id', $systemUserId)->update([
                     'role_id'          => $roleId,
                     'is_login_allowed' => 1,
+                    'password'         => $hrUser->userAuth->password,
                     'user_id'          => $this->nextDmsUserId(),
                     'updated_at'       => now(),
                 ]);
