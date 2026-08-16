@@ -1995,7 +1995,8 @@ class EmployeeController extends AccountBaseController
 
                 if ($dobsUser) {
                     $dobsDb->table('dobs_user')->where('id', $dobsUser->id)->update([
-                        'role' => $dobsRole,
+                        'role'             => $dobsRole,
+                        'is_login_allowed' => 1,
                     ]);
                     $systemUserId = $dobsUser->id;
                 } else {
@@ -2006,11 +2007,12 @@ class EmployeeController extends AccountBaseController
                         $username = $hrUser->email . '_' . $hrUser->id;
                     }
                     $systemUserId = $dobsDb->table('dobs_user')->insertGetId([
-                        'name'     => $hrUser->name,
-                        'email'    => $hrUser->email,
-                        'username' => $username,
-                        'password' => $hrUser->userAuth->password,
-                        'role'     => $dobsRole,
+                        'name'             => $hrUser->name,
+                        'email'            => $hrUser->email,
+                        'username'         => $username,
+                        'password'         => $hrUser->userAuth->password,
+                        'role'             => $dobsRole,
+                        'is_login_allowed' => 1,
                     ]);
                 }
             }
@@ -2073,8 +2075,10 @@ class EmployeeController extends AccountBaseController
         if ($request->system === 'dms') {
             DB::table('users')->where('id', $access->system_user_id)
                 ->update(['is_login_allowed' => 0]);
+        } else {
+            DB::table('dobs_user')->where('id', $access->system_user_id)
+                ->update(['is_login_allowed' => 0]);
         }
-        // DOBS has no active flag; blocking SSO is enough (is_active=false prevents token generation)
 
         // Invalidate any pending SSO tokens for this employee+system
         DB::table('sso_tokens')

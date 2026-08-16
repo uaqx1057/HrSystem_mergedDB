@@ -83,7 +83,11 @@ class EmployeeSystemSyncService
                         ? DB::table('branches')->where('id', $hrUser->branch_id)->value('name')
                         : null;
 
-                    $dobsUpdate = ['name' => $hrUser->name, 'email' => $hrUser->email];
+                    $dobsUpdate = [
+                        'name'             => $hrUser->name,
+                        'email'            => $hrUser->email,
+                        'is_login_allowed' => strtolower((string) $hrUser->status) === 'active' ? 1 : 0,
+                    ];
                     if ($designationName) $dobsUpdate['designation'] = $designationName;
                     if ($branchName) $dobsUpdate['branch_city'] = $branchName;
 
