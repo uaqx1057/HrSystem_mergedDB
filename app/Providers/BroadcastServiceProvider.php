@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -14,7 +15,7 @@ class BroadcastServiceProvider extends ServiceProvider
     public function register()
     {
         try {
-            $pusherSetting = DB::table('pusher_settings')->first();
+            $pusherSetting = Cache::remember('provider:pusher_settings', 300, fn () => DB::table('pusher_settings')->first());
 
             if ($pusherSetting) {
 

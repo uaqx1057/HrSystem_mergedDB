@@ -6,6 +6,7 @@ use App\Traits\HasMaskImage;
 use Illuminate\Mail\MailServiceProvider;
 use Illuminate\Queue\QueueServiceProvider;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,8 +19,8 @@ class SmtpConfigProvider extends ServiceProvider
     public function register()
     {
         try {
-            $smtpSetting = DB::table('smtp_settings')->first();
-            $settings = DB::table('global_settings')->first();
+            $smtpSetting = Cache::remember('provider:smtp_settings', 300, fn () => DB::table('smtp_settings')->first());
+            $settings = Cache::remember('provider:global_settings', 300, fn () => DB::table('global_settings')->first());
 
             if ($smtpSetting && $settings) {
 
@@ -50,7 +51,7 @@ class SmtpConfigProvider extends ServiceProvider
                     Config::set('app.logo', $this->generateMaskedImageAppUrl('app-logo/' . $settings->light_logo));
                 }
 
-                $pushSetting = DB::table('push_notification_settings')->first();
+                $pushSetting = Cache::remember('provider:push_notification_settings', 300, fn () => DB::table('push_notification_settings')->first());
 
                 if ($pushSetting) {
                     Config::set('services.onesignal.app_id', $pushSetting->onesignal_app_id);

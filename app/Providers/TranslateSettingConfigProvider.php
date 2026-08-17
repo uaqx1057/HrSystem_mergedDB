@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Schema;
@@ -14,8 +15,8 @@ class TranslateSettingConfigProvider extends ServiceProvider
     {
         try {
 
-            if (Schema::hasTable('translate_settings')) {
-                $translateSetting = DB::table('translate_settings')->first();
+            if (Cache::remember('provider:translate_settings_table_exists', 300, fn () => Schema::hasTable('translate_settings'))) {
+                $translateSetting = Cache::remember('provider:translate_settings', 300, fn () => DB::table('translate_settings')->first());
 
                 if ($translateSetting) {
                     Config::set('laravel_google_translate.google_translate_api_key', $translateSetting->google_key);

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Session\SessionServiceProvider;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -20,7 +21,7 @@ class SessionDriverConfigProvider extends ServiceProvider
     {
         try {
 
-            $setting = DB::table('global_settings')->first();
+            $setting = Cache::remember('provider:global_settings', 300, fn () => DB::table('global_settings')->first());
 
             if ($setting) {
                 Config::set('session.driver', $setting->session_driver != '' ? $setting->session_driver : 'file');

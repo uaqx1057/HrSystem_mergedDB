@@ -28,6 +28,7 @@ use App\Models\TicketAgentGroups;
 use Illuminate\Support\Facades\DB;
 use App\Models\ProjectTimeLogBreak;
 use App\Models\EmployeeShiftSchedule;
+use App\Models\EmployeeSystemAccess;
 use App\Http\Requests\ClockIn\ClockInRequest;
 use App\Models\Company;
 use App\Models\EmployeeShift;
@@ -163,14 +164,12 @@ trait EmployeeDashboard
             return $eventData;
         }
 
-        $this->totalProjects = Project::select('projects.id')
+        $this->totalProjects = Project::query()
             ->where('completion_percent', '<>', 100)
-
-            ->join('project_members', 'project_members.project_id', '=', 'projects.id');
-        $this->totalProjects = $this->totalProjects->where('project_members.user_id', '=', $this->user->id);
-
-        $this->totalProjects = $this->totalProjects->groupBy('projects.id');
-        $this->totalProjects = count($this->totalProjects->get());
+            ->join('project_members', 'project_members.project_id', '=', 'projects.id')
+            ->where('project_members.user_id', $this->user->id)
+            ->distinct()
+            ->count('projects.id');
 
         $this->counts = User::select(
             DB::raw('(select IFNULL(sum(project_time_logs.total_minutes),0) from `project_time_logs` where user_id = ' . $this->user->id . ') as totalHoursLogged '),
@@ -247,20 +246,14 @@ trait EmployeeDashboard
             return !is_null($item->due_date) && $item->due_date->endOfDay()->isPast();
         })->count();
 
-        $projects = Project::with('members')
+        $this->dueProjects = Project::query()
             ->where('completion_percent', '<>', '100')
-            ->leftJoin('project_members', 'project_members.project_id', 'projects.id')
-            ->leftJoin('users', 'project_members.user_id', 'users.id')
-            ->selectRaw('project_members.user_id, projects.deadline as due_date, projects.id')
+            ->join('project_members', 'project_members.project_id', 'projects.id')
             ->where('project_members.user_id', $this->user->id)
-            ->groupBy('projects.id')
-            ->get();
-
-        $projects = $projects->whereNotNull('due_date');
-
-        $this->dueProjects = $projects->filter(function ($value) {
-            return now(company()->timezone)->gt($value->due_date);
-        })->count();
+            ->whereNotNull('projects.deadline')
+            ->where('projects.deadline', '<', now(company()->timezone))
+            ->distinct()
+            ->count('projects.id');
 
         // Getting Current Clock-in if exist
         $this->currentClockIn = Attendance::where(DB::raw('DATE(clock_in_time)'), now()->format('Y-m-d'))
@@ -280,6 +273,9 @@ trait EmployeeDashboard
 
         // Check Holiday by date
         $this->checkTodayHoliday = Holiday::where('date', $currentDate)->first();
+        $this->mySystemAccess = EmployeeSystemAccess::where('employee_id', user()->id)
+            ->where('is_active', true)
+            ->get();
         $this->myActiveTimer = ProjectTimeLog::with('task', 'user', 'project', 'breaks', 'activeBreak')
             ->where('user_id', user()->id)
             ->whereNull('end_time')

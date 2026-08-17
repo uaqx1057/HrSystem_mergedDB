@@ -94,11 +94,6 @@
                         <i class="icons icon-logout mr-2"></i>@lang('modules.attendance.clock_out')
                     </button>
                 @endif
-                @php
-                    $mySystemAccess = \App\Models\EmployeeSystemAccess::where('employee_id', user()->id)
-                        ->where('is_active', true)->get();
-                @endphp
-
                
                 {{-- @if (in_array('admin', user_roles()))
                     <div class="private-dash-settings ml-3">
@@ -140,7 +135,7 @@
                 @endif --}}
             </div>
         </div>
-            @if($mySystemAccess->count())
+            @if($mySystemAccess->isNotEmpty())
                 <div class="col-12 mb-4">
                     <div class="card">
                         <div class="card-header">

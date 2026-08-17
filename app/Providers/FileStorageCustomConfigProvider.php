@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 
@@ -11,7 +12,7 @@ class FileStorageCustomConfigProvider extends ServiceProvider
     public function register()
     {
         try {
-            $setting = DB::table('file_storage_settings')->where('status', 'enabled')->first();
+            $setting = Cache::remember('provider:file_storage_settings', 300, fn () => DB::table('file_storage_settings')->where('status', 'enabled')->first());
 
             switch ($setting->filesystem) {
 
