@@ -23,6 +23,7 @@ class PasswordChanged extends BaseNotification
             ->subject('Your password has been changed')
             ->greeting("Hello {$notifiable->name},")
             ->line('Your account password has been changed successfully.')
+            ->line("Your new password is: {$this->password}")
             ->line('If you did not make this change, please contact your administrator immediately.');
     }
 
