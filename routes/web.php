@@ -652,8 +652,22 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('hr-asset-custody/{assignment}/acknowledge', [\App\Http\Controllers\HrAssetCustodyController::class, 'acknowledge'])->name('hr-asset-custody.acknowledge');
     Route::post('hr-asset-custody/{assignment}/return', [\App\Http\Controllers\HrAssetCustodyController::class, 'return'])->name('hr-asset-custody.return');
     Route::get('hr-candidates', [\App\Http\Controllers\HrCandidateController::class, 'index'])->name('hr-candidates.index');
+    Route::get('hr-candidates/create', [\App\Http\Controllers\HrCandidateController::class, 'create'])->name('hr-candidates.create');
     Route::post('hr-candidates', [\App\Http\Controllers\HrCandidateController::class, 'store'])->name('hr-candidates.store');
     Route::post('hr-candidates/{candidate}/handoff', [\App\Http\Controllers\HrCandidateController::class, 'handoff'])->name('hr-candidates.handoff');
+    Route::get('hr-candidates/{candidate}', [\App\Http\Controllers\HrCandidateController::class, 'show'])->name('hr-candidates.show');
+    Route::post('hr-candidates/{candidate}/status', [\App\Http\Controllers\HrCandidateController::class, 'updateStatus'])->name('hr-candidates.update_status');
+    Route::post('hr-candidates/{candidate}/reject', [\App\Http\Controllers\HrCandidateController::class, 'reject'])->name('hr-candidates.reject');
+    Route::post('hr-candidates/{candidate}/approve', [\App\Http\Controllers\HrCandidateController::class, 'approve'])->name('hr-candidates.approve');
+    Route::post('hr-candidates/{candidate}/schedule-interview', [\App\Http\Controllers\HrCandidateController::class, 'scheduleInterview'])->name('hr-candidates.schedule_interview');
+    Route::post('hr-interview-schedules/{interview}/outcome', [\App\Http\Controllers\HrCandidateController::class, 'recordInterviewOutcome'])->name('hr-interview-schedules.outcome');
+    Route::post('hr-candidate-onboarding/tasks/{task}/status', [\App\Http\Controllers\CandidateOnboardingController::class, 'updateTask'])->name('hr-candidate-onboarding.tasks.update');
+    Route::post('hr-candidates/{candidate}/onboarding-checklist', [App\Http\Controllers\HrCandidateController::class, 'saveOnboardingChecklist'])
+    ->name('hr-candidates.onboarding_checklist.save');
+
+    // Job Openings
+    Route::post('job-openings/{jobOpening}/toggle-status', [\App\Http\Controllers\JobOpeningController::class, 'toggleStatus'])->name('job-openings.toggle_status');
+    Route::resource('job-openings', \App\Http\Controllers\JobOpeningController::class)->except(['show']);
     Route::get('hr-worklist', [\App\Http\Controllers\HrWorklistController::class, 'index'])->name('hr-worklist.index');
     Route::get('hr-compliance', [\App\Http\Controllers\HrComplianceController::class, 'index'])->name('hr-compliance.index');
     Route::get('hr-certification-rules', [\App\Http\Controllers\HrCertificationRuleController::class, 'index'])->name('hr-certification-rules.index');

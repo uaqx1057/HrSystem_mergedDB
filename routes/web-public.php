@@ -24,6 +24,13 @@ use Illuminate\Support\Facades\Route;
 Route::get('/invitation/{code}', [RegisterController::class, 'invitation'])->name('invitation');
 Route::post('/invitation/accept-invite', [RegisterController::class, 'acceptInvite'])->name('accept_invite');
 
+// Public careers / job application pipeline
+Route::get('/careers', [\App\Http\Controllers\CareerController::class, 'index'])->name('careers.index');
+Route::get('/careers/apply', [\App\Http\Controllers\CareerController::class, 'apply'])->name('careers.apply.general');
+Route::post('/careers/apply', [\App\Http\Controllers\CareerController::class, 'store'])->middleware('throttle:6,1')->name('careers.apply.store');
+Route::get('/careers/{slug}', [\App\Http\Controllers\CareerController::class, 'show'])->name('careers.show');
+Route::get('/careers/{slug}/apply', [\App\Http\Controllers\CareerController::class, 'apply'])->name('careers.apply');
+
 Route::get('/invoice/{hash}', [HomeController::class, 'invoice'])->name('front.invoice');
 Route::get('/change-lang/{locale}', [HomeController::class, 'changeLang'])->name('front.changeLang');
 Route::get('front/show-image', [HomeController::class, 'showImage'])->name('front.public.show_image');

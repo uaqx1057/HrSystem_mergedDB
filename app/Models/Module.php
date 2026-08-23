@@ -1982,6 +1982,31 @@ class Module extends BaseModel
             'module_name' => 'messages',
             'permissions' => []
         ],
+        [
+            'module_name' => 'recruitment',
+            'permissions' => [
+                [
+                    'allowed_permissions' => Permission::ALL_NONE,
+                    'is_custom' => 0,
+                    'name' => 'manage_job_openings',
+                ],
+                [
+                    'allowed_permissions' => Permission::ALL_4_ADDED_1_OWNED_2_BOTH_3_NONE_5,
+                    'is_custom' => 0,
+                    'name' => 'view_candidates',
+                ],
+                [
+                    'allowed_permissions' => Permission::ALL_4_ADDED_1_OWNED_2_BOTH_3_NONE_5,
+                    'is_custom' => 0,
+                    'name' => 'edit_candidates',
+                ],
+                [
+                    'allowed_permissions' => Permission::ALL_NONE,
+                    'is_custom' => 1,
+                    'name' => 'manage_interviews',
+                ],
+            ]
+        ],
         ...self::SUPERADMIN_MODULE_LIST
     ];
 

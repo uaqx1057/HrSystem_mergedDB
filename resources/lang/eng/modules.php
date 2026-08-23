@@ -1942,6 +1942,7 @@ return array(
         'advance_salary' => 'Advance Salary',
         'company_assets' => 'Company Assets',
         'employeebankaccount' => 'Employee Bank Account',
+        'recruitment' => 'Recruitment',
     ),
     'projectSettings' => array(
         'sendNotificationsTo' => 'Send Reminder To',

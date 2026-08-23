@@ -3,6 +3,7 @@
 return [
 
     'description',
+    'requirements',
     'summery',
     'note',
     'notes',

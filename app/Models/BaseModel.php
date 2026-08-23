@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Froiden\RestAPI\ApiModel;
+// use Froiden\ResSanitizeInputPI\ApiModel;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -16,7 +16,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @method static \Illuminate\Database\Eloquent\Builder|BaseModel query()
  * @mixin \Eloquent
  */
-class BaseModel extends ApiModel
+// class BaseModel extends ApiModel
+class BaseModel extends \Illuminate\Database\Eloquent\Model
 {
     use LogsActivity;
 

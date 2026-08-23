@@ -28,29 +28,13 @@
 
         <x-filters.more-filter-box>
             <div class="more-filter-items">
-                <label class="f-14 text-dark-grey mb-12 text-capitalize">Job opening</label>
-                <div class="select-filter mb-4">
-                    <select class="form-control select-picker" name="job_opening_id" id="job_opening_id"
-                            data-live-search="true">
-                        <option value="all">@lang('app.all')</option>
-                        <option value="general" @selected(request('job_opening_id') === 'general')>General applications only</option>
-                        @foreach ($jobOpenings as $job)
-                            <option value="{{ $job->id }}" @selected(request('job_opening_id') == $job->id)>{{ $job->title }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <div class="more-filter-items">
                 <label class="f-14 text-dark-grey mb-12 text-capitalize">Status</label>
                 <div class="select-filter mb-4">
                     <select class="form-control select-picker" name="status_filter" id="status_filter">
                         <option value="">@lang('app.all')</option>
-                        @foreach (['new', 'applied', 'screening', 'interview_scheduled', 'interviewed', 'approved', 'onboarding', 'converted', 'rejected', 'handoff'] as $s)
-                            <option value="{{ $s }}" @selected(request('status') == $s)>
-                                {{ ucwords(str_replace('_', ' ', $s)) }}
-                            </option>
-                        @endforeach
+                        <option value="open">Open</option>
+                        <option value="on_hold">On hold</option>
+                        <option value="closed">Closed</option>
                     </select>
                 </div>
             </div>
@@ -63,19 +47,12 @@
 
         <div class="d-grid d-lg-flex d-md-flex action-bar">
             <div id="table-actions" class="flex-grow-1 align-items-center">
-                <a href="{{ route('hr-candidates.create') }}" class="btn btn-sm btn-primary ml-3">
-                    <i class="fa fa-plus mr-1"></i> Add Recruitment Candidates
+                <a href="{{ route('job-openings.create') }}" class="btn btn-sm btn-primary ml-3">
+                    <i class="fa fa-plus mr-1"></i> Add Job Opening
                 </a>
             </div>
         </div>
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-                <i class="fa fa-check-circle mr-1"></i> {{ session('success') }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        @endif
+
         <div class="d-flex flex-column w-tables rounded mt-3 bg-white">
             {!! $dataTable->table(['class' => 'table table-hover border-0 w-100']) !!}
         </div>
@@ -87,18 +64,17 @@
     @include('sections.datatable_js')
 
     <script>
-        $('#hr-candidates-table').on('preXhr.dt', function (e, settings, data) {
+        $('#job-openings-table').on('preXhr.dt', function (e, settings, data) {
             data['searchText'] = $('#search-text-field').val();
-            data['jobOpeningId'] = $('#job_opening_id').val();
             data['statusFilter'] = $('#status_filter').val();
         });
 
         const showTable = () => {
-            window.LaravelDataTables["hr-candidates-table"].draw(false);
+            window.LaravelDataTables["job-openings-table"].draw(false);
         }
 
-        $('#job_opening_id, #status_filter').on('change', function () {
-            if ($('#job_opening_id').val() != "all" || $('#status_filter').val() != "") {
+        $('#status_filter').on('change', function () {
+            if ($(this).val() != "") {
                 $('#reset-filters').removeClass('d-none');
             } else {
                 $('#reset-filters').addClass('d-none');
@@ -115,18 +91,50 @@
 
         $('#reset-filters').click(function () {
             $('#search-text-field').val('');
-            $('#job_opening_id').val('all');
             $('#status_filter').val('');
             $('.filter-box .select-picker').selectpicker("refresh");
             $('#reset-filters').addClass('d-none');
             showTable();
         });
 
-        $('body').on('click', '.handoff-row', function () {
-            var id = $(this).data('candidate-id');
-            var url = "{{ route('hr-candidates.handoff', ':id') }}";
-            url = url.replace(':id', id);
-            window.location.href = url;
+        $('body').on('click', '.delete-table-row', function () {
+            var id = $(this).data('job-id');
+            Swal.fire({
+                title: "@lang('messages.sweetAlertTitle')",
+                text: "@lang('messages.recoverRecord')",
+                icon: 'warning',
+                showCancelButton: true,
+                focusConfirm: false,
+                confirmButtonText: "@lang('messages.confirmDelete')",
+                cancelButtonText: "@lang('app.cancel')",
+                customClass: {
+                    confirmButton: 'btn btn-primary mr-3',
+                    cancelButton: 'btn btn-secondary'
+                },
+                showClass: {
+                    popup: 'swal2-noanimation',
+                    backdrop: 'swal2-noanimation'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var url = "{{ route('job-openings.destroy', ':id') }}";
+                    url = url.replace(':id', id);
+
+                    $.easyAjax({
+                        type: 'POST',
+                        url: url,
+                        blockUI: true,
+                        data: {
+                            '_token': "{{ csrf_token() }}",
+                            '_method': 'DELETE'
+                        },
+                        success: function (response) {
+                            showTable();
+                        }
+                    });
+                }
+            });
         });
     </script>
 @endpush
