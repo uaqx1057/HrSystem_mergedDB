@@ -159,26 +159,26 @@ class HrCandidateController extends AccountBaseController
         $candidate->save();
 
         $fileMap = [
-            'iqama_image' => 'iqama',
-            'national_id_image' => 'national_id',
-            'passport_image' => 'passport',
-            'qiva_contract' => 'qiva_contract',
-            'company_contract' => 'company_contract',
-            'bank_document' => 'bank_account',
-            'contract_document' => 'contract_signed',
+            'iqama_image'        => ['type' => 'iqama',           'dir' => 'iqama'],
+            'national_id_image'  => ['type' => 'national_id',     'dir' => 'national_id'],
+            'passport_image'     => ['type' => 'passport',        'dir' => 'passport'],
+            'qiva_contract'       => ['type' => 'qiva_contract',    'dir' => 'contracts'],
+            'company_contract'    => ['type' => 'company_contract', 'dir' => 'contracts'],
+            'bank_document'       => ['type' => 'bank_account',     'dir' => 'candidate-documents'],
+            'contract_document'   => ['type' => 'contract_signed',  'dir' => 'candidate-documents'],
         ];
 
-        foreach ($fileMap as $field => $type) {
+        foreach ($fileMap as $field => $meta) {
             if ($request->hasFile($field)) {
                 $file = $request->file($field);
-                $stored = Files::uploadLocalOrS3($file, 'candidate-documents');
+                $stored = Files::uploadLocalOrS3($file, $meta['dir']);
                 HrCandidateDocument::updateOrCreate(
-                    ['candidate_id' => $candidate->id, 'document_type' => $type],
+                    ['candidate_id' => $candidate->id, 'document_type' => $meta['type']],
                     [
                         'original_name' => $file->getClientOriginalName(),
-                        'stored_path' => $stored,
-                        'mime_type' => $file->getClientMimeType(),
-                        'size' => $file->getSize(),
+                        'stored_path'   => $stored,
+                        'mime_type'     => $file->getClientMimeType(),
+                        'size'          => $file->getSize(),
                     ]
                 );
             }
