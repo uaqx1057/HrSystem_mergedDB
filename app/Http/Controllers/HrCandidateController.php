@@ -107,19 +107,10 @@ class HrCandidateController extends AccountBaseController
         abort_403($candidate->company_id != user()->company_id);
         abort_if(is_null($candidate->onboardingCase), 404);
 
-        $dateFormat = $this->company->date_format;
-        $employeeType = $request->input('employee_type');
-
+        // Employee type / Iqama / National ID / Passport are collected once, at apply time,
+        // and are intentionally NOT re-validated or re-writable here — this checklist only
+        // confirms compensation, bank details, contract, and sign-off.
         $data = $request->validate([
-            'employee_type' => 'required|in:saudi,expat',
-            'iqama_no' => $employeeType === 'expat' ? 'required|string|max:50' : 'nullable|string|max:50',
-            'iqama_profession' => $employeeType === 'expat' ? 'required|string|max:100' : 'nullable|string|max:100',
-            'iqama_expiry_date' => $employeeType === 'expat' ? 'required|date_format:"' . $dateFormat . '"' : 'nullable|date_format:"' . $dateFormat . '"',
-            'national_id' => $employeeType === 'saudi' ? 'required|string|max:50' : 'nullable|string|max:50',
-            'national_id_expiry_date' => $employeeType === 'saudi' ? 'required|date_format:"' . $dateFormat . '"' : 'nullable|date_format:"' . $dateFormat . '"',
-            'passport_no' => 'nullable|string|max:50',
-            'passport_expiry_date' => 'nullable|date_format:"' . $dateFormat . '"',
-            'probation_time' => 'nullable|string|max:100',
             'department_id' => 'nullable|exists:teams,id',
             'designation_id' => 'nullable|exists:designations,id',
             'branch_id' => 'nullable|exists:branches,id',
@@ -135,37 +126,19 @@ class HrCandidateController extends AccountBaseController
             'items.contract_signed' => 'nullable|boolean',
             'items.manager_signoff' => 'nullable|boolean',
             'convert_to_employee' => 'nullable|boolean',
-            'iqama_image' => 'nullable|file|max:5120',
-            'national_id_image' => 'nullable|file|max:5120',
-            'passport_image' => 'nullable|file|max:5120',
-            'qiva_contract' => 'nullable|file|max:5120',
-            'company_contract' => 'nullable|file|max:5120',
             'bank_document' => 'nullable|file|max:5120',
             'contract_document' => 'nullable|file|max:5120',
         ]);
 
-        foreach (['iqama_expiry_date', 'national_id_expiry_date', 'passport_expiry_date'] as $field) {
-            $data[$field] = !empty($data[$field])
-                ? \Carbon\Carbon::createFromFormat($dateFormat, $data[$field])->format('Y-m-d')
-                : null;
-        }
-
         $candidate->fill(collect($data)->only([
-            'employee_type', 'iqama_no', 'iqama_profession', 'iqama_expiry_date',
-            'national_id', 'national_id_expiry_date', 'passport_no', 'passport_expiry_date',
-            'probation_time', 'department_id', 'designation_id', 'branch_id', 'basic_salary',
+            'department_id', 'designation_id', 'branch_id', 'basic_salary',
             'bank_name', 'iban_number', 'account_number', 'swift_code',
         ])->toArray());
         $candidate->save();
 
         $fileMap = [
-            'iqama_image'        => ['type' => 'iqama',           'dir' => 'iqama'],
-            'national_id_image'  => ['type' => 'national_id',     'dir' => 'national_id'],
-            'passport_image'     => ['type' => 'passport',        'dir' => 'passport'],
-            'qiva_contract'       => ['type' => 'qiva_contract',    'dir' => 'contracts'],
-            'company_contract'    => ['type' => 'company_contract', 'dir' => 'contracts'],
-            'bank_document'       => ['type' => 'bank_account',     'dir' => 'candidate-documents'],
-            'contract_document'   => ['type' => 'contract_signed',  'dir' => 'candidate-documents'],
+            'bank_document'     => ['type' => 'bank_account',    'dir' => 'candidate-documents'],
+            'contract_document' => ['type' => 'contract_signed', 'dir' => 'candidate-documents'],
         ];
 
         foreach ($fileMap as $field => $meta) {
@@ -194,34 +167,32 @@ class HrCandidateController extends AccountBaseController
             'convert_to_employee' => !empty($data['convert_to_employee']),
         ]);
 
-        $case = $candidate->onboardingCase->fresh();
-        $allChecked = $case->documents_verified
-            && $case->compensation_confirmed
-            && $case->bank_details_collected
-            && $case->contract_signed
-            && $case->manager_signoff;
-
         $service = app(CandidateOnboardingService::class);
         $message = 'Onboarding checklist saved.';
 
         if ($candidate->status === HrCandidate::STATUS_CONVERTED && $candidate->converted_employee_id) {
-            // Already an employee — every save from here on keeps both records in sync.
+            // Already an employee — keep syncing compensation/bank changes into that record.
             $service->convertToEmployee($candidate->fresh());
             $message = 'Onboarding checklist saved and employee record updated.';
-        } elseif ($case->convert_to_employee && $allChecked) {
-            $service->convertToEmployee($candidate->fresh());
-            $case->update(['status' => 'completed', 'completed_at' => now()]);
+        } elseif ($service->maybeConvertIfChecklistComplete($candidate->onboardingCase->fresh())) {
             $message = 'All checklist items complete — candidate converted to employee.';
         }
 
         return back()->with('success', $message);
     }
-    public function show(HrCandidate $candidate)
+    public function show(Request $request, HrCandidate $candidate)
     {
+        $tab = $request->get('tab', 'detail');
+        $this->activeTab = $tab;
+
         $this->auth();
         abort_403($candidate->company_id != user()->company_id);
         $this->candidate = $candidate->load(['documents', 'interviews.event', 'interviews.scheduledBy', 'jobOpening', 'onboardingCase.tasks']);
         $this->interviewers = \App\Models\User::allEmployees(null, true);
+
+        if($candidate->status == 'applied'){
+            $this->activeTab = 'detail';
+        }
 
         return view('hr-candidates.show', $this->data);
     }

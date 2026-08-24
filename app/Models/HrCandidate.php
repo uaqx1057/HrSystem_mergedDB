@@ -60,5 +60,10 @@ class HrCandidate extends BaseModel
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    public function country(): BelongsTo
+    {
+        return $this->belongsTo(Country::class, 'country_id');
+    }
 }
 

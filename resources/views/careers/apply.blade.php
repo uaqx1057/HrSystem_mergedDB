@@ -46,6 +46,7 @@
             --text-muted: rgba(209, 250, 229, 0.62);
             --border: rgba(255, 255, 255, 0.08);
             --border-em: rgba(5, 150, 105, 0.22);
+            --danger: #f87171;
         }
 
         body {
@@ -188,7 +189,7 @@
         }
 
         .apply-hero-inner {
-            max-width: 700px;
+            max-width: 760px;
             margin: 0 auto;
             padding: 3rem 2rem 2.4rem;
             position: relative;
@@ -257,7 +258,7 @@
         }
 
         .sec-inner {
-            max-width: 700px;
+            max-width: 760px;
             margin: 0 auto;
             padding: 0 2rem;
         }
@@ -318,6 +319,114 @@
             margin-bottom: 2px;
         }
 
+        /* ════════════════════ STEP INDICATOR ════════════════════ */
+        .ms-steps-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            padding-bottom: 26px;
+            margin-bottom: 28px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .ms-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ms-step-circle {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 2px solid var(--border-em);
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            transition: all .25s;
+            flex-shrink: 0;
+        }
+
+        .ms-step-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            white-space: nowrap;
+            transition: color .25s;
+        }
+
+        .ms-step.active .ms-step-circle {
+            border-color: var(--emerald-mid);
+            background: linear-gradient(135deg, var(--emerald), var(--teal));
+            color: #fff;
+            box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.12);
+        }
+
+        .ms-step.active .ms-step-label {
+            color: var(--emerald-pale);
+        }
+
+        .ms-step.done .ms-step-circle {
+            border-color: var(--emerald);
+            background: rgba(5, 150, 105, 0.16);
+            color: var(--emerald-mid);
+        }
+
+        .ms-step.done .ms-step-label {
+            color: var(--emerald-mid);
+        }
+
+        .ms-step-line {
+            height: 2px;
+            width: 30px;
+            background: var(--border);
+            flex-shrink: 0;
+            transition: background .25s;
+            margin: 0 4px;
+        }
+
+        .ms-step-line.done {
+            background: var(--emerald);
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+            animation: fadeUp .35s ease both;
+        }
+
+        .step-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: .3rem;
+        }
+
+        .step-subtitle {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 1.4rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.1rem 1.3rem;
+        }
+
+        .form-row .field-full {
+            grid-column: 1 / -1;
+        }
+
         /* Form fields */
         .field {
             margin-bottom: 1.3rem;
@@ -332,12 +441,15 @@
         }
 
         .required {
-            color: #f87171;
+            color: var(--danger);
         }
 
         .field input[type=text],
         .field input[type=email],
         .field input[type=tel],
+        .field input[type=number],
+        .field input[type=date],
+        .field select,
         .field textarea {
             width: 100%;
             height: 50px;
@@ -351,11 +463,34 @@
             transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
         }
 
+        .field select {
+            appearance: none;
+            -webkit-appearance: none;
+            color-scheme: dark;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2334d399'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 18px 18px;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+
+        .field select option {
+            background: #04150e;
+            color: #f0fdf4;
+        }
+
+        .field input[type=date] {
+            color-scheme: dark;
+            cursor: pointer;
+        }
+
         .field textarea {
             height: auto;
             padding: 14px 16px;
             resize: vertical;
             line-height: 1.55;
+            min-height: 110px;
         }
 
         .field input::placeholder,
@@ -364,11 +499,37 @@
         }
 
         .field input:focus,
+        .field select:focus,
         .field textarea:focus {
             outline: none;
             border-color: rgba(52, 211, 153, 0.65);
             box-shadow: 0 0 0 5px rgba(52, 211, 153, 0.10);
             transform: translateY(-1px);
+        }
+
+        .field.has-error input,
+        .field.has-error select,
+        .field.has-error textarea {
+            border-color: var(--danger) !important;
+        }
+
+        .field.has-error .file-drop {
+            border-color: var(--danger) !important;
+        }
+
+        .field-error {
+            display: none;
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .field.has-error .field-error {
+            display: block;
+        }
+
+        .hidden-field {
+            display: none !important;
         }
 
         /* File upload */
@@ -377,9 +538,10 @@
             border: 1.5px dashed var(--border-em);
             border-radius: 16px;
             background: rgba(5, 150, 105, 0.05);
-            padding: 22px 18px;
+            padding: 18px 16px;
             text-align: center;
             transition: border-color .2s, background .2s;
+            cursor: pointer;
         }
 
         .file-drop:hover {
@@ -388,14 +550,14 @@
         }
 
         .file-drop i {
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             color: var(--emerald-mid);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             display: block;
         }
 
         .file-drop-text {
-            font-size: 13.5px;
+            font-size: 13px;
             color: var(--text-muted);
         }
 
@@ -404,9 +566,9 @@
         }
 
         .file-hint {
-            font-size: 12px;
+            font-size: 11.5px;
             color: var(--text-muted);
-            margin-top: 8px;
+            margin-top: 6px;
         }
 
         .field input[type=file] {
@@ -418,39 +580,61 @@
             cursor: pointer;
         }
 
-        .file-drop {
-            position: relative;
-            cursor: pointer;
+        /* Nav buttons */
+        .ms-nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.6rem;
+            gap: 12px;
         }
 
-        /* Submit */
-        .btn-submit {
+        .btn-step {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-            height: 54px;
-            border: 0;
-            border-radius: 18px;
-            background: linear-gradient(135deg, #059669, #0d9488);
-            color: #fff;
-
-            font-size: 1rem;
+            gap: 8px;
+            font-family: inherit;
             font-weight: 800;
-            letter-spacing: 0.02em;
-            box-shadow: 0 18px 34px rgba(5, 150, 105, 0.28);
+            font-size: 14px;
+            padding: 13px 26px;
+            border-radius: 14px;
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 0;
+            transition: transform .2s ease, box-shadow .2s ease;
         }
 
-        .btn-submit:hover {
+        .btn-step-next,
+        .btn-step-submit {
+            background: linear-gradient(135deg, #059669, #0d9488);
+            color: #fff;
+            box-shadow: 0 16px 30px var(--emerald-glow);
+            margin-left: auto;
+        }
+
+        .btn-step-next:hover,
+        .btn-step-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 24px 40px rgba(5, 150, 105, 0.38);
+            box-shadow: 0 22px 38px var(--emerald-glow);
+        }
+
+        .btn-step-submit:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-step-prev {
+            background: transparent;
+            border: 1px solid var(--border-em);
+            color: var(--emerald-pale);
+        }
+
+        .btn-step-prev:hover {
+            background: rgba(5, 150, 105, 0.1);
         }
 
         .g-recaptcha {
-            margin-top: 6px;
+            margin: 0 0 1.2rem;
         }
 
         /* ════════════════════ FOOTER ════════════════════ */
@@ -539,7 +723,7 @@
         @keyframes fadeUp {
             from {
                 opacity: 0;
-                transform: translateY(22px);
+                transform: translateY(14px);
             }
 
             to {
@@ -570,6 +754,10 @@
             .nav-right .btn-outline-nav span {
                 display: none;
             }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 480px) {
@@ -579,6 +767,10 @@
 
             .form-card {
                 border-radius: 18px;
+            }
+
+            .ms-step-label {
+                display: none;
             }
         }
     </style>
@@ -647,53 +839,329 @@
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('careers.apply.store') }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('careers.apply.store') }}" enctype="multipart/form-data"
+                    id="apply-form" novalidate>
                     @csrf
                     <input type="hidden" name="job_opening_slug" value="{{ $jobOpening->public_slug ?? '' }}">
 
-                    <div class="field">
-                        <label for="name">Full name <span class="required">*</span></label>
-                        <input type="text" id="name" name="name" value="{{ old('name') }}"
-                            placeholder="Enter your full name" required>
-                    </div>
-
-                    <div class="field">
-                        <label for="email">Email <span class="required">*</span></label>
-                        <input type="email" id="email" name="email" value="{{ old('email') }}"
-                            placeholder="you@example.com" required>
-                    </div>
-
-                    <div class="field">
-                        <label for="mobile">Mobile</label>
-                        <input type="tel" id="mobile" name="mobile" value="{{ old('mobile') }}"
-                            placeholder="+966 5X XXX XXXX">
-                    </div>
-
-                    <div class="field">
-                        <label for="cover_note">Cover note</label>
-                        <textarea id="cover_note" name="cover_note" rows="5"
-                            placeholder="Tell us a little about yourself and why you're a great fit...">{{ old('cover_note') }}</textarea>
-                    </div>
-
-                    <div class="field">
-                        <label for="resume">Resume</label>
-                        <div class="file-drop">
-                            <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx">
-                            <i class="ri-upload-cloud-2-line"></i>
-                            <div class="file-drop-text"><strong>Click to upload</strong> or drag your resume here</div>
-                            <div class="file-hint">PDF or Word, max 5MB</div>
+                    {{-- ── STEP INDICATOR ── --}}
+                    <div class="ms-steps-wrapper" id="ms-steps-wrapper">
+                        <div class="ms-step active" data-step="1">
+                            <div class="ms-step-circle">1</div>
+                            <span class="ms-step-label">Basic Info</span>
+                        </div>
+                        <div class="ms-step-line" id="line-1"></div>
+                        <div class="ms-step" data-step="2">
+                            <div class="ms-step-circle">2</div>
+                            <span class="ms-step-label">Documents</span>
+                        </div>
+                        <div class="ms-step-line" id="line-2"></div>
+                        <div class="ms-step" data-step="3">
+                            <div class="ms-step-circle">3</div>
+                            <span class="ms-step-label">Personal Detail</span>
+                        </div>
+                        <div class="ms-step-line" id="line-3"></div>
+                        <div class="ms-step" data-step="4">
+                            <div class="ms-step-circle">4</div>
+                            <span class="ms-step-label">Other Detail</span>
                         </div>
                     </div>
 
-                    @if (global_setting()->google_recaptcha_status == 'active' && global_setting()->google_recaptcha_v2_status == 'active')
-                        <div class="g-recaptcha" data-sitekey="{{ global_setting()->google_recaptcha_v2_site_key }}">
-                        </div>
-                    @endif
+                    {{-- ══════════════════════════════
+                         STEP 1 — Basic Info
+                    ══════════════════════════════ --}}
+                    <div class="form-step active" id="form-step-1">
+                        <div class="step-title">Basic Info</div>
+                        <div class="step-subtitle">Tell us who you are.</div>
 
-                    <button type="submit" class="btn-submit">
-                        <span>Submit Application</span>
-                        {{-- <i class="ri-send-plane-line"></i> --}}
-                    </button>
+                        <div class="form-row">
+                            <div class="field">
+                                <label for="salutation">Salutation <span class="required">*</span></label>
+                                <select id="salutation" name="salutation" required>
+                                    <option value="">--</option>
+                                    @foreach ($salutations as $salutation)
+                                        <option value="{{ $salutation->value }}" @selected(old('salutation') === $salutation->value)>
+                                            {{ $salutation->label() }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="field-error">Salutation is required.</div>
+                            </div>
+                            <div class="field">
+                                <label for="name">Full name <span class="required">*</span></label>
+                                <input type="text" id="name" name="name" value="{{ old('name') }}"
+                                    placeholder="Enter your full name" required>
+                                <div class="field-error">Full name is required.</div>
+                            </div>
+                            <div class="field">
+                                <label for="email">Email <span class="required">*</span></label>
+                                <input type="email" id="email" name="email" value="{{ old('email') }}"
+                                    placeholder="you@example.com" required>
+                                <div class="field-error">A valid email is required.</div>
+                            </div>
+                            <div class="field">
+                                <label for="date_of_birth">Date of Birth <span class="required">*</span></label>
+                                <input type="date" id="date_of_birth" name="date_of_birth"
+                                    value="{{ old('date_of_birth') }}"
+                                    max="{{ now()->subYears(15)->format('Y-m-d') }}" required>
+                                <div class="field-error">Date of Birth is required.</div>
+                            </div>
+                            <div class="field field-full">
+                                <label for="image">Profile Picture <span class="required">*</span></label>
+                                <div class="file-drop" data-target="image">
+                                    <input type="file" id="image" name="image"
+                                        accept=".png,.jpg,.jpeg,.svg,.bmp" required>
+                                    <i class="ri-user-3-line"></i>
+                                    <div class="file-drop-text"><strong>Click to upload</strong> or drag your photo
+                                        here</div>
+                                    <div class="file-hint">PNG or JPG, max 5MB</div>
+                                </div>
+                                <div class="field-error">Profile picture is required.</div>
+                            </div>
+
+                            <div class="field field-full">
+                                <label for="resume">Resume / CV <span class="required">*</span></label>
+                                <div class="file-drop">
+                                    <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx"
+                                        required>
+                                    <i class="ri-upload-cloud-2-line"></i>
+                                    <div class="file-drop-text"><strong>Click to upload</strong> or drag your resume
+                                        here</div>
+                                    <div class="file-hint">PDF or Word, max 5MB</div>
+                                </div>
+                                <div class="field-error">Resume / CV is required.</div>
+                            </div>
+                        </div>
+
+                        <div class="ms-nav-buttons">
+                            <div></div>
+                            <button type="button" class="btn-step btn-step-next" data-next="2">
+                                Next &nbsp;<i class="ri-arrow-right-line"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- ══════════════════════════════
+                         STEP 2 — Document Details
+                    ══════════════════════════════ --}}
+                    <div class="form-step" id="form-step-2">
+                        <div class="step-title">Document Details</div>
+                        <div class="step-subtitle">Select your employee type — the fields below adjust
+                            automatically.</div>
+
+                        <div class="form-row">
+                            <div class="field field-full">
+                                <label for="employee_type">Employee Type <span class="required">*</span></label>
+                                <select id="employee_type" name="employee_type" required>
+                                    <option value="expat"
+                                        {{ old('employee_type', 'expat') === 'expat' ? 'selected' : '' }}>
+                                        Expat</option>
+                                    <option value="saudi" {{ old('employee_type') === 'saudi' ? 'selected' : '' }}>
+                                        Saudi</option>
+                                </select>
+                            </div>
+
+                            {{-- EXPAT ONLY --}}
+                            <div class="field expat-only-field">
+                                <label for="iqama_no">Iqama No <span class="required expat-required">*</span></label>
+                                <input type="text" id="iqama_no" name="iqama_no" value="{{ old('iqama_no') }}"
+                                    placeholder="Iqama No" required>
+                                <div class="field-error">Iqama No is required.</div>
+                            </div>
+                            <div class="field expat-only-field">
+                                <label for="iqama_profession">Iqama Profession <span
+                                        class="required expat-required">*</span></label>
+                                <input type="text" id="iqama_profession" name="iqama_profession"
+                                    value="{{ old('iqama_profession') }}" placeholder="Iqama Profession" required>
+                                <div class="field-error">Iqama Profession is required.</div>
+                            </div>
+                            <div class="field expat-only-field">
+                                <label for="iqama_expiry_date">Iqama Expiry Date <span
+                                        class="required expat-required">*</span></label>
+                                <input type="date" id="iqama_expiry_date" name="iqama_expiry_date"
+                                    value="{{ old('iqama_expiry_date') }}" required>
+                                <div class="field-error">Iqama Expiry Date is required.</div>
+                            </div>
+                            <div class="field expat-only-field">
+                                <label for="iqama_image">Iqama Image <span
+                                        class="required expat-required">*</span></label>
+                                <div class="file-drop" data-target="iqama_image">
+                                    <input type="file" id="iqama_image" name="iqama_image"
+                                        accept=".png,.jpg,.jpeg,.svg,.bmp" required>
+                                    <i class="ri-file-shield-2-line"></i>
+                                    <div class="file-drop-text"><strong>Click to upload</strong> Iqama image</div>
+                                    <div class="file-hint">PNG or JPG, max 5MB</div>
+                                </div>
+                                <div class="field-error">Iqama Image is required.</div>
+                            </div>
+
+                            {{-- SAUDI ONLY --}}
+                            <div class="field saudi-only-field hidden-field">
+                                <label for="national_id">National ID No <span
+                                        class="required saudi-required">*</span></label>
+                                <input type="text" id="national_id" name="national_id"
+                                    value="{{ old('national_id') }}" placeholder="National ID No" required>
+                                <div class="field-error">National ID No is required.</div>
+                            </div>
+                            <div class="field saudi-only-field hidden-field">
+                                <label for="national_id_expiry_date">National ID Expiry Date <span
+                                        class="required saudi-required">*</span></label>
+                                <input type="date" id="national_id_expiry_date" name="national_id_expiry_date"
+                                    value="{{ old('national_id_expiry_date') }}" required>
+                                <div class="field-error">National ID Expiry Date is required.</div>
+                            </div>
+                            <div class="field saudi-only-field hidden-field">
+                                <label for="national_id_image">National ID Image <span
+                                        class="required saudi-required">*</span></label>
+                                <div class="file-drop" data-target="national_id_image">
+                                    <input type="file" id="national_id_image" name="national_id_image"
+                                        accept=".png,.jpg,.jpeg,.svg,.bmp" required>
+                                    <i class="ri-id-card-line"></i>
+                                    <div class="file-drop-text"><strong>Click to upload</strong> National ID image
+                                    </div>
+                                    <div class="file-hint">PNG or JPG, max 5MB</div>
+                                </div>
+                                <div class="field-error">National ID Image is required.</div>
+                            </div>
+
+                            {{-- SHARED --}}
+                            <div class="field">
+                                <label for="passport_no">Passport No <span class="required">*</span></label>
+                                <input type="text" id="passport_no" name="passport_no"
+                                    value="{{ old('passport_no') }}" placeholder="Passport No" required>
+                                <div class="field-error">Passport No is required.</div>
+                            </div>
+                            <div class="field">
+                                <label for="passport_expiry_date">Passport Expiry Date <span
+                                        class="required">*</span></label>
+                                <input type="date" id="passport_expiry_date" name="passport_expiry_date"
+                                    value="{{ old('passport_expiry_date') }}" required>
+                                <div class="field-error">Passport Expiry Date is required.</div>
+                            </div>
+                            <div class="field field-full">
+                                <label for="passport_image">Passport Image <span class="required">*</span></label>
+                                <div class="file-drop" data-target="passport_image">
+                                    <input type="file" id="passport_image" name="passport_image"
+                                        accept=".png,.jpg,.jpeg,.svg,.bmp" required>
+                                    <i class="ri-passport-line"></i>
+                                    <div class="file-drop-text"><strong>Click to upload</strong> Passport image</div>
+                                    <div class="file-hint">PNG or JPG, max 5MB</div>
+                                </div>
+                                <div class="field-error">Passport Image is required.</div>
+                            </div>
+                        </div>
+
+                        <div class="ms-nav-buttons">
+                            <button type="button" class="btn-step btn-step-prev" data-prev="1">
+                                <i class="ri-arrow-left-line"></i> &nbsp;Previous
+                            </button>
+                            <button type="button" class="btn-step btn-step-next" data-next="3">
+                                Next &nbsp;<i class="ri-arrow-right-line"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- ══════════════════════════════
+                         STEP 3 — Personal Detail
+                    ══════════════════════════════ --}}
+                    <div class="form-step" id="form-step-3">
+                        <div class="step-title">Personal Detail</div>
+                        <div class="step-subtitle">A little more about you.</div>
+
+                        <div class="form-row">
+                            <div class="field">
+                                <label for="country_id">Country <span class="required">*</span></label>
+                                <select id="country_id" name="country_id" required>
+                                    <option value="">--</option>
+                                    @foreach ($countries as $item)
+                                        <option value="{{ $item->id }}" @selected(old('country_id') == $item->id)>
+                                            {{ $item->nicename }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="field-error">Country is required.</div>
+                            </div>
+                            <div class="field">
+                                <label for="mobile">Mobile <span class="required">*</span></label>
+                                <input type="tel" id="mobile" name="mobile" value="{{ old('mobile') }}"
+                                    placeholder="+966 5X XXX XXXX" required>
+                                <div class="field-error">Mobile is required.</div>
+                            </div>
+                            <div class="field">
+                                <label for="gender">Gender <span class="required">*</span></label>
+                                <select id="gender" name="gender" required>
+                                    <option value="">--</option>
+                                    <option value="male" @selected(old('gender') === 'male')>Male</option>
+                                    <option value="female" @selected(old('gender') === 'female')>Female</option>
+                                    <option value="others" @selected(old('gender') === 'others')>Others</option>
+                                </select>
+                                <div class="field-error">Gender is required.</div>
+                            </div>
+                            <div class="field">
+                                <label for="basic_salary">Expected Salary <span class="required">*</span></label>
+                                <input type="number" min="0" step="0.01" id="basic_salary"
+                                    name="basic_salary" value="{{ old('basic_salary') }}"
+                                    placeholder="Expected basic salary" required>
+                                <div class="field-error">Expected Salary is required.</div>
+                            </div>
+                            <div class="field field-full">
+                                <label for="address">Address <span class="required">*</span></label>
+                                <textarea id="address" name="address" rows="4" placeholder="Your current address" required>{{ old('address') }}</textarea>
+                                <div class="field-error">Address is required.</div>
+                            </div>
+                        </div>
+
+                        <div class="ms-nav-buttons">
+                            <button type="button" class="btn-step btn-step-prev" data-prev="2">
+                                <i class="ri-arrow-left-line"></i> &nbsp;Previous
+                            </button>
+                            <button type="button" class="btn-step btn-step-next" data-next="4">
+                                Next &nbsp;<i class="ri-arrow-right-line"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- ══════════════════════════════
+                         STEP 4 — Other Detail (final)
+                    ══════════════════════════════ --}}
+                    <div class="form-step" id="form-step-4">
+                        <div class="step-title">Other Detail</div>
+                        <div class="step-subtitle">Almost done.</div>
+
+                        <div class="form-row">
+                            <div class="field">
+                                <label for="linkedin_username">LinkedIn ID <span class="required">*</span></label>
+                                <input type="text" id="linkedin_username" name="linkedin_username"
+                                    value="{{ old('linkedin_username') }}" placeholder="linkedin.com/in/yourname"
+                                    required>
+                                <div class="field-error">LinkedIn ID is required.</div>
+                            </div>
+                            <div class="field">
+                                <label for="marital_status">Marital Status <span class="required">*</span></label>
+                                <select id="marital_status" name="marital_status" required>
+                                    <option value="">--</option>
+                                    @foreach ($maritalStatuses as $status)
+                                        <option value="{{ $status->value }}" @selected(old('marital_status') === $status->value)>
+                                            {{ $status->label() }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="field-error">Marital Status is required.</div>
+                            </div>
+                        </div>
+
+                        @if (global_setting()->google_recaptcha_status == 'active' && global_setting()->google_recaptcha_v2_status == 'active')
+                            <div class="g-recaptcha"
+                                data-sitekey="{{ global_setting()->google_recaptcha_v2_site_key }}">
+                            </div>
+                        @endif
+
+                        <div class="ms-nav-buttons">
+                            <button type="button" class="btn-step btn-step-prev" data-prev="3">
+                                <i class="ri-arrow-left-line"></i> &nbsp;Previous
+                            </button>
+                            <button type="submit" class="btn-step btn-step-submit" id="submit-btn">
+                                <span>Submit Application</span>
+                            </button>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
@@ -737,16 +1205,223 @@
 
     <script>
         (function() {
-            const input = document.getElementById('resume');
-            const textEl = document.querySelector('.file-drop-text');
-            if (!input || !textEl) return;
-            const defaultHTML = textEl.innerHTML;
-            input.addEventListener('change', function() {
-                if (input.files && input.files.length > 0) {
-                    textEl.innerHTML = '<strong>Selected:</strong> ' + input.files[0].name;
-                } else {
-                    textEl.innerHTML = defaultHTML;
+            'use strict';
+
+            var totalSteps = 4;
+            var currentStep = 1;
+
+            var wrapper = document.getElementById('ms-steps-wrapper');
+            var nextBtns = document.querySelectorAll('.btn-step-next');
+            var prevBtns = document.querySelectorAll('.btn-step-prev');
+
+            function goToStep(step) {
+                document.querySelectorAll('.form-step').forEach(function(el) {
+                    el.classList.remove('active');
+                });
+                document.getElementById('form-step-' + step).classList.add('active');
+
+                for (var s = 1; s <= totalSteps; s++) {
+                    var stepEl = wrapper.querySelector('[data-step="' + s + '"]');
+                    var lineEl = document.getElementById('line-' + s);
+                    stepEl.classList.remove('active', 'done');
+                    if (lineEl) lineEl.classList.remove('done');
+
+                    if (s < step) {
+                        stepEl.classList.add('done');
+                        if (lineEl) lineEl.classList.add('done');
+                    } else if (s === step) {
+                        stepEl.classList.add('active');
+                    }
                 }
+
+                currentStep = step;
+                document.getElementById('apply-form').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+
+            function setError(fieldId, hasError) {
+                var input = document.getElementById(fieldId);
+                if (!input) return;
+                var wrap = input.closest('.field');
+                if (!wrap) return;
+                wrap.classList.toggle('has-error', hasError);
+            }
+
+            function isEmptyVal(id) {
+                var el = document.getElementById(id);
+                return !el || el.value.trim() === '';
+            }
+
+            function isEmptyFile(id) {
+                var el = document.getElementById(id);
+                return !el || !el.files || el.files.length === 0;
+            }
+
+            function validateStep(step) {
+                var ok = true;
+
+                if (step === 1) {
+                    ['salutation', 'name', 'email', 'date_of_birth'].forEach(function(id) {
+                        if (isEmptyVal(id)) {
+                            setError(id, true);
+                            ok = false;
+                        } else {
+                            setError(id, false);
+                        }
+                    });
+
+                    var email = document.getElementById('email').value.trim();
+                    var emailReg = /^[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}$/;
+                    if (email === '' || !emailReg.test(email)) {
+                        setError('email', true);
+                        ok = false;
+                    } else {
+                        setError('email', false);
+                    }
+
+                    ['image', 'resume'].forEach(function(id) {
+                        if (isEmptyFile(id)) {
+                            setError(id, true);
+                            ok = false;
+                        } else {
+                            setError(id, false);
+                        }
+                    });
+                }
+
+                if (step === 2) {
+                    var isSaudi = document.getElementById('employee_type').value === 'saudi';
+
+                    if (isEmptyVal('employee_type')) {
+                        setError('employee_type', true);
+                        ok = false;
+                    } else {
+                        setError('employee_type', false);
+                    }
+
+                    if (!isSaudi) {
+                        ['iqama_no', 'iqama_profession', 'iqama_expiry_date'].forEach(function(id) {
+                            if (isEmptyVal(id)) {
+                                setError(id, true);
+                                ok = false;
+                            } else {
+                                setError(id, false);
+                            }
+                        });
+                        if (isEmptyFile('iqama_image')) {
+                            setError('iqama_image', true);
+                            ok = false;
+                        } else {
+                            setError('iqama_image', false);
+                        }
+                    } else {
+                        ['national_id', 'national_id_expiry_date'].forEach(function(id) {
+                            if (isEmptyVal(id)) {
+                                setError(id, true);
+                                ok = false;
+                            } else {
+                                setError(id, false);
+                            }
+                        });
+                        if (isEmptyFile('national_id_image')) {
+                            setError('national_id_image', true);
+                            ok = false;
+                        } else {
+                            setError('national_id_image', false);
+                        }
+                    }
+
+                    ['passport_no', 'passport_expiry_date'].forEach(function(id) {
+                        if (isEmptyVal(id)) {
+                            setError(id, true);
+                            ok = false;
+                        } else {
+                            setError(id, false);
+                        }
+                    });
+                    if (isEmptyFile('passport_image')) {
+                        setError('passport_image', true);
+                        ok = false;
+                    } else {
+                        setError('passport_image', false);
+                    }
+                }
+
+                if (step === 3) {
+                    ['country_id', 'mobile', 'gender', 'basic_salary', 'address'].forEach(function(id) {
+                        if (isEmptyVal(id)) {
+                            setError(id, true);
+                            ok = false;
+                        } else {
+                            setError(id, false);
+                        }
+                    });
+                }
+
+                return ok;
+            }
+
+            nextBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var next = parseInt(btn.getAttribute('data-next'), 10);
+                    var current = next - 1;
+                    if (!validateStep(current)) return;
+                    goToStep(next);
+                });
+            });
+
+            prevBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    goToStep(parseInt(btn.getAttribute('data-prev'), 10));
+                });
+            });
+
+            // ── EMPLOYEE TYPE TOGGLE ──────────────────────────────
+            function toggleEmployeeTypeFields() {
+                var isSaudi = document.getElementById('employee_type').value === 'saudi';
+
+                document.querySelectorAll('.expat-only-field').forEach(function(el) {
+                    el.classList.toggle('hidden-field', isSaudi);
+                    el.querySelectorAll('input, select').forEach(function(inp) {
+                        inp.disabled = isSaudi;
+                        inp.required = !isSaudi;
+                    });
+                });
+                document.querySelectorAll('.saudi-only-field').forEach(function(el) {
+                    el.classList.toggle('hidden-field', !isSaudi);
+                    el.querySelectorAll('input, select').forEach(function(inp) {
+                        inp.disabled = !isSaudi;
+                        inp.required = isSaudi;
+                    });
+                });
+            }
+
+            document.getElementById('employee_type').addEventListener('change', toggleEmployeeTypeFields);
+            toggleEmployeeTypeFields();
+
+            // ── FILE DROP LABEL UPDATE ────────────────────────────
+            document.querySelectorAll('.file-drop').forEach(function(drop) {
+                var input = drop.querySelector('input[type=file]');
+                var textEl = drop.querySelector('.file-drop-text');
+                var defaultHTML = textEl.innerHTML;
+                input.addEventListener('change', function() {
+                    if (input.files && input.files.length > 0) {
+                        textEl.innerHTML = '<strong>Selected:</strong> ' + input.files[0].name;
+                        var wrap = input.closest('.field');
+                        if (wrap) wrap.classList.remove('has-error');
+                    } else {
+                        textEl.innerHTML = defaultHTML;
+                    }
+                });
+            });
+
+            // ── SUBMIT GUARD (avoid double-submit) ────────────────
+            document.getElementById('apply-form').addEventListener('submit', function() {
+                var btn = document.getElementById('submit-btn');
+                btn.disabled = true;
+                btn.querySelector('span').textContent = 'Submitting...';
             });
         })();
     </script>

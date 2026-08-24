@@ -43,7 +43,8 @@
     </div>
     <div class="form-group col">
         <label>Closes at</label>
-        <input type="date" name="closes_at" class="form-control height-35 f-14" value="{{ old('closes_at', $job->closes_at ?? '') }}">
+        <input type="date" name="closes_at" class="form-control height-35 f-14"
+                value="{{ old('closes_at', isset($job->closes_at) ? $job->closes_at->format('Y-m-d') : '') }}">
     </div>
 </div>
 <div class="form-group">

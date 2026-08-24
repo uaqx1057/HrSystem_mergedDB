@@ -66,6 +66,40 @@ class CandidateOnboardingService
     }
 
     /**
+     * Central "all checked → convert" rule for the 5-item checklist. Returns true if a
+     * conversion happened as a result of this call.
+     *
+     * NOTE: this still respects the "Convert this candidate to an employee" checkbox as
+     * an explicit opt-in — all 5 items being checked alone won't convert unless that box
+     * is also ticked. If you'd rather convert automatically the moment all 5 are checked
+     * (dropping the checkbox as a gate), remove the `$case->convert_to_employee &&` below.
+     */
+    public function maybeConvertIfChecklistComplete(HrCandidateOnboardingCase $case): bool
+    {
+        $allChecked = $case->documents_verified
+            && $case->compensation_confirmed
+            && $case->bank_details_collected
+            && $case->contract_signed
+            && $case->manager_signoff;
+
+        if (!$allChecked) {
+            return false;
+        }
+
+        if ($case->status !== 'completed') {
+            $case->update(['status' => 'completed', 'completed_at' => now()]);
+        }
+
+        if (!$case->convert_to_employee) {
+            return false;
+        }
+
+        $this->convertToEmployee($case->candidate);
+
+        return true;
+    }
+
+    /**
      * Creates the real employee record from a fully-collected candidate the first time
      * this is called for that candidate, and re-syncs the same fields into the existing
      * employee record on every call after that — so later edits to the candidate's
@@ -131,8 +165,10 @@ class CandidateOnboardingService
     }
 
     /**
-     * Copies every pre-hire field the checklist collects (identity docs, compensation,
-     * bank account, uploaded files) from the candidate onto the given employee.
+     * Copies every pre-hire field the candidate has collected — now including everything
+     * gathered by the multistep apply form (salutation, gender, DOB, country, address,
+     * marital status, LinkedIn) as well as compensation, bank account, and uploaded files —
+     * from the candidate onto the given employee.
      */
     private function fillEmployeeFromCandidate(User $user, HrCandidate $candidate, ?EmployeeDetails $employee = null): void
     {
@@ -141,6 +177,18 @@ class CandidateOnboardingService
         $user->name = $candidate->name;
         $user->mobile = $candidate->mobile;
         $user->branch_id = $candidate->branch_id ?? $user->branch_id;
+        $user->salutation = $candidate->salutation;
+        $user->gender = $candidate->gender;
+        $user->country_id = $candidate->country_id;
+        // Reusing the employee form's existing (mislabeled-in-UI) slack_username field for
+        // LinkedIn, matching the pattern already used elsewhere — see note below.
+        // $user->slack_username = $candidate->linkedin_username;
+
+        $profilePicture = $candidate->documents()->where('document_type', 'profile_picture')->latest()->first();
+        if ($profilePicture) {
+            $user->image = $profilePicture->stored_path;
+        }
+
         $user->save();
 
         $employee->user_id = $user->id;
@@ -148,6 +196,7 @@ class CandidateOnboardingService
         $employee->designation_id = $candidate->designation_id;
         $employee->basic_salary = $candidate->basic_salary;
         $employee->employee_type = $candidate->employee_type;
+        $employee->slack_username = $candidate->linkedin_username;
         $employee->iqama_no = $candidate->iqama_no;
         $employee->iqama_profession = $candidate->iqama_profession;
         $employee->iqama_expiry_date = $candidate->iqama_expiry_date;
@@ -156,6 +205,9 @@ class CandidateOnboardingService
         $employee->passport_no = $candidate->passport_no;
         $employee->passport_expiry_date = $candidate->passport_expiry_date;
         $employee->probation_time = $candidate->probation_time;
+        $employee->date_of_birth = $candidate->date_of_birth;
+        $employee->address = $candidate->address;
+        $employee->marital_status = $candidate->marital_status;
         if (empty($employee->joining_date)) {
             $employee->joining_date = now();
         }

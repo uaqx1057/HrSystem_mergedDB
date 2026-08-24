@@ -63,9 +63,9 @@
 
         <div class="d-grid d-lg-flex d-md-flex action-bar">
             <div id="table-actions" class="flex-grow-1 align-items-center">
-                <a href="{{ route('hr-candidates.create') }}" class="btn btn-sm btn-primary ml-3">
+                {{-- <a href="{{ route('hr-candidates.create') }}" class="btn btn-sm btn-primary ml-3">
                     <i class="fa fa-plus mr-1"></i> Add Recruitment Candidates
-                </a>
+                </a> --}}
             </div>
         </div>
         @if (session('success'))
