@@ -10,8 +10,6 @@
 
     @include('super-admin.saas.section.testimonial')
 
-    @include('super-admin.saas.section.careers')
-
 @endsection
 @push('footer-script')
     <script>

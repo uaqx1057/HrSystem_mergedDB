@@ -415,6 +415,23 @@
     .role-title {  font-size: 15px; font-weight: 800; margin-bottom: .5rem; }
     .role-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
 
+    /* ════════════════════ CAREERS ════════════════════ */
+    .careers-section { background: rgba(3,18,11,0.6); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+    .careers-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1.5rem; margin: 3.5rem 0 3rem; }
+    .perk-card {
+      background: rgba(4,25,16,0.7); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.8rem; transition: border-color .2s, transform .2s;
+    }
+    .perk-card:hover { border-color: var(--border-em); transform: translateY(-2px); }
+    .perk-icon {
+      width: 48px; height: 48px; border-radius: 14px; margin-bottom: 1.2rem;
+      background: rgba(5,150,105,0.1); border: 1px solid var(--border-em);
+      display: grid; place-items: center; font-size: 1.3rem; color: var(--emerald-mid);
+    }
+    .perk-title {  font-size: 15px; font-weight: 800; margin-bottom: .5rem; }
+    .perk-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+    .careers-cta { text-align: center; }
+
     /* ════════════════════ WHY ════════════════════ */
     .why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; margin-top: 3.5rem; }
     .why-list { display: flex; flex-direction: column; gap: 1.2rem; }
@@ -570,6 +587,7 @@
       <li><a href="#modules">Modules</a></li>
       <li><a href="#workflow">Workflow</a></li>
       <li><a href="#access">Access</a></li>
+      <li><a href="/careers">Careers</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
     <div class="nav-right">
@@ -955,6 +973,39 @@
   </div>
 </section>
 
+<!-- ══ CAREERS ═════════════════════════════════════════ -->
+<section id="careers" class="careers-section">
+  <div class="sec-inner">
+    <div style="text-align:center;max-width:580px;margin:0 auto;">
+      <div class="sec-kicker">Careers</div>
+      <h2 class="sec-title">Join the team building<br/>Speed Logi's people operations.</h2>
+      <p class="sec-sub" style="margin:0 auto;">We're always looking for people who care about getting the details right. Browse open roles or send us a general application.</p>
+    </div>
+    <div class="careers-grid">
+      <div class="perk-card">
+        <div class="perk-icon"><i class="ri-map-pin-line"></i></div>
+        <div class="perk-title">Al Khobar, KSA</div>
+        <div class="perk-desc">Based out of Al Mada Tower, with roles across HR, operations, and technology.</div>
+      </div>
+      <div class="perk-card">
+        <div class="perk-icon"><i class="ri-team-line"></i></div>
+        <div class="perk-title">Grow With The Team</div>
+        <div class="perk-desc">A fast-moving logistics platform where your work has direct, visible impact.</div>
+      </div>
+      <div class="perk-card">
+        <div class="perk-icon"><i class="ri-file-list-3-line"></i></div>
+        <div class="perk-title">Straightforward Process</div>
+        <div class="perk-desc">Apply online, hear back from our team, and track your application through hiring.</div>
+      </div>
+    </div>
+    <div class="careers-cta">
+      <a href="/careers" class="btn-primary" style="font-size:15px;padding:15px 32px;">
+        <i class="ri-briefcase-line"></i> View Open Positions
+      </a>
+    </div>
+  </div>
+</section>
+
 <!-- ══ CTA ════════════════════════════════════════════ -->
 <section class="cta-section" id="contact">
   <div class="sec-inner cta-inner">
@@ -995,6 +1046,7 @@
         <li><a href="#modules">Modules</a></li>
         <li><a href="#workflow">Workflow</a></li>
         <li><a href="#access">Access Levels</a></li>
+        <li><a href="/careers">Careers</a></li>
       </ul>
     </div>
     <div class="footer-col">
