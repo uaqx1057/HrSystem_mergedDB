@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\EmployeeAllowance;
 use App\Models\EmployeeBankAccount;
 use App\Models\EmployeeDetails;
 use App\Models\HrCandidate;
@@ -198,6 +199,7 @@ class CandidateOnboardingService
         $employee->employee_type = $candidate->employee_type;
         $employee->slack_username = $candidate->linkedin_username;
         $employee->iqama_no = $candidate->iqama_no;
+        $employee->probation_time = $candidate->probation_time;
         $employee->iqama_profession = $candidate->iqama_profession;
         $employee->iqama_expiry_date = $candidate->iqama_expiry_date;
         $employee->national_id = $candidate->national_id;
@@ -242,6 +244,16 @@ class CandidateOnboardingService
                     'added_by' => user()?->id ?? $user->id,
                 ]
             );
+        }
+
+        $allowances = $candidate->allowances;
+
+        foreach ($allowances as $allowance) {
+            EmployeeAllowance::create([
+                'employee_id' => $user->id,
+                'name' => $allowance->name,
+                'amount' => $allowance->amount,
+            ]);
         }
     }
 }

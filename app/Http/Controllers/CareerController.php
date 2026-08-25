@@ -95,6 +95,7 @@ class CareerController extends Controller
             'gender' => 'nullable|in:male,female,others',
             'basic_salary' => 'nullable|numeric|min:0',
             'address' => 'nullable|string|max:2000',
+            'notes' => 'nullable|string|max:5000',
 
             'linkedin_username' => 'nullable|string|max:255',
             'marital_status' => 'nullable|string|max:30',
@@ -139,6 +140,7 @@ class CareerController extends Controller
             'marital_status' => $request->marital_status,
             'linkedin_username' => $request->linkedin_username,
             'source' => 'public_application',
+            'notes' => $request->notes,
             'status' => HrCandidate::STATUS_APPLIED,
         ]);
 
@@ -149,21 +151,6 @@ class CareerController extends Controller
             'passport_image' => 'passport',
             'resume' => 'resume',
         ];
-
-        // foreach ($fileMap as $field => $documentType) {
-        //     if ($request->hasFile($field)) {
-        //         $file = $request->file($field);
-        //         $stored = Files::uploadLocalOrS3($file, 'candidate-documents');
-        //         HrCandidateDocument::create([
-        //             'candidate_id' => $candidate->id,
-        //             'document_type' => $documentType,
-        //             'original_name' => $file->getClientOriginalName(),
-        //             'stored_path' => $stored,
-        //             'mime_type' => $file->getClientMimeType(),
-        //             'size' => $file->getSize(),
-        //         ]);
-        //     }
-        // }
 
         $fileMap = [
             'image'        => ['type' => 'profile_picture',           'dir' => 'avatar'],
@@ -204,7 +191,16 @@ class CareerController extends Controller
             ->notify(new CandidateApplicationReceived($candidate));
 
         $admins = User::allAdmins($companyId);
-        \Illuminate\Support\Facades\Notification::send($admins, new NewCandidateApplicationReceived($candidate));
+
+        $resumeDocument = HrCandidateDocument::where('candidate_id', $candidate->id)
+            ->where('document_type', 'resume')
+            ->latest()
+            ->first();
+
+        \Illuminate\Support\Facades\Notification::send(
+            $admins,
+            new NewCandidateApplicationReceived($candidate, $resumeDocument)
+        );
 
         return back()->with('success', 'Thank you — your application has been received.');
     }

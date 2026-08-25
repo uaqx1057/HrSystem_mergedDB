@@ -16,10 +16,10 @@ class HrInterviewDataTable extends BaseDataTable
     {
         return datatables()
             ->eloquent($query)
-            ->addColumn('when', fn ($row) => $row->event?->start_date_time ?? '-')
-            ->editColumn('status', fn ($row) => ucwords(str_replace('_', ' ', $row->status)))
+            ->addColumn('when', fn($row) => $row->event?->start_date_time ?? '-')
+            ->editColumn('status', fn($row) => ucwords(str_replace('_', ' ', $row->status)))
             ->editColumn('outcome', function ($row) {
-                if (! $row->outcome) {
+                if (!$row->outcome) {
                     return '-';
                 }
 
@@ -58,7 +58,7 @@ class HrInterviewDataTable extends BaseDataTable
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                                         </div>
                                         <div class="modal-body">
-                                            <div class="form-group">
+                                            <div class="form-group text-left">
                                                 <label>Outcome</label>
                                                 <select name="outcome" class="form-control height-35">
                                                     <option value="pass">Pass</option>
@@ -66,7 +66,7 @@ class HrInterviewDataTable extends BaseDataTable
                                                     <option value="pending">Pending</option>
                                                 </select>
                                             </div>
-                                            <div class="form-group">
+                                            <div class="form-group text-left">
                                                 <label>Note</label>
                                                 <textarea name="feedback" rows="4" class="form-control" placeholder="Add a note (optional)"></textarea>
                                             </div>
@@ -106,7 +106,12 @@ class HrInterviewDataTable extends BaseDataTable
             'Status' => ['data' => 'status', 'name' => 'status', 'title' => 'Status'],
             'Outcome' => ['data' => 'outcome', 'name' => 'outcome', 'title' => 'Outcome'],
             'Note' => ['data' => 'feedback', 'name' => 'feedback', 'title' => 'Note', 'orderable' => false],
-            Column::computed('action', '')->exportable(false)->printable(false)->orderable(false)->searchable(false),
+            Column::computed('action', __('app.action'))
+                ->exportable(false)
+                ->printable(false)
+                ->orderable(false)
+                ->searchable(false)
+                ->addClass('text-right pr-20'),
         ];
     }
 }

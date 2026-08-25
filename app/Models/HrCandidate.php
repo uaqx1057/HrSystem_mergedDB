@@ -65,5 +65,10 @@ class HrCandidate extends BaseModel
     {
         return $this->belongsTo(Country::class, 'country_id');
     }
+
+    public function allowances()
+    {
+        return $this->hasMany(HrCandidateAllowance::class, 'candidate_id');
+    }
 }
 

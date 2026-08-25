@@ -28,12 +28,12 @@
                             ])" text="Schedule Interview" class="interview" ajax="false" />
                         </li>
                         @if ($candidate->status == 'onboarding' || $candidate->status == 'converted')
-                        <li>
-                            <x-tab :href="route('hr-candidates.show', [
-                                'candidate' => $candidate->id,
-                                'tab' => 'pre_hire',
-                            ])" text="Pre-hire Onboarding" class="pre_hire" ajax="false" />
-                        </li>
+                            <li>
+                                <x-tab :href="route('hr-candidates.show', [
+                                    'candidate' => $candidate->id,
+                                    'tab' => 'pre_hire',
+                                ])" text="Pre-hire Onboarding" class="pre_hire" ajax="false" />
+                            </li>
                         @endif
                     @endif
                 </ul>
@@ -80,34 +80,36 @@
                                 class="ml-2">
                                 @csrf
                                 <input type="hidden" name="status" value="screening">
-                                <button class="btn btn-sm btn-primary" >Screening</button>
+                                <button class="btn btn-sm btn-primary">Short list this candidate</button>
                             </form>
                         @endif
 
                         @if ($candidate->status == 'screening')
                             <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
-                                data-target="#scheduleInterviewModal" >
+                                data-target="#scheduleInterviewModal">
                                 Schedule Interview
                             </button>
                         @endif
 
-                        @if ($candidate->interviews->isNotEmpty() && $candidate->interviews->every('outcome', 'pass'))
+                        @if (
+                            $candidate->interviews->isNotEmpty() &&
+                                $candidate->interviews->every('outcome', 'pass') &&
+                                !in_array($candidate->status, ['rejected', 'onboarding']))
                             <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
-                                data-target="#approveModal" >
+                                data-target="#approveModal">
                                 Accept
                             </button>
 
 
                             @if ($candidate->interviews->isNotEmpty())
                                 <button type="button" class="btn btn-outline-danger btn-sm ml-2" data-toggle="modal"
-                                        data-target="#rejectModal">
-                                        Reject
-                                    </button>
+                                    data-target="#rejectModal">
+                                    Reject
+                                </button>
                             @endif
                         @endif
 
-                        <a href="{{ route('hr-candidates.index') }}" class="btn btn-sm btn-secondary ml-2"
-                            >Back</a>
+                        <a href="{{ route('hr-candidates.index') }}" class="btn btn-sm btn-secondary ml-2">Back</a>
                     </div>
                     <x-cards.data-row label="Full Name" :value="($candidate->salutation ? ucfirst($candidate->salutation) . ' ' : '') . $candidate->name" />
                     <x-cards.data-row label="Gender" :value="ucfirst($candidate->gender) ?? '-'" />
@@ -149,17 +151,16 @@
                     <x-cards.data-row label="Status" :value="ucfirst($candidate->status)" />
 
                     @foreach ($candidate->documents as $doc)
-
                         @php
-                            $fileDir =  match($doc->document_type) {
+                            $fileDir = match ($doc->document_type) {
                                 'profile_picture' => 'avatar',
                                 'iqama' => 'iqama',
                                 'national_id' => 'national_id',
                                 'passport' => 'passport',
                                 'bank_account', 'contract_signed', 'resume' => 'candidate-documents',
                                 default => 'candidate-documents',
-                                };
-                            $url = asset_url_local_s3( $fileDir ."/" . $doc->stored_path);
+                            };
+                            $url = asset_url_local_s3($fileDir . '/' . $doc->stored_path);
                             $file_url =
                                 '<a role="button" href="' .
                                 $url .
@@ -171,6 +172,9 @@
                         <x-cards.data-row :label="ucfirst($doc->document_type)" :value="$file_url" html="true" />
                     @endforeach
 
+                    @if ($candidate->notes)
+                        <x-cards.data-row label="Other Detail" :value="$candidate->notes" />
+                    @endif
                 </div>
             </div>
 
@@ -318,6 +322,21 @@
                                             class="form-control height-35" data-size="8"
                                             value="{{ $candidate->basic_salary }}">
                                     </div>
+
+                                    <div class="form-group">
+                                        <label>Probation Time</label>
+                                        <input type="text" name="probation_time" class="form-control height-35"
+                                            data-size="8" placeholder="In month"
+                                            value="{{ $candidate->probation_time }}">
+                                    </div>
+
+                                    <hr>
+                                    <label class="f-w-500 mb-2">Allowances</label>
+                                    <div id="approve-allowances-rows"></div>
+                                    <button type="button" id="approve-add-allowance-btn"
+                                        class="btn btn-outline-primary btn-sm mb-2">
+                                        <i class="fa fa-plus mr-1"></i> Add Allowance
+                                    </button>
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -358,13 +377,13 @@
                                     </div>
                                     <div class="form-group">
                                         <label>Start date/time</label>
-                                        <input type="datetime-local" id="start_date_time" name="start_date_time" data-size="8"
-                                            class="form-control height-35" required>
+                                        <input type="datetime-local" id="start_date_time" name="start_date_time"
+                                            data-size="8" class="form-control height-35" required>
                                     </div>
                                     <div class="form-group">
                                         <label>End date/time</label>
-                                        <input type="datetime-local" id="end_date_time" name="end_date_time" data-size="8"
-                                            class="form-control height-35" required>
+                                        <input type="datetime-local" id="end_date_time" name="end_date_time"
+                                            data-size="8" class="form-control height-35" required>
                                     </div>
                                     <div class="form-group">
                                         <label>Location / link</label>
@@ -500,6 +519,49 @@
                                             <input type="number" step="0.01" class="form-control height-35"
                                                 name="basic_salary"
                                                 value="{{ old('basic_salary', $candidate->basic_salary) }}">
+                                        </div>
+
+                                        <div class="col-lg-3 col-md-6 mb-2">
+                                            <label class="f-14 text-dark-grey">Probation Time</label>
+                                            <input type="text" name="probation_time" class="form-control height-35"
+                                            data-size="8" placeholder="In month"
+                                            value="{{ $candidate->probation_time }}">
+                                        </div>
+
+                                        <div class="col-lg-12 mb-2">
+                                            <label class="f-14 text-dark-grey">Allowances</label>
+                                            <div id="prehire-allowances-rows">
+                                                @foreach ($candidate->allowances as $i => $allowance)
+                                                    <div class="row allowance-row p-2 mb-2 mx-0"
+                                                        data-index="{{ $i }}">
+                                                        <div class="col-lg-5 col-md-5 px-1">
+                                                            <input type="text" class="form-control height-35 f-14"
+                                                                name="allowances[{{ $i }}][name]"
+                                                                value="{{ old("allowances.$i.name", $allowance->name) }}"
+                                                                placeholder="Allowance name" required>
+                                                        </div>
+                                                        <div class="col-lg-4 col-md-4 px-1">
+                                                            <input type="number" class="form-control height-35 f-14"
+                                                                name="allowances[{{ $i }}][amount]"
+                                                                value="{{ old("allowances.$i.amount", $allowance->amount) }}"
+                                                                placeholder="Amount" min="0" step="0.01"
+                                                                required>
+                                                        </div>
+                                                        <input type="hidden" name="allowances[{{ $i }}][id]"
+                                                            value="{{ $allowance->id }}">
+                                                        <div class="col-lg-2 col-md-2 px-1 d-flex align-items-center">
+                                                            <button type="button"
+                                                                class="btn btn-danger btn-sm remove-prehire-allowance-btn">
+                                                                <i class="fa fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                            <button type="button" id="prehire-add-allowance-btn"
+                                                class="btn btn-outline-primary btn-sm mt-1">
+                                                <i class="fa fa-plus mr-1"></i> Add Allowance
+                                            </button>
                                         </div>
                                     </div>
                                 </li>
@@ -698,7 +760,7 @@
     </script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
 
             const startDateTime = document.getElementById('start_date_time');
             const endDateTime = document.getElementById('end_date_time');
@@ -718,7 +780,7 @@
             endDateTime.min = now;
 
             // End date/time must be after start date/time
-            startDateTime.addEventListener('change', function () {
+            startDateTime.addEventListener('change', function() {
                 endDateTime.min = startDateTime.value;
 
                 if (endDateTime.value && endDateTime.value <= startDateTime.value) {
@@ -726,6 +788,95 @@
                 }
             });
 
+        });
+    </script>
+
+    <script>
+        $(function() {
+            var approveAllowanceIndex = 0;
+
+            function addApproveAllowanceRow() {
+                var row = `
+                <div class="row allowance-row p-2 mb-2 mx-0" data-index="${approveAllowanceIndex}">
+                    <div class="col-6 px-1">
+                        <input type="text" class="form-control height-35 f-14"
+                               name="allowances[${approveAllowanceIndex}][name]"
+                               placeholder="Allowance name" required>
+                    </div>
+                    <div class="col-5 px-1">
+                        <input type="number" class="form-control height-35 f-14"
+                               name="allowances[${approveAllowanceIndex}][amount]"
+                               placeholder="Amount" min="0" step="0.01" required>
+                    </div>
+                    <div class="col-1 px-1 d-flex align-items-center">
+                        <button type="button" class="btn btn-danger btn-sm remove-approve-allowance-btn">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>`;
+                $('#approve-allowances-rows').append(row);
+                approveAllowanceIndex++;
+            }
+
+            $('#approve-add-allowance-btn').on('click', function() {
+                addApproveAllowanceRow();
+            });
+
+            $(document).on('click', '.remove-approve-allowance-btn', function() {
+                $(this).closest('.allowance-row').remove();
+                $('#approve-allowances-rows .allowance-row').each(function(i) {
+                    $(this).attr('data-index', i);
+                    $(this).find('[name]').each(function() {
+                        var newName = $(this).attr('name').replace(/\[\d+\]/, '[' + i +
+                            ']');
+                        $(this).attr('name', newName);
+                    });
+                });
+                approveAllowanceIndex = $('#approve-allowances-rows .allowance-row').length;
+            });
+
+            // Reset rows every time the modal is reopened
+            $('#approveModal').on('show.bs.modal', function() {
+                $('#approve-allowances-rows').empty();
+                approveAllowanceIndex = 0;
+            });
+        });
+    </script>
+
+    <script>
+        $(function() {
+            var prehireAllowanceIndex = {{ $candidate->allowances->count() }};
+
+            function addPrehireAllowanceRow() {
+                var row = `
+                <div class="row allowance-row p-2 mb-2 mx-0" data-index="${prehireAllowanceIndex}">
+                    <div class="col-lg-5 col-md-5 px-1">
+                        <input type="text" class="form-control height-35 f-14"
+                               name="allowances[${prehireAllowanceIndex}][name]"
+                               placeholder="Allowance name" required>
+                    </div>
+                    <div class="col-lg-4 col-md-4 px-1">
+                        <input type="number" class="form-control height-35 f-14"
+                               name="allowances[${prehireAllowanceIndex}][amount]"
+                               placeholder="Amount" min="0" step="0.01" required>
+                    </div>
+                    <div class="col-lg-2 col-md-2 px-1 d-flex align-items-center">
+                        <button type="button" class="btn btn-danger btn-sm remove-prehire-allowance-btn">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                </div>`;
+                $('#prehire-allowances-rows').append(row);
+                prehireAllowanceIndex++;
+            }
+
+            $('#prehire-add-allowance-btn').on('click', function() {
+                addPrehireAllowanceRow();
+            });
+
+            $(document).on('click', '.remove-prehire-allowance-btn', function() {
+                $(this).closest('.allowance-row').remove();
+            });
         });
     </script>
 @endpush

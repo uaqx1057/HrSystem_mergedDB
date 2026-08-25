@@ -1145,6 +1145,13 @@
                                 </select>
                                 <div class="field-error">Marital Status is required.</div>
                             </div>
+
+                            {{-- NEW: Note field --}}
+                            <div class="field field-full">
+                                <label for="notes">Other Detail (Optional)</label>
+                                <textarea id="notes" name="notes" rows="4" placeholder="Anything else you'd like us to know? (optional)">{{ old('notes') }}</textarea>
+                                <div class="field-error">Other detail is invalid.</div>
+                            </div>
                         </div>
 
                         @if (global_setting()->google_recaptcha_status == 'active' && global_setting()->google_recaptcha_v2_status == 'active')

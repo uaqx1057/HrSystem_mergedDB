@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Event;
 use App\Models\EventAttendee;
 use App\Models\HrCandidate;
+use App\Models\HrCandidateAllowance;
 use App\Models\HrInterviewSchedule;
 use App\Models\HrJobOpening;
 use App\Notifications\CandidateRejected;
@@ -117,6 +118,7 @@ class HrCandidateController extends AccountBaseController
             'branch_id' => 'nullable|exists:branches,id',
             'basic_salary' => 'nullable|numeric',
             'bank_name' => 'nullable|string|max:255',
+            'probation_time' => 'nullable',
             'iban_number' => 'nullable|string|max:255',
             'account_number' => 'nullable|string|max:255',
             'swift_code' => 'nullable|string|max:255',
@@ -133,9 +135,11 @@ class HrCandidateController extends AccountBaseController
 
         $candidate->fill(collect($data)->only([
             'department_id', 'designation_id', 'branch_id', 'basic_salary',
-            'bank_name', 'iban_number', 'account_number', 'swift_code',
+            'bank_name', 'iban_number', 'account_number', 'swift_code','probation_time',
         ])->toArray());
         $candidate->save();
+
+        $this->saveCandidateAllowances($request, $candidate);
 
         $fileMap = [
             'bank_document'     => ['type' => 'bank_account',    'dir' => 'candidate-documents'],
@@ -237,12 +241,19 @@ class HrCandidateController extends AccountBaseController
             'branch_id' => 'nullable|exists:branches,id',
             'department_id' => 'nullable|exists:teams,id',
             'designation_id' => 'nullable|exists:designations,id',
+            'probation_time' => 'nullable',
             'basic_salary' => 'nullable|numeric',
+            'allowances' => 'nullable|array',
+            'allowances.*.id' => 'nullable|integer|exists:hr_candidate_allowances,id',
+            'allowances.*.name' => 'required_with:allowances.*.amount|string|max:255',
+            'allowances.*.amount' => 'required_with:allowances.*.name|numeric|min:0',
         ]);
 
-        $candidate->fill($data);
+        $candidate->fill(collect($data)->only(['branch_id', 'department_id', 'designation_id', 'basic_salary','probation_time'])->toArray());
         $candidate->status = HrCandidate::STATUS_ONBOARDING;
         $candidate->save();
+
+        $this->saveCandidateAllowances($request, $candidate);
 
         app(CandidateOnboardingService::class)->startCase($candidate);
 
@@ -251,6 +262,37 @@ class HrCandidateController extends AccountBaseController
         }
 
         return back()->with('success', 'Candidate approved. Pre-hire onboarding checklist started.');
+    }
+
+    protected function saveCandidateAllowances(Request $request, HrCandidate $candidate)
+    {
+        if ($request->has('allowances') && is_array($request->allowances)) {
+            $submittedIds = collect($request->allowances)
+                ->pluck('id')
+                ->filter()
+                ->toArray();
+
+            HrCandidateAllowance::where('candidate_id', $candidate->id)
+                ->whereNotIn('id', $submittedIds)
+                ->delete();
+
+            foreach ($request->allowances as $allowance) {
+                if (!empty($allowance['name']) && $allowance['amount'] !== null && $allowance['amount'] !== '') {
+                    HrCandidateAllowance::updateOrCreate(
+                        [
+                            'id' => $allowance['id'] ?? null,
+                            'candidate_id' => $candidate->id,
+                        ],
+                        [
+                            'name' => $allowance['name'],
+                            'amount' => $allowance['amount'],
+                        ]
+                    );
+                }
+            }
+        } else {
+            HrCandidateAllowance::where('candidate_id', $candidate->id)->delete();
+        }
     }
 
     public function scheduleInterview(Request $request, HrCandidate $candidate)
