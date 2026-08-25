@@ -1,4 +1,7 @@
 @extends('layouts.app')
+@push('datatable-styles')
+    @include('sections.datatable_css')
+@endpush
 @section('filter-section')
     <!-- FILTER START -->
     <div class="d-flex filter-box project-header bg-white">
@@ -24,7 +27,7 @@
                                 'tab' => 'interview',
                             ])" text="Schedule Interview" class="interview" ajax="false" />
                         </li>
-                        @if ($candidate->status == 'onboarding')
+                        @if ($candidate->status == 'onboarding' || $candidate->status == 'converted')
                         <li>
                             <x-tab :href="route('hr-candidates.show', [
                                 'candidate' => $candidate->id,
@@ -77,33 +80,34 @@
                                 class="ml-2">
                                 @csrf
                                 <input type="hidden" name="status" value="screening">
-                                <button class="btn btn-sm btn-primary" style="padding: 0.25rem 0.5rem;">Screening</button>
+                                <button class="btn btn-sm btn-primary" >Screening</button>
                             </form>
                         @endif
 
                         @if ($candidate->status == 'screening')
                             <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
-                                data-target="#scheduleInterviewModal" style="padding: 0.25rem 0.5rem;">
+                                data-target="#scheduleInterviewModal" >
                                 Schedule Interview
                             </button>
                         @endif
 
                         @if ($candidate->interviews->isNotEmpty() && $candidate->interviews->every('outcome', 'pass'))
                             <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
-                                data-target="#approveModal" style="padding: 0.25rem 0.5rem;">
-                                Approve &amp; Start Onboarding
+                                data-target="#approveModal" >
+                                Accept
                             </button>
 
-                        @endif
-                        @if ($candidate->interviews->isNotEmpty())
-                            <button type="button" class="btn btn-outline-danger btn-sm ml-2" data-toggle="modal"
-                                    data-target="#rejectModal">
-                                    Reject
-                                </button>
+
+                            @if ($candidate->interviews->isNotEmpty())
+                                <button type="button" class="btn btn-outline-danger btn-sm ml-2" data-toggle="modal"
+                                        data-target="#rejectModal">
+                                        Reject
+                                    </button>
+                            @endif
                         @endif
 
                         <a href="{{ route('hr-candidates.index') }}" class="btn btn-sm btn-secondary ml-2"
-                            style="padding: 0.25rem 0.5rem;">Back</a>
+                            >Back</a>
                     </div>
                     <x-cards.data-row label="Full Name" :value="($candidate->salutation ? ucfirst($candidate->salutation) . ' ' : '') . $candidate->name" />
                     <x-cards.data-row label="Gender" :value="ucfirst($candidate->gender) ?? '-'" />
@@ -145,10 +149,20 @@
                     <x-cards.data-row label="Status" :value="ucfirst($candidate->status)" />
 
                     @foreach ($candidate->documents as $doc)
+
                         @php
+                            $fileDir =  match($doc->document_type) {
+                                'profile_picture' => 'avatar',
+                                'iqama' => 'iqama',
+                                'national_id' => 'national_id',
+                                'passport' => 'passport',
+                                'bank_account', 'contract_signed', 'resume' => 'candidate-documents',
+                                default => 'candidate-documents',
+                                };
+                            $url = asset_url_local_s3( $fileDir ."/" . $doc->stored_path);
                             $file_url =
                                 '<a role="button" href="' .
-                                $doc->file_url .
+                                $url .
                                 '" target="_blank">' .
                                 strtoupper($doc->document_type) .
                                 '</a>';
@@ -272,7 +286,7 @@
                             @csrf
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title">Approve &amp; Start Onboarding</h5>
+                                    <h5 class="modal-title">Accept Candidate</h5>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                         <span aria-hidden="true">&times;</span>
                                     </button>
@@ -307,7 +321,7 @@
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-success">Approve &amp; Start Onboarding</button>
+                                    <button type="submit" class="btn btn-primary">Accept</button>
                                 </div>
                             </div>
                         </form>
@@ -383,71 +397,14 @@
         @endif
 
         @if ($activeTab === 'interview')
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h5>Interviews</h5>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Round</th>
-                                <th>When</th>
-                                <th>Status</th>
-                                <th>Outcome</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($candidate->interviews as $interview)
-                                <tr>
-                                    <td>{{ $interview->round }}</td>
-                                    <td>{{ $interview->event?->start_date_time }}</td>
-                                    <td>{{ $interview->status }}</td>
-                                    <td>{{ $interview->outcome }}</td>
-                                    <td>
-                                        @if ($interview->status !== 'completed')
-                                            <form method="POST"
-                                                action="{{ route('hr-interview-schedules.outcome', $interview) }}"
-                                                class="form-inline">
-                                                @csrf
-                                                <select name="outcome" class="form-control form-control-sm mr-1"
-                                                    style="height: 32px !important;">
-                                                    <option value="pass">Pass</option>
-                                                    <option value="fail">Fail</option>
-                                                    <option value="pending">Pending</option>
-                                                </select>
-                                                <button class="btn btn-sm btn-outline-primary">Record outcome</button>
-                                            </form>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+            <div class="d-flex flex-column w-tables rounded mt-3 bg-white">
+                {!! $dataTable->table(['class' => 'table table-hover border-0 w-100']) !!}
             </div>
-
-            {{-- @if ($candidate->onboardingCase)
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h5>Pre-hire onboarding checklist ({{ $candidate->onboardingCase->status }})</h5>
-                    <ul class="list-unstyled">
-                        @foreach ($candidate->onboardingCase->tasks as $task)
-                            <li class="mb-1">
-                                <form method="POST" action="{{ route('hr-candidate-onboarding.tasks.update', $task) }}"
-                                    class="form-inline">
-                                    @csrf
-                                    <input type="hidden" name="complete" value="0">
-                                    <input type="checkbox" name="complete" value="1" onchange="this.form.submit()"
-                                        @checked($task->status == 'completed') class="mr-2">
-                                    {{ $task->title }} {{ $task->status }}
-                                </form>
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        @endif --}}
+            @push('scripts')
+                @include('sections.datatable_js')
+            @endpush
         @endif
+
         @if ($activeTab === 'pre_hire')
 
             @if ($candidate->onboardingCase)

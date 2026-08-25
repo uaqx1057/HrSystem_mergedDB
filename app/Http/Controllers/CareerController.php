@@ -7,7 +7,9 @@ use App\Models\GlobalSetting;
 use App\Models\HrCandidate;
 use App\Models\HrCandidateDocument;
 use App\Models\HrJobOpening;
+use App\Models\User;
 use App\Notifications\CandidateApplicationReceived;
+use App\Notifications\NewCandidateApplicationReceived;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -148,23 +150,61 @@ class CareerController extends Controller
             'resume' => 'resume',
         ];
 
-        foreach ($fileMap as $field => $documentType) {
+        // foreach ($fileMap as $field => $documentType) {
+        //     if ($request->hasFile($field)) {
+        //         $file = $request->file($field);
+        //         $stored = Files::uploadLocalOrS3($file, 'candidate-documents');
+        //         HrCandidateDocument::create([
+        //             'candidate_id' => $candidate->id,
+        //             'document_type' => $documentType,
+        //             'original_name' => $file->getClientOriginalName(),
+        //             'stored_path' => $stored,
+        //             'mime_type' => $file->getClientMimeType(),
+        //             'size' => $file->getSize(),
+        //         ]);
+        //     }
+        // }
+
+        $fileMap = [
+            'image'        => ['type' => 'profile_picture',           'dir' => 'avatar'],
+            'iqama_image'        => ['type' => 'iqama',           'dir' => 'iqama'],
+            'national_id_image'  => ['type' => 'national_id',     'dir' => 'national_id'],
+            'passport_image'     => ['type' => 'passport',        'dir' => 'passport'],
+            'resume'       => ['type' => 'resume',    'dir' => 'candidate-documents'],
+        ];
+
+        foreach ($fileMap as $field => $meta) {
             if ($request->hasFile($field)) {
                 $file = $request->file($field);
-                $stored = Files::uploadLocalOrS3($file, 'candidate-documents');
-                HrCandidateDocument::create([
-                    'candidate_id' => $candidate->id,
-                    'document_type' => $documentType,
-                    'original_name' => $file->getClientOriginalName(),
-                    'stored_path' => $stored,
-                    'mime_type' => $file->getClientMimeType(),
-                    'size' => $file->getSize(),
-                ]);
+                if($meta['dir'] == 'avatar'){
+                    $stored = Files::uploadLocalOrS3($file, $meta['dir'], 300);
+                    HrCandidateDocument::create([
+                        'candidate_id' => $candidate->id,
+                        'document_type' => $meta['type'],
+                        'original_name' => $file->getClientOriginalName(),
+                        'stored_path' => $stored,
+                        'mime_type' => $file->getClientMimeType(),
+                        'size' => $file->getSize(),
+                    ]);
+                } else{
+                    $stored = Files::uploadLocalOrS3($file, $meta['dir']);
+                    HrCandidateDocument::create([
+                        'candidate_id' => $candidate->id,
+                        'document_type' => $meta['type'],
+                        'original_name' => $file->getClientOriginalName(),
+                        'stored_path' => $stored,
+                        'mime_type' => $file->getClientMimeType(),
+                        'size' => $file->getSize(),
+                    ]);
+                }
             }
         }
 
         \Illuminate\Support\Facades\Notification::route('mail', $candidate->email)
             ->notify(new CandidateApplicationReceived($candidate));
+
+        $admins = User::allAdmins($companyId);
+        \Illuminate\Support\Facades\Notification::send($admins, new NewCandidateApplicationReceived($candidate));
 
         return back()->with('success', 'Thank you — your application has been received.');
     }

@@ -18,6 +18,7 @@ use Carbon\Carbon;
 use App\Models\Designation;
 
 use App\DataTables\HrCandidateDataTable;
+use App\DataTables\HrInterviewDataTable;
 use App\Helper\Files;
 use App\Models\HrCandidateDocument;
 
@@ -192,6 +193,11 @@ class HrCandidateController extends AccountBaseController
 
         if($candidate->status == 'applied'){
             $this->activeTab = 'detail';
+        }
+
+        if ($this->activeTab === 'interview') {
+            $this->dataTable = new HrInterviewDataTable($candidate->id);
+            return $this->dataTable->render('hr-candidates.show', $this->data);
         }
 
         return view('hr-candidates.show', $this->data);

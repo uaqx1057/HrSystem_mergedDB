@@ -57,7 +57,6 @@ class JobOpeningController extends AccountBaseController
         $this->departments = Team::where('company_id', user()->company_id)->orderBy('team_name')->get();
         $this->designations = Designation::allDesignations();
         $this->branches = Branch::orderBy('name')->get();
-     
 
         return view('job-openings.edit', $this->data);
     }
