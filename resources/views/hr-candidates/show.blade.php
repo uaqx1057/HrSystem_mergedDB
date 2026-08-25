@@ -94,7 +94,7 @@
                         @if (
                             $candidate->interviews->isNotEmpty() &&
                                 $candidate->interviews->every('outcome', 'pass') &&
-                                !in_array($candidate->status, ['rejected', 'onboarding']))
+                                !in_array($candidate->status, ['rejected', 'onboarding', 'converted']))
                             <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
                                 data-target="#approveModal">
                                 Accept
@@ -255,97 +255,7 @@
                     </div>
                 </div>
 
-                {{-- Reject Modal --}}
-                <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <form method="POST" action="{{ route('hr-candidates.reject', $candidate) }}">
-                            @csrf
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Reject Candidate</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="form-group">
-                                        <label>Rejection reason</label>
-                                        <input type="text" name="rejection_reason" class="form-control height-35"
-                                            data-size="8" required>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-danger">Reject</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
 
-                {{-- Approve & Start Onboarding Modal --}}
-                <div class="modal fade" id="approveModal" tabindex="-1" role="dialog" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <form method="POST" action="{{ route('hr-candidates.approve', $candidate) }}">
-                            @csrf
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Accept Candidate</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="form-group">
-                                        <label>Department</label>
-                                        <select name="department_id" class="form-control height-35" data-size="8">
-                                            <option value="">Department</option>
-                                            @foreach (\App\Models\Team::where('company_id', user()->company_id)->orderBy('team_name')->get() as $d)
-                                                <option value="{{ $d->id }}" @selected($candidate->department_id == $d->id)>
-                                                    {{ $d->team_name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Designation</label>
-                                        <select name="designation_id" class="form-control height-35" data-size="8">
-                                            <option value="">Designation</option>
-                                            @foreach (\App\Models\Designation::allDesignations() as $d)
-                                                <option value="{{ $d->id }}" @selected($candidate->designation_id == $d->id)>
-                                                    {{ $d->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Basic salary</label>
-                                        <input type="number" step="0.01" name="basic_salary"
-                                            class="form-control height-35" data-size="8"
-                                            value="{{ $candidate->basic_salary }}">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>Probation Time</label>
-                                        <input type="text" name="probation_time" class="form-control height-35"
-                                            data-size="8" placeholder="In month"
-                                            value="{{ $candidate->probation_time }}">
-                                    </div>
-
-                                    <hr>
-                                    <label class="f-w-500 mb-2">Allowances</label>
-                                    <div id="approve-allowances-rows"></div>
-                                    <button type="button" id="approve-add-allowance-btn"
-                                        class="btn btn-outline-primary btn-sm mb-2">
-                                        <i class="fa fa-plus mr-1"></i> Add Allowance
-                                    </button>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-primary">Accept</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
 
                 {{-- <div class="card mt-3">
                     <div class="card-body">
@@ -415,7 +325,116 @@
 
         @endif
 
+        {{-- Reject Modal --}}
+        <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <form method="POST" action="{{ route('hr-candidates.reject', $candidate) }}">
+                    @csrf
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Reject Candidate</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Rejection reason</label>
+                                <input type="text" name="rejection_reason" class="form-control height-35"
+                                    data-size="8" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger">Reject</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Approve & Start Onboarding Modal --}}
+        <div class="modal fade" id="approveModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <form method="POST" action="{{ route('hr-candidates.approve', $candidate) }}">
+                    @csrf
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Accept Candidate</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Department</label>
+                                <select name="department_id" class="form-control height-35" data-size="8">
+                                    <option value="">Department</option>
+                                    @foreach (\App\Models\Team::where('company_id', user()->company_id)->orderBy('team_name')->get() as $d)
+                                        <option value="{{ $d->id }}" @selected($candidate->department_id == $d->id)>
+                                            {{ $d->team_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Designation</label>
+                                <select name="designation_id" class="form-control height-35" data-size="8">
+                                    <option value="">Designation</option>
+                                    @foreach (\App\Models\Designation::allDesignations() as $d)
+                                        <option value="{{ $d->id }}" @selected($candidate->designation_id == $d->id)>
+                                            {{ $d->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Basic salary</label>
+                                <input type="number" step="0.01" name="basic_salary" class="form-control height-35"
+                                    data-size="8" value="{{ $candidate->basic_salary }}">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Probation Time</label>
+                                <input type="text" name="probation_time" class="form-control height-35"
+                                    data-size="8" placeholder="In month" value="{{ $candidate->probation_time }}">
+                            </div>
+
+                            <hr>
+                            <label class="f-w-500 mb-2">Allowances</label>
+                            <div id="approve-allowances-rows"></div>
+                            <button type="button" id="approve-add-allowance-btn"
+                                class="btn btn-outline-primary btn-sm mb-2">
+                                <i class="fa fa-plus mr-1"></i> Add Allowance
+                            </button>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Accept</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         @if ($activeTab === 'interview')
+            <div class="text-right d-flex justify-content-end">
+                @if (
+                    $candidate->interviews->isNotEmpty() &&
+                        $candidate->interviews->every('outcome', 'pass') &&
+                        !in_array($candidate->status, ['rejected', 'onboarding', 'converted']))
+                    <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
+                        data-target="#approveModal">
+                        Accept
+                    </button>
+
+
+                    @if ($candidate->interviews->isNotEmpty())
+                        <button type="button" class="btn btn-outline-danger btn-sm ml-2" data-toggle="modal"
+                            data-target="#rejectModal">
+                            Reject
+                        </button>
+                    @endif
+                @endif
+            </div>
             <div class="d-flex flex-column w-tables rounded mt-3 bg-white">
                 {!! $dataTable->table(['class' => 'table table-hover border-0 w-100']) !!}
             </div>
@@ -524,8 +543,8 @@
                                         <div class="col-lg-3 col-md-6 mb-2">
                                             <label class="f-14 text-dark-grey">Probation Time</label>
                                             <input type="text" name="probation_time" class="form-control height-35"
-                                            data-size="8" placeholder="In month"
-                                            value="{{ $candidate->probation_time }}">
+                                                data-size="8" placeholder="In month"
+                                                value="{{ $candidate->probation_time }}">
                                         </div>
 
                                         <div class="col-lg-12 mb-2">
