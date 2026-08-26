@@ -1,3 +1,9 @@
+@php
+    $isResignation = ($termination->exit_type ?? 'termination') === \App\Models\EmployeeTermination::EXIT_RESIGNATION;
+    $exitLabel = $isResignation ? 'Resignation' : 'Termination';
+    $completedLabel = $isResignation ? 'Resigned' : 'Terminated';
+@endphp
+
 <div id="terminated-employee-section">
     <div class="row">
         <div class="col-sm-12">
@@ -11,7 +17,7 @@
                 </div>
                 <div class="card-body">
                     <div class="text-right d-flex justify-content-end mb-3">
-                        <a href="{{ route('employees.index') }}?tab=terminated" class="btn btn-sm btn-primary">Back</a>
+                        <a href="{{ route('employees.index') }}?tab=offboard" class="btn btn-sm btn-primary">Back</a>
                     </div>
 
                     <x-cards.data-row :label="__('modules.employees.employeeId')" :value="$employee->employeeDetail->employee_id ?? '--'" />
@@ -19,17 +25,22 @@
                     <x-cards.data-row :label="__('app.email')" :value="$employee->email" />
                     <x-cards.data-row :label="__('app.designation')" :value="$employee->employeeDetail->designation->name ?? '--'" />
                     <x-cards.data-row :label="__('app.department')" :value="$employee->employeeDetail->department->team_name ?? '--'" />
-                    <x-cards.data-row label="Notice Period Start" :value="$employee->employeeDetail->notice_period_start_date
+                    <x-cards.data-row :label="$isResignation ? 'Resignation Date' : 'Notice Period Start'" :value="$isResignation
+                        ? ($termination?->resignation_date?->translatedFormat(company()->date_format) ?? '--')
+                        : ($employee->employeeDetail->notice_period_start_date
                         ? \Carbon\Carbon::parse($employee->employeeDetail->notice_period_start_date)->translatedFormat(
                             company()->date_format,
                         )
-                        : '--'" />
-                    <x-cards.data-row label="Notice Period End" :value="$employee->employeeDetail->notice_period_end_date
+                        : '--')" />
+                    <x-cards.data-row :label="$isResignation ? 'Last Working Date' : 'Notice Period End'" :value="$isResignation
+                        ? ($termination?->last_working_date?->translatedFormat(company()->date_format) ?? '--')
+                        : ($employee->employeeDetail->notice_period_end_date
                         ? \Carbon\Carbon::parse($employee->employeeDetail->notice_period_end_date)->translatedFormat(
                             company()->date_format,
                         )
-                        : '--'" />
-                    <x-cards.data-row label="Status" value="Terminated" />
+                        : '--')" />
+                    <x-cards.data-row label="Exit Type" :value="$exitLabel" />
+                    <x-cards.data-row label="Status" :value="$completedLabel" />
                 </div>
             </div>
 
@@ -37,13 +48,14 @@
                 <div class="card-header form-heading-background border-bottom-grey text-capitalize justify-content-between p-20">
                     <div class="row">
                         <div class="col-md-10 col-10">
-                            <h3 class="heading-h1">Termination Summary</h3>
+                            <h3 class="heading-h1">{{ $exitLabel }} Summary</h3>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
                     @if ($termination)
                         <x-cards.data-row label="Initiated By" :value="$termination->initiatedBy->name ?? '--'" />
+                        <x-cards.data-row label="Reason" :value="$termination->reason ?: $termination->terminate_reason ?: '--'" />
                         <x-cards.data-row label="IT Clearance" :value="ucfirst($termination->it_clearance_status)" />
                         <x-cards.data-row label="IT Clearance Issued By" :value="$termination->itClearanceIssuedBy->name ?? '--'" />
                         <x-cards.data-row label="Finance Clearance" :value="ucfirst($termination->finance_clearance_status)" />
@@ -65,7 +77,7 @@
                             @endif
                         </div>
                     @else
-                        <p class="text-center mb-0">No termination record found.</p>
+                        <p class="text-center mb-0">No offboard record found.</p>
                     @endif
                 </div>
             </div>

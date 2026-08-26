@@ -33,6 +33,13 @@ $viewClientDocumentPermission = user()->permission('view_client_document');
                             </a>
 
                             @if (!in_array('client', user_roles()))
+                                <a class="nav-item nav-link f-15 resignation"
+                                href="{{ route('profile-settings.index') }}?tab=resignation" role="tab"
+                                aria-controls="resignation" aria-selected="false" ajax="false">Resignation
+                                </a>
+                            @endif
+
+                            @if (!in_array('client', user_roles()))
                                 <a class="nav-item nav-link f-15 emergency-contacts"
                                 href="{{ route('profile-settings.index') }}?tab=emergency-contacts" role="tab"
                                 aria-controls="nav-profile" aria-selected="true" ajax="false">@lang('modules.emergencyContact.emergencyContact')

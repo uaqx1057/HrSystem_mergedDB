@@ -258,6 +258,7 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('employees/send-invite', [EmployeeController::class, 'sendInvite'])->name('employees.send_invite');
     Route::post('employees/create-link', [EmployeeController::class, 'createLink'])->name('employees.create_link');
     Route::post('employees/change-password', [EmployeeController::class, 'changePassword'])->name('employees.change-password');
+    Route::post('employees/resignation', [EmployeeController::class, 'submitResignation'])->name('employees.resignation');
     Route::post('employees/{id}/save-step', [EmployeeController::class, 'saveStep'])->name('employees.save_step');
     Route::get('hr-lifecycle/employees/{employee}', [\App\Http\Controllers\HrLifecycleController::class, 'show'])->name('hr-lifecycle.show');
     Route::get('hr-lifecycle', [\App\Http\Controllers\HrLifecycleController::class, 'index'])->name('hr-lifecycle.index');
@@ -266,6 +267,7 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('hr-access-scopes/{scope}/revoke', [\App\Http\Controllers\HrAccessScopeController::class, 'revoke'])->name('hr-access-scopes.revoke');
     Route::post('hr-lifecycle/employees/{employee}/onboarding', [\App\Http\Controllers\HrLifecycleController::class, 'startOnboarding'])->name('hr-lifecycle.onboarding.start');
     Route::post('hr-lifecycle/employees/{employee}/offboarding', [\App\Http\Controllers\HrLifecycleController::class, 'startOffboarding'])->name('hr-lifecycle.offboarding.start');
+    Route::post('hr-lifecycle/employees/{employee}/resignation', [\App\Http\Controllers\HrLifecycleController::class, 'startResignation'])->name('hr-lifecycle.resignation.start');
     Route::post('hr-lifecycle/tasks/{type}/{task}/status', [\App\Http\Controllers\HrLifecycleController::class, 'updateTask'])->name('hr-lifecycle.tasks.update');
     Route::post('hr-lifecycle/{type}/cases/{case}/tasks', [\App\Http\Controllers\HrLifecycleController::class, 'addTask'])->name('hr-lifecycle.tasks.add');
     Route::post('hr-lifecycle/employees/{employee}/transfers', [\App\Http\Controllers\HrLifecycleController::class, 'requestTransfer'])->name('hr-lifecycle.transfer.request');

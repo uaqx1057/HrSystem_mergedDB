@@ -38,11 +38,11 @@
                 @endif
 
                 @if ($showPendingTerminationTab)
-                    <x-tab :href="route('employees.index').'?tab=pending-termination'" :text="__('app.menu.pendingTermination')" ajax="false" class="pending-termination" />
+                    <x-tab :href="route('employees.index').'?tab=pending-offboard'" text="Pending Offboard" ajax="false" class="pending-offboard" />
                 @endif
 
                 @if ($viewTerminated && $viewTerminated != 'none')
-                    <x-tab :href="route('employees.index').'?tab=terminated'" :text="__('app.menu.terminated')" ajax="false" class="terminated" />
+                    <x-tab :href="route('employees.index').'?tab=offboard'" text="Offboard" ajax="false" class="offboard" />
                 @endif
 
             </div>

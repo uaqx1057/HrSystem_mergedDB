@@ -18,9 +18,13 @@ class EmployeeTermination extends Model
     const CLEARANCE_ISSUED = 'issued';
 
     const STATUS_REVERTED = 'reverted';   // add alongside existing STATUS_PENDING / STATUS_COMPLETED
+    const STATUS_REJECTED = 'rejected';
+    const EXIT_TERMINATION = 'termination';
+    const EXIT_RESIGNATION = 'resignation';
 
     protected $fillable = [
         'user_id',
+        'exit_type',
         'company_id',
         'initiated_by',
         'reason',
@@ -39,6 +43,8 @@ class EmployeeTermination extends Model
         'reverted_at',
         'revert_reason',
         'terminate_reason',
+        'resignation_date',
+        'last_working_date',
     ];
 
     protected $casts = [
@@ -48,6 +54,8 @@ class EmployeeTermination extends Model
         'finance_reminder_sent_at' => 'datetime',
         'completed_at' => 'datetime',
         'reverted_at' => 'datetime',
+        'resignation_date' => 'date',
+        'last_working_date' => 'date',
     ];
 
     public function employee(): BelongsTo

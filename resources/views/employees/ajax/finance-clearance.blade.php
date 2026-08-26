@@ -16,7 +16,7 @@
                 </div>
                 <div class="card-body">
                     <div class="text-right d-flex justify-content-end mb-3">
-                        <a href="{{ route('employees.index') }}?tab=pending-termination"
+                        <a href="{{ route('employees.index') }}?tab=pending-offboard"
                             class="btn btn-sm btn-secondary">Back</a>
                     </div>
 

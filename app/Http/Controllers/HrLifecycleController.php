@@ -6,6 +6,7 @@ use App\Helper\Reply;
 use App\Models\EmployeeDetails;
 use App\Models\HrEmployeeTransfer;
 use App\Models\HrOffboardingCase;
+use App\Models\EmployeeTermination;
 use App\Models\HrOnboardingCase;
 use App\Models\Team;
 use App\Models\User;
@@ -63,12 +64,66 @@ class HrLifecycleController extends AccountBaseController
     {
         $employee = $this->employee($employeeId); $this->authorizeEmployee($employee);
         $data = $request->validate(['reason' => 'required|string|max:255', 'last_working_date' => 'required|date']);
-        if (HrOffboardingCase::where('employee_id', $employee->id)->where('status', 'open')->exists()) {
-            return $this->workflowResponse($request, 'An offboarding clearance is already open for this employee.', $employeeId);
+        if (EmployeeTermination::where('user_id', $employee->id)->where('status', EmployeeTermination::STATUS_PENDING)->exists()) {
+            return $this->workflowResponse($request, 'An offboard request is already open for this employee.', $employeeId);
         }
-        $case = HrOffboardingCase::create(['company_id' => $employee->company_id, 'employee_id' => $employee->id, 'reason' => $data['reason'], 'last_working_date' => $data['last_working_date'], 'status' => 'open', 'initiated_by' => user()->id]);
-        foreach (['Return and verify assets', 'Calculate leave and advance settlement', 'Complete final payroll', 'Revoke DMS/DOBS access', 'Archive employee documents'] as $title) DB::table('hr_offboarding_tasks')->insert(['case_id' => $case->id, 'title' => $title, 'owner_type' => 'hr', 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
-        return $this->workflowResponse($request, 'Offboarding clearance started.', $employeeId);
+        EmployeeTermination::create([
+            'user_id' => $employee->id,
+            'company_id' => $employee->company_id,
+            'initiated_by' => user()->id,
+            'exit_type' => EmployeeTermination::EXIT_TERMINATION,
+            'reason' => $data['reason'],
+            'terminate_reason' => $data['reason'],
+            'last_working_date' => $data['last_working_date'],
+            'status' => EmployeeTermination::STATUS_PENDING,
+        ]);
+        return $this->workflowResponse($request, 'Termination submitted for clearance.', $employeeId);
+    }
+
+    public function startResignation(Request $request, $employeeId)
+    {
+        $employee = $this->employee($employeeId); $this->authorizeEmployee($employee);
+        $data = $request->validate([
+            'reason' => 'required|string|max:255',
+            'resignation_date' => 'required|date',
+            'last_working_date' => 'required|date|after_or_equal:resignation_date',
+        ]);
+        if (EmployeeTermination::where('user_id', $employee->id)->where('status', EmployeeTermination::STATUS_PENDING)->exists()) {
+            return $this->workflowResponse($request, 'An offboard request is already open for this employee.', $employeeId);
+        }
+        EmployeeTermination::create([
+            'user_id' => $employee->id,
+            'company_id' => $employee->company_id,
+            'initiated_by' => user()->id,
+            'exit_type' => EmployeeTermination::EXIT_RESIGNATION,
+            'reason' => $data['reason'],
+            'terminate_reason' => $data['reason'],
+            'resignation_date' => $data['resignation_date'],
+            'last_working_date' => $data['last_working_date'],
+            'status' => EmployeeTermination::STATUS_PENDING,
+        ]);
+        return $this->workflowResponse($request, 'Resignation submitted for clearance.', $employeeId);
+    }
+
+    private function createOffboardingCase(Request $request, User $employee, array $data, string $exitType)
+    {
+        if (HrOffboardingCase::where('employee_id', $employee->id)->where('status', 'open')->exists()) {
+            return $this->workflowResponse($request, 'An offboarding clearance is already open for this employee.', $employee->id);
+        }
+        $case = HrOffboardingCase::create([
+            'company_id' => $employee->company_id,
+            'employee_id' => $employee->id,
+            'exit_type' => $exitType,
+            'reason' => $data['reason'],
+            'resignation_date' => $data['resignation_date'] ?? null,
+            'last_working_date' => $data['last_working_date'],
+            'status' => 'open',
+            'initiated_by' => user()->id,
+        ]);
+        foreach (['Return and verify assets', 'Calculate leave and advance settlement', 'Complete final payroll', 'Revoke DMS/DOBS access', 'Archive employee documents'] as $title) {
+            DB::table('hr_offboarding_tasks')->insert(['case_id' => $case->id, 'title' => $title, 'owner_type' => 'hr', 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
+        }
+        return $this->workflowResponse($request, ucfirst($exitType) . ' offboarding started.', $employee->id);
     }
 
     public function updateTask(Request $request, string $type, int $taskId)
@@ -125,6 +180,6 @@ class HrLifecycleController extends AccountBaseController
 
     private function employee($id): User { return User::withoutGlobalScope(ActiveScope::class)->with('employeeDetail')->findOrFail($id); }
     private function authorizeEmployee(User $employee): void { $permission = user()->permission('edit_employees'); abort_403(!($permission === 'all' || ($permission === 'branch' && user()->branch_id === $employee->branch_id))); }
-    private function syncCaseCompletion(string $type, int $caseId): void { $taskTable = 'hr_' . $type . '_tasks'; $caseTable = 'hr_' . $type . '_cases'; $openTasks = DB::table($taskTable)->where('case_id', $caseId)->where('status', '!=', 'completed')->exists(); if (!$openTasks) DB::table($caseTable)->where('id', $caseId)->update(['status' => 'completed', 'completed_at' => now(), 'updated_at' => now()]); }
+    private function syncCaseCompletion(string $type, int $caseId): void { $taskTable = 'hr_' . $type . '_tasks'; $caseTable = 'hr_' . $type . '_cases'; $openTasks = DB::table($taskTable)->where('case_id', $caseId)->where('status', '!=', 'completed')->exists(); if (!$openTasks) { DB::table($caseTable)->where('id', $caseId)->update(['status' => 'completed', 'completed_at' => now(), 'updated_at' => now()]); if ($type === 'offboarding') { $case = DB::table($caseTable)->where('id', $caseId)->first(); $employee = $this->employee($case->employee_id); User::withoutGlobalScope(ActiveScope::class)->whereKey($employee->id)->update(['status' => 'deactive']); app(\App\Services\EmployeeSystemSyncService::class)->syncEmployeeProfileToLinkedSystems($employee->fresh()); } } }
     private function workflowResponse(Request $request, string $message, int $employeeId) { return $request->ajax() ? Reply::successWithData($message, ['redirectUrl' => route('hr-lifecycle.show', $employeeId)]) : redirect()->route('hr-lifecycle.show', $employeeId)->with('success', $message); }
 }

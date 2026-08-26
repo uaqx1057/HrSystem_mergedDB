@@ -257,11 +257,11 @@
         var id = $(this).data('user-id');
         Swal.fire({
             title: "@lang('messages.sweetAlertTitle')",
-            text: "@lang('messages.terminateRecord')",
+                text: "Submit an offboard request",
             icon: 'warning',
             showCancelButton: true,
             focusConfirm: false,
-            confirmButtonText: "@lang('messages.confirmTerminate')",
+                confirmButtonText: "Confirm termination",
             cancelButtonText: "@lang('app.cancel')",
             customClass: {
                 confirmButton: 'btn btn-primary mr-3',
@@ -343,16 +343,18 @@
 
     $('body').on('click', '.revert-termination-row', function() {
         var id = $(this).data('user-id');
+        var exitType = $(this).data('exit-type') || 'termination';
+        var exitLabel = exitType === 'resignation' ? 'resignation' : 'termination';
 
         Swal.fire({
             title: "@lang('messages.sweetAlertTitle')",
-            text: "@lang('messages.confirmRevertTermination')",
+            text: 'Reject this ' + exitLabel + ' request?',
             input: 'textarea',
             inputPlaceholder: "@lang('app.revertReasonOptional')",
             icon: 'warning',
             showCancelButton: true,
             focusConfirm: false,
-            confirmButtonText: "@lang('app.revertTermination')",
+            confirmButtonText: 'Revert ' + exitLabel,
             cancelButtonText: "@lang('app.cancel')",
             customClass: {
                 confirmButton: 'btn btn-primary mr-3',

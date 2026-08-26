@@ -18,7 +18,6 @@
 @php
 
 $showFullProfile = false;
-
 if ($viewPermission == 'all'
     || ($viewPermission == 'added' && $employee->employeeDetail->added_by == user()->id)
     || ($viewPermission == 'owned' && $employee->employeeDetail->user_id == user()->id)

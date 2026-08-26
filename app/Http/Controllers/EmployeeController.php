@@ -84,6 +84,7 @@ use Symfony\Component\Mailer\Exception\TransportException;
 use App\Models\PackageUpdateNotify;
 use Illuminate\Support\Facades\Hash;
 use App\Mail\TerminationRevertedMail;
+use App\Notifications\EmployeeResignationSubmitted;
 class EmployeeController extends AccountBaseController
 {
     use ImportExcel;
@@ -105,13 +106,13 @@ class EmployeeController extends AccountBaseController
         $this->activeTab = $tab ?: 'employee';
 
         switch ($tab) {
-            case 'pending-termination':
+            case 'pending-offboard':
                 return $this->pendingTerminationList();
 
             case 'onboard':
                 return $this->onboardList();
 
-            case 'terminated':
+            case 'offboard':
                 return $this->terminatedList();
 
             default:
@@ -149,7 +150,7 @@ class EmployeeController extends AccountBaseController
             && !in_array($financePermission, ['all', 'branch'])
         );
 
-        $this->activeTab = 'pending-termination';
+        $this->activeTab = 'pending-offboard';
         $this->employees = User::allEmployees();
         $this->skills = Skill::all();
         $this->departments = Team::all();
@@ -185,7 +186,7 @@ class EmployeeController extends AccountBaseController
         $viewPermission = user()->permission('view_terminated_employees');
         abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both', 'branch']));
 
-        $this->activeTab = 'terminated';
+        $this->activeTab = 'offboard';
         $this->employees = User::allEmployees();
         $this->skills = Skill::all();
         $this->departments = Team::all();
@@ -2184,6 +2185,7 @@ class EmployeeController extends AccountBaseController
             'user_id' => $user->id,
             'company_id' => $user->company_id,
             'initiated_by' => user()->id,
+            'exit_type' => EmployeeTermination::EXIT_TERMINATION,
             'terminate_reason' => $request->terminate_reason,
             'status' => EmployeeTermination::STATUS_PENDING,
         ]);
@@ -2209,6 +2211,37 @@ class EmployeeController extends AccountBaseController
 
         return Reply::success(__('messages.pendingTermination'));
 
+    }
+
+    public function submitResignation(Request $request)
+    {
+        $employee = User::withoutGlobalScope(ActiveScope::class)->findOrFail(user()->id);
+        $data = $request->validate([
+            'reason' => 'required|string|max:1000',
+            'resignation_date' => 'required|date',
+            'last_working_date' => 'required|date|after_or_equal:resignation_date',
+        ]);
+
+        if (EmployeeTermination::where('user_id', $employee->id)->where('status', EmployeeTermination::STATUS_PENDING)->exists()) {
+            return back()->with('error', 'You already have a pending offboard request.');
+        }
+
+        $resignation = EmployeeTermination::create([
+            'user_id' => $employee->id,
+            'company_id' => $employee->company_id,
+            'initiated_by' => $employee->id,
+            'exit_type' => EmployeeTermination::EXIT_RESIGNATION,
+            'reason' => $data['reason'],
+            'terminate_reason' => $data['reason'],
+            'resignation_date' => $data['resignation_date'],
+            'last_working_date' => $data['last_working_date'],
+            'status' => EmployeeTermination::STATUS_PENDING,
+        ]);
+
+        $admins = User::allAdmins($employee->company_id);
+        \Illuminate\Support\Facades\Notification::send($admins, new EmployeeResignationSubmitted($resignation));
+
+        return back()->with('success', 'Resignation submitted for clearance.');
     }
 
     public function showTerminatePending($id)
@@ -2374,7 +2407,9 @@ class EmployeeController extends AccountBaseController
         $wasCompleted = $termination->status === EmployeeTermination::STATUS_COMPLETED;
 
         DB::transaction(function () use ($termination, $user, $request, $wasCompleted) {
-            $termination->status = EmployeeTermination::STATUS_REVERTED;
+            $termination->status = $termination->exit_type === EmployeeTermination::EXIT_RESIGNATION
+                ? EmployeeTermination::STATUS_REJECTED
+                : EmployeeTermination::STATUS_REVERTED;
             $termination->reverted_by = user()->id;
             $termination->reverted_at = now();
             $termination->revert_reason = $request->revert_reason;

@@ -24,12 +24,12 @@
                     @endif
                     <div class="text-right d-flex justify-content-end">
 
-                        <a href="{{ route('employees.index') . '?tab=pending-termination' }}"
+                        <a href="{{ route('employees.index') . '?tab=pending-offboard' }}"
                             class="btn btn-sm btn-primary">Back</a>
                         @if (($canManageTermination ?? false) && $termination && $termination->isFullyCleared())
                             <a href="javascript:;" data-id="{{ $employee->id }}"
                                 class="btn btn-sm btn-primary complete-termination-btn ml-2">
-                                <i class="fa fa-user-times mr-2"></i> Complete Terminate
+                                <i class="fa fa-user-times mr-2"></i> {{ $termination->exit_type === \App\Models\EmployeeTermination::EXIT_RESIGNATION ? 'Accept Resignation' : 'Complete Termination' }}
                             </a>
                         @endif
                     </div>
@@ -273,17 +273,17 @@
             title: "@lang('messages.sweetAlertTitle')",
             html:
                 '<div class="form-group text-left">' +
-                    '<label for="notice_period_start_date">Notice Period Start</label>' +
+                    '<label for="notice_period_start_date">{{ $termination->exit_type === \App\Models\EmployeeTermination::EXIT_RESIGNATION ? 'Approval Start Date' : 'Notice Period Start' }}</label>' +
                     '<input id="notice_period_start_date" type="date" class="form-control" />' +
                 '</div>' +
                 '<div class="form-group text-left">' +
-                    '<label for="notice_period_end_date">Notice Period End</label>' +
+                    '<label for="notice_period_end_date">{{ $termination->exit_type === \App\Models\EmployeeTermination::EXIT_RESIGNATION ? 'Last Working Date' : 'Notice Period End' }}</label>' +
                     '<input id="notice_period_end_date" type="date" class="form-control" />' +
                 '</div>',
             icon: 'warning',
             showCancelButton: true,
             focusConfirm: false,
-            confirmButtonText: 'Submit',
+            confirmButtonText: '{{ $termination->exit_type === \App\Models\EmployeeTermination::EXIT_RESIGNATION ? 'Accept Resignation' : 'Complete Termination' }}',
             cancelButtonText: "@lang('app.cancel')",
             customClass: {
                 confirmButton: 'btn btn-primary mr-3',
@@ -295,12 +295,12 @@
                 var endDate = document.getElementById('notice_period_end_date').value;
 
                 if (!startDate || !endDate) {
-                    Swal.showValidationMessage('Both notice period dates are required.');
+                    Swal.showValidationMessage('{{ $termination->exit_type === \App\Models\EmployeeTermination::EXIT_RESIGNATION ? 'Both approval dates are required.' : 'Both notice period dates are required.' }}');
                     return false;
                 }
 
                 if (new Date(startDate) > new Date(endDate)) {
-                    Swal.showValidationMessage('Notice period end date must be the same or after the start date.');
+                    Swal.showValidationMessage('{{ $termination->exit_type === \App\Models\EmployeeTermination::EXIT_RESIGNATION ? 'Last working date must be the same or after the approval start date.' : 'Notice period end date must be the same or after the start date.' }}');
                     return false;
                 }
 
@@ -324,7 +324,7 @@
                     },
                     success: function(response) {
                         if (response.status == 'success') {
-                            window.location.href = "{{ route('employees.index') }}?tab=terminated";
+                            window.location.href = "{{ route('employees.index') }}?tab=offboard";
                         }
                     }
                 });

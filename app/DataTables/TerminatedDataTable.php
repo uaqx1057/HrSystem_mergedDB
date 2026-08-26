@@ -72,9 +72,9 @@ class TerminatedDataTable extends BaseDataTable
                 || ($this->terminateEmployeePermission == 'branch' && !is_null(user()->branch_id) && $row->branch_id == user()->branch_id);
 
             if ($canRevert) {
-                $action .= '<a class="dropdown-item revert-termination-row" href="javascript:;" data-user-id="' . $row->id . '">
+                $action .= '<a class="dropdown-item revert-termination-row" href="javascript:;" data-user-id="' . $row->id . '" data-exit-type="' . ($row->exit_type ?? 'termination') . '">
                             <i class="fa fa-undo mr-2"></i>
-                            ' . __('app.revertTermination') . '
+                            Revert ' . ucfirst($row->exit_type ?? 'termination') . '
                         </a>';
             }
 
@@ -88,6 +88,9 @@ class TerminatedDataTable extends BaseDataTable
         $datatables->addColumn('employee_name', function ($row) {
             return $row->name;
         });
+        $datatables->addColumn('exit_type_label', function ($row) {
+            return ucfirst($row->exit_type ?? 'termination');
+        });
 
         $datatables->editColumn(
             'created_at',
@@ -99,7 +102,7 @@ class TerminatedDataTable extends BaseDataTable
         $datatables->editColumn(
             'status',
             function ($row) {
-                return '<i class="fa fa-circle mr-1 text-red f-10"></i>' . __('app.menu.terminated');
+                return '<i class="fa fa-circle mr-1 text-red f-10"></i>Offboarded ' . ucfirst($row->exit_type ?? 'termination');
             }
         );
 
@@ -147,13 +150,14 @@ class TerminatedDataTable extends BaseDataTable
             ->leftJoin('employee_details', 'employee_details.user_id', '=', 'users.id')
             ->leftJoin('designations', 'employee_details.designation_id', '=', 'designations.id')
             ->join('roles', 'roles.id', '=', 'role_user.role_id')
-            ->select('users.id', 'users.branch_id', 'employee_details.added_by', 'users.salutation', 'users.name', 'users.email', 'users.created_at', 'roles.name as roleName', 'roles.id as roleId', 'users.image', 'users.gender', 'users.status', DB::raw('(select user_roles.role_id from role_user as user_roles where user_roles.user_id = users.id ORDER BY user_roles.role_id DESC limit 1) as `current_role`'), DB::raw('(select roles.name from roles as roles where roles.id = current_role limit 1) as `current_role_name`'), 'designations.name as designation_name', 'employee_details.employee_id', 'employee_details.joining_date', 'employee_details.iqama_no', 'employee_details.iqama_expiry_date', 'employee_details.sponsor_kafala')
+            ->select('users.id', 'users.branch_id', 'employee_details.added_by', 'users.salutation', 'users.name', 'users.email', 'users.created_at', 'roles.name as roleName', 'roles.id as roleId', 'users.image', 'users.gender', 'users.status', DB::raw('(select employee_terminations.exit_type from employee_terminations where employee_terminations.user_id = users.id and employee_terminations.status = \'completed\' order by employee_terminations.id desc limit 1) as exit_type'), DB::raw('(select user_roles.role_id from role_user as user_roles where user_roles.user_id = users.id ORDER BY user_roles.role_id DESC limit 1) as `current_role`'), DB::raw('(select roles.name from roles as roles where roles.id = current_role limit 1) as `current_role_name`'), 'designations.name as designation_name', 'employee_details.employee_id', 'employee_details.joining_date', 'employee_details.iqama_no', 'employee_details.iqama_expiry_date', 'employee_details.sponsor_kafala')
             ->onlyEmployee()
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('employee_terminations')
                     ->whereColumn('employee_terminations.user_id', 'users.id')
-                    ->where('employee_terminations.status', 'completed');
+                    ->where('employee_terminations.status', 'completed')
+                    ->whereIn('employee_terminations.exit_type', ['termination', 'resignation']);
             });
 
         if ($request->searchText != '') {
@@ -230,6 +234,7 @@ class TerminatedDataTable extends BaseDataTable
             __('modules.employees.role') => ['data' => 'current_role_name', 'name' => 'current_role_name', 'visible' => false, 'title' => __('modules.employees.role')],
             __('modules.employees.joiningDate') => ['data' => 'joining_date', 'name' => 'joining_date', 'visible' => false, 'title' => __('modules.employees.joiningDate')],
             __('app.status') => ['data' => 'status', 'name' => 'status', 'title' => __('app.status')]
+            , 'Exit Type' => ['data' => 'exit_type_label', 'name' => 'exit_type', 'title' => 'Exit Type']
         ];
 
         $action = [

@@ -15,7 +15,7 @@
                 </div>
                 <div class="card-body">
                     <div class="text-right d-flex justify-content-end mb-3">
-                        <a href="{{ route('employees.index') }}?tab=pending-termination" class="btn btn-sm btn-secondary">Back</a>
+                        <a href="{{ route('employees.index') }}?tab=pending-offboard" class="btn btn-sm btn-secondary">Back</a>
                     </div>
 
                     <x-cards.data-row :label="__('modules.employees.employeeId')" :value="$employee->employeeDetail->employee_id ?? '--'" />

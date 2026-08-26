@@ -13,7 +13,7 @@
                     <div class="card"><div class="card-body">
                         <h5>{{ $workflow['title'] }}</h5>
                         @if($workflow['case'])
-                            <span class="badge badge-{{ $workflow['badge'] }}">{{ $workflow['case']->status }}</span>
+                            <span class="badge badge-{{ $workflow['badge'] }}">{{ $workflow['case']->status }}{{ $workflow['case']->exit_type ? ' - ' . ucfirst($workflow['case']->exit_type) : '' }}</span>
                             @foreach($workflow['tasks'] as $task)
                                 <form class="mt-2" method="POST" action="{{ route('hr-lifecycle.tasks.update', [$type, $task->id]) }}">
                                     @csrf
@@ -30,7 +30,8 @@
                         @elseif($type === 'onboarding')
                             <form method="POST" action="{{ route('hr-lifecycle.onboarding.start', $employee->id) }}">@csrf<button class="btn btn-primary">Start onboarding</button></form>
                         @else
-                            <form method="POST" action="{{ route('hr-lifecycle.offboarding.start', $employee->id) }}">@csrf<input class="form-control mb-2" name="reason" placeholder="Reason" required><input class="form-control mb-2" type="date" name="last_working_date" required><button class="btn btn-danger">Start offboarding</button></form>
+                            <form method="POST" action="{{ route('hr-lifecycle.resignation.start', $employee->id) }}">@csrf<input class="form-control mb-2" name="reason" placeholder="Resignation reason" required><input class="form-control mb-2" type="date" name="resignation_date" required><input class="form-control mb-2" type="date" name="last_working_date" required><button class="btn btn-warning">Record resignation</button></form>
+                            <form class="mt-2" method="POST" action="{{ route('hr-lifecycle.offboarding.start', $employee->id) }}">@csrf<input type="hidden" name="exit_type" value="termination"><input class="form-control mb-2" name="reason" placeholder="Termination reason" required><input class="form-control mb-2" type="date" name="last_working_date" required><button class="btn btn-danger">Start termination offboarding</button></form>
                         @endif
                     </div></div>
                 </div>

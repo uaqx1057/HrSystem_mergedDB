@@ -6,6 +6,7 @@ use App\Enums\Salutation;
 use App\Helper\Reply;
 use App\Models\EmergencyContact;
 use App\Models\User;
+use App\Models\EmployeeTermination;
 
 class ProfileSettingController extends AccountBaseController
 {
@@ -29,6 +30,11 @@ class ProfileSettingController extends AccountBaseController
 
         $this->salutations = Salutation::cases();
 
+        $this->resignation = EmployeeTermination::where('user_id', user()->id)
+            ->where('exit_type', EmployeeTermination::EXIT_RESIGNATION)
+            ->latest('id')
+            ->first();
+
         switch ($tab) {
 
         case 'emergency-contacts':
@@ -45,6 +51,9 @@ class ProfileSettingController extends AccountBaseController
                 $this->view = 'profile-settings.ajax.employee.index';
             }
 
+            break;
+        case 'resignation':
+            $this->view = 'profile-settings.ajax.resignation';
             break;
         default:
             $this->view = 'profile-settings.ajax.profile';
