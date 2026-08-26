@@ -246,9 +246,11 @@ class CandidateOnboardingService
             );
         }
 
-        $allowances = $candidate->allowances;
+        // Re-synced on every call (see class docblock), so clear out the previous copy first —
+        // otherwise re-saving the checklist after conversion duplicates every allowance row.
+        EmployeeAllowance::where('employee_id', $user->id)->delete();
 
-        foreach ($allowances as $allowance) {
+        foreach ($candidate->allowances as $allowance) {
             EmployeeAllowance::create([
                 'employee_id' => $user->id,
                 'name' => $allowance->name,

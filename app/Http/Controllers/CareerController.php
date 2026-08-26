@@ -89,6 +89,7 @@ class CareerController extends Controller
             'passport_no' => 'nullable|string|max:50',
             'passport_expiry_date' => 'nullable|date',
             'passport_image' => 'nullable|file|max:5120|mimes:png,jpg,jpeg,svg,bmp',
+            'resume' => 'nullable|file|max:5120|mimes:pdf,doc,docx',
 
             'country_id' => 'nullable|exists:countries,id',
             'mobile' => 'nullable|string|max:30',
