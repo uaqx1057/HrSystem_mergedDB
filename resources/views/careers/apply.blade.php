@@ -1025,28 +1025,27 @@
 
                             {{-- SHARED --}}
                             <div class="field">
-                                <label for="passport_no">Passport No <span class="required">*</span></label>
+                                <label for="passport_no">Passport No <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
                                 <input type="text" id="passport_no" name="passport_no"
-                                    value="{{ old('passport_no') }}" placeholder="Passport No" required>
-                                <div class="field-error">Passport No is required.</div>
+                                    value="{{ old('passport_no') }}" placeholder="Passport No">
+                                <div class="field-error">Passport No is invalid.</div>
                             </div>
                             <div class="field">
-                                <label for="passport_expiry_date">Passport Expiry Date <span
-                                        class="required">*</span></label>
+                                <label for="passport_expiry_date">Passport Expiry Date <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
                                 <input type="date" id="passport_expiry_date" name="passport_expiry_date"
-                                    value="{{ old('passport_expiry_date') }}" required>
-                                <div class="field-error">Passport Expiry Date is required.</div>
+                                    value="{{ old('passport_expiry_date') }}">
+                                <div class="field-error">Passport Expiry Date is invalid.</div>
                             </div>
                             <div class="field field-full">
-                                <label for="passport_image">Passport Image <span class="required">*</span></label>
+                                <label for="passport_image">Passport Image <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
                                 <div class="file-drop" data-target="passport_image">
                                     <input type="file" id="passport_image" name="passport_image"
-                                        accept=".png,.jpg,.jpeg,.svg,.bmp" required>
+                                        accept=".png,.jpg,.jpeg,.svg,.bmp">
                                     <i class="ri-passport-line"></i>
                                     <div class="file-drop-text"><strong>Click to upload</strong> Passport image</div>
                                     <div class="file-hint">PNG or JPG, max 5MB</div>
                                 </div>
-                                <div class="field-error">Passport Image is required.</div>
+                                <div class="field-error">Passport Image is invalid.</div>
                             </div>
                         </div>
 
@@ -1128,11 +1127,10 @@
 
                         <div class="form-row">
                             <div class="field">
-                                <label for="linkedin_username">LinkedIn ID <span class="required">*</span></label>
+                                <label for="linkedin_username">LinkedIn ID <span style="color: var(--text-muted); font-weight: 400;">(optional)</span></label>
                                 <input type="text" id="linkedin_username" name="linkedin_username"
-                                    value="{{ old('linkedin_username') }}" placeholder="linkedin.com/in/yourname"
-                                    required>
-                                <div class="field-error">LinkedIn ID is required.</div>
+                                    value="{{ old('linkedin_username') }}" placeholder="linkedin.com/in/yourname">
+                                <div class="field-error">LinkedIn ID is invalid.</div>
                             </div>
                             <div class="field">
                                 <label for="marital_status">Marital Status <span class="required">*</span></label>
@@ -1340,20 +1338,6 @@
                         }
                     }
 
-                    ['passport_no', 'passport_expiry_date'].forEach(function(id) {
-                        if (isEmptyVal(id)) {
-                            setError(id, true);
-                            ok = false;
-                        } else {
-                            setError(id, false);
-                        }
-                    });
-                    if (isEmptyFile('passport_image')) {
-                        setError('passport_image', true);
-                        ok = false;
-                    } else {
-                        setError('passport_image', false);
-                    }
                 }
 
                 if (step === 3) {

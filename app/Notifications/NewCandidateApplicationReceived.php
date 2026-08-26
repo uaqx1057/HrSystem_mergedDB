@@ -4,13 +4,17 @@ namespace App\Notifications;
 
 use App\Models\HrCandidate;
 use App\Models\HrCandidateDocument;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Storage;
 use App\Services\StorageSetting;
 
-class NewCandidateApplicationReceived extends Notification
+class NewCandidateApplicationReceived extends Notification implements ShouldQueue
 {
+    use Queueable;
+
     public function __construct(
         private HrCandidate $candidate,
         private ?HrCandidateDocument $resume = null
