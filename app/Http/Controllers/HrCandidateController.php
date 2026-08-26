@@ -235,7 +235,12 @@ class HrCandidateController extends AccountBaseController
     {
         $this->auth();
         abort_403($candidate->company_id != user()->company_id);
-        abort_403(in_array($candidate->status, [HrCandidate::STATUS_REJECTED, HrCandidate::STATUS_CONVERTED], true));
+        // converted_employee_id has a nullOnDelete FK, so a truthy value here guarantees that
+        // employee still exists — only block re-approval for a candidate with a genuinely live
+        // employee. A candidate stuck at 'converted' with no employee (e.g. the employee record
+        // was later deleted) can be re-approved to restart the onboarding checklist.
+        abort_403($candidate->status === HrCandidate::STATUS_REJECTED
+            || ($candidate->status === HrCandidate::STATUS_CONVERTED && $candidate->converted_employee_id));
 
         $data = $request->validate([
             'branch_id' => 'nullable|exists:branches,id',

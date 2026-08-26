@@ -94,7 +94,8 @@
                         @if (
                             $candidate->interviews->isNotEmpty() &&
                                 $candidate->interviews->every('outcome', 'pass') &&
-                                !in_array($candidate->status, ['rejected', 'onboarding', 'converted']))
+                                !in_array($candidate->status, ['rejected', 'onboarding']) &&
+                                !($candidate->status === 'converted' && $candidate->converted_employee_id))
                             <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
                                 data-target="#approveModal">
                                 Accept
@@ -420,7 +421,8 @@
                 @if (
                     $candidate->interviews->isNotEmpty() &&
                         $candidate->interviews->every('outcome', 'pass') &&
-                        !in_array($candidate->status, ['rejected', 'onboarding', 'converted']))
+                        !in_array($candidate->status, ['rejected', 'onboarding']) &&
+                        !($candidate->status === 'converted' && $candidate->converted_employee_id))
                     <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
                         data-target="#approveModal">
                         Accept
