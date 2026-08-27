@@ -77,7 +77,7 @@ class HrLifecycleController extends AccountBaseController
             'last_working_date' => $data['last_working_date'],
             'status' => EmployeeTermination::STATUS_PENDING,
         ]);
-        return $this->workflowResponse($request, 'Termination submitted for clearance.', $employeeId);
+        return $this->createOffboardingCase($request, $employee, $data, EmployeeTermination::EXIT_TERMINATION);
     }
 
     public function startResignation(Request $request, $employeeId)
@@ -102,7 +102,7 @@ class HrLifecycleController extends AccountBaseController
             'last_working_date' => $data['last_working_date'],
             'status' => EmployeeTermination::STATUS_PENDING,
         ]);
-        return $this->workflowResponse($request, 'Resignation submitted for clearance.', $employeeId);
+        return $this->createOffboardingCase($request, $employee, $data, EmployeeTermination::EXIT_RESIGNATION);
     }
 
     private function createOffboardingCase(Request $request, User $employee, array $data, string $exitType)
