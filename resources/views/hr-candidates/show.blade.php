@@ -84,14 +84,14 @@
                             </form>
                         @endif
 
-                        @if ($candidate->status == 'screening' || !in_array($candidate->status, ['rejected', 'onboarding', 'converted']))
+                        @if ($candidate->status == 'screening' || !in_array($candidate->status, ['rejected', 'onboarding', 'converted','applied']))
                             <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
                                 data-target="#scheduleInterviewModal">
                                 Schedule Interview
                             </button>
                         @endif
 
-                        @if (!in_array($candidate->status, ['rejected', 'onboarding']) &&
+                        @if (!in_array($candidate->status, ['rejected', 'onboarding','applied']) &&
                                 !($candidate->status === 'converted' && $candidate->converted_employee_id))
                             <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
                                 data-target="#approveModal">

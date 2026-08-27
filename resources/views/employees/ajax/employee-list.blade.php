@@ -65,7 +65,7 @@
                         <option selected value="all">@lang('app.all')</option>
                         <option value="active">@lang('app.active')</option>
                         <option value="deactive">@lang('app.inactive')</option>
-                        <option {{ request('status') == 'ex_employee' ? 'selected' : '' }} value="ex_employee">
+                        {{-- <option {{ request('status') == 'ex_employee' ? 'selected' : '' }} value="ex_employee"> --}}
                             @lang('modules.employees.exEmployee')</option>
                     </select>
                 </div>

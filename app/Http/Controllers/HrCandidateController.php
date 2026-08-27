@@ -380,9 +380,9 @@ class HrCandidateController extends AccountBaseController
         }
 
         if ($admins->isNotEmpty()) {
-            // Notification::send($admins, new InterviewScheduledAdmin($candidate, $interview->event, $interview, $interviewers));
+            Notification::send($admins, new InterviewScheduledAdmin($candidate, $interview->event, $interview, $interviewers));
 
-            Notification::route('mail', $admins->email)->notify(new InterviewScheduledAdmin($candidate, $interview->event, $interview, $interviewers));
+            // Notification::route('mail', $admins->email)->notify(new InterviewScheduledAdmin($candidate, $interview->event, $interview, $interviewers));
         }
 
         return back()->with('success', 'Interview scheduled.');
