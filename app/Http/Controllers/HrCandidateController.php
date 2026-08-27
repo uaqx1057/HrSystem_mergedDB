@@ -9,8 +9,10 @@ use App\Models\HrCandidate;
 use App\Models\HrCandidateAllowance;
 use App\Models\HrInterviewSchedule;
 use App\Models\HrJobOpening;
+use App\Models\User;
 use App\Notifications\CandidateRejected;
 use App\Notifications\InterviewScheduled;
+use App\Notifications\InterviewScheduledAdmin;
 use App\Services\CandidateOnboardingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -193,7 +195,19 @@ class HrCandidateController extends AccountBaseController
         $this->auth();
         abort_403($candidate->company_id != user()->company_id);
         $this->candidate = $candidate->load(['documents', 'interviews.event', 'interviews.scheduledBy', 'jobOpening', 'onboardingCase.tasks']);
-        $this->interviewers = \App\Models\User::allEmployees(null, true);
+        // $this->interviewers = User::allEmployees(null, true);
+
+        $employees = User::whereHas('employee')->select(['id','name'])->where('status', 'Active')->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('employee_terminations')
+                    ->whereColumn('employee_terminations.user_id', 'users.id')
+                    ->whereIn('employee_terminations.status', [
+                        \App\Models\EmployeeTermination::STATUS_PENDING,
+                        \App\Models\EmployeeTermination::STATUS_COMPLETED,
+                    ]);
+            })->whereNull('is_superadmin')->orderBy('id', 'desc')->get();
+
+        $this->interviewers = $employees;
 
         if($candidate->status == 'applied'){
             $this->activeTab = 'detail';
@@ -353,6 +367,22 @@ class HrCandidateController extends AccountBaseController
 
         if ($candidate->email) {
             Notification::route('mail', $candidate->email)->notify(new InterviewScheduled($candidate, $interview->event));
+        }
+
+        $admins = User::allAdmins($candidate->company_id);
+
+        $interviewers = collect();
+        if (!empty($data['interviewer_ids'])) {
+            $interviewers = User::whereIn('id', $data['interviewer_ids'])->get(['id', 'name']);
+            $adminIds = $admins->pluck('id')->toArray();
+            $result = array_values(array_unique(array_merge($adminIds, $data['interviewer_ids'])));
+            $admins = User::whereIn('id', $result)->get(['id', 'email']);
+        }
+
+        if ($admins->isNotEmpty()) {
+            // Notification::send($admins, new InterviewScheduledAdmin($candidate, $interview->event, $interview, $interviewers));
+
+            Notification::route('mail', $admins->email)->notify(new InterviewScheduledAdmin($candidate, $interview->event, $interview, $interviewers));
         }
 
         return back()->with('success', 'Interview scheduled.');

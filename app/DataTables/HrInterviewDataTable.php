@@ -32,21 +32,36 @@ class HrInterviewDataTable extends BaseDataTable
                 return '<i class="fa fa-circle mr-1 ' . $color . ' f-10"></i>' . ucwords(str_replace('_', ' ', $row->outcome));
             })
             ->addColumn('action', function ($row) {
-                $action = '<div class="task_view">';
+                if ($row->status !== 'completed') {
+                    $action = '<div class="task_view">';
 
-                $action .= '<div class="dropdown">
+                    $action .= '<div class="dropdown">
                         <a class="task_view_more d-flex align-items-center justify-content-center dropdown-toggle" type="link"
                             id="dropdownMenuLink-' . $row->id . '" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="icon-options-vertical icons"></i>
                         </a><div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownMenuLink-' . $row->id . '" tabindex="0">';
 
-                if ($row->status !== 'completed') {
+
                     $action .= '<a href="javascript:void(0);" class="dropdown-item" data-toggle="modal" data-target="#outcomeModal-' . $row->id . '">
                             <i class="fa fa-check-circle mr-2"></i> Record Outcome
                         </a>';
-                }
 
-                $action .= '</div></div></div>';
+
+                    $action .= '</div></div></div>';
+                } else {
+                    if (!$row->outcome) {
+                        return '-';
+                    }
+
+                    $map = [
+                        'pass' => 'text-light-green',
+                        'fail' => 'text-red',
+                        'pending' => 'text-yellow',
+                    ];
+                    $color = $map[$row->outcome] ?? 'text-grey';
+
+                    return '<i class="fa fa-circle mr-1 ' . $color . ' f-10"></i>' . ucwords(str_replace('_', ' ', $row->outcome));
+                }
 
                 if ($row->status !== 'completed') {
                     $action .= '<div class="modal fade" id="outcomeModal-' . $row->id . '" tabindex="-1" role="dialog" aria-hidden="true">

@@ -84,30 +84,24 @@
                             </form>
                         @endif
 
-                        @if ($candidate->status == 'screening')
+                        @if ($candidate->status == 'screening' || !in_array($candidate->status, ['rejected', 'onboarding', 'converted']))
                             <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
                                 data-target="#scheduleInterviewModal">
                                 Schedule Interview
                             </button>
                         @endif
 
-                        @if (
-                            $candidate->interviews->isNotEmpty() &&
-                                $candidate->interviews->every('outcome', 'pass') &&
-                                !in_array($candidate->status, ['rejected', 'onboarding']) &&
+                        @if (!in_array($candidate->status, ['rejected', 'onboarding']) &&
                                 !($candidate->status === 'converted' && $candidate->converted_employee_id))
                             <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
                                 data-target="#approveModal">
                                 Accept
                             </button>
 
-
-                            @if ($candidate->interviews->isNotEmpty())
-                                <button type="button" class="btn btn-outline-danger btn-sm ml-2" data-toggle="modal"
-                                    data-target="#rejectModal">
-                                    Reject
-                                </button>
-                            @endif
+                            <button type="button" class="btn btn-outline-danger btn-sm ml-2" data-toggle="modal"
+                                data-target="#rejectModal">
+                                Reject
+                            </button>
                         @endif
 
                         <a href="{{ route('hr-candidates.index') }}" class="btn btn-sm btn-secondary ml-2">Back</a>
@@ -179,51 +173,7 @@
                 </div>
             </div>
 
-
-            {{-- <div class="card">
-            <div class="card-body">
-                <h4>{{ $candidate->name }} <small
-                        class="text-muted">{{ ucwords(str_replace('_', ' ', $candidate->status)) }}</small></h4>
-                <p>{{ $candidate->email }} &middot; {{ $candidate->mobile }}</p>
-                <p>Applying for: {{ $candidate->jobOpening?->title ?? ($candidate->designation ?? 'General application') }}
-                </p>
-                @if ($candidate->cover_note)
-                    <p><strong>Cover note:</strong><br>{{ $candidate->cover_note }}</p>
-                @endif
-
-                <h5>Documents</h5>
-                <ul>
-                    @forelse($candidate->documents as $doc)
-                        <li><a href="{{ $doc->file_url }}" target="_blank">{{ $doc->original_name }}</a>
-                            ({{ $doc->document_type }})
-                        </li>
-                    @empty
-                        <li>No documents uploaded.</li>
-                    @endforelse
-                </ul>
-            </div>
-        </div> --}}
-
             @if (!in_array($candidate->status, ['rejected', 'converted']))
-                {{-- <div class="card mt-3">
-                    <div class="card-body">
-                        <h5>Review actions</h5>
-
-                        <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal"
-                            data-target="#updateStatusModal">
-                            Update status
-                        </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm" data-toggle="modal"
-                            data-target="#rejectModal">
-                            Reject
-                        </button>
-                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal"
-                            data-target="#approveModal" style="padding: 0.25rem 0.5rem;">
-                            Approve &amp; Start Onboarding
-                        </button>
-                    </div>
-                </div> --}}
-
                 {{-- Update Status Modal --}}
                 <div class="modal fade" id="updateStatusModal" tabindex="-1" role="dialog" aria-hidden="true">
                     <div class="modal-dialog" role="document">
@@ -255,76 +205,63 @@
                         </form>
                     </div>
                 </div>
-
-
-
-                {{-- <div class="card mt-3">
-                    <div class="card-body">
-                        <h5>Schedule interview</h5>
-                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal"
-                            data-target="#scheduleInterviewModal">
-                            Schedule on calendar
-                        </button>
-                    </div>
-                </div> --}}
-
-                {{-- Schedule Interview Modal --}}
-                <div class="modal fade" id="scheduleInterviewModal" tabindex="-1" role="dialog" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <form method="POST" action="{{ route('hr-candidates.schedule_interview', $candidate) }}">
-                            @csrf
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Schedule Interview</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="form-group">
-                                        <label>Round</label>
-                                        <input type="text" name="round" class="form-control height-35"
-                                            data-size="8" placeholder="Round (e.g. HR Screening)" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Start date/time</label>
-                                        <input type="datetime-local" id="start_date_time" name="start_date_time"
-                                            data-size="8" class="form-control height-35" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>End date/time</label>
-                                        <input type="datetime-local" id="end_date_time" name="end_date_time"
-                                            data-size="8" class="form-control height-35" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Location / link</label>
-                                        <input type="text" name="where" class="form-control height-35"
-                                            data-size="8" placeholder="Location / link">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Interviewers</label>
-                                        <select name="interviewer_ids[]"
-                                            class="form-control select2-interviewers height-35" multiple>
-                                            @foreach ($interviewers as $u)
-                                                <option value="{{ $u->id }}">{{ $u->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal"
-                                        style="padding: 0.25rem 0.5rem;">Cancel</button>
-                                    <button type="submit" class="btn btn-primary"
-                                        style="padding: 0.25rem 0.5rem;">Schedule
-                                        on calendar</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
             @endif
 
         @endif
+
+        {{-- Schedule Interview Modal --}}
+        <div class="modal fade" id="scheduleInterviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <form method="POST" action="{{ route('hr-candidates.schedule_interview', $candidate) }}">
+                    @csrf
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Schedule Interview</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Round</label>
+                                <input type="text" name="round" class="form-control height-35" data-size="8"
+                                    placeholder="Round (e.g. HR Screening)" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Start date/time</label>
+                                <input type="datetime-local" id="start_date_time" name="start_date_time" data-size="8"
+                                    class="form-control height-35" required>
+                            </div>
+                            <div class="form-group">
+                                <label>End date/time</label>
+                                <input type="datetime-local" id="end_date_time" name="end_date_time" data-size="8"
+                                    class="form-control height-35" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Location / link</label>
+                                <input type="text" name="where" class="form-control height-35" data-size="8"
+                                    placeholder="Location / link">
+                            </div>
+                            <div class="form-group">
+                                <label>Interviewers</label>
+                                <select name="interviewer_ids[]" class="form-control select2-interviewers height-35"
+                                    multiple>
+                                    @foreach ($interviewers as $u)
+                                        <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                style="padding: 0.25rem 0.5rem;">Cancel</button>
+                            <button type="submit" class="btn btn-primary" style="padding: 0.25rem 0.5rem;">Schedule
+                                on calendar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
 
         {{-- Reject Modal --}}
         <div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -417,25 +354,40 @@
         </div>
 
         @if ($activeTab === 'interview')
+            @if (in_array($candidate->status, ['rejected', 'onboarding', 'converted']))
+                <div class="text-right d-flex justify-content-end mb-2">
+                    @if (in_array($candidate->status, ['onboarding', 'converted']))
+                        <span class="badge badge-success text-uppercase">
+                            Accepted
+                        </span>
+                    @else
+                        <span class="badge badge-danger text-uppercase">
+                            Rejected
+                        </span>
+                    @endif
+                </div>
+            @endif
             <div class="text-right d-flex justify-content-end">
-                @if (
-                    $candidate->interviews->isNotEmpty() &&
-                        $candidate->interviews->every('outcome', 'pass') &&
-                        !in_array($candidate->status, ['rejected', 'onboarding']) &&
+                @if ($candidate->status == 'screening' || !in_array($candidate->status, ['rejected', 'onboarding', 'converted']))
+                <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
+                    data-target="#scheduleInterviewModal">
+                    Schedule Interview
+                </button>
+                @endif
+
+                @if (!in_array($candidate->status, ['rejected', 'onboarding']) &&
                         !($candidate->status === 'converted' && $candidate->converted_employee_id))
                     <button type="button" class="btn btn-primary btn-sm ml-2" data-toggle="modal"
                         data-target="#approveModal">
                         Accept
                     </button>
 
-
-                    @if ($candidate->interviews->isNotEmpty())
-                        <button type="button" class="btn btn-outline-danger btn-sm ml-2" data-toggle="modal"
-                            data-target="#rejectModal">
-                            Reject
-                        </button>
-                    @endif
+                    <button type="button" class="btn btn-outline-danger btn-sm ml-2" data-toggle="modal"
+                        data-target="#rejectModal">
+                        Reject
+                    </button>
                 @endif
+
             </div>
             <div class="d-flex flex-column w-tables rounded mt-3 bg-white">
                 {!! $dataTable->table(['class' => 'table table-hover border-0 w-100']) !!}

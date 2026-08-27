@@ -725,7 +725,15 @@ class User extends BaseModel
 
     public static function allAdmins($companyId = null)
     {
-        $users = User::withOut('clientDetails')->withRole('admin');
+        $users = User::withOut('clientDetails')->withRole('admin')->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('employee_terminations')
+                    ->whereColumn('employee_terminations.user_id', 'users.id')
+                    ->whereIn('employee_terminations.status', [
+                        \App\Models\EmployeeTermination::STATUS_PENDING,
+                        \App\Models\EmployeeTermination::STATUS_COMPLETED,
+                    ]);
+            });
 
         if (!is_null($companyId)) {
             return $users->where('users.company_id', $companyId)->get();
