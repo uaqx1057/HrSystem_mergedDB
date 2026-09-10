@@ -61,7 +61,7 @@ class HrLifecycleController extends AccountBaseController
         $case = HrOnboardingCase::create(['company_id' => $employee->company_id, 'employee_id' => $employee->id, 'template_name' => $employee->employeeDetail?->employee_type ?? 'expat', 'status' => 'open', 'due_date' => now()->addDays(14), 'initiated_by' => user()->id]);
         $tasks = ['Verify employee profile and documents', 'Set up bank and payroll', 'Assign insurance', 'Assign required assets', 'Grant DMS/DOBS access', 'Manager confirmation'];
         foreach ($tasks as $title) DB::table('hr_onboarding_tasks')->insert(['case_id' => $case->id, 'title' => $title, 'owner_type' => 'hr', 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
-        return $this->workflowResponse($request, 'Onboarding checklist started.', $employeeId);
+        return $this->workflowResponse($request, 'Onboarding checklist started.', $employeeId, true, route('hr-lifecycle.show', [$employeeId, 'tab' => 'onboarding']));
     }
 
     public function startOffboarding(Request $request, $employeeId)
@@ -74,7 +74,7 @@ class HrLifecycleController extends AccountBaseController
         ]);
         $terms = \App\Support\NoticeTerms::resolve($request->input('notice_type'), $request->input('notice_months'), null);
         app(OffboardingService::class)->request($employee, user()->id, EmployeeTermination::EXIT_TERMINATION, ['reason' => $data['reason']] + $terms);
-        return $this->workflowResponse($request, 'Termination request submitted for approval.', $employeeId);
+        return $this->workflowResponse($request, 'Termination request submitted for approval.', $employeeId, true, route('hr-lifecycle.show', [$employeeId, 'tab' => 'offboarding']));
     }
 
     public function startResignation(Request $request, $employeeId)
@@ -91,7 +91,7 @@ class HrLifecycleController extends AccountBaseController
             'reason' => $data['reason'],
             'resignation_date' => $data['resignation_date'],
         ] + $terms);
-        return $this->workflowResponse($request, 'Resignation request submitted for approval.', $employeeId);
+        return $this->workflowResponse($request, 'Resignation request submitted for approval.', $employeeId, true, route('hr-lifecycle.show', [$employeeId, 'tab' => 'offboarding']));
     }
 
     public function updateExitTerms(Request $request, HrOffboardingCase $case)
@@ -152,7 +152,7 @@ class HrLifecycleController extends AccountBaseController
         $this->authorizeEmployee($employee);
         app(OffboardingService::class)->approve($case, user()->id);
 
-        return $this->workflowResponse($request, 'Offboarding request approved.', $employee->id);
+        return $this->workflowResponse($request, 'Offboarding request approved.', $employee->id, true, route('hr-lifecycle.offboarding.console', $case->id));
     }
 
     public function rejectOffboarding(Request $request, HrOffboardingCase $case)
@@ -412,11 +412,12 @@ class HrLifecycleController extends AccountBaseController
         }
         if ($type === 'offboarding') {
             app(OffboardingService::class)->completeTask(HrOffboardingTask::findOrFail($taskId), user()->id, $request->boolean('complete'));
-        } else {
-            DB::table($table)->where('id', $taskId)->update(['status' => $request->boolean('complete') ? 'completed' : 'pending', 'completed_at' => $request->boolean('complete') ? now() : null, 'updated_at' => now()]);
-            $this->syncCaseCompletion($type, $task->case_id);
+            return $this->workflowResponse($request, 'Task updated.', $task->employee_id, true, route('hr-lifecycle.offboarding.console', $task->case_id) . '#tab-clearance');
         }
-        return $this->workflowResponse($request, 'Task updated.', $task->employee_id);
+
+        DB::table($table)->where('id', $taskId)->update(['status' => $request->boolean('complete') ? 'completed' : 'pending', 'completed_at' => $request->boolean('complete') ? now() : null, 'updated_at' => now()]);
+        $this->syncCaseCompletion($type, $task->case_id);
+        return $this->workflowResponse($request, 'Task updated.', $task->employee_id, true, route('hr-lifecycle.show', [$task->employee_id, 'tab' => 'onboarding']));
     }
 
     public function addTask(Request $request, string $type, int $caseId)
@@ -431,7 +432,10 @@ class HrLifecycleController extends AccountBaseController
         }
         DB::table($taskTable)->insert(['case_id' => $caseId, 'title' => $data['title'], 'owner_type' => 'hr', 'assigned_to' => $data['assigned_to'] ?? null, 'due_date' => $data['due_date'] ?? null, 'status' => 'pending', 'created_at' => now(), 'updated_at' => now()]);
         DB::table($caseTable)->where('id', $caseId)->update(['status' => 'open', 'completed_at' => null, 'updated_at' => now()]);
-        return $this->workflowResponse($request, 'Task added.', $case->employee_id);
+        $url = $type === 'offboarding'
+            ? route('hr-lifecycle.offboarding.console', $caseId) . '#tab-clearance'
+            : route('hr-lifecycle.show', [$case->employee_id, 'tab' => 'onboarding']);
+        return $this->workflowResponse($request, 'Task added.', $case->employee_id, true, $url);
     }
 
     public function requestTransfer(Request $request, $employeeId)
@@ -477,13 +481,12 @@ class HrLifecycleController extends AccountBaseController
     private function employee($id): User { return User::withoutGlobalScope(ActiveScope::class)->with('employeeDetail')->findOrFail($id); }
     private function authorizeEmployee(User $employee): void { $permission = user()->permission('edit_employees'); abort_403(!($permission === 'all' || ($permission === 'branch' && user()->branch_id === $employee->branch_id))); }
     private function syncCaseCompletion(string $type, int $caseId): void { $taskTable = 'hr_' . $type . '_tasks'; $caseTable = 'hr_' . $type . '_cases'; $openTasks = DB::table($taskTable)->where('case_id', $caseId)->where('status', '!=', 'completed')->exists(); if (!$openTasks) { DB::table($caseTable)->where('id', $caseId)->update(['status' => 'completed', 'completed_at' => now(), 'updated_at' => now()]); } }
-    private function workflowResponse(Request $request, string $message, int $employeeId, bool $ok = true)
+    private function workflowResponse(Request $request, string $message, int $employeeId, bool $ok = true, ?string $url = null)
     {
+        $url = $url ?: route('hr-lifecycle.show', $employeeId);
         if ($request->ajax()) {
-            return $ok
-                ? Reply::successWithData($message, ['redirectUrl' => route('hr-lifecycle.show', $employeeId)])
-                : Reply::error($message);
+            return $ok ? Reply::successWithData($message, ['redirectUrl' => $url]) : Reply::error($message);
         }
-        return redirect()->route('hr-lifecycle.show', $employeeId)->with($ok ? 'success' : 'error', $message);
+        return redirect($url)->with($ok ? 'success' : 'error', $message);
     }
 }

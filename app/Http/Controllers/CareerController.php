@@ -10,6 +10,7 @@ use App\Models\HrJobOpening;
 use App\Models\User;
 use App\Notifications\CandidateApplicationReceived;
 use App\Notifications\NewCandidateApplicationReceived;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -50,7 +51,6 @@ class CareerController extends Controller
                 ->with('error', 'Applications for this role closed on '.$this->jobOpening->closes_at->format('d M Y').'.');
         }
 
-        $this->salutations = \App\Enums\Salutation::cases();
         $this->countries = countries();
         $this->maritalStatuses = \App\Enums\MaritalStatus::cases();
 
@@ -72,18 +72,17 @@ class CareerController extends Controller
         $employeeType = $request->input('employee_type', 'expat');
 
         $rules = [
-            'salutation' => 'nullable|string|max:20',
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'date_of_birth' => 'nullable|date|before:-15 years',
+            'date_of_birth' => 'required|date_format:d/m/Y',
             'image' => 'nullable|file|max:5120|mimes:png,jpg,jpeg,svg,bmp',
 
             'employee_type' => 'required|in:saudi,expat',
-            'iqama_no' => $employeeType === 'expat' ? 'required|string|max:50' : 'nullable|string|max:50',
+            'iqama_no' => $employeeType === 'expat' ? ['required', 'regex:/^2[0-9]{9}$/'] : 'nullable|string|max:50',
             'iqama_profession' => $employeeType === 'expat' ? 'required|string|max:100' : 'nullable|string|max:100',
             'iqama_expiry_date' => $employeeType === 'expat' ? 'required|date' : 'nullable|date',
             'iqama_image' => 'nullable|file|max:5120|mimes:png,jpg,jpeg,svg,bmp',
-            'national_id' => $employeeType === 'saudi' ? 'required|string|max:50' : 'nullable|string|max:50',
+            'national_id' => $employeeType === 'saudi' ? ['required', 'regex:/^1[0-9]{9}$/'] : 'nullable|string|max:50',
             'national_id_expiry_date' => $employeeType === 'saudi' ? 'required|date' : 'nullable|date',
             'national_id_image' => 'nullable|file|max:5120|mimes:png,jpg,jpeg,svg,bmp',
             'passport_no' => 'nullable|string|max:50',
@@ -92,7 +91,7 @@ class CareerController extends Controller
             'resume' => 'nullable|file|max:5120|mimes:pdf,doc,docx',
 
             'country_id' => 'nullable|exists:countries,id',
-            'mobile' => 'nullable|string|max:30',
+            'mobile' => 'required|string|max:30',
             'gender' => 'nullable|in:male,female,others',
             'basic_salary' => 'nullable|numeric|min:0',
             'address' => 'nullable|string|max:2000',
@@ -108,6 +107,13 @@ class CareerController extends Controller
 
         $request->validate($rules);
 
+        $dateOfBirth = Carbon::createFromFormat('!d/m/Y', $request->date_of_birth);
+        if ($dateOfBirth->greaterThan(now()->startOfDay()->subYears(15))) {
+            return back()->withErrors([
+                'date_of_birth' => 'You must be at least 15 years old to apply.',
+            ])->withInput();
+        }
+
         if ($request->filled('g-recaptcha-response') && !GlobalSetting::validateGoogleRecaptcha($request->input('g-recaptcha-response'))) {
             return back()->withErrors(['g-recaptcha-response' => __('auth.recaptchaFailed')])->withInput();
         }
@@ -116,10 +122,9 @@ class CareerController extends Controller
 
         $candidate = HrCandidate::create([
             'company_id' => $companyId,
-            'salutation' => $request->salutation,
             'name' => $request->name,
             'email' => $request->email,
-            'date_of_birth' => $request->date_of_birth,
+            'date_of_birth' => $dateOfBirth->toDateString(),
             'mobile' => $request->mobile,
             'country_id' => $request->country_id,
             'gender' => $request->gender,

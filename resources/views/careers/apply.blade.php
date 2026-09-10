@@ -876,17 +876,6 @@
 
                         <div class="form-row">
                             <div class="field">
-                                <label for="salutation">Salutation <span class="required">*</span></label>
-                                <select id="salutation" name="salutation" required>
-                                    <option value="">--</option>
-                                    @foreach ($salutations as $salutation)
-                                        <option value="{{ $salutation->value }}" @selected(old('salutation') === $salutation->value)>
-                                            {{ $salutation->label() }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="field-error">Salutation is required.</div>
-                            </div>
-                            <div class="field">
                                 <label for="name">Full name <span class="required">*</span></label>
                                 <input type="text" id="name" name="name" value="{{ old('name') }}"
                                     placeholder="Enter your full name" required>
@@ -900,10 +889,17 @@
                             </div>
                             <div class="field">
                                 <label for="date_of_birth">Date of Birth <span class="required">*</span></label>
-                                <input type="date" id="date_of_birth" name="date_of_birth"
+                                <input type="text" id="date_of_birth" name="date_of_birth"
                                     value="{{ old('date_of_birth') }}"
-                                    max="{{ now()->subYears(15)->format('Y-m-d') }}" required>
-                                <div class="field-error">Date of Birth is required.</div>
+                                    placeholder="DD/MM/YYYY" inputmode="numeric" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}"
+                                    maxlength="10" required>
+                                <div class="field-error">Enter your date of birth as DD/MM/YYYY.</div>
+                            </div>
+                            <div class="field">
+                                <label for="mobile">Mobile <span class="required">*</span></label>
+                                <input type="tel" id="mobile" name="mobile" value="{{ old('mobile', '+966 ') }}"
+                                    placeholder="+966 5X XXX XXXX" maxlength="30" required>
+                                <div class="field-error">Mobile is required.</div>
                             </div>
                             <div class="field field-full">
                                 <label for="image">Profile Picture <span class="required">*</span></label>
@@ -964,8 +960,8 @@
                             <div class="field expat-only-field">
                                 <label for="iqama_no">Iqama No <span class="required expat-required">*</span></label>
                                 <input type="text" id="iqama_no" name="iqama_no" value="{{ old('iqama_no') }}"
-                                    placeholder="Iqama No" required>
-                                <div class="field-error">Iqama No is required.</div>
+                                    placeholder="2XXXXXXXXX" inputmode="numeric" pattern="2[0-9]{9}" minlength="10" maxlength="10" required>
+                                <div class="field-error">Iqama number must be 10 digits and start with 2.</div>
                             </div>
                             <div class="field expat-only-field">
                                 <label for="iqama_profession">Iqama Profession <span
@@ -999,8 +995,8 @@
                                 <label for="national_id">National ID No <span
                                         class="required saudi-required">*</span></label>
                                 <input type="text" id="national_id" name="national_id"
-                                    value="{{ old('national_id') }}" placeholder="National ID No" required>
-                                <div class="field-error">National ID No is required.</div>
+                                    value="{{ old('national_id') }}" placeholder="1XXXXXXXXX" inputmode="numeric" pattern="1[0-9]{9}" minlength="10" maxlength="10" required>
+                                <div class="field-error">National ID must be 10 digits and start with 1.</div>
                             </div>
                             <div class="field saudi-only-field hidden-field">
                                 <label for="national_id_expiry_date">National ID Expiry Date <span
@@ -1077,12 +1073,6 @@
                                     @endforeach
                                 </select>
                                 <div class="field-error">Country is required.</div>
-                            </div>
-                            <div class="field">
-                                <label for="mobile">Mobile <span class="required">*</span></label>
-                                <input type="tel" id="mobile" name="mobile" value="{{ old('mobile', '+966 ') }}"
-                                    placeholder="+966 5X XXX XXXX" required>
-                                <div class="field-error">Mobile is required.</div>
                             </div>
                             <div class="field">
                                 <label for="gender">Gender <span class="required">*</span></label>
@@ -1268,7 +1258,7 @@
                 var ok = true;
 
                 if (step === 1) {
-                    ['salutation', 'name', 'email', 'date_of_birth'].forEach(function(id) {
+                    ['name', 'email', 'date_of_birth', 'mobile'].forEach(function(id) {
                         if (isEmptyVal(id)) {
                             setError(id, true);
                             ok = false;
@@ -1284,6 +1274,12 @@
                         ok = false;
                     } else {
                         setError('email', false);
+                    }
+
+                    var dateOfBirth = document.getElementById('date_of_birth').value.trim();
+                    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateOfBirth)) {
+                        setError('date_of_birth', true);
+                        ok = false;
                     }
 
                     ['image', 'resume'].forEach(function(id) {
@@ -1321,6 +1317,10 @@
                         } else {
                             setError('iqama_image', false);
                         }
+                        if (!/^2\d{9}$/.test(document.getElementById('iqama_no').value.trim())) {
+                            setError('iqama_no', true);
+                            ok = false;
+                        }
                     } else {
                         ['national_id', 'national_id_expiry_date'].forEach(function(id) {
                             if (isEmptyVal(id)) {
@@ -1336,12 +1336,16 @@
                         } else {
                             setError('national_id_image', false);
                         }
+                        if (!/^1\d{9}$/.test(document.getElementById('national_id').value.trim())) {
+                            setError('national_id', true);
+                            ok = false;
+                        }
                     }
 
                 }
 
                 if (step === 3) {
-                    ['country_id', 'mobile', 'gender', 'basic_salary', 'address'].forEach(function(id) {
+                    ['country_id', 'gender', 'basic_salary', 'address'].forEach(function(id) {
                         if (isEmptyVal(id)) {
                             setError(id, true);
                             ok = false;
