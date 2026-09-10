@@ -497,7 +497,7 @@
                             </x-forms.text>
                         </div>
                         <div class="col-lg-3 col-md-6">
-                            <x-forms.select fieldId="country" :fieldLabel="__('app.country')" fieldName="country" search="true">
+                            <x-forms.select fieldId="country" fieldLabel="Nationality" fieldName="country" search="true">
                                 @foreach ($countries as $item)
                                     <option data-tokens="{{ $item->iso3 }}" data-phonecode="{{ $item->phonecode }}"
                                         data-content="<span class='flag-icon flag-icon-{{ strtolower($item->iso) }} flag-icon-squared'></span> {{ $item->nicename }}"

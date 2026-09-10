@@ -545,7 +545,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                     <div class="row p-20">
 
                         <div class="col-md-4 col-lg-3">
-                            <x-forms.select fieldId="country" :fieldLabel="__('app.country')" fieldName="country" search="true">
+                            <x-forms.select fieldId="country" fieldLabel="Nationality" fieldName="country" search="true">
                                 <option value="">--</option>
                                 @foreach ($countries as $item)
                                     <option @selected(($employee->country_id ?? null) ? ((int) $employee->country_id === (int) $item->id) : (strtoupper($item->iso) === 'SA'))

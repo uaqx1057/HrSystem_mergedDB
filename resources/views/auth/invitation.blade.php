@@ -225,7 +225,7 @@
                 </div>
 
                 <div class="inv-field">
-                    <label class="text-left" >@lang('app.country')</label>
+                    <label class="text-left" >Nationality</label>
                     <select name="country" id="country">
                         <option value="">-- Select Country --</option>
                         @foreach ($countries as $item)

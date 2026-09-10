@@ -1068,7 +1068,7 @@
 
                         <div class="form-row">
                             <div class="field">
-                                <label for="country_id">Country <span class="required">*</span></label>
+                                <label for="country_id">Nationality <span class="required">*</span></label>
                                 <select id="country_id" name="country_id" required>
                                     <option value="">--</option>
                                     @foreach ($countries as $item)
