@@ -10,11 +10,14 @@ class HrOffboardingCase extends BaseModel
 	protected $casts = [
 		'last_working_date' => 'date',
 		'resignation_date' => 'date',
+		'notice_start_date' => 'date',
 		'completed_at' => 'datetime',
 		'approved_at' => 'datetime',
 		'rejected_at' => 'datetime',
 		'access_revoked_at' => 'datetime',
 		'reverted_at' => 'datetime',
+		'hr_cleared_at' => 'datetime',
+		'hr_clearance_data' => 'array',
 		'settlement_amount' => 'decimal:2',
 	];
 
@@ -31,5 +34,10 @@ class HrOffboardingCase extends BaseModel
 	public function termination()
 	{
 		return $this->hasOne(EmployeeTermination::class, 'offboarding_case_id');
+	}
+
+	public function hrClearedBy()
+	{
+		return $this->belongsTo(User::class, 'hr_cleared_by')->withoutGlobalScopes();
 	}
 }

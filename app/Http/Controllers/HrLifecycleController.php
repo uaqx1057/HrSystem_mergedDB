@@ -67,8 +67,13 @@ class HrLifecycleController extends AccountBaseController
     public function startOffboarding(Request $request, $employeeId)
     {
         $employee = $this->employee($employeeId); $this->authorizeEmployee($employee);
-        $data = $request->validate(['reason' => 'required|string|max:255', 'last_working_date' => 'required|date']);
-        app(OffboardingService::class)->request($employee, user()->id, EmployeeTermination::EXIT_TERMINATION, $data);
+        $data = $request->validate([
+            'reason' => 'required|string|max:255',
+            'notice_type' => 'required|in:immediate,notice',
+            'notice_months' => 'required_if:notice_type,notice|nullable|in:1,2,3',
+        ]);
+        $terms = \App\Support\NoticeTerms::resolve($request->input('notice_type'), $request->input('notice_months'), null);
+        app(OffboardingService::class)->request($employee, user()->id, EmployeeTermination::EXIT_TERMINATION, ['reason' => $data['reason']] + $terms);
         return $this->workflowResponse($request, 'Termination request submitted for approval.', $employeeId);
     }
 
@@ -78,10 +83,46 @@ class HrLifecycleController extends AccountBaseController
         $data = $request->validate([
             'reason' => 'required|string|max:255',
             'resignation_date' => 'required|date',
-            'last_working_date' => 'required|date|after_or_equal:resignation_date',
+            'notice_type' => 'required|in:immediate,notice',
+            'notice_months' => 'required_if:notice_type,notice|nullable|in:1,2,3',
         ]);
-        app(OffboardingService::class)->request($employee, user()->id, EmployeeTermination::EXIT_RESIGNATION, $data);
+        $terms = \App\Support\NoticeTerms::resolve($request->input('notice_type'), $request->input('notice_months'), $data['resignation_date']);
+        app(OffboardingService::class)->request($employee, user()->id, EmployeeTermination::EXIT_RESIGNATION, [
+            'reason' => $data['reason'],
+            'resignation_date' => $data['resignation_date'],
+        ] + $terms);
         return $this->workflowResponse($request, 'Resignation request submitted for approval.', $employeeId);
+    }
+
+    public function updateExitTerms(Request $request, HrOffboardingCase $case)
+    {
+        $employee = $this->employee($case->employee_id);
+        $this->authorizeEmployee($employee);
+        abort_403(!in_array($case->status, ['open', 'completion_pending'], true) || $case->approval_status !== 'approved');
+
+        $request->validate([
+            'notice_type' => 'required|in:immediate,notice',
+            'notice_months' => 'required_if:notice_type,notice|nullable|in:1,2,3',
+        ]);
+
+        $base = $case->exit_type === EmployeeTermination::EXIT_RESIGNATION && $case->resignation_date
+            ? $case->resignation_date->toDateString()
+            : ($case->notice_start_date?->toDateString() ?? now()->toDateString());
+        $terms = \App\Support\NoticeTerms::resolve($request->input('notice_type'), $request->input('notice_months'), $base);
+
+        $case->update($terms);
+        if ($case->termination) {
+            $case->termination->update(['last_working_date' => $terms['last_working_date']]);
+        }
+        HrLifecycleEvent::create([
+            'subject_user_id' => $employee->id,
+            'company_id' => $employee->company_id,
+            'event' => 'offboarding_exit_terms_updated',
+            'actor_id' => user()->id,
+            'meta' => $terms,
+        ]);
+
+        return $this->workflowResponse($request, 'Exit terms updated. Last working day is now ' . $terms['last_working_date'] . '.', $employee->id);
     }
 
     private function createOffboardingCase(Request $request, User $employee, array $data, string $exitType)
@@ -165,6 +206,103 @@ class HrLifecycleController extends AccountBaseController
         ])->setPaper('letter');
 
         return $pdf->download('HR-clearance-' . ($case->reference ?: $case->id) . '.pdf');
+    }
+
+    /** The gated HR Clearance & Offboarding (HR-0111) data-entry screen. */
+    public function hrClearanceForm(HrOffboardingCase $case)
+    {
+        $employee = $this->employee($case->employee_id);
+        $this->authorizeEmployee($employee);
+
+        $case->load(['tasks.completedBy', 'termination', 'employee.employeeDetail.designation', 'employee.employeeDetail.department', 'employee.branch']);
+
+        $this->case = $case;
+        $this->employee = $employee;
+        $this->settlement = $case->termination
+            ? \App\Support\Clearance::finalSettlement($case->termination)
+            : null;
+        $this->settlementDraft = $case->termination
+            ? \App\Models\HrSettlementForm::where('employee_termination_id', $case->termination->id)->first()
+            : null;
+        $this->handover = \App\Support\Clearance::HR_HANDOVER;
+        $this->statutory = \App\Support\Clearance::HR_STATUTORY;
+        $this->entitlements = \App\Support\Clearance::HR_ENTITLEMENTS;
+        $this->decisions = \App\Support\Clearance::HR_DECISIONS;
+        $this->hrData = $case->hr_clearance_data ?? [];
+
+        return view('hr-lifecycle.hr-clearance', $this->data);
+    }
+
+    public function issueHrClearance(Request $request, HrOffboardingCase $case)
+    {
+        $employee = $this->employee($case->employee_id);
+        $this->authorizeEmployee($employee);
+        abort_403($case->approval_status !== 'approved' || !in_array($case->status, ['open', 'completion_pending'], true));
+
+        $decision = (string) $request->input('hr_clearance_decision');
+
+        $payload = [
+            'separation' => [
+                'contract_type'  => (string) $request->input('separation.contract_type'),
+                'nationality'    => (string) $request->input('separation.nationality'),
+                'total_service'  => (string) $request->input('separation.total_service'),
+            ],
+            'handover' => collect(\App\Support\Clearance::HR_HANDOVER)->map(fn ($label, $i) => [
+                'label'    => $label,
+                'result'   => (string) $request->input("handover.$i.result"),
+                'handed_to' => (string) $request->input("handover.$i.handed_to"),
+                'remarks'  => (string) $request->input("handover.$i.remarks"),
+            ])->all(),
+            'statutory' => collect(\App\Support\Clearance::HR_STATUTORY)->map(fn ($label, $i) => [
+                'label'     => $label,
+                'result'    => (string) $request->input("statutory.$i.result"),
+                'reference' => (string) $request->input("statutory.$i.reference"),
+                'date'      => (string) $request->input("statutory.$i.date"),
+            ])->all(),
+            'entitlements' => collect(\App\Support\Clearance::HR_ENTITLEMENTS)
+                ->mapWithKeys(fn ($meta, $key) => [$key => (string) $request->input("entitlements.$key")])
+                ->all(),
+            'forwarding_address'       => (string) $request->input('forwarding_address'),
+            'contact_number'           => (string) $request->input('contact_number'),
+            'personal_email'           => trim((string) $request->input('personal_email')),
+            'declaration_acknowledged' => $request->boolean('declaration_acknowledged'),
+            'hr_officer'               => (string) $request->input('hr_officer'),
+            'hr_manager'               => (string) $request->input('hr_manager'),
+            'hr_remarks'               => (string) $request->input('hr_remarks'),
+        ];
+
+        if ($error = \App\Support\Clearance::hrIssueError($payload, $decision)) {
+            return $this->workflowResponse($request, $error, $employee->id, false);
+        }
+
+        DB::transaction(function () use ($case, $employee, $payload, $decision) {
+            $case->update([
+                'hr_clearance_data'     => $payload,
+                'hr_clearance_status'   => 'issued',
+                'hr_clearance_decision' => $decision,
+                'hr_cleared_by'         => user()->id,
+                'hr_cleared_at'         => now(),
+            ]);
+
+            if (!empty($payload['personal_email']) && $employee->employeeDetail) {
+                $employee->employeeDetail->personal_email = $payload['personal_email'];
+                $employee->employeeDetail->save();
+            }
+
+            HrLifecycleEvent::create([
+                'subject_user_id' => $employee->id,
+                'company_id' => $employee->company_id,
+                'event' => 'hr_clearance_issued',
+                'actor_id' => user()->id,
+                'meta' => ['case_id' => $case->id, 'decision' => $decision],
+            ]);
+        });
+
+        \App\Jobs\SendEmployeeClearanceDocument::dispatch($employee->id, 'hr')->afterCommit();
+
+        return Reply::successWithData('HR clearance issued.', [
+            'redirectUrl' => route('hr-lifecycle.offboarding.hr-clearance', $case->id),
+        ]);
     }
 
     /** Tabbed offboarding console for one case (Overview / Clearance / Finance / Assets / Statutory). */
@@ -339,5 +477,13 @@ class HrLifecycleController extends AccountBaseController
     private function employee($id): User { return User::withoutGlobalScope(ActiveScope::class)->with('employeeDetail')->findOrFail($id); }
     private function authorizeEmployee(User $employee): void { $permission = user()->permission('edit_employees'); abort_403(!($permission === 'all' || ($permission === 'branch' && user()->branch_id === $employee->branch_id))); }
     private function syncCaseCompletion(string $type, int $caseId): void { $taskTable = 'hr_' . $type . '_tasks'; $caseTable = 'hr_' . $type . '_cases'; $openTasks = DB::table($taskTable)->where('case_id', $caseId)->where('status', '!=', 'completed')->exists(); if (!$openTasks) { DB::table($caseTable)->where('id', $caseId)->update(['status' => 'completed', 'completed_at' => now(), 'updated_at' => now()]); } }
-    private function workflowResponse(Request $request, string $message, int $employeeId) { return $request->ajax() ? Reply::successWithData($message, ['redirectUrl' => route('hr-lifecycle.show', $employeeId)]) : redirect()->route('hr-lifecycle.show', $employeeId)->with('success', $message); }
+    private function workflowResponse(Request $request, string $message, int $employeeId, bool $ok = true)
+    {
+        if ($request->ajax()) {
+            return $ok
+                ? Reply::successWithData($message, ['redirectUrl' => route('hr-lifecycle.show', $employeeId)])
+                : Reply::error($message);
+        }
+        return redirect()->route('hr-lifecycle.show', $employeeId)->with($ok ? 'success' : 'error', $message);
+    }
 }

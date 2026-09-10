@@ -268,6 +268,9 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::get('hr-lifecycle/finance-worklist', [\App\Http\Controllers\HrLifecycleController::class, 'financeWorklist'])->name('hr-lifecycle.finance-worklist');
     Route::get('hr-lifecycle/offboarding/{case}/console', [\App\Http\Controllers\HrLifecycleController::class, 'offboardingConsole'])->name('hr-lifecycle.offboarding.console');
     Route::get('hr-lifecycle/offboarding/{case}/clearance-pdf', [\App\Http\Controllers\HrLifecycleController::class, 'clearancePdf'])->name('hr-lifecycle.offboarding.clearance-pdf');
+    Route::get('hr-lifecycle/offboarding/{case}/hr-clearance', [\App\Http\Controllers\HrLifecycleController::class, 'hrClearanceForm'])->name('hr-lifecycle.offboarding.hr-clearance');
+    Route::post('hr-lifecycle/offboarding/{case}/hr-clearance/issue', [\App\Http\Controllers\HrLifecycleController::class, 'issueHrClearance'])->name('hr-lifecycle.offboarding.hr-clearance.issue');
+    Route::post('hr-lifecycle/offboarding/{case}/exit-terms', [\App\Http\Controllers\HrLifecycleController::class, 'updateExitTerms'])->name('hr-lifecycle.offboarding.exit-terms');
     Route::get('hr-lifecycle/employees/{employee}', [\App\Http\Controllers\HrLifecycleController::class, 'show'])->name('hr-lifecycle.show');
     Route::get('hr-lifecycle', [\App\Http\Controllers\HrLifecycleController::class, 'index'])->name('hr-lifecycle.index');
     Route::get('hr-access-scopes', [\App\Http\Controllers\HrAccessScopeController::class, 'index'])->name('hr-access-scopes.index');

@@ -25,7 +25,13 @@
                     <div class="text-right d-flex justify-content-end">
 
                         <a href="{{ route('employees.index') . '?tab=pending-offboard' }}"
-                            class="btn btn-sm btn-primary">Back</a>                        @if ($termination && in_array(user()->permission('manage_finance_clearance'), ['all', 'branch']))
+                            class="btn btn-sm btn-primary">Back</a>
+                        @if ($termination && $termination->offboarding_case_id)
+                            <a href="{{ route('hr-lifecycle.offboarding.console', $termination->offboarding_case_id) }}" class="btn btn-sm btn-info ml-2">
+                                <i class="fa fa-tasks mr-2"></i> Offboarding Console
+                            </a>
+                        @endif
+                        @if ($termination && in_array(user()->permission('manage_finance_clearance'), ['all', 'branch']))
                             <a href="{{ route('hr-settlement.edit', $termination->id) }}" class="btn btn-sm btn-success ml-2">
                                 <i class="fa fa-money mr-2"></i> Finance Settlement
                             </a>
@@ -37,6 +43,28 @@
                             </a>
                         @endif
                     </div>
+
+                    @if ($termination)
+                        @php $stage = \App\Support\OffboardingStage::for($termination); @endphp
+                        <div class="d-flex flex-wrap align-items-center my-3" style="gap:4px;">
+                            @foreach ($stage['steps'] as $i => $step)
+                                <span class="badge badge-pill p-2 f-11 badge-{{ $step['state'] === 'done' ? 'success' : ($step['state'] === 'current' ? 'primary' : 'light border') }}">
+                                    {{ $i + 1 }}. {{ $step['label'] }}
+                                </span>
+                                @if (!$loop->last)<i class="fa fa-angle-right text-muted"></i>@endif
+                            @endforeach
+                        </div>
+                        <div class="f-12 text-muted mb-2">
+                            Exit terms:
+                            <strong>{{ $termination->exit_type === \App\Models\EmployeeTermination::EXIT_RESIGNATION ? 'Resignation' : 'Termination' }}</strong>,
+                            {{ optional($termination->offboardingCase)->notice_type === 'immediate' ? 'immediate effect' : (optional($termination->offboardingCase)->notice_months . '-month notice') }},
+                            last working day <strong>{{ optional($termination->last_working_date)->translatedFormat(company()->date_format) ?? '--' }}</strong>.
+                            @if ($termination->offboarding_case_id)
+                                <a href="{{ route('hr-lifecycle.offboarding.console', $termination->offboarding_case_id) }}">change on the console</a>.
+                            @endif
+                        </div>
+                    @endif
+
                     <x-cards.data-row :label="__('modules.employees.employeeId')" :value="$employee->employeeDetail->employee_id ?? '--'" />
 
                     <x-cards.data-row :label="__('modules.employees.fullName')" :value="$employee->name" />
@@ -285,15 +313,10 @@
 
         Swal.fire({
             title: "@lang('messages.sweetAlertTitle')",
-            html:
-                '<div class="form-group text-left">' +
-                    '<label for="notice_period_start_date">{{ $termination->exit_type === \App\Models\EmployeeTermination::EXIT_RESIGNATION ? 'Approval Start Date' : 'Notice Period Start' }}</label>' +
-                    '<input id="notice_period_start_date" type="date" class="form-control" value="{{ $termination->resignation_date?->format('Y-m-d') ?? '' }}" />' +
-                '</div>' +
-                '<div class="form-group text-left">' +
-                    '<label for="notice_period_end_date">{{ $termination->exit_type === \App\Models\EmployeeTermination::EXIT_RESIGNATION ? 'Last Working Date' : 'Notice Period End' }}</label>' +
-                    '<input id="notice_period_end_date" type="date" class="form-control" value="{{ $termination->last_working_date?->format('Y-m-d') ?? '' }}" />' +
-                '</div>',
+            html: 'This finalises the exit and deactivates the employee.<br><br>' +
+                '<strong>Last working day:</strong> {{ optional($termination->last_working_date)->translatedFormat(company()->date_format) ?? '—' }}<br>' +
+                '<strong>Notice:</strong> {{ optional($termination->offboardingCase)->notice_type === 'immediate' ? 'Immediate effect' : (optional($termination->offboardingCase)->notice_months . '-month notice') }}<br>' +
+                '<span class="text-muted f-12">To change these, use the offboarding console before completing.</span>',
             icon: 'warning',
             showCancelButton: true,
             focusConfirm: false,
@@ -303,26 +326,7 @@
                 confirmButton: 'btn btn-primary mr-3',
                 cancelButton: 'btn btn-secondary'
             },
-            buttonsStyling: false,
-            preConfirm: function() {
-                var startDate = document.getElementById('notice_period_start_date').value;
-                var endDate = document.getElementById('notice_period_end_date').value;
-
-                if (!startDate || !endDate) {
-                    Swal.showValidationMessage('{{ $termination->exit_type === \App\Models\EmployeeTermination::EXIT_RESIGNATION ? 'Both approval dates are required.' : 'Both notice period dates are required.' }}');
-                    return false;
-                }
-
-                if (new Date(startDate) > new Date(endDate)) {
-                    Swal.showValidationMessage('{{ $termination->exit_type === \App\Models\EmployeeTermination::EXIT_RESIGNATION ? 'Last working date must be the same or after the approval start date.' : 'Notice period end date must be the same or after the start date.' }}');
-                    return false;
-                }
-
-                return {
-                    notice_period_start_date: startDate,
-                    notice_period_end_date: endDate
-                };
-            }
+            buttonsStyling: false
         }).then((result) => {
             if (result.isConfirmed) {
                 var url = "{{ route('employees.complete-termination', ':id') }}".replace(':id', id);
@@ -331,11 +335,7 @@
                     type: 'POST',
                     url: url,
                     blockUI: true,
-                    data: {
-                        '_token': "{{ csrf_token() }}",
-                        notice_period_start_date: result.value.notice_period_start_date,
-                        notice_period_end_date: result.value.notice_period_end_date
-                    },
+                    data: { '_token': "{{ csrf_token() }}" },
                     success: function(response) {
                         if (response.status == 'success') {
                             window.location.href = "{{ route('employees.index') }}?tab=offboard";

@@ -258,7 +258,11 @@
         Swal.fire({
             title: "@lang('messages.sweetAlertTitle')",
                 html: '<div class="form-group text-left"><label for="terminate_reason">Reason</label><textarea id="terminate_reason" class="form-control"></textarea></div>' +
-                    '<div class="form-group text-left"><label for="last_working_date">Last working date</label><input id="last_working_date" type="date" class="form-control" required></div>',
+                    '<div class="form-group text-left"><label for="notice_type">Effect</label>' +
+                    '<select id="notice_type" class="form-control" onchange="document.getElementById(\'notice_months_wrap\').style.display = this.value===\'notice\' ? \'block\' : \'none\';">' +
+                    '<option value="immediate">Immediate effect</option><option value="notice" selected>With notice period</option></select></div>' +
+                    '<div class="form-group text-left" id="notice_months_wrap"><label for="notice_months">Notice period</label>' +
+                    '<select id="notice_months" class="form-control"><option value="1">1 month</option><option value="2">2 months</option><option value="3">3 months</option></select></div>',
             icon: 'warning',
             showCancelButton: true,
             focusConfirm: false,
@@ -274,12 +278,12 @@
             },
             buttonsStyling: false,
             preConfirm: function() {
-                var lastWorkingDate = document.getElementById('last_working_date').value;
-                if (!lastWorkingDate) {
-                    Swal.showValidationMessage('Last working date is required.');
-                    return false;
-                }
-                return { reason: document.getElementById('terminate_reason').value, lastWorkingDate: lastWorkingDate };
+                var nt = document.getElementById('notice_type').value;
+                return {
+                    reason: document.getElementById('terminate_reason').value,
+                    noticeType: nt,
+                    noticeMonths: nt === 'notice' ? document.getElementById('notice_months').value : ''
+                };
             }
         }).then((result) => {
             if (result.isConfirmed) {
@@ -296,7 +300,8 @@
                         '_token': token,
                         '_method': 'POST',
                         'terminate_reason': result.value.reason,
-                        'last_working_date': result.value.lastWorkingDate
+                        'notice_type': result.value.noticeType,
+                        'notice_months': result.value.noticeMonths
                     },
                     success: function(response) {
                         if (response.status == "success") {

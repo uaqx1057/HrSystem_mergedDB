@@ -47,7 +47,7 @@ class TerminationClearanceSafetyTest extends TestCase
         $syncService = file_get_contents(app_path('Services/EmployeeSystemSyncService.php'));
         $syncJob = file_get_contents(app_path('Jobs/ProcessHrSystemSyncJob.php'));
 
-        $this->assertStringContainsString('DB::transaction(function () use ($request, $user, $termination)', $employeeController);
+        $this->assertStringContainsString('DB::transaction(function () use ($user, $termination', $employeeController);
         $this->assertStringContainsString("'operation' => 'termination_completed'", $employeeController);
         $this->assertStringContainsString('ProcessHrSystemSyncJob::dispatch($syncJob->id)->afterCommit()', $employeeController);
         $this->assertStringContainsString('SendTerminationCompletedNotifications::dispatch($termination->id)->afterCommit()', $employeeController);
@@ -81,7 +81,8 @@ class TerminationClearanceSafetyTest extends TestCase
         $controller = file_get_contents(app_path('Http/Controllers/EmployeeController.php'));
 
         $this->assertSame(2, substr_count($controller, 'app(OffboardingService::class)->request('));
-        $this->assertStringContainsString("'last_working_date' => 'required|date'", $controller);
+        // The exit date is now derived from the notice terms captured at initiation.
+        $this->assertStringContainsString("'notice_type' => 'required|in:immediate,notice'", $controller);
     }
 
     public function test_asset_loss_pending_status_is_named_and_centrally_reused(): void

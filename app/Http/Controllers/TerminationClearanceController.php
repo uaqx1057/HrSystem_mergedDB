@@ -276,6 +276,8 @@ class TerminationClearanceController extends AccountBaseController
             }
         }
 
+        \App\Jobs\SendEmployeeClearanceDocument::dispatch($employee->id, 'it')->afterCommit();
+
         return Reply::successWithData('IT clearance issued.', [
             'redirectUrl' => route('employees.it-clearance', $employee->id),
         ]);
@@ -464,6 +466,8 @@ class TerminationClearanceController extends AccountBaseController
                 Log::error('Failed to send Finance issue cleared email: ' . $e->getMessage());
             }
         }
+
+        \App\Jobs\SendEmployeeClearanceDocument::dispatch($employee->id, 'finance')->afterCommit();
 
         return Reply::successWithData('Finance clearance issued.', [
             'redirectUrl' => route('employees.finance-clearance', $employee->id),

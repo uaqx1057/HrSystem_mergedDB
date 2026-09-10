@@ -18,29 +18,24 @@
     $doj = $detail?->joining_date ? \Carbon\Carbon::parse($detail->joining_date)->format('d M Y') : $dash;
     $lwd = $case->last_working_date ? \Carbon\Carbon::parse($case->last_working_date)->format('d M Y') : $dash;
 
+    $hd        = is_array($case->hr_clearance_data) ? $case->hr_clearance_data : [];
+    $issued    = ($case->hr_clearance_status ?? 'pending') === 'issued';
+    $sep       = $hd['separation'] ?? [];
+    $handover  = $hd['handover'] ?? [];
+    $statutory = $hd['statutory'] ?? [];
+    $ent       = $hd['entitlements'] ?? [];
+    $decisionLabels = \App\Support\Clearance::HR_DECISIONS;
+    $decision  = $case->hr_clearance_decision;
+
     $tasks = $case->tasks;
-    $requiredOpen = $tasks->where('is_required', true)->whereNotIn('status', ['completed', 'waived'])->count();
     $settlementFinal = $settlement && $settlement->status === \App\Models\HrSettlementForm::STATUS_FINAL;
-    $accessRevoked = (bool) $case->access_revoked_at;
-    $cleared = $requiredOpen === 0 && $settlementFinal && $accessRevoked;
 
     $statusLabel = fn ($s) => match ($s) {
         'completed' => 'Cleared', 'waived' => 'Waived / N/A', 'blocked' => 'Blocked', default => 'Pending',
     };
-
-    $statutoryActions = [
-        'Qiwa contract closed / employment ended',
-        'GOSI contributions stopped and final month reported',
-        'Iqama cancelled or sponsorship transferred (Muqeem / Absher)',
-        'Final exit visa issued (if applicable)',
-        'MHRSD / labour office notification',
-        'Medical insurance (CCHI) cancelled',
-        'Dependants\' iqama / exit handled (if applicable)',
-        'WPS / Mudad final salary file submitted',
-        'Traffic violations / Absher dues cleared',
-        'Personnel file archived and retained',
-    ];
-    $inputs = $settlement && is_array($settlement->inputs) ? $settlement->inputs : [];
+    $tick = fn ($v) => $v === 'done' ? '[x] Done' : ($v === 'na' ? '[ ] N/A' : $dash);
+    $entShow = fn ($k) => ($ent[$k] ?? '') !== '' ? ucfirst((string) $ent[$k]) : $dash;
+    $noticeLabel = $case->notice_type === 'immediate' ? 'Immediate effect' : (($case->notice_months ?: '?') . '-month notice');
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -61,10 +56,8 @@
         table.kv td.label { width: 22%; color: #6b5b86; font-size: 8.5px; text-transform: uppercase; letter-spacing: .3px; }
         table.kv td.value { width: 28%; font-weight: bold; color: #2d3748; }
         table.grid { width: 100%; border-collapse: collapse; margin-top: 3px; background: transparent; }
-        table.grid th, table.grid td { border: 1px solid #d9d2e6; padding: 3px 7px; background: transparent; text-align: left; }
+        table.grid th, table.grid td { border: 1px solid #d9d2e6; padding: 3px 7px; background: transparent; text-align: left; font-size: 9px; }
         table.grid th { background: #f4f1f7; color: #6b5b86; font-size: 8px; text-transform: uppercase; }
-        ol.checks { margin: 4px 0 0; padding-left: 16px; font-size: 9px; }
-        ol.checks li { margin-bottom: 1px; }
         .declaration { margin-top: 8px; padding: 7px 11px; border: 1px solid #d9d2e6; border-left: 3px solid #5b2a86; font-size: 9.5px; text-align: justify; background: transparent; }
         .decision { margin-top: 6px; padding: 6px 10px; border: 1px solid #5b2a86; font-size: 10px; }
         .decision .big { font-size: 13px; font-weight: bold; color: #5b2a86; }
@@ -86,7 +79,8 @@
         <h2 class="doc-title">HR Clearance &amp; Offboarding Form</h2>
         <div class="doc-sub">
             Reference {{ $case->reference ?: $case->id }} &nbsp;|&nbsp;
-            {{ ucfirst((string) $case->exit_type) }} &nbsp;|&nbsp; Generated {{ \Carbon\Carbon::now()->format('d M Y') }}
+            {{ ucfirst((string) $case->exit_type) }} &nbsp;|&nbsp;
+            {{ $issued ? 'Issued ' . optional($case->hr_cleared_at)->format('d M Y') : 'Generated ' . \Carbon\Carbon::now()->format('d M Y') }}
         </div>
 
         <div class="section-title">1. Employee &amp; Separation Details</div>
@@ -97,19 +91,26 @@
             </tr>
             <tr>
                 <td class="label">{{ $idLabel }}</td><td class="value">{{ $idValue ?: $dash }}</td>
-                <td class="label">Designation</td><td class="value">{{ $detail?->designation?->name ?: $dash }}</td>
+                <td class="label">Nationality</td><td class="value">{{ $sep['nationality'] ?? ($employee?->country?->nicename ?: $dash) }}</td>
             </tr>
             <tr>
+                <td class="label">Designation</td><td class="value">{{ $detail?->designation?->name ?: $dash }}</td>
                 <td class="label">Department</td><td class="value">{{ $detail?->department?->team_name ?: $dash }}</td>
-                <td class="label">Branch</td><td class="value">{{ $employee?->branch?->name ?: $dash }}</td>
             </tr>
             <tr>
                 <td class="label">Date of Joining</td><td class="value">{{ $doj }}</td>
+                <td class="label">Total Service (Y/M/D)</td><td class="value">{{ $sep['total_service'] ?? $dash }}</td>
+            </tr>
+            <tr>
+                <td class="label">Contract Type</td><td class="value">{{ $sep['contract_type'] ?? $dash }}</td>
                 <td class="label">Last Working Day</td><td class="value">{{ $lwd }}</td>
             </tr>
             <tr>
                 <td class="label">Separation Type</td><td class="value">{{ ucfirst((string) $case->exit_type) }}</td>
-                <td class="label">Reason</td><td class="value">{{ $case->reason ?: $dash }}</td>
+                <td class="label">Notice</td><td class="value">{{ $noticeLabel }}</td>
+            </tr>
+            <tr>
+                <td class="label">Reason</td><td class="value" colspan="3">{{ $case->reason ?: $dash }}</td>
             </tr>
         </table>
 
@@ -129,66 +130,97 @@
             </tbody>
         </table>
 
-        <div class="section-title">3. Statutory &amp; Government Actions (KSA)</div>
-        <ol class="checks">
-            @foreach($statutoryActions as $line)
-                <li>{{ $line }} &nbsp; [ &nbsp; Done &nbsp; / &nbsp; N/A &nbsp; ] &nbsp; Ref: __________</li>
+        <div class="section-title">3. Handover of Duties, Documents &amp; Company Property</div>
+        <table class="grid">
+            <thead><tr><th style="width:44%">Item</th><th>Done / N/A</th><th>Handed over to</th><th>Remarks</th></tr></thead>
+            <tbody>
+            @foreach(\App\Support\Clearance::HR_HANDOVER as $i => $label)
+                @php $row = $handover[$i] ?? []; @endphp
+                <tr>
+                    <td>{{ $label }}</td>
+                    <td>{{ $tick($row['result'] ?? null) }}</td>
+                    <td>{{ $row['handed_to'] ?? $dash }}</td>
+                    <td>{{ $row['remarks'] ?? $dash }}</td>
+                </tr>
             @endforeach
-        </ol>
+            </tbody>
+        </table>
 
-        <div class="section-title">4. Leave, Entitlements &amp; Final Settlement</div>
+        <div class="section-title">4. Statutory &amp; Government Actions (KSA)</div>
+        <table class="grid">
+            <thead><tr><th style="width:44%">Action</th><th>Done / N/A</th><th>Reference no.</th><th>Date</th></tr></thead>
+            <tbody>
+            @foreach(\App\Support\Clearance::HR_STATUTORY as $i => $label)
+                @php $row = $statutory[$i] ?? []; @endphp
+                <tr>
+                    <td>{{ $label }}</td>
+                    <td>{{ $tick($row['result'] ?? null) }}</td>
+                    <td>{{ $row['reference'] ?? $dash }}</td>
+                    <td>{{ $row['date'] ?? $dash }}</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+
+        <div class="section-title">5. Leave, Entitlements &amp; Documents Due to Employee</div>
         <table class="kv">
             <tr>
-                <td class="label">Leave balance (days)</td><td class="value">{{ $inputs['leave_balance_days'] ?? $dash }}</td>
-                <td class="label">Leave encashment (SAR)</td><td class="value">{{ isset($inputs['leave_encashment']) ? number_format((float) $inputs['leave_encashment'], 2) : $dash }}</td>
+                <td class="label">Annual leave entitled</td><td class="value">{{ $entShow('leave_entitled') }}</td>
+                <td class="label">Leave availed</td><td class="value">{{ $entShow('leave_availed') }}</td>
             </tr>
             <tr>
-                <td class="label">EOSB (SAR)</td><td class="value">{{ isset($inputs['eosb_amount']) ? number_format((float) $inputs['eosb_amount'], 2) : $dash }}</td>
-                <td class="label">Settlement status</td><td class="value">{{ $settlementFinal ? 'Finalised — FC form issued' : ($settlement ? 'Draft' : 'Not started') }}</td>
+                <td class="label">Leave balance</td><td class="value">{{ $entShow('leave_balance') }}</td>
+                <td class="label">Leave encashment due</td><td class="value">{{ $entShow('leave_encashment_due') }}</td>
             </tr>
             <tr>
+                <td class="label">Unauthorised absence (days)</td><td class="value">{{ $entShow('unauthorised_absence_days') }}</td>
+                <td class="label">EOSB eligibility</td><td class="value">{{ $entShow('eosb_eligibility') }}</td>
+            </tr>
+            <tr>
+                <td class="label">Repatriation ticket due</td><td class="value">{{ $entShow('repatriation_ticket_due') }}</td>
+                <td class="label">Service certificate</td><td class="value">{{ $entShow('service_certificate') }}</td>
+            </tr>
+            <tr>
+                <td class="label">Experience letter</td><td class="value">{{ $entShow('experience_letter') }}</td>
                 <td class="label">Net settlement (SAR)</td>
-                <td class="value">{{ $settlement ? number_format((float) $settlement->net_amount, 2) : $dash }}</td>
-                <td class="label">Service certificate</td><td class="value">[ &nbsp; Issued &nbsp; ]</td>
+                <td class="value">{{ $settlement ? number_format((float) $settlement->net_amount, 2) . ($settlementFinal ? ' (finalised)' : ' (draft)') : $dash }}</td>
             </tr>
         </table>
 
-        <div class="section-title">5. Employee Declaration</div>
+        <div class="section-title">6. Employee Declaration</div>
         <div class="declaration">
-            I confirm that I have returned all Company property and assets in my custody, handed over my work and records,
-            settled or acknowledged any amounts due, and that I have no outstanding claim against the Company other than the
-            final settlement recorded above. I authorise the Company to recover any amount for which I am liable from my final
-            settlement or end-of-service benefits, in accordance with the applicable labour regulations.
+            The employee confirms that all Company property and assets in their custody have been returned, that work and
+            records have been handed over, and that they retain no Company data or confidential information. The employee
+            authorises the Company to recover any verified outstanding amount from the final settlement or end-of-service
+            benefits, in accordance with the applicable labour regulations.
+            {{ !empty($hd['declaration_acknowledged']) ? ' — Acknowledged.' : ' — NOT yet acknowledged.' }}
             <br><br>
-            Forwarding address: ______________________________ &nbsp; Contact: ______________ &nbsp; Personal email: ______________
+            Forwarding address: {{ $hd['forwarding_address'] ?? '______________________________' }}
+            &nbsp;&nbsp; Contact: {{ $hd['contact_number'] ?? '______________' }}
+            &nbsp;&nbsp; Personal email: {{ $hd['personal_email'] ?? ($detail?->personal_email ?? '______________') }}
         </div>
 
-        <div class="section-title">6. HR Clearance Decision</div>
+        <div class="section-title">7. HR Clearance Decision</div>
         <div class="decision">
-            @if($cleared)
-                <span class="big">CLEARED</span> — all required departmental clearances complete, DMS/DOBS access revoked,
-                and the final settlement finalised. The employee may be released and deactivated.
-            @else
-                <span class="big">NOT YET CLEARED</span> — outstanding:
-                {{ $requiredOpen > 0 ? $requiredOpen . ' required clearance task(s); ' : '' }}
-                {{ !$settlementFinal ? 'final settlement not finalised; ' : '' }}
-                {{ !$accessRevoked ? 'linked-system access revocation not confirmed; ' : '' }}
-            @endif
-            <br>HR remarks: ________________________________________________________________
+            <span class="big">{{ strtoupper($decisionLabels[$decision] ?? ($decision ?: 'PENDING')) }}</span>
+            @if(!empty($hd['hr_remarks']))<br>HR remarks: {{ $hd['hr_remarks'] }}@endif
+            <br>Issued by: {{ $case->hrClearedBy?->name ?? ($hd['hr_officer'] ?? $dash) }}
+            @if(!empty($hd['hr_manager'])) &nbsp;·&nbsp; HR Manager: {{ $hd['hr_manager'] }}@endif
+            &nbsp;·&nbsp; {{ optional($case->hr_cleared_at)->format('d M Y') ?: $dash }}
         </div>
 
         <table class="sign">
             <tr>
-                <td><div class="sign-role">Employee</div><div class="sign-line">{{ $employee?->name ?: 'Name: __________' }}<div class="sign-meta">Signature / Date: __________</div></div></td>
-                <td><div class="sign-role">Line Manager</div><div class="sign-line">Name: __________<div class="sign-meta">Signature / Date: __________</div></div></td>
-                <td><div class="sign-role">HR Officer</div><div class="sign-line">Name: __________<div class="sign-meta">Signature / Date: __________</div></div></td>
-                <td><div class="sign-role">HR Manager</div><div class="sign-line">Name: __________<div class="sign-meta">Signature / Date: __________</div></div></td>
+                <td><div class="sign-role">Employee</div><div class="sign-line">{{ $employee?->name ?: 'Name: __________' }}<div class="sign-meta">Signature / Date</div></div></td>
+                <td><div class="sign-role">Line Manager</div><div class="sign-line">Name: __________<div class="sign-meta">Signature / Date</div></div></td>
+                <td><div class="sign-role">HR Officer</div><div class="sign-line">{{ $hd['hr_officer'] ?? 'Name: __________' }}<div class="sign-meta">Signature / Date</div></div></td>
+                <td><div class="sign-role">HR Manager</div><div class="sign-line">{{ $hd['hr_manager'] ?? 'Name: __________' }}<div class="sign-meta">Signature / Date</div></div></td>
             </tr>
         </table>
 
         <div class="footer-note">
             {{ $companyName }} &nbsp;|&nbsp; CR 7038950171 &nbsp;|&nbsp; HR Clearance &amp; Offboarding Form
-            — {{ $case->reference ?: $case->id }} &nbsp;|&nbsp; System-generated from the offboarding case on {{ \Carbon\Carbon::now()->format('d M Y H:i') }}.
+            — {{ $case->reference ?: $case->id }} &nbsp;|&nbsp; Confidential Document.
         </div>
     </div>
 

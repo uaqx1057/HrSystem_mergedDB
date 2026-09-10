@@ -32,15 +32,28 @@
                         <textarea class="form-control" id="resignation-reason" name="reason" required>{{ old('reason') }}</textarea>
                     </div>
                     <div class="form-row">
-                        <div class="form-group col-md-6">
+                        <div class="form-group col-md-4">
                             <label for="resignation-date">Resignation date</label>
                             <input class="form-control height-35 f-14" id="resignation-date" type="date" name="resignation_date" value="{{ old('resignation_date') }}" required min="<?php echo date('Y-m-d'); ?>">
                         </div>
-                        <div class="form-group col-md-6">
-                            <label for="last-working-date">Last working date</label>
-                            <input class="form-control height-35 f-14" id="last-working-date" type="date" name="last_working_date" value="{{ old('last_working_date') }}" required min="<?php echo date('Y-m-d'); ?>">
+                        <div class="form-group col-md-4">
+                            <label for="notice-type">Effect</label>
+                            <select class="form-control height-35 f-14" id="notice-type" name="notice_type"
+                                    onchange="document.getElementById('notice-months-wrap').style.display = this.value === 'notice' ? 'block' : 'none';">
+                                <option value="notice" @selected(old('notice_type', 'notice') === 'notice')>With notice period</option>
+                                <option value="immediate" @selected(old('notice_type') === 'immediate')>Immediate effect</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-md-4" id="notice-months-wrap" style="{{ old('notice_type') === 'immediate' ? 'display:none;' : '' }}">
+                            <label for="notice-months">Notice period</label>
+                            <select class="form-control height-35 f-14" id="notice-months" name="notice_months">
+                                @foreach ([1, 2, 3] as $m)
+                                    <option value="{{ $m }}" @selected((int) old('notice_months', 1) === $m)>{{ $m }} month{{ $m > 1 ? 's' : '' }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
+                    <p class="text-muted f-12">Your last working day is calculated from the resignation date and the notice period.</p>
                     <button class="btn btn-warning" id="submit-resignation" type="button">Submit resignation</button>
                 </div>
             </div>
@@ -55,7 +68,7 @@
         $.easyAjax({
             url: "{{ route('employees.resignation') }}",
             type: 'POST',
-            data: $('#resignation-form input, #resignation-form textarea').serialize(),
+            data: $('#resignation-form input, #resignation-form textarea, #resignation-form select').serialize(),
             container: '#resignation-form',
             blockUI: true,
             success: function (response) {

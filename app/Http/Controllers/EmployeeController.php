@@ -879,6 +879,9 @@ class EmployeeController extends AccountBaseController
                 foreach (['address', 'reporting_to', 'basic_salary', 'vehicle_allocation'] as $field) {
                     if ($request->has($field)) $employee->{$field} = $request->input($field);
                 }
+                if ($request->has('personal_email')) {
+                    $employee->personal_email = $request->input('personal_email') ?: null;
+                }
                 $this->saveEmployeeStepDates($request, $employee, ['date_of_birth', 'joining_date']);
             }
 
@@ -1647,6 +1650,9 @@ class EmployeeController extends AccountBaseController
     {
         $employee->employee_id = $request->employee_id;
         $employee->address = $request->address;
+        if ($request->has('personal_email')) {
+            $employee->personal_email = $request->personal_email ?: null;
+        }
         $employee->slack_username = $request->slack_username;
         $employee->employee_type = $request->employee_type === 'saudi' ? 'saudi' : 'expat';
         $employee->iqama_no = $request->iqama_no;
@@ -2168,7 +2174,8 @@ class EmployeeController extends AccountBaseController
         $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
         $data = $request->validate([
             'terminate_reason' => 'nullable|string|max:1000',
-            'last_working_date' => 'required|date',
+            'notice_type' => 'required|in:immediate,notice',
+            'notice_months' => 'required_if:notice_type,notice|nullable|in:1,2,3',
         ]);
         $this->terminatePermission = user()->permission('manage_termination_employees');
 
@@ -2190,13 +2197,19 @@ class EmployeeController extends AccountBaseController
             return Reply::error(__('messages.assignmentAlreadyProcessed'));
         }
 
+        $terms = $this->resolveNoticeTerms($request, null);
+
         app(OffboardingService::class)->request($user, user()->id, EmployeeTermination::EXIT_TERMINATION, [
             'reason' => $data['terminate_reason'] ?: 'Termination initiated by HR.',
-            'last_working_date' => $data['last_working_date'],
-        ]);
+        ] + $terms);
 
         return Reply::success('Termination request submitted for approval.');
 
+    }
+
+    private function resolveNoticeTerms(Request $request, ?string $baseDate): array
+    {
+        return \App\Support\NoticeTerms::resolve($request->input('notice_type'), $request->input('notice_months'), $baseDate);
     }
 
     public function submitResignation(Request $request)
@@ -2205,14 +2218,20 @@ class EmployeeController extends AccountBaseController
         $data = $request->validate([
             'reason' => 'required|string|max:1000',
             'resignation_date' => 'required|date',
-            'last_working_date' => 'required|date|after_or_equal:resignation_date',
+            'notice_type' => 'required|in:immediate,notice',
+            'notice_months' => 'required_if:notice_type,notice|nullable|in:1,2,3',
         ]);
 
         if (EmployeeTermination::where('user_id', $employee->id)->where('status', EmployeeTermination::STATUS_PENDING)->exists()) {
             return back()->with('error', 'You already have a pending offboard request.');
         }
 
-        app(OffboardingService::class)->request($employee, $employee->id, EmployeeTermination::EXIT_RESIGNATION, $data);
+        $terms = $this->resolveNoticeTerms($request, $data['resignation_date']);
+
+        app(OffboardingService::class)->request($employee, $employee->id, EmployeeTermination::EXIT_RESIGNATION, [
+            'reason' => $data['reason'],
+            'resignation_date' => $data['resignation_date'],
+        ] + $terms);
 
         return back()->with('success', 'Resignation submitted for approval.');
     }
@@ -2315,11 +2334,6 @@ class EmployeeController extends AccountBaseController
             return Reply::error(__('messages.employeeNotFound'));
         }
 
-        $request->validate([
-            'notice_period_start_date' => 'required|date',
-            'notice_period_end_date' => 'required|date|after_or_equal:notice_period_start_date',
-        ]);
-
         if (!$termination->isFullyCleared()) {
             return Reply::error('Both IT and Finance clearance must be issued before completing termination.');
         }
@@ -2333,6 +2347,7 @@ class EmployeeController extends AccountBaseController
             return Reply::error('A finalized finance settlement is required before completing termination.');
         }
 
+        $case = null;
         if ($termination->offboarding_case_id) {
             $case = $termination->offboardingCase()->withCount(['tasks as open_required_tasks' => function ($query) {
                 $query->where('is_required', true)->whereNotIn('status', ['completed', 'waived']);
@@ -2340,16 +2355,28 @@ class EmployeeController extends AccountBaseController
             if (!$case || $case->open_required_tasks > 0 || !$case->access_revoked_at) {
                 return Reply::error('All required offboarding tasks and linked-system access revocation must be completed first.');
             }
+            if (($case->hr_clearance_status ?? 'pending') !== 'issued') {
+                return Reply::error('The HR Clearance form must be completed and issued before completing termination.');
+            }
         }
 
         if (!$user->employeeDetail) {
             return Reply::error('Employee detail record not found.');
         }
 
-        DB::transaction(function () use ($request, $user, $termination) {
-            $user->employeeDetail->notice_period_start_date = Carbon::parse($request->notice_period_start_date)->format('Y-m-d');
-            $user->employeeDetail->notice_period_end_date = Carbon::parse($request->notice_period_end_date)->format('Y-m-d');
-            $user->employeeDetail->last_date = now();
+        // Notice period + last working day come from the offboarding case (set
+        // when the exit was started), not a prompt at completion time.
+        $lastWorkingDate = optional($case?->last_working_date)->toDateString()
+            ?? optional($termination->last_working_date)->toDateString()
+            ?? now()->toDateString();
+        $noticeStartDate = $case && $case->notice_type === 'notice'
+            ? optional($case->notice_start_date)->toDateString()
+            : null;
+
+        DB::transaction(function () use ($user, $termination, $lastWorkingDate, $noticeStartDate) {
+            $user->employeeDetail->notice_period_start_date = $noticeStartDate;
+            $user->employeeDetail->notice_period_end_date = $lastWorkingDate;
+            $user->employeeDetail->last_date = $lastWorkingDate;
             $user->employeeDetail->save();
 
             $user->status = 'deactive';
@@ -2373,6 +2400,7 @@ class EmployeeController extends AccountBaseController
 
             ProcessHrSystemSyncJob::dispatch($syncJob->id)->afterCommit();
             SendTerminationCompletedNotifications::dispatch($termination->id)->afterCommit();
+            \App\Jobs\SendEmployeeClearanceDocument::dispatch($user->id, 'hr')->afterCommit();
         });
 
         return Reply::success(__('messages.updateSuccess'));

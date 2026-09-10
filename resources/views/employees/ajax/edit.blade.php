@@ -635,6 +635,14 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </x-forms.select>
                         </div>
 
+                        <div class="col-md-4 col-lg-3">
+                            <x-forms.text fieldId="personal_email" fieldLabel="Personal email" fieldName="personal_email"
+                                :fieldValue="$employee->employeeDetail->personal_email"
+                                fieldPlaceholder="name@example.com"
+                                fieldHelp="Non-work email — offboarding / clearance documents are sent here.">
+                            </x-forms.text>
+                        </div>
+
                         <div class="col-md-12">
                             <div class="form-group my-3">
                                 <x-forms.textarea class="mr-0 mr-lg-2 mr-md-2" :fieldLabel="__('app.address')"

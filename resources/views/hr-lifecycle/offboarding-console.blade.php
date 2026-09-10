@@ -8,13 +8,15 @@
     $pct = (int) round(($requiredDone / $requiredTotal) * 100);
     $settlementFinal = $settlement && $settlement->status === \App\Models\HrSettlementForm::STATUS_FINAL;
     $accessRevoked = (bool) $case->access_revoked_at;
-    $cleared = $requiredOpen === 0 && $settlementFinal && $accessRevoked;
+    $hrIssued = ($case->hr_clearance_status ?? 'pending') === 'issued';
+    $cleared = $requiredOpen === 0 && $settlementFinal && $accessRevoked && $hrIssued;
     $done = fn ($t) => in_array($t->status, ['completed', 'waived']);
 
     $blockers = [];
     if ($requiredOpen > 0) $blockers[] = $requiredOpen . ' required clearance task(s) still open';
     if (!$settlementFinal) $blockers[] = 'final settlement not finalised';
     if (!$accessRevoked) $blockers[] = 'DMS/DOBS access revocation not yet confirmed';
+    if (!$hrIssued) $blockers[] = 'HR Clearance form not issued';
 @endphp
 
 @section('content')
@@ -61,6 +63,22 @@
                 <tr><td class="text-muted pr-4">Settlement</td><td>{{ $settlementFinal ? 'Finalised (net SAR '.number_format((float) $settlement->net_amount, 2).')' : ($settlement ? 'Draft' : 'Not started') }}</td></tr>
                 <tr><td class="text-muted pr-4">DMS/DOBS access revoked</td><td>{{ $accessRevoked ? $case->access_revoked_at->format('d M Y H:i') : 'pending' }}</td></tr>
             </table>
+            <h6 class="text-uppercase small text-muted">Exit terms</h6>
+            <form class="form-inline mb-3" method="POST" action="{{ route('hr-lifecycle.offboarding.exit-terms', $case->id) }}">
+                @csrf
+                <select class="form-control form-control-sm mr-2" name="notice_type" id="exit-notice-type" onchange="document.getElementById('exit-notice-months').disabled = (this.value !== 'notice');">
+                    <option value="immediate" {{ $case->notice_type === 'immediate' ? 'selected' : '' }}>Immediate effect</option>
+                    <option value="notice" {{ $case->notice_type !== 'immediate' ? 'selected' : '' }}>Notice period</option>
+                </select>
+                <select class="form-control form-control-sm mr-2" name="notice_months" id="exit-notice-months" {{ $case->notice_type === 'immediate' ? 'disabled' : '' }}>
+                    @foreach ([1, 2, 3] as $m)
+                        <option value="{{ $m }}" {{ (int) $case->notice_months === $m ? 'selected' : '' }}>{{ $m }} month{{ $m > 1 ? 's' : '' }}</option>
+                    @endforeach
+                </select>
+                <button class="btn btn-sm btn-light">Update &amp; recompute last day</button>
+                <span class="small text-muted ml-2">Current last working day: {{ optional($case->last_working_date)->format('d M Y') ?: '—' }}</span>
+            </form>
+
             <h6 class="text-uppercase small text-muted">Timeline</h6>
             @forelse($timeline as $e)
                 <div class="small border-bottom py-1">{{ ucfirst(str_replace('_', ' ', $e->event)) }} <span class="text-muted">&mdash; {{ optional($e->created_at)->format('d M Y H:i') }} by {{ $e->actor?->name ?: 'System' }}</span></div>
@@ -70,6 +88,16 @@
         </div>
 
         <div class="tab-pane fade" id="tab-clearance">
+            <div class="alert {{ $hrIssued ? 'alert-success' : 'alert-warning' }} py-2 d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fa fa-{{ $hrIssued ? 'check-circle' : 'exclamation-triangle' }} mr-1"></i>
+                    <strong>HR Clearance form:</strong>
+                    {{ $hrIssued ? 'issued — ' . (\App\Support\Clearance::HR_DECISIONS[$case->hr_clearance_decision] ?? $case->hr_clearance_decision) : 'not completed yet. Offboarding cannot be completed until it is issued.' }}
+                </span>
+                <a class="btn btn-sm btn-{{ $hrIssued ? 'outline-primary' : 'primary' }}" href="{{ route('hr-lifecycle.offboarding.hr-clearance', $case->id) }}">
+                    {{ $hrIssued ? 'View / download' : 'Open HR Clearance form' }}
+                </a>
+            </div>
             <h6 class="mb-2">Departmental clearance (HR-0111)</h6>
             <table class="table table-sm">
                 <thead class="thead-light"><tr><th>Area</th><th>Owner</th><th style="width:130px">Clear</th><th>Cleared by</th></tr></thead>

@@ -11,6 +11,8 @@ use App\Models\User;
 use App\Models\CustomField;
 use App\Models\CustomFieldGroup;
 use App\DataTables\BaseDataTable;
+use App\Models\EmployeeTermination;
+use App\Support\OffboardingStage;
 use Illuminate\Database\Eloquent\Model;
 use Yajra\DataTables\Html\Button;
 use Yajra\DataTables\Html\Column;
@@ -92,6 +94,15 @@ class TerminatedDataTable extends BaseDataTable
             return ucfirst($row->exit_type ?? 'termination');
         });
 
+        $datatables->addColumn('stage', function ($row) {
+            $termination = EmployeeTermination::where('user_id', $row->id)->latest('id')->first();
+            if (!$termination) {
+                return '<span class="text-muted">--</span>';
+            }
+            $stage = OffboardingStage::for($termination);
+            return '<span class="badge badge-' . $stage['badge'] . ' p-2">' . $stage['index'] . '. ' . e($stage['label']) . '</span>';
+        });
+
         $datatables->editColumn(
             'created_at',
             function ($row) {
@@ -131,7 +142,7 @@ class TerminatedDataTable extends BaseDataTable
 
         $customFieldColumns = CustomField::customFieldData($datatables, EmployeeDetails::CUSTOM_FIELD_MODEL, 'employeeDetail');
 
-        $datatables->rawColumns(array_merge(['name', 'action', 'status', 'employee_id'], $customFieldColumns));
+        $datatables->rawColumns(array_merge(['name', 'action', 'status', 'employee_id', 'stage'], $customFieldColumns));
 
         return $datatables;
     }
@@ -235,6 +246,7 @@ class TerminatedDataTable extends BaseDataTable
             __('modules.employees.joiningDate') => ['data' => 'joining_date', 'name' => 'joining_date', 'visible' => false, 'title' => __('modules.employees.joiningDate')],
             __('app.status') => ['data' => 'status', 'name' => 'status', 'title' => __('app.status')]
             , 'Exit Type' => ['data' => 'exit_type_label', 'name' => 'exit_type', 'title' => 'Exit Type']
+            , 'Stage' => ['data' => 'stage', 'name' => 'stage', 'title' => 'Stage', 'orderable' => false, 'searchable' => false, 'exportable' => false]
         ];
 
         $action = [

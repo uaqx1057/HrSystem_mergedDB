@@ -72,6 +72,14 @@ class OffboardingServiceBehaviourTest extends TestCase
             $t->string('reason')->nullable();
             $t->date('resignation_date')->nullable();
             $t->date('last_working_date')->nullable();
+            $t->string('notice_type')->nullable();
+            $t->unsignedTinyInteger('notice_months')->nullable();
+            $t->date('notice_start_date')->nullable();
+            $t->string('hr_clearance_status')->nullable();
+            $t->text('hr_clearance_data')->nullable();
+            $t->string('hr_clearance_decision')->nullable();
+            $t->unsignedInteger('hr_cleared_by')->nullable();
+            $t->timestamp('hr_cleared_at')->nullable();
             $t->string('status')->default('open');
             $t->string('approval_status')->default('awaiting_approval');
             $t->unsignedInteger('initiated_by')->nullable();
