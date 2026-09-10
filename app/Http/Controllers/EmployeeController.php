@@ -326,7 +326,7 @@ class EmployeeController extends AccountBaseController
             $user->name = $request->name;
             $user->email = $request->email;
             $user->mobile = $request->mobile;
-            $user->country_id = $request->country;
+            $user->country_id = $this->resolveNationality($request);
             $user->salutation = $request->salutation;
             $user->country_phonecode = $request->country_phonecode;
             $user->gender = $request->gender;
@@ -698,7 +698,7 @@ class EmployeeController extends AccountBaseController
         $user->name = $request->name;
 
         $user->mobile = $request->mobile;
-        $user->country_id = $request->country;
+        $user->country_id = $this->resolveNationality($request);
         $user->salutation = $request->salutation;
         $user->country_phonecode = $request->country_phonecode;
         $user->gender = $request->gender;
@@ -1727,6 +1727,9 @@ class EmployeeController extends AccountBaseController
         if ($request->has('no_of_kafala_transfers')) {
             $employee->no_of_kafala_transfers = $request->filled('no_of_kafala_transfers') ? (int) $request->no_of_kafala_transfers : null;
         }
+        if ($request->input('employee_type') === 'saudi') {
+            $employee->no_of_kafala_transfers = null;
+        }
         $employee->department_id = $request->department;
         $employee->designation_id = $request->designation;
         $employee->reporting_to = $request->reporting_to;
@@ -2214,6 +2217,19 @@ class EmployeeController extends AccountBaseController
     private function resolveNoticeTerms(Request $request, ?string $baseDate): array
     {
         return \App\Support\NoticeTerms::resolve($request->input('notice_type'), $request->input('notice_months'), $baseDate);
+    }
+
+    /**
+     * A Saudi national's nationality is always Saudi Arabia; for anyone else it
+     * is whatever the Nationality field carried.
+     */
+    private function resolveNationality($request): ?int
+    {
+        if ($request->input('employee_type') === 'saudi') {
+            return \App\Models\Country::where('iso', 'SA')->value('id') ?: ($request->country ?: null);
+        }
+
+        return $request->country ?: null;
     }
 
     public function submitResignation(Request $request)

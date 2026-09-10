@@ -421,6 +421,11 @@
                                     </x-forms.select>
                                 </div>
 
+                                <div class="col-lg-3 col-md-6 expat-only-field">
+                                    <x-forms.text fieldId="no_of_kafala_transfers" fieldLabel="Kafala transfers so far" fieldName="no_of_kafala_transfers"
+                                        fieldPlaceholder="e.g. 2" :fieldValue="old('no_of_kafala_transfers')" />
+                                </div>
+
                                 {{-- NEW: Probation Time --}}
                                 <div class="col-lg-3 col-md-6 ">
                                     <x-forms.text fieldId="probation_time" :fieldLabel="__('modules.employees.probation_time')" fieldName="probation_time" :fieldPlaceholder="__('placeholders.probation_time')">
@@ -496,7 +501,7 @@
                                 :fieldPlaceholder="__('placeholders.password')" :fieldValue="old('password')" :showButton="$showButton">
                             </x-forms.text>
                         </div>
-                        <div class="col-lg-3 col-md-6">
+                        <div class="col-lg-3 col-md-6 js-nationality">
                             <x-forms.select fieldId="country" fieldLabel="Nationality" fieldName="country" search="true">
                                 @foreach ($countries as $item)
                                     <option data-tokens="{{ $item->iso3 }}" data-phonecode="{{ $item->phonecode }}"
@@ -505,6 +510,7 @@
                                         value="{{ $item->id }}">{{ $item->nicename }}</option>
                                 @endforeach
                             </x-forms.select>
+                            <input type="hidden" id="sa-country-id" value="{{ optional($countries->firstWhere('iso', 'SA'))->id }}">
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <x-forms.label class="" fieldId="mobile" :fieldLabel="__('app.mobile')"></x-forms.label>
@@ -1053,6 +1059,14 @@
             // Passport is required for expats, optional for Saudis.
             $('#passport_no').prop('required', !isSaudi);
             $('label[for="passport_no"] sup').toggle(!isSaudi);
+
+            // A Saudi national's nationality is fixed as Saudi Arabia — hide the
+            // Nationality picker and lock it to Saudi.
+            $('.js-nationality').toggleClass('d-none', isSaudi);
+            var saId = $('#sa-country-id').val();
+            if (isSaudi && saId) {
+                $('#country').val(saId).selectpicker('refresh');
+            }
         }
 
         $('#employee_type').change(toggleEmployeeTypeFields);
