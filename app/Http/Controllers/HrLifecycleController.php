@@ -267,7 +267,11 @@ class HrLifecycleController extends AccountBaseController
         $table = 'hr_' . $type . '_tasks';
         $caseTable = 'hr_' . $type . '_cases';
         $task = DB::table($table)->join($caseTable, $caseTable . '.id', '=', $table . '.case_id')->select($table . '.*', $caseTable . '.employee_id')->where($table . '.id', $taskId)->first(); abort_if(!$task, 404);
-        $this->authorizeEmployee($this->employee($task->employee_id));
+        // The user the task is assigned to (e.g. the line manager for the handover
+        // clearance) may tick their own task without wider employee-edit rights.
+        if ((int) ($task->assigned_to ?? 0) !== (int) user()->id) {
+            $this->authorizeEmployee($this->employee($task->employee_id));
+        }
         if ($type === 'offboarding') {
             app(OffboardingService::class)->completeTask(HrOffboardingTask::findOrFail($taskId), user()->id, $request->boolean('complete'));
         } else {

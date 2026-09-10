@@ -271,3 +271,32 @@ module is now employees-only.
   roles they won't see the new screens; grant the permissions in the Role Permissions grid.
 - Unrelated pre-existing prod error in the log: `BioTime sync failed: Database hosts
   array is empty` — attendance-device integration, not part of this work.
+
+## Office roles set up — 2026-09-10
+
+`database/seeders/OfficeRolesSeeder.php` (idempotent, `db:seed --class=OfficeRolesSeeder`).
+Backup `deploy-backups/20260910_154025_office-roles/rbac.sql` (roles + permission_role + role_user).
+
+20 roles created for company 27 (ids 77-95), each a full 469-row clone of a template:
+
+| Role | Template | HR grants |
+|---|---|---|
+| CEO | `admin` | full |
+| GM | `employee` | view-only: employees, payroll, leave, assets, insurance, attendance, candidates, term lists |
+| Finance Manager | `employee` | payroll (full), manage_finance_clearance, advance salary, asset-loss deduction, employees (view) |
+| Accountant | `employee` | payroll (view+add), advance salary (view), asset-loss deduction (view) |
+| IT Manager | `employee` | manage_it_clearance, company assets (full), employees (view) |
+| GRO | `employee` | employees (view), insurance (manage), term lists (view) |
+| Business Development Mgr, Fleet Mgr, Project Mgr, Operational Mgr, Ops Lead Supervisor, Ops Supervisor, Facility Mgr, Controlroom Supervisor | `employee` | branch: view_employees, view_leave, approve_or_reject_leaves — **no** edit_employees |
+| Fleet Coordinator, Operational Coordinator, Platform Coordinator, Developer, Tea Boy | `employee` | none (self-service only) |
+
+- `hr-manager` (id 70) left in place; the seeder just ensures its offboarding/clearance
+  permissions are 'all'.
+- 18 DMS-import junk roles (no company, no users) soft-deleted.
+- Code change: `HrLifecycleController::updateTask` lets a task's `assigned_to` user
+  complete it without `edit_employees`; `OffboardingService::createTasks` auto-assigns
+  the `owner_type = manager` clearance to the employee's `reporting_to`. So line managers
+  do the handover tick without branch-wide employee rights.
+- **Still to do (you):** assign each staff member to their role in the users screen.
+  Line-manager leave approval is branch-scoped (Worksuite has no "direct reports only"
+  level) — tighten later with a code change if branches are too coarse.

@@ -252,10 +252,15 @@ class OffboardingService
             ])->all()
             : self::DEFAULT_TASKS;
 
+        // Route the line-manager clearance to the employee's actual reporting
+        // manager so they can complete it without wider employee-edit rights.
+        $reportingTo = $employee->employeeDetail?->reporting_to;
+
         foreach ($tasks as $task) {
             HrOffboardingTask::create($task + [
                 'case_id' => $case->id,
                 'status' => 'pending',
+                'assigned_to' => ($task['owner_type'] ?? null) === 'manager' ? $reportingTo : null,
             ]);
         }
     }

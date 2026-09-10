@@ -38,6 +38,7 @@ class OffboardingServiceBehaviourTest extends TestCase
             $t->increments('id');
             $t->unsignedInteger('user_id');
             $t->string('employee_type')->nullable();
+            $t->unsignedInteger('reporting_to')->nullable();
         });
         // User::$with auto-loads these three on every query.
         Schema::create('client_details', function (Blueprint $t) {
@@ -94,6 +95,7 @@ class OffboardingServiceBehaviourTest extends TestCase
             $t->string('category')->default('custom');
             $t->boolean('is_required')->default(true);
             $t->string('owner_type')->default('hr');
+            $t->unsignedInteger('assigned_to')->nullable();
             $t->string('status')->default('pending');
             $t->date('due_date')->nullable();
             $t->timestamp('completed_at')->nullable();
