@@ -1119,16 +1119,17 @@
                         <div class="step-subtitle">A little more about you.</div>
 
                         <div class="form-row">
-                            <div class="field">
+                            <div class="field js-hide-for-saudi">
                                 <label for="country_id">Nationality <span class="required">*</span></label>
-                                <select id="country_id" name="country_id" required>
+                                <select id="country_id" name="country_id"
+                                    data-sa-country-id="{{ optional($countries->firstWhere('iso', 'SA'))->id }}" required>
                                     <option value="">--</option>
                                     @foreach ($countries as $item)
                                         <option value="{{ $item->id }}" @selected(old('country_id') == $item->id)>
                                             {{ $item->nicename }}</option>
                                     @endforeach
                                 </select>
-                                <div class="field-error">Country is required.</div>
+                                <div class="field-error">Nationality is required.</div>
                             </div>
                             <div class="field">
                                 <label for="gender">Gender <span class="required">*</span></label>
@@ -1158,9 +1159,8 @@
                                 </select>
                                 <div class="field-error">Marital Status is required.</div>
                             </div>
-                            <div class="field">
-                                <label for="kafala_transfers">Kafala transfers so far
-                                    <span style="color: var(--text-muted); font-weight: 400;">(expat applicants)</span></label>
+                            <div class="field js-hide-for-saudi">
+                                <label for="kafala_transfers">Kafala transfers so far</label>
                                 <input type="number" min="0" max="20" step="1" id="kafala_transfers"
                                     name="kafala_transfers" value="{{ old('kafala_transfers') }}"
                                     placeholder="0 if this is your first job in KSA">
@@ -1408,7 +1408,11 @@
                 }
 
                 if (step === 3) {
-                    ['country_id', 'gender', 'basic_salary', 'address', 'marital_status'].forEach(function(id) {
+                    var step3Fields = ['gender', 'basic_salary', 'address', 'marital_status'];
+                    if (document.getElementById('employee_type').value !== 'saudi') {
+                        step3Fields.unshift('country_id');
+                    }
+                    step3Fields.forEach(function(id) {
                         if (isEmptyVal(id)) {
                             setError(id, true);
                             ok = false;
@@ -1454,6 +1458,21 @@
                         inp.required = isSaudi;
                     });
                 });
+
+                // Nationality + kafala transfers only apply to expats. A Saudi
+                // national's nationality is fixed and there is no transfer number.
+                document.querySelectorAll('.js-hide-for-saudi').forEach(function(el) {
+                    el.classList.toggle('hidden-field', isSaudi);
+                });
+                var country = document.getElementById('country_id');
+                var kafala = document.getElementById('kafala_transfers');
+                if (isSaudi) {
+                    if (country && country.dataset.saCountryId) { country.value = country.dataset.saCountryId; }
+                    if (country) { country.required = false; }
+                    if (kafala) { kafala.value = ''; }
+                } else if (country) {
+                    country.required = true;
+                }
             }
 
             document.getElementById('employee_type').addEventListener('change', toggleEmployeeTypeFields);

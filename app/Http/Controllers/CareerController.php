@@ -108,6 +108,14 @@ class CareerController extends Controller
 
         $request->validate($rules);
 
+        // A Saudi national's nationality is fixed and there is no kafala transfer.
+        $countryId = $request->country_id;
+        $kafalaTransfers = $request->filled('kafala_transfers') ? (int) $request->kafala_transfers : null;
+        if ($employeeType === 'saudi') {
+            $countryId = \App\Models\Country::where('iso', 'SA')->value('id') ?? $countryId;
+            $kafalaTransfers = null;
+        }
+
         $dateOfBirth = Carbon::createFromFormat('!d/m/Y', $request->date_of_birth);
         if ($dateOfBirth->greaterThan(now()->startOfDay()->subYears(15))) {
             return back()->withErrors([
@@ -127,7 +135,7 @@ class CareerController extends Controller
             'email' => $request->email,
             'date_of_birth' => $dateOfBirth->toDateString(),
             'mobile' => $request->mobile,
-            'country_id' => $request->country_id,
+            'country_id' => $countryId,
             'gender' => $request->gender,
             'address' => $request->address,
             'branch_id' => $jobOpening->branch_id ?? null,
@@ -145,7 +153,7 @@ class CareerController extends Controller
             'passport_expiry_date' => $request->passport_expiry_date,
             'basic_salary' => $request->basic_salary,
             'marital_status' => $request->marital_status,
-            'kafala_transfers' => $request->filled('kafala_transfers') ? (int) $request->kafala_transfers : null,
+            'kafala_transfers' => $kafalaTransfers,
             'linkedin_username' => $request->linkedin_username,
             'source' => 'public_application',
             'notes' => $request->notes,
