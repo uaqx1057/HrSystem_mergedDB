@@ -1675,8 +1675,8 @@ class EmployeeController extends AccountBaseController
         if ($request->has('for-onboarding')) {
             $employee->verify_employee_profile = $request->verify_employee_profile ?? false;
             $employee->setup_bank_and_payroll = $request->setup_bank_and_payroll ?? false;
-            // $employee->assign_insurance = $request->assign_insurance ?? false;
-            // $employee->assign_required_assets = $request->assign_required_assets ?? false;
+            $employee->assign_insurance = $request->assign_insurance ?? false;
+            $employee->assign_required_assets = $request->assign_required_assets ?? false;
             $employee->manager_confirmation = $request->manager_confirmation ?? false;
         }
 
@@ -2590,6 +2590,13 @@ class EmployeeController extends AccountBaseController
             }
         }
 
+        // Linked onboarding case (created on candidate conversion) - shown on step 6 for reference.
+        $this->onboardingCase = HrOnboardingCase::where('employee_id', $this->employee->id)
+            ->where('status', 'open')->latest('id')->first();
+        $this->onboardingTasks = $this->onboardingCase
+            ? \Illuminate\Support\Facades\DB::table('hr_onboarding_tasks')->where('case_id', $this->onboardingCase->id)->orderBy('id')->get()
+            : collect();
+
         if (request()->ajax()) {
             $html = view('employees.ajax.edit-onboarding', $this->data)->render();
 
@@ -2600,6 +2607,116 @@ class EmployeeController extends AccountBaseController
 
         return view('employees.create', $this->data);
 
+    }
+
+    /** The five onboarding checklist flags stored on employee_details. */
+    private const ONBOARDING_FLAGS = [
+        'verify_employee_profile', 'setup_bank_and_payroll', 'assign_insurance',
+        'assign_required_assets', 'manager_confirmation',
+    ];
+
+    /**
+     * Step 6 "Save progress": persist just the checklist flags and leave the
+     * employee pending. A lightweight path that skips the full-form validation.
+     */
+    public function saveOnboardingProgress(Request $request, $id)
+    {
+        $user = User::withoutGlobalScope(ActiveScope::class)->with('employeeDetail')->findOrFail($id);
+        $this->authorizeEmployeeStepSave($user, $request);
+
+        $employee = EmployeeDetails::firstOrNew(['user_id' => $user->id]);
+        foreach (self::ONBOARDING_FLAGS as $flag) {
+            $employee->{$flag} = $request->boolean($flag);
+        }
+        $employee->save();
+
+        return Reply::successWithData(__('messages.updateSuccess'), ['redirectUrl' => route('employees.index', ['tab' => 'onboard'])]);
+    }
+
+    /**
+     * Finish onboarding from the wizard's step 6: persist the checklist flags,
+     * make the employee active, and close any linked onboarding case/tasks.
+     */
+    public function completeOnboarding(Request $request, $id)
+    {
+        $user = User::withoutGlobalScope(ActiveScope::class)->with('employeeDetail')->findOrFail($id);
+        $this->authorizeEmployeeStepSave($user, $request);
+        abort_403($user->id === user()->id || $user->id === 1);
+
+        if ($user->status !== 'active' && !checkCompanyCanAddMoreEmployees($user->company_id)) {
+            return Reply::error(__('superadmin.maxEmployeesLimitReached'));
+        }
+
+        DB::transaction(function () use ($request, $user) {
+            $checklist = [];
+            $employee = EmployeeDetails::firstOrNew(['user_id' => $user->id]);
+            foreach (self::ONBOARDING_FLAGS as $flag) {
+                $checklist[$flag] = $request->boolean($flag);
+                $employee->{$flag} = $checklist[$flag];
+            }
+            $employee->save();
+
+            $user->status = 'active';
+            $user->save();
+            PackageUpdateNotify::where('company_id', $user->company_id)->where('user_id', $user->id)->delete();
+
+            $case = HrOnboardingCase::where('employee_id', $user->id)->where('status', 'open')->latest('id')->first();
+            if ($case) {
+                DB::table('hr_onboarding_tasks')->where('case_id', $case->id)->where('status', '!=', 'completed')
+                    ->update(['status' => 'completed', 'completed_at' => now(), 'updated_at' => now()]);
+                $case->update(['status' => 'completed', 'completed_at' => now()]);
+            }
+
+            HrLifecycleEvent::create([
+                'subject_user_id' => $user->id,
+                'company_id' => $user->company_id,
+                'event' => 'onboarding_completed',
+                'actor_id' => user()->id,
+                'meta' => ['checklist' => $checklist],
+            ]);
+        });
+
+        try {
+            app(EmployeeSystemSyncService::class)->syncEmployeeProfileToLinkedSystems($user->fresh());
+        } catch (\Throwable $e) {
+            Log::error('Onboarding activation sync failed for user ' . $user->id . ': ' . $e->getMessage());
+        }
+
+        return Reply::successWithData(__('messages.updateSuccess'), ['redirectUrl' => route('employees.index', ['tab' => 'onboard'])]);
+    }
+
+    /**
+     * Reject onboarding from the wizard's step 6: leave the account inactive and
+     * cancel any linked onboarding case, recording the reason on the timeline.
+     */
+    public function rejectOnboarding(Request $request, $id)
+    {
+        $user = User::withoutGlobalScope(ActiveScope::class)->with('employeeDetail')->findOrFail($id);
+        $this->authorizeEmployeeStepSave($user, $request);
+        abort_403($user->id === user()->id || $user->id === 1);
+
+        $data = $request->validate(['reason' => 'required|string|max:1000']);
+
+        DB::transaction(function () use ($data, $user) {
+            $user->status = 'deactive';
+            $user->save();
+            PackageUpdateNotify::where('company_id', $user->company_id)->where('user_id', $user->id)->delete();
+
+            $case = HrOnboardingCase::where('employee_id', $user->id)->where('status', 'open')->latest('id')->first();
+            if ($case) {
+                $case->update(['status' => 'cancelled', 'completed_at' => now()]);
+            }
+
+            HrLifecycleEvent::create([
+                'subject_user_id' => $user->id,
+                'company_id' => $user->company_id,
+                'event' => 'onboarding_rejected',
+                'actor_id' => user()->id,
+                'meta' => ['reason' => $data['reason']],
+            ]);
+        });
+
+        return Reply::successWithData(__('messages.updateSuccess'), ['redirectUrl' => route('employees.index', ['tab' => 'onboard'])]);
     }
 
 }

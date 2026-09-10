@@ -266,12 +266,18 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                         <span class="ms-step-label">On Boarding</span>
                     </div>
                 </div>
-                <div class="px-3 pb-2 text-muted f-12" id="edit-save-status">
+                <div class="px-3 pb-1 text-muted f-12" id="edit-save-status">
                     @if (($editState->last_saved_at ?? null))
                         Last saved step {{ $editState->last_saved_step }} at {{ $editState->last_saved_at->timezone(company()->timezone)->format(company()->time_format) }}
                     @else
                         Changes save per step.
                     @endif
+                </div>
+                <div class="px-3 pb-2 text-muted f-11">
+                    <i class="fa fa-info-circle mr-1"></i>
+                    <strong>Save this step</strong> saves only the section you are on. Work through steps 1–5,
+                    then use the <strong>Onboarding</strong> step (6) to <strong>complete &amp; activate</strong> or
+                    <strong>reject</strong> the onboarding.
                 </div>
 
                 {{-- ══════════════════════════════════════
@@ -990,85 +996,75 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                 <div class="form-step" id="form-step-6">
                     <h4 class="mb-0 p-20 f-21 font-weight-normal text-capitalize border-bottom-grey form-heading-background">
                         On Boarding</h4>
+                    @php
+                        $onbCase = $onboardingCase ?? null;
+                        $onbTasks = $onboardingTasks ?? collect();
+                        $flagList = [
+                            'verify_employee_profile' => ['Verify employee profile & documents', 'Name, ID, iqama/national ID, contract, joining date and emergency contact are all correct on this record.'],
+                            'setup_bank_and_payroll'  => ['Set up bank & payroll', 'Bank account added and a payroll setup / basic salary exists for this employee.'],
+                            'assign_insurance'        => ['Assign medical insurance', 'Employee (and eligible dependants) added to the company medical insurance policy.'],
+                            'assign_required_assets'  => ['Hand over required assets', 'Laptop, SIM, access card and any role assets issued via Company Assets.'],
+                            'manager_confirmation'    => ['Line manager confirmation', 'The reporting manager has confirmed the employee has started and is ready to work.'],
+                        ];
+                        $flagsDone = collect($flagList)->keys()->filter(fn($k) => (bool) $employee->employeeDetail->$k)->count();
+                        $flagsTotal = count($flagList);
+                        $statusIsActive = strtolower((string) $employee->status) === 'active';
+                    @endphp
+
                     <div class="row p-20">
                         <div class="col-md-12">
+                            <div class="alert alert-info py-2 f-13 mb-3">
+                                <i class="fa fa-info-circle mr-1"></i>
+                                This is the final step. Tick each item as it is done, then choose an outcome:
+                                <strong>Complete &amp; activate</strong> makes the employee active and closes onboarding &middot;
+                                <strong>Reject onboarding</strong> cancels it and leaves the account inactive &middot;
+                                <strong>Save progress</strong> keeps it pending so you can finish later.
+                            </div>
+
                             <div class="step5-card">
-                                <div class="step5-subtitle">Track onboarding progress for this employee.</div>
-
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" name="verify_employee_profile"
-                                           id="verify_employee_profile" value="1"
-                                           @checked((bool) $employee->employeeDetail->verify_employee_profile)>
-                                    <label class="form-check-label f-12 pt-1 ml-2" for="verify_employee_profile">
-                                        Verify Employee Profile
-                                    </label>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="f-14 font-weight-bold">Onboarding checklist</span>
+                                    <span class="f-12 text-muted" id="onb-progress-label">{{ $flagsDone }} of {{ $flagsTotal }} done</span>
+                                </div>
+                                <div class="progress mb-3" style="height:6px;">
+                                    <div class="progress-bar bg-success" id="onb-progress-bar"
+                                         style="width: {{ $flagsTotal ? round($flagsDone / $flagsTotal * 100) : 0 }}%"></div>
                                 </div>
 
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" name="setup_bank_and_payroll"
-                                           id="setup_bank_and_payroll" value="1"
-                                           @checked((bool) $employee->employeeDetail->setup_bank_and_payroll)>
-                                    <label class="form-check-label f-12 pt-1 ml-2" for="setup_bank_and_payroll">
-                                        Setup Bank &amp; Payroll
-                                    </label>
+                                @foreach ($flagList as $key => [$label, $hint])
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input onb-flag" type="checkbox" name="{{ $key }}"
+                                               id="{{ $key }}" value="1"
+                                               @checked((bool) $employee->employeeDetail->$key)>
+                                        <label class="form-check-label f-13 pt-1 ml-2" for="{{ $key }}">
+                                            {{ $label }}
+                                            <span class="d-block f-11 text-muted">{{ $hint }}</span>
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            @if ($onbCase && $onbTasks->count())
+                                <div class="f-12 text-muted mt-3 mb-1">Linked onboarding case <strong>{{ $onbCase->reference ?? ('#'.$onbCase->id) }}</strong> ({{ $onbCase->status }})</div>
+                                <div class="step5-card">
+                                    @foreach ($onbTasks as $t)
+                                        <div class="f-12 py-1 border-bottom">
+                                            <i class="fa fa-{{ in_array($t->status, ['completed','waived']) ? 'check text-success' : 'clock-o text-muted' }} mr-1"></i>
+                                            {{ $t->title }} <span class="text-muted">— {{ $t->status }}</span>
+                                        </div>
+                                    @endforeach
+                                    <div class="f-11 text-muted mt-1">Completing onboarding below also closes this case.</div>
                                 </div>
+                            @endif
 
-                                {{-- <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" name="assign_insurance"
-                                           id="assign_insurance" value="1"
-                                           @checked((bool) $employee->employeeDetail->assign_insurance)>
-                                    <label class="form-check-label f-12 pt-1 ml-2" for="assign_insurance">
-                                        Assign Insurance
-                                    </label>
-                                </div> --}}
-
-                                {{-- <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" name="assign_required_assets"
-                                           id="assign_required_assets" value="1"
-                                           @checked((bool) $employee->employeeDetail->assign_required_assets)>
-                                    <label class="form-check-label f-12 pt-1 ml-2" for="assign_required_assets">
-                                        Assign Required Assets
-                                    </label>
-                                </div> --}}
-
-                                <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" name="manager_confirmation"
-                                           id="manager_confirmation" value="1"
-                                           @checked((bool) $employee->employeeDetail->manager_confirmation)>
-                                    <label class="form-check-label f-12 pt-1 ml-2" for="manager_confirmation">
-                                        Manager Confirmation
-                                    </label>
-                                </div>
-                                <input type="hidden" name="for-onboarding" value="yes">
+                            <div class="mt-3 f-13">
+                                Current status:
+                                <span class="badge badge-{{ $statusIsActive ? 'success' : 'warning' }}">{{ $employee->status ?: 'Pending Onboarding' }}</span>
                             </div>
                         </div>
-
-                        @if ($employee->id != user()->id && $employee->id != 1)
-                            <div class="col-md-12 col-lg-12">
-                                <div class="form-group">
-                                    <label class="f-14 text-dark-grey mt-3 w-100" for="usr">@lang('app.status')</label>
-                                    <div class="d-flex">
-                                        <x-forms.radio fieldId="status-active" :fieldLabel="__('app.active')"
-                                            fieldValue="active" fieldName="status"
-                                            checked="($employee->status == 'active') ? 'checked' : ''">
-                                        </x-forms.radio>
-                                        <x-forms.radio fieldId="status-inactive" :fieldLabel="__('app.inactive')"
-                                            fieldValue="deactive" fieldName="status"
-                                            :checked="($employee->status == 'deactive') ? 'checked' : ''">
-                                        </x-forms.radio>
-
-                                        <x-forms.radio fieldId="status-pending-onboarding" fieldLabel="Pending Onboarding"
-                                            fieldValue="Pending Onboarding" fieldName="status"
-                                            :checked="($employee->status == 'Pending Onboarding') ? 'checked' : ''">
-                                        </x-forms.radio>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
                     </div>
 
-                    {{-- Step 6 nav + Save buttons --}}
+                    {{-- Step 6 — outcome actions --}}
                     <div class="ms-nav-buttons">
                         <div class="left-btns">
                             <button type="button" class="btn btn-secondary ms-prev-btn" data-prev="5">
@@ -1076,9 +1072,17 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                             </button>
                         </div>
                         <div class="right-btns">
-                            <button type="button" class="btn btn-outline-primary save-step-btn" data-step="6"><i class="fa fa-save"></i> Save this step</button>
-                            <x-forms.button-primary id="save-form" class="mr-3" icon="check">@lang('app.save')
-                            </x-forms.button-primary>
+                            <button type="button" class="btn btn-outline-secondary" id="save-onboarding-progress">
+                                <i class="fa fa-save"></i> Save progress (keep pending)
+                            </button>
+                            @if ($employee->id != user()->id && $employee->id != 1)
+                                <button type="button" class="btn btn-danger" id="reject-onboarding">
+                                    <i class="fa fa-times"></i> Reject onboarding
+                                </button>
+                                <button type="button" class="btn btn-success" id="complete-onboarding">
+                                    <i class="fa fa-check"></i> Complete &amp; activate
+                                </button>
+                            @endif
                             <x-forms.button-cancel :link="route('employees.index')" class="border-0">@lang('app.cancel')
                             </x-forms.button-cancel>
                         </div>
@@ -1762,28 +1766,85 @@ $(document).ready(function () {
         }
     }, 60000);
 
-    $('#save-form').click(function () {
-        if (!validateDependants()) return;
-        if (!validateAllowances()) return;
-        if (!validateBankAccounts()) return;
-        const url = "{{ route('employees.update', $employee->id) }}";
+    // ── Step 6: onboarding checklist + outcome actions ─────
+    function refreshOnbProgress() {
+        var total = $('.onb-flag').length;
+        var done = $('.onb-flag:checked').length;
+        $('#onb-progress-label').text(done + ' of ' + total + ' done');
+        $('#onb-progress-bar').css('width', (total ? Math.round(done / total * 100) : 0) + '%');
+    }
+    $(document).on('change', '.onb-flag', refreshOnbProgress);
+    refreshOnbProgress();
+
+    // "Save progress" — persist just the checklist flags, keep status pending
+    $('#save-onboarding-progress').on('click', function () {
         $.easyAjax({
-            url: url,
-            container: '#save-data-form',
-            type: "POST",
-            disableButton: true,
-            blockUI: true,
-            buttonSelector: "#save-form",
-            file: true,
-            data: new FormData($('#save-data-form')[0]),
-            success: function (response) {
-                if (response.status == 'success') {
-                    window.location.href = response.redirectUrl;
-                }
+            url: "{{ route('employees.onboarding.save-progress', $employee->id) }}",
+            type: 'POST', blockUI: true, disableButton: true, buttonSelector: '#save-onboarding-progress',
+            data: {
+                _token: "{{ csrf_token() }}",
+                verify_employee_profile: $('#verify_employee_profile').is(':checked') ? 1 : 0,
+                setup_bank_and_payroll: $('#setup_bank_and_payroll').is(':checked') ? 1 : 0,
+                assign_insurance: $('#assign_insurance').is(':checked') ? 1 : 0,
+                assign_required_assets: $('#assign_required_assets').is(':checked') ? 1 : 0,
+                manager_confirmation: $('#manager_confirmation').is(':checked') ? 1 : 0
             },
-            error: function (xhr) {
-                showValidationErrorList(xhr);
-            }
+            success: function (res) { if (res.status === 'success') window.location.href = res.redirectUrl; }
+        });
+    });
+
+    // "Complete & activate"
+    $('#complete-onboarding').on('click', function () {
+        var total = $('.onb-flag').length;
+        var done = $('.onb-flag:checked').length;
+        Swal.fire({
+            title: 'Complete onboarding?',
+            html: done < total
+                ? '<b>' + (total - done) + '</b> checklist item(s) are not ticked. Complete anyway and activate the employee?'
+                : 'All checklist items are done. Activate the employee and close onboarding?',
+            icon: done < total ? 'warning' : 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, complete & activate',
+            customClass: { confirmButton: 'btn btn-success mr-2', cancelButton: 'btn btn-secondary' },
+            buttonsStyling: false
+        }).then(function (r) {
+            if (!r.isConfirmed) return;
+            $.easyAjax({
+                url: "{{ route('employees.onboarding.complete', $employee->id) }}",
+                type: 'POST', blockUI: true, disableButton: true, buttonSelector: '#complete-onboarding',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    verify_employee_profile: $('#verify_employee_profile').is(':checked') ? 1 : 0,
+                    setup_bank_and_payroll: $('#setup_bank_and_payroll').is(':checked') ? 1 : 0,
+                    assign_insurance: $('#assign_insurance').is(':checked') ? 1 : 0,
+                    assign_required_assets: $('#assign_required_assets').is(':checked') ? 1 : 0,
+                    manager_confirmation: $('#manager_confirmation').is(':checked') ? 1 : 0
+                },
+                success: function (res) { if (res.status === 'success') window.location.href = res.redirectUrl; }
+            });
+        });
+    });
+
+    // "Reject onboarding"
+    $('#reject-onboarding').on('click', function () {
+        Swal.fire({
+            title: 'Reject onboarding?',
+            input: 'textarea',
+            inputLabel: 'Reason (required)',
+            inputPlaceholder: 'Why is this onboarding being rejected / cancelled?',
+            inputValidator: function (v) { return !v && 'A reason is required.'; },
+            showCancelButton: true,
+            confirmButtonText: 'Reject onboarding',
+            customClass: { confirmButton: 'btn btn-danger mr-2', cancelButton: 'btn btn-secondary' },
+            buttonsStyling: false
+        }).then(function (r) {
+            if (!r.isConfirmed) return;
+            $.easyAjax({
+                url: "{{ route('employees.onboarding.reject', $employee->id) }}",
+                type: 'POST', blockUI: true, disableButton: true, buttonSelector: '#reject-onboarding',
+                data: { _token: "{{ csrf_token() }}", reason: r.value },
+                success: function (res) { if (res.status === 'success') window.location.href = res.redirectUrl; }
+            });
         });
     });
 

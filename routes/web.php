@@ -301,6 +301,9 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
 
     Route::resource('employees', EmployeeController::class);
     Route::get('employees/{id}/edit-onboarding', [EmployeeController::class, 'editOnboarding'])->name('employees.edit-onboarding');
+    Route::post('employees/{id}/onboarding/save-progress', [EmployeeController::class, 'saveOnboardingProgress'])->name('employees.onboarding.save-progress');
+    Route::post('employees/{id}/onboarding/complete', [EmployeeController::class, 'completeOnboarding'])->name('employees.onboarding.complete');
+    Route::post('employees/{id}/onboarding/reject', [EmployeeController::class, 'rejectOnboarding'])->name('employees.onboarding.reject');
     Route::get('employees/{id}/assign-company-asset', [EmployeeController::class, 'assignCompanyAsset'])->name('employees.assign-company-asset');
     Route::post('employees/{id}/revert-termination', [EmployeeController::class, 'revertTermination'])
     ->name('employees.revert-termination');
