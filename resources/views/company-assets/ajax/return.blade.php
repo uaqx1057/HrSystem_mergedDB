@@ -50,13 +50,9 @@
                     </div>
 
                     <div class="col-lg-12 mt-3">
-                        <a href="{{ route('company-assets.return-pdf', $assignment->id) }}" target="_blank"
-                            rel="noopener noreferrer">
-                            Download Return Form
-                        </a>
-                    </div>
-
-                    <div class="col-lg-12">
+                        <p class="f-13 text-dark-grey mb-2">
+                            Upload the signed <strong>Asset Return Form</strong> (download it from the asset detail page).
+                        </p>
                         <x-forms.file :fieldLabel="__('app.returnSignature')" fieldName="return_document" fieldId="return_document"
                             allowedFileExtensions="pdf png jpg jpeg svg" />
                         @error('return_document')

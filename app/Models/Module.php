@@ -199,31 +199,7 @@ class Module extends BaseModel
                 ]
             ]
         ],
-        [
-            'module_name' => 'drivers',
-            'permissions' => [
-                [
-                    'allowed_permissions' => Permission::ALL_NONE,
-                    'is_custom' => 0,
-                    'name' => 'add_drivers',
-                ],
-                [
-                    'allowed_permissions' => Permission::ALL_NONE,
-                    'is_custom' => 0,
-                    'name' => 'view_drivers',
-                ],
-                [
-                    'allowed_permissions' => Permission::ALL_NONE,
-                    'is_custom' => 0,
-                    'name' => 'edit_drivers',
-                ],
-                [
-                    'allowed_permissions' => Permission::ALL_NONE,
-                    'is_custom' => 0,
-                    'name' => 'delete_drivers',
-                ]
-            ]
-        ],
+        // 'drivers' module removed — driver management belongs to DMS/DOBS, not the HR app.
         [
             'module_name' => 'businesses',
             'permissions' => [

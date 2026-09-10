@@ -84,6 +84,7 @@
                 @if ($canAccessHrWorklist)
                     <x-sub-menu-item :link="route('hr-worklist.index')" text="HR Worklist" />
                 @endif
+                <x-sub-menu-item :link="route('hr-lifecycle.my-resignation')" text="My Resignation" />
                 @if (user()->permission('manage_job_openings') == 'all')
                     <x-sub-menu-item :link="route('job-openings.index')" text="Job Openings" />
                 @endif
@@ -115,12 +116,6 @@
                 @if (in_array(user()->permission('view_insurance'), ['all', 'added', 'owned', 'both','branch']))
                 <x-sub-menu-item :link="route('insurance.index')" :text="__('app.menu.insurance')" />
                 @endif
-
-                @if (in_array('drivers', user_modules()) && in_array(user()->permission('view_drivers'), ['all','branch']))
-                    <x-sub-menu-item :link="route('drivers.index')" :text="__('app.menu.drivers')" />
-                    <x-sub-menu-item :link="route('driver-documents.index')" text="Driver Documents" />
-                @endif
-
 
                 @if (in_array('leaves', user_modules()) && in_array(user()->permission('view_leave'), ['all', 'added', 'owned', 'both', 'branch']))
                     <x-sub-menu-item :link="route('leaves.index')" :text="__('app.menu.leaves')" />

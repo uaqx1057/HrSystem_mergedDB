@@ -1,160 +1,198 @@
 @php
-    $editDepartmentPermission = user()->permission('edit_employees');
-    $deleteDepartmentPermission = user()->permission('delete_employees');
+    $S_AVAILABLE = \App\Models\CompanyAssetSerial::STATUS_AVAILABLE;
+    $S_PENDING   = \App\Models\CompanyAssetSerial::STATUS_PENDING;
+    $S_ASSIGNED  = \App\Models\CompanyAssetSerial::STATUS_ASSIGNED;
+
+    $assignPermission = user()->permission('assign_company_asset_to_employee');
+    $viewAssignPerm   = user()->permission('view_assign_company_assets_to_employee');
+    $editAssignPerm   = user()->permission('edit_assign_company_assets_to_employee');
+    $sigPerm          = user()->permission('upload_signature_assign_company_assets_to_employee');
+    $editAssetPerm    = user()->permission('edit_company_assets');
+
+    $canAssign       = in_array($assignPermission, ['all', 'added', 'branch']);
+    $canEditAssign   = in_array($editAssignPerm, ['all', 'added', 'owned', 'both', 'branch']);
+    $canSign         = in_array($sigPerm, ['all', 'added', 'owned', 'both', 'branch']);
+    $canFlagSerials  = in_array($editAssetPerm, ['all', 'added', 'branch']);
+
+    $serialBadge = fn ($s) => [
+        'available' => 'badge-success',
+        'pending'   => 'badge-warning',
+        'assigned'  => 'badge-info',
+        'lost'      => 'badge-danger',
+        'damaged'   => 'badge-danger',
+        'retired'   => 'badge-secondary',
+    ][strtolower((string) $s)] ?? 'badge-secondary';
+
+    $assetBadge = fn ($s) => [
+        'available'          => 'badge-success',
+        'partially_assigned' => 'badge-warning',
+        'assigned'           => 'badge-info',
+    ][strtolower((string) $s)] ?? 'badge-secondary';
+
+    $assetLabel = fn ($s) => [
+        'available'          => 'Available',
+        'partially_assigned' => 'Partially assigned',
+        'assigned'           => 'Fully assigned',
+    ][strtolower((string) $s)] ?? ucfirst((string) $s);
+
+    $countBy = fn ($status) => $serials->where('status', $status)->count();
+    $flaggedCount = $serials->whereIn('status', [
+        'lost', 'damaged', 'retired',
+    ])->count();
 @endphp
 
-<div id="department-section">
+<div id="company-asset-detail">
     <div class="row">
         <div class="col-sm-12">
             <div class="card bg-white border-0 b-shadow-4">
-                <div class="card-header form-heading-background  border-bottom-grey text-capitalize justify-content-between p-20">
-                    <div class="row">
-                        <div class="col-md-10 col-10">
-                            <h3 class="heading-h1">@lang('app.companyAssetDetail')</h3>
-                        </div>
-                        {{-- <div class="col-md-2 col-2 text-right">
-                            <div class="dropdown">
-                                <button
-                                    class="btn btn-lg f-14 px-2 py-1 text-dark-grey text-capitalize rounded  dropdown-toggle"
-                                    type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <i class="fa fa-ellipsis-h"></i>
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-right border-grey rounded b-shadow-4 p-0"
-                                    aria-labelledby="dropdownMenuLink" tabindex="0">
-                                        <a class="dropdown-item openRightModal"
-                                            data-redirect-url="{{ url()->previous() }}"
-                                            href="{{ route('insurance.edit', $asset->id) }}">@lang('app.edit')</a>
-                                        <a class="dropdown-item delete-insurance" data-insurance-id="{{ $asset->id }}">@lang('app.delete')</a>
 
-                                </div>
-                            </div>
-                        </div> --}}
+                <div class="card-header form-heading-background border-bottom-grey d-flex flex-wrap justify-content-between align-items-center p-20">
+                    <h3 class="heading-h1 mb-0">
+                        @lang('app.companyAssetDetail')
+                        <span class="badge {{ $assetBadge($asset->status) }} f-12 ml-2 align-middle">{{ $assetLabel($asset->status) }}</span>
+                    </h3>
+                    <div class="d-flex flex-wrap align-items-center">
+                        @if ($asset->available_qty > 0 && $canAssign)
+                            <a href="{{ route('company-assets.assign', $asset->id) }}" class="btn btn-sm btn-primary openRightModal mr-2">
+                                <i class="fa fa-user-plus mr-1"></i> @lang('app.assign')
+                            </a>
+                        @endif
+                        @if (in_array($viewAssignPerm, ['all', 'added', 'owned', 'both', 'branch']))
+                            <a href="{{ route('company-assets.view-assign', $asset->id) }}" class="btn btn-sm btn-outline-primary openRightModal mr-2">
+                                <i class="fa fa-history mr-1"></i> @lang('app.assignmentHistory')
+                            </a>
+                        @endif
+                        <a href="{{ route('company-assets.index') }}" class="btn btn-sm btn-secondary">
+                            <i class="fa fa-arrow-left mr-1"></i> @lang('app.back')
+                        </a>
                     </div>
                 </div>
+
                 <div class="card-body">
-                      @if (session('success'))
-                        <div class="alert alert-success">{{ session('success') }}</div>
-                    @endif
-                    @if (session('error'))
-                        <div class="alert alert-danger">{{ session('error') }}</div>
-                    @endif
-                    <div class="text-right d-flex justify-content-end">
-                        @if ($asset->available_qty > 0
-                        && (in_array(user()->permission('assign_company_asset_to_employee'), ['all', 'added','branch']))
-                        )
-                            <div class="">
-                                <x-forms.link-primary :link="route('company-assets.assign', $asset->id)" class="mr-3 openRightModal" icon="plus">
-                                    @lang('app.assign')
-                                </x-forms.link-primary>
-                            </div>
-                        @endif
-                        <a href="{{ route('company-assets.index') }}" class="btn btn-sm btn-primary">Back</a>
-                        @if (in_array(user()->permission('view_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both','branch']))
-                        <a href="{{ route('company-assets.view-assign', $asset->id) }}" class="btn btn-sm btn-primary openRightModal ml-2">
-                            <i class="fa fa-history mr-2"></i> Assignment History
-                        </a>
-                        @endif
+                    @if (session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
+                    @if (session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <x-cards.data-row :label="__('app.name')" :value="$asset->name ?: '--'" />
+                            <x-cards.data-row :label="__('app.catalog')" :value="$asset->catalog ?: '--'" />
+                            <x-cards.data-row :label="__('SKU No')" :value="$asset->sku_no ?: '--'" />
+                            <x-cards.data-row :label="__('app.type')" :value="$asset->type ?: '--'" />
+                            <x-cards.data-row :label="__('app.brand')" :value="$asset->brand ?: '--'" />
+                        </div>
+                        <div class="col-md-6">
+                            <x-cards.data-row :label="__('app.department')" :value="optional($asset->department)->name ?? '--'" />
+                            <x-cards.data-row :label="__('app.branchName')" :value="optional($asset->branch)->name ?? '--'" />
+                            <x-cards.data-row :label="__('app.status')" :value="$assetLabel($asset->status)" />
+                        </div>
                     </div>
-                    <x-cards.data-row :label="__('app.catalog')" :value="$asset->catalog" />
-                    <x-cards.data-row :label="__('SKU No')" :value="$asset->sku_no" />
-                    <x-cards.data-row :label="__('Name')" :value="$asset->name" />
-                    <x-cards.data-row :label="__('Type')" :value="$asset->type" />
-                    <x-cards.data-row :label="__('Brand')" :value="$asset->brand" />
-                    <x-cards.data-row :label="__('app.department')" :value="$asset->department->name ?? 'N/A'" />
-                    <x-cards.data-row :label="__('app.branchName')" :value="$asset->branch->name ?? 'N/A'" />
-                    <x-cards.data-row :label="__('app.qty')" :value="$asset->qty" />
-                    <x-cards.data-row :label="__('app.availableQty')" :value="$asset->available_qty" />
-                    <x-cards.data-row :label="__('app.status')" :value="ucfirst($asset->status)" />
 
-                    <h4>Serial Numbers</h4>
-                    @foreach ($serials as $serial)
-                        <x-cards.data-row :label="$serial->serial_no" :value="ucfirst($serial->status)" />
-                    @endforeach
-                    {{-- Assignment Assets  --}}
-                    <h4>@lang('app.assignment')</h4>
+                    {{-- At-a-glance --}}
+                    <div class="d-flex flex-wrap mt-2" style="gap: 8px;">
+                        <span class="badge badge-success f-12 p-2">{{ $countBy('available') }} available</span>
+                        <span class="badge badge-warning f-12 p-2">{{ $countBy('pending') }} reserved</span>
+                        <span class="badge badge-info f-12 p-2">{{ $countBy('assigned') }} issued</span>
+                        @if ($flaggedCount)
+                            <span class="badge badge-danger f-12 p-2">{{ $flaggedCount }} lost / damaged / retired</span>
+                        @endif
+                        <span class="badge badge-light f-12 p-2">{{ $serials->count() }} units total</span>
+                    </div>
 
-                    <br>
-                    <br>
+                    {{-- Units --}}
+                    <h4 class="mt-4 mb-2 f-16">Units</h4>
                     <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
+                        <table class="table table-bordered mb-0">
+                            <thead class="text-uppercase f-11 text-dark-grey">
                                 <tr>
+                                    <th style="width: 50px;">#</th>
                                     <th>@lang('app.serialNo')</th>
+                                    <th style="width: 110px;">@lang('app.status')</th>
                                     <th>@lang('app.employee')</th>
-                                    <th>@lang('app.signature')</th>
-                                    <th>@lang('app.status')</th>
-                                    <th>@lang('app.action')</th>
+                                    <th class="text-right" style="white-space: nowrap;">@lang('app.action')</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @php
-                                    $viewPermission = user()->permission('view_assign_company_assets_to_employee');
-                                    $assignments = $asset->assignments();
-                                    if ($viewPermission == 'added') {
-                                        $assignments = $assignments->where('added_by', user()->id);
-                                    }
-                                    if ($viewPermission == 'owned') {
-                                        $assignments = $assignments->where('employee_id', user()->id);
-                                    }
-                                    if ($viewPermission == 'both') {
-                                        $assignments = $assignments->where('employee_id', user()->id)->orWhere('added_by', user()->id);
-                                    }
-                                    if ($viewPermission == 'branch' && !hr_has_all_branch_access('company_assets')) {
-                                        $assignments = $assignments->where('branch_id', user()->branch_id);
-                                    }
-                                    $assignments = $assignments->get();
-                                @endphp
-                                @forelse ($assignments as $assignment)
+                                @forelse ($serials as $i => $serial)
                                     @php
-                                        $signatureFile = ($assignment->signed_document) ? asset_url_local_s3('asset' . '/' . $assignment->signed_document) : '';
+                                        $a = $serial->assignment;                       // AssetAssignment|null
+                                        $holder = optional(optional($a)->employee)->name;
+                                        $sigFile = ($a && $a->signed_document) ? asset_url_local_s3('asset/' . $a->signed_document) : '';
                                     @endphp
                                     <tr>
-                                        <td>{{ $assignment->serial_no }}</td>
-                                        <td>{{ $assignment->employee->name ?? 'N/A' }}</td>
+                                        <td>{{ $i + 1 }}</td>
+                                        <td class="text-darkest-grey f-w-500">{{ $serial->serial_no }}</td>
+                                        <td><span class="badge {{ $serialBadge($serial->status) }}">{{ ucfirst($serial->status) }}</span></td>
                                         <td>
-                                            @if ($assignment->signed_document)
-                                                <a href="{{ $signatureFile }}" target="_blank">
-                                                    View Signature
-                                                </a>
-                                            @else
-                                                --
+                                            {{ $holder ?: '--' }}
+                                            @if ($sigFile)
+                                                <a href="{{ $sigFile }}" target="_blank" rel="noopener" class="f-11 d-block"><i class="fa fa-file-signature mr-1"></i> signed doc</a>
                                             @endif
                                         </td>
-                                        <td>{{ $assignment->status }}</td>
-                                        <td>
-                                            @if (in_array(user()->permission('edit_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both','branch']) && $assignment->status === 'Pending')
-                                                <a href="{{ route('company-assets.edit-assign', [$assignment->id]) }}" class="btn btn-sm btn-primary openRightModal">
-                                                    <i class="fa fa-edit mr-2"></i>
-                                                    @lang('app.edit')
-                                                </a>
-                                            @endif
+                                        <td class="text-right" style="white-space: nowrap;">
+                                            <div class="d-inline-flex align-items-center flex-nowrap" style="gap: 4px;">
+                                                {{-- AVAILABLE --}}
+                                                @if ($serial->status === $S_AVAILABLE)
+                                                    @if ($canAssign)
+                                                        <a href="{{ route('company-assets.assign', [$asset->id, 'serial_id' => $serial->id]) }}"
+                                                           class="btn btn-xs btn-primary openRightModal">
+                                                            <i class="fa fa-user-plus mr-1"></i> Assign
+                                                        </a>
+                                                    @endif
+                                                    @if ($canFlagSerials)
+                                                        <div class="dropdown d-inline-block">
+                                                            <button class="btn btn-xs btn-outline-secondary dropdown-toggle" data-toggle="dropdown">Flag</button>
+                                                            <div class="dropdown-menu dropdown-menu-right">
+                                                                <a class="dropdown-item serial-status" data-serial="{{ $serial->id }}" data-status="lost">Mark lost</a>
+                                                                <a class="dropdown-item serial-status" data-serial="{{ $serial->id }}" data-status="damaged">Mark damaged</a>
+                                                                <a class="dropdown-item serial-status" data-serial="{{ $serial->id }}" data-status="retired">Retire</a>
+                                                            </div>
+                                                        </div>
+                                                    @endif
 
-                                            @if (in_array(user()->permission('edit_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both','branch']) && $assignment->status === 'Pending')
-                                                <a href="javascript:;" class="btn btn-sm btn-danger delete-assignment" data-assignment-id="{{ $assignment->id }}">
-                                                    <i class="fa fa-trash mr-2"></i>
-                                                    @lang('app.delete')
-                                                </a>
-                                            @endif
-                                            @if (in_array(user()->permission('upload_signature_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both','branch']) == 'all' && !$assignment->signed_document)
-                                                <a href="{{ route('company-assets.upload-signature', [$assignment->id]) }}" class="btn btn-sm btn-primary ">
-                                                    <i class="fa fa-upload mr-2"></i>
-                                                    Upload Signature
-                                                </a>
-                                            @endif
+                                                {{-- PENDING (reserved, not signed) --}}
+                                                @elseif ($serial->status === $S_PENDING && $a)
+                                                    <a href="{{ route('company-assets.generate-pdf', $a->id) }}" class="btn btn-xs btn-outline-dark" target="_blank" rel="noopener">
+                                                        <i class="fa fa-file-pdf mr-1"></i> Handover
+                                                    </a>
+                                                    @if ($canSign)
+                                                        <a href="{{ route('company-assets.upload-signature', [$a->id]) }}" class="btn btn-xs btn-success">
+                                                            <i class="fa fa-upload mr-1"></i> Signature
+                                                        </a>
+                                                    @endif
+                                                    @if ($canEditAssign)
+                                                        <a href="{{ route('company-assets.edit-assign', [$a->id]) }}" class="btn btn-xs btn-primary openRightModal">
+                                                            <i class="fa fa-edit mr-1"></i> @lang('app.edit')
+                                                        </a>
+                                                        <a href="javascript:;" class="btn btn-xs btn-danger delete-assignment" data-assignment-id="{{ $a->id }}">
+                                                            <i class="fa fa-trash mr-1"></i> @lang('app.delete')
+                                                        </a>
+                                                    @endif
 
-                                            @if (in_array(user()->permission('upload_signature_assign_company_assets_to_employee'), ['all', 'added', 'owned', 'both','branch']) == 'all' && $assignment->signed_document)
-                                                <a href="{{ route('company-assets.return', [$assignment->id]) }}" class="btn btn-sm btn-primary ">
-                                                    <i class="fa fa-undo mr-2"></i>
-                                                    Return Asset
-                                                </a>
-                                            @endif
+                                                {{-- ASSIGNED (signed, out) --}}
+                                                @elseif ($serial->status === $S_ASSIGNED && $a)
+                                                    <a href="{{ route('company-assets.generate-pdf', $a->id) }}" class="btn btn-xs btn-outline-dark" target="_blank" rel="noopener">
+                                                        <i class="fa fa-file-pdf mr-1"></i> Handover
+                                                    </a>
+                                                    <a href="{{ route('company-assets.return-pdf', $a->id) }}" class="btn btn-xs btn-outline-dark" target="_blank" rel="noopener">
+                                                        <i class="fa fa-file-pdf mr-1"></i> Return PDF
+                                                    </a>
+                                                    @if ($canSign)
+                                                        <a href="{{ route('company-assets.return', [$a->id]) }}" class="btn btn-xs btn-warning">
+                                                            <i class="fa fa-undo mr-1"></i> Return
+                                                        </a>
+                                                    @endif
 
+                                                {{-- LOST / DAMAGED / RETIRED --}}
+                                                @elseif ($canFlagSerials)
+                                                    <a class="btn btn-xs btn-outline-success serial-status" data-serial="{{ $serial->id }}" data-status="available">
+                                                        <i class="fa fa-undo mr-1"></i> Restore
+                                                    </a>
+                                                @endif
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="4" class="text-center">@lang('messages.noRecordFound')</td>
-                                    </tr>
+                                    <tr><td colspan="5" class="text-center">@lang('messages.noRecordFound')</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -166,92 +204,35 @@
 </div>
 
 <script>
-    $('body').on('click', '.delete-insurance', function() {
-        var id = $(this).data('insurance-id');
-        Swal.fire({
-            title: "@lang('messages.sweetAlertTitle')",
-            text: "@lang('messages.recoverRecord')",
-            icon: 'warning',
-            showCancelButton: true,
-            focusConfirm: false,
-            confirmButtonText: "@lang('messages.confirmDelete')",
-            cancelButtonText: "@lang('app.cancel')",
-            customClass: {
-                confirmButton: 'btn btn-primary mr-3',
-                cancelButton: 'btn btn-secondary'
-            },
-            showClass: {
-                popup: 'swal2-noanimation',
-                backdrop: 'swal2-noanimation'
-            },
-            buttonsStyling: false
-        }).then((result) => {
-            if (result.isConfirmed) {
-                var url = "{{ route('insurance.destroy', ':id') }}";
-                url = url.replace(':id', id);
+    (function () {
+        function swal(text, cb) {
+            Swal.fire({
+                title: "@lang('messages.sweetAlertTitle')", text: text, icon: 'warning',
+                showCancelButton: true, focusConfirm: false,
+                confirmButtonText: "@lang('messages.confirmDelete')", cancelButtonText: "@lang('app.cancel')",
+                customClass: { confirmButton: 'btn btn-primary mr-3', cancelButton: 'btn btn-secondary' },
+                showClass: { popup: 'swal2-noanimation', backdrop: 'swal2-noanimation' }, buttonsStyling: false
+            }).then((r) => { if (r.isConfirmed) cb(); });
+        }
 
-                var token = "{{ csrf_token() }}";
-
-                $.easyAjax({
-                    type: 'POST',
-                    url: url,
-                    blockUI: true,
-                    data: {
-                        '_token': token,
-                        '_method': 'DELETE'
-                    },
-                    success: function(response) {
-                        if (response.status == "success") {
-                            showTable();
-                            window.location.href = response.redirectUrl
-                        }
-                    }
-                });
-            }
+        $('body').on('click', '#company-asset-detail .delete-assignment', function () {
+            var id = $(this).data('assignment-id');
+            swal("@lang('messages.recoverRecord')", function () {
+                var url = "{{ route('company-assets.delete-assign', ':id') }}".replace(':id', id);
+                $.easyAjax({ type: 'GET', url: url, blockUI: true, success: function () { window.location.reload(); } });
+            });
         });
-    });
 
-    $('body').on('click', '.delete-assignment', function() {
-        var id = $(this).data('assignment-id');
-        Swal.fire({
-            title: "@lang('messages.sweetAlertTitle')",
-            text: "@lang('messages.recoverRecord')",
-            icon: 'warning',
-            showCancelButton: true,
-            focusConfirm: false,
-            confirmButtonText: "@lang('messages.confirmDelete')",
-            cancelButtonText: "@lang('app.cancel')",
-            customClass: {
-                confirmButton: 'btn btn-primary mr-3',
-                cancelButton: 'btn btn-secondary'
-            },
-            showClass: {
-                popup: 'swal2-noanimation',
-                backdrop: 'swal2-noanimation'
-            },
-            buttonsStyling: false
-        }).then((result) => {
-            if (result.isConfirmed) {
-                var url = "{{ route('company-assets.delete-assign', ':id') }}";
-                url = url.replace(':id', id);
-
-                var token = "{{ csrf_token() }}";
-
+        $('body').on('click', '#company-asset-detail .serial-status', function () {
+            var serial = $(this).data('serial'), status = $(this).data('status');
+            swal("Change this unit's status to \"" + status + "\"?", function () {
+                var url = "{{ route('company-assets.serial-status', ['serialId' => 0]) }}".replace('/serial/0/status', '/serial/' + serial + '/status');
                 $.easyAjax({
-                    type: 'POST',
-                    url: url,
-                    blockUI: true,
-                    data: {
-                        '_token': token,
-                        '_method': 'GET'
-                    },
-                    success: function(response) {
-                        if (response.status == "success") {
-                            window.location.reload();
-                        }
-                    }
+                    type: 'POST', url: url, blockUI: true,
+                    data: { _token: "{{ csrf_token() }}", status: status },
+                    success: function () { window.location.reload(); }
                 });
-            }
+            });
         });
-    });
+    })();
 </script>

@@ -42,7 +42,7 @@ class EmployeeSystemSyncService
         }
     }
 
-    public function syncEmployeeProfileToLinkedSystems(User $hrUser): void
+    public function syncEmployeeProfileToLinkedSystems(User $hrUser, bool $throwOnFailure = false): void
     {
         $employeeDetail = $hrUser->employeeDetail;
 
@@ -95,6 +95,25 @@ class EmployeeSystemSyncService
                 }
             } catch (\Throwable $e) {
                 Log::error("Failed to sync employee #{$hrUser->id} profile to {$access->system}: " . $e->getMessage());
+
+                if ($throwOnFailure) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    public function revokeLinkedSystemAccess(User $employee): void
+    {
+        $accesses = EmployeeSystemAccess::where('employee_id', $employee->id)
+            ->where('is_active', true)
+            ->get();
+
+        foreach ($accesses as $access) {
+            if ($access->system === 'dms') {
+                DB::table('users')->where('id', $access->system_user_id)->update(['is_login_allowed' => 0, 'updated_at' => now()]);
+            } elseif ($access->system === 'dobs') {
+                DB::table('dobs_user')->where('id', $access->system_user_id)->update(['is_login_allowed' => 0]);
             }
         }
     }

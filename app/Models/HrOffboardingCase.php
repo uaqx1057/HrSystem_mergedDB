@@ -11,10 +11,25 @@ class HrOffboardingCase extends BaseModel
 		'last_working_date' => 'date',
 		'resignation_date' => 'date',
 		'completed_at' => 'datetime',
+		'approved_at' => 'datetime',
+		'rejected_at' => 'datetime',
+		'access_revoked_at' => 'datetime',
+		'reverted_at' => 'datetime',
+		'settlement_amount' => 'decimal:2',
 	];
 
 	public function employee()
 	{
 		return $this->belongsTo(User::class, 'employee_id')->withoutGlobalScopes();
+	}
+
+	public function tasks()
+	{
+		return $this->hasMany(HrOffboardingTask::class, 'case_id');
+	}
+
+	public function termination()
+	{
+		return $this->hasOne(EmployeeTermination::class, 'offboarding_case_id');
 	}
 }

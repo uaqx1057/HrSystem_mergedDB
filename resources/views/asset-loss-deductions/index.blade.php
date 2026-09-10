@@ -78,7 +78,7 @@
                                 <td>{{ $deduction->loss_amount }}</td>
                                 <td>{{ $deduction->deducted_amount }}</td>
                                 <td>{{ $deduction->loss_amount - $deduction->deducted_amount }}</td>
-                                <td class="{{ $deduction->status == 'Deducted' ? 'text-success' : 'text-warning' }}">
+                                <td class="{{ $deduction->status == \App\Models\EmployeeAssessLoss::STATUS_SETTLED ? 'text-success' : 'text-warning' }}">
                                     <strong>{{ ucfirst($deduction->status) }}</strong></td>
                             </tr>
                         @empty

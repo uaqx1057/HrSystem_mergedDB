@@ -219,8 +219,10 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::resource('driver-types', DriverTypeController::class);
     Route::get('get-driver-type', [DriverController::class, 'getDriverType'])->name('drivers.get-driver-type');
     Route::resource('activity-log', ActivityLogController::class);
-    Route::resource('drivers', DriverController::class);
-    Route::resource('driver-documents', DriverDocumentController::class);
+    // /account/drivers list + standalone /account/driver-documents CRUD removed;
+    // driver CRUD stays (shared by Branches / Driver Types / Businesses / Coordinator Report),
+    // driver-documents keeps only the inline preview used by the driver profile.
+    Route::resource('drivers', DriverController::class)->except(['index']);
     Route::get(
         'driver-documents/{id}/preview',
         [DriverDocumentController::class, 'preview']
@@ -260,6 +262,12 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('employees/change-password', [EmployeeController::class, 'changePassword'])->name('employees.change-password');
     Route::post('employees/resignation', [EmployeeController::class, 'submitResignation'])->name('employees.resignation');
     Route::post('employees/{id}/save-step', [EmployeeController::class, 'saveStep'])->name('employees.save_step');
+    Route::get('hr-lifecycle/approvals', [\App\Http\Controllers\HrLifecycleController::class, 'approvalsInbox'])->name('hr-lifecycle.approvals');
+    Route::get('hr-lifecycle/my-resignation', [\App\Http\Controllers\HrLifecycleController::class, 'myResignation'])->name('hr-lifecycle.my-resignation');
+    Route::get('hr-lifecycle/it-worklist', [\App\Http\Controllers\HrLifecycleController::class, 'itWorklist'])->name('hr-lifecycle.it-worklist');
+    Route::get('hr-lifecycle/finance-worklist', [\App\Http\Controllers\HrLifecycleController::class, 'financeWorklist'])->name('hr-lifecycle.finance-worklist');
+    Route::get('hr-lifecycle/offboarding/{case}/console', [\App\Http\Controllers\HrLifecycleController::class, 'offboardingConsole'])->name('hr-lifecycle.offboarding.console');
+    Route::get('hr-lifecycle/offboarding/{case}/clearance-pdf', [\App\Http\Controllers\HrLifecycleController::class, 'clearancePdf'])->name('hr-lifecycle.offboarding.clearance-pdf');
     Route::get('hr-lifecycle/employees/{employee}', [\App\Http\Controllers\HrLifecycleController::class, 'show'])->name('hr-lifecycle.show');
     Route::get('hr-lifecycle', [\App\Http\Controllers\HrLifecycleController::class, 'index'])->name('hr-lifecycle.index');
     Route::get('hr-access-scopes', [\App\Http\Controllers\HrAccessScopeController::class, 'index'])->name('hr-access-scopes.index');
@@ -268,6 +276,8 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('hr-lifecycle/employees/{employee}/onboarding', [\App\Http\Controllers\HrLifecycleController::class, 'startOnboarding'])->name('hr-lifecycle.onboarding.start');
     Route::post('hr-lifecycle/employees/{employee}/offboarding', [\App\Http\Controllers\HrLifecycleController::class, 'startOffboarding'])->name('hr-lifecycle.offboarding.start');
     Route::post('hr-lifecycle/employees/{employee}/resignation', [\App\Http\Controllers\HrLifecycleController::class, 'startResignation'])->name('hr-lifecycle.resignation.start');
+    Route::post('hr-lifecycle/offboarding/{case}/approve', [\App\Http\Controllers\HrLifecycleController::class, 'approveOffboarding'])->name('hr-lifecycle.offboarding.approve');
+    Route::post('hr-lifecycle/offboarding/{case}/reject', [\App\Http\Controllers\HrLifecycleController::class, 'rejectOffboarding'])->name('hr-lifecycle.offboarding.reject');
     Route::post('hr-lifecycle/tasks/{type}/{task}/status', [\App\Http\Controllers\HrLifecycleController::class, 'updateTask'])->name('hr-lifecycle.tasks.update');
     Route::post('hr-lifecycle/{type}/cases/{case}/tasks', [\App\Http\Controllers\HrLifecycleController::class, 'addTask'])->name('hr-lifecycle.tasks.add');
     Route::post('hr-lifecycle/employees/{employee}/transfers', [\App\Http\Controllers\HrLifecycleController::class, 'requestTransfer'])->name('hr-lifecycle.transfer.request');
@@ -332,13 +342,25 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::post('company-assets/update-assign/{id}', [CompanyAssetController::class, 'updateAssignAsset'])->name('company-assets.update-assign');
     Route::get('company-assets/generate-pdf/{id}', [CompanyAssetController::class, 'generatePdf'])->name('company-assets.generate-pdf');
     Route::get('company-assets/return-pdf/{id}', [CompanyAssetController::class, 'returnPdf'])->name('company-assets.return-pdf');
+    Route::get('company-assets/return-form/{id}/pdf', [CompanyAssetController::class, 'rtPdf'])->name('company-assets.return-form.pdf');
+    Route::get('asset-recovery', [\App\Http\Controllers\AssetRecoveryController::class, 'index'])->name('asset-recovery.index');
+    Route::get('hr-settlement/settings', [\App\Http\Controllers\HrSettlementController::class, 'settings'])->name('hr-settlement.settings');
+    Route::post('hr-settlement/settings', [\App\Http\Controllers\HrSettlementController::class, 'saveSettings'])->name('hr-settlement.settings.save');
+    Route::get('hr-settlement/{termination}/edit', [\App\Http\Controllers\HrSettlementController::class, 'edit'])->name('hr-settlement.edit');
+    Route::post('hr-settlement/{termination}/worksheet', [\App\Http\Controllers\HrSettlementController::class, 'worksheet'])->name('hr-settlement.worksheet');
+    Route::post('hr-settlement/{termination}/finalize', [\App\Http\Controllers\HrSettlementController::class, 'finalize'])->name('hr-settlement.finalize');
+    Route::get('hr-settlement/{termination}/pdf', [\App\Http\Controllers\HrSettlementController::class, 'pdf'])->name('hr-settlement.pdf');
+    Route::post('asset-recovery/{id}/approve', [\App\Http\Controllers\AssetRecoveryController::class, 'approve'])->name('asset-recovery.approve');
+    Route::post('asset-recovery/{id}/waive', [\App\Http\Controllers\AssetRecoveryWaiverController::class, 'waive'])->name('asset-recovery.waive');
     Route::get('company-assets/upload-signature/{id}', [CompanyAssetController::class, 'uploadSignature'])->name('company-assets.upload-signature');
     Route::get('company-assets/view-assign/{id}', [CompanyAssetController::class, 'viewAssign'])->name('company-assets.view-assign');
     Route::post('company-assets/store-signature/{id}', [CompanyAssetController::class, 'storeSignature'])->name('company-assets.store-signature');
     // Return company asset
     Route::get('company-assets/return/{id}', [CompanyAssetController::class, 'returnAsset'])->name('company-assets.return');
     Route::post('company-assets/return/store/{id}', [CompanyAssetController::class, 'storeReturnAsset'])->name('company-assets.return.store');
+    Route::post('company-assets/assign/{id}/write-off', [CompanyAssetController::class, 'writeOffAssignment'])->name('company-assets.assign.write-off');
     Route::get('company-assets/delete-assign/{id}', [CompanyAssetController::class, 'destroyAssignAsset'])->name('company-assets.delete-assign');
+    Route::post('company-assets/serial/{serialId}/status', [CompanyAssetController::class, 'updateSerialStatus'])->name('company-assets.serial-status');
 
     Route::resource('company-assets', CompanyAssetController::class);
 
@@ -653,6 +675,8 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::get('hr-asset-custody', [\App\Http\Controllers\HrAssetCustodyController::class, 'index'])->name('hr-asset-custody.index');
     Route::post('hr-asset-custody/{assignment}/acknowledge', [\App\Http\Controllers\HrAssetCustodyController::class, 'acknowledge'])->name('hr-asset-custody.acknowledge');
     Route::post('hr-asset-custody/{assignment}/return', [\App\Http\Controllers\HrAssetCustodyController::class, 'return'])->name('hr-asset-custody.return');
+    Route::get('hr-asset-custody/certifications', [\App\Http\Controllers\HrAssetCustodyCertificationController::class, 'index'])->name('hr-asset-custody.certifications');
+    Route::post('hr-asset-custody/{assignment}/certify', [\App\Http\Controllers\HrAssetCustodyCertificationController::class, 'certify'])->name('hr-asset-custody.certify');
     Route::get('hr-candidates', [\App\Http\Controllers\HrCandidateController::class, 'index'])->name('hr-candidates.index');
     Route::get('hr-candidates/create', [\App\Http\Controllers\HrCandidateController::class, 'create'])->name('hr-candidates.create');
     Route::post('hr-candidates', [\App\Http\Controllers\HrCandidateController::class, 'store'])->name('hr-candidates.store');
@@ -853,10 +877,6 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
         Route::post('salary-setups/employees', [PayrollController::class, 'storeEmployeeSetup'])->name('salary-setups.employees.store');
         Route::put('salary-setups/employees/{payrollEmployeeSetup}', [PayrollController::class, 'updateEmployeeSetup'])->name('salary-setups.employees.update');
         Route::delete('salary-setups/employees/{payrollEmployeeSetup}', [PayrollController::class, 'destroyEmployeeSetup'])->name('salary-setups.employees.destroy');
-
-        Route::post('salary-setups/drivers', [PayrollController::class, 'storeDriverSetup'])->name('salary-setups.drivers.store');
-        Route::put('salary-setups/drivers/{payrollDriverSetup}', [PayrollController::class, 'updateDriverSetup'])->name('salary-setups.drivers.update');
-        Route::delete('salary-setups/drivers/{payrollDriverSetup}', [PayrollController::class, 'destroyDriverSetup'])->name('salary-setups.drivers.destroy');
 
         Route::post('salary-groups', [PayrollController::class, 'storeSalaryGroup'])->name('salary-groups.store');
         Route::put('salary-groups/{salaryGroup}', [PayrollController::class, 'updateSalaryGroup'])->name('salary-groups.update');

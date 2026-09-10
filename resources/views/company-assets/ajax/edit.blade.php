@@ -94,14 +94,15 @@
 
         function renderSerialFields() {
             let qty = parseInt($('#asset_qty').val()) || 0;
-            const maxQty = 200;
+            const maxQty = {{ $maxQty ?? 500 }};
 
-            const assignedCount = existingSerials.filter(s => s.status === 'assigned').length;
+            // reserved / issued / flagged units can never be dropped
+            const lockedStatuses = ['pending', 'assigned', 'lost', 'damaged', 'retired'];
+            const lockedCount = existingSerials.filter(s => lockedStatuses.includes(s.status)).length;
 
-            // never allow qty below number of already-assigned serials
-            if (qty < assignedCount) {
-                qty = assignedCount;
-                $('#asset_qty').val(assignedCount);
+            if (qty < lockedCount) {
+                qty = lockedCount;
+                $('#asset_qty').val(lockedCount);
             }
             if (qty > maxQty) {
                 qty = maxQty;
@@ -115,15 +116,16 @@
                 const existing = existingSerials[i];
 
                 if (existing) {
-                    const isAssigned = existing.status === 'assigned';
+                    const locked = ['pending', 'assigned', 'lost', 'damaged', 'retired'].includes(existing.status);
                     container.append(`
                         <div class="col-md-6 mb-2">
                             <input type="hidden" name="serial_id[]" value="${existing.id}">
                             <input type="text" class="form-control height-35 f-14" name="serial_no[]"
                                    value="${existing.serial_no}"
                                    placeholder="serial number ${i + 1}"
-                                   ${isAssigned ? 'readonly title="Assigned - cannot edit"' : ''}
+                                   ${locked ? 'readonly title="' + existing.status + ' - cannot edit"' : ''}
                                    required>
+                            ${locked ? '<small class="text-lightest f-11">' + existing.status + '</small>' : ''}
                         </div>
                     `);
                 } else {

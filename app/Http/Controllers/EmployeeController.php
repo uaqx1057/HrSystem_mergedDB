@@ -28,6 +28,7 @@ use App\Models\Team;
 use App\Models\Branch;
 use App\Models\User;
 use App\Services\EmployeeSystemSyncService;
+use App\Services\OffboardingService;
 use App\Helper\Files;
 use App\Helper\Reply;
 use App\Http\Requests\Admin\Employee\ImportProcessRequest;
@@ -39,6 +40,8 @@ use App\Http\Requests\User\CreateInviteLinkRequest;
 use App\Http\Requests\User\InviteEmailRequest;
 use App\Imports\EmployeeImport;
 use App\Jobs\ImportEmployeeJob;
+use App\Jobs\ProcessHrSystemSyncJob;
+use App\Jobs\SendTerminationCompletedNotifications;
 use App\Models\Appreciation;
 use App\Models\Attendance;
 use App\Models\Designation;
@@ -46,6 +49,8 @@ use App\Models\EmployeeDetails;
 use App\Models\HrCandidate;
 use App\Models\HrEmployeeEditState;
 use App\Models\HrOnboardingCase;
+use App\Models\HrSettlementForm;
+use App\Models\HrSystemSyncJob;
 use App\Models\EmployeeSkill;
 use App\Models\LanguageSetting;
 use App\Models\Leave;
@@ -2161,11 +2166,15 @@ class EmployeeController extends AccountBaseController
     public function terminatePending(Request $request, $id)
     {
         $user = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
+        $data = $request->validate([
+            'terminate_reason' => 'nullable|string|max:1000',
+            'last_working_date' => 'required|date',
+        ]);
         $this->terminatePermission = user()->permission('manage_termination_employees');
 
         abort_403(!(
             $this->terminatePermission == 'all'
-            || ($this->terminatePermission == 'branch' && user()->branch_id == 6)
+            || ($this->terminatePermission == 'branch' && HrAccess::canAccessEmployeeBranch(user(), $user, 'termination'))
             || ($this->terminatePermission == 'branch' && !is_null(user()->branch_id) && $user->branch_id == user()->branch_id)
         ));
 
@@ -2181,35 +2190,12 @@ class EmployeeController extends AccountBaseController
             return Reply::error(__('messages.assignmentAlreadyProcessed'));
         }
 
-        $termination = EmployeeTermination::create([
-            'user_id' => $user->id,
-            'company_id' => $user->company_id,
-            'initiated_by' => user()->id,
-            'exit_type' => EmployeeTermination::EXIT_TERMINATION,
-            'terminate_reason' => $request->terminate_reason,
-            'status' => EmployeeTermination::STATUS_PENDING,
+        app(OffboardingService::class)->request($user, user()->id, EmployeeTermination::EXIT_TERMINATION, [
+            'reason' => $data['terminate_reason'] ?: 'Termination initiated by HR.',
+            'last_working_date' => $data['last_working_date'],
         ]);
 
-        $itUsers = User::usersWithPermission('manage_it_clearance', $user->company_id);
-        $financeUsers = User::usersWithPermission('manage_finance_clearance', $user->company_id);
-
-        foreach ($itUsers as $itUser) {
-            try {
-                Mail::to($itUser->email)->send(new TerminationClearanceRequestMail($termination, 'IT'));
-            } catch (\Exception $e) {
-                Log::error('Failed to send IT clearance request email: ' . $e->getMessage());
-            }
-        }
-
-        foreach ($financeUsers as $financeUser) {
-            try {
-                Mail::to($financeUser->email)->send(new TerminationClearanceRequestMail($termination, 'Finance'));
-            } catch (\Exception $e) {
-                Log::error('Failed to send Finance clearance request email: ' . $e->getMessage());
-            }
-        }
-
-        return Reply::success(__('messages.pendingTermination'));
+        return Reply::success('Termination request submitted for approval.');
 
     }
 
@@ -2226,22 +2212,9 @@ class EmployeeController extends AccountBaseController
             return back()->with('error', 'You already have a pending offboard request.');
         }
 
-        $resignation = EmployeeTermination::create([
-            'user_id' => $employee->id,
-            'company_id' => $employee->company_id,
-            'initiated_by' => $employee->id,
-            'exit_type' => EmployeeTermination::EXIT_RESIGNATION,
-            'reason' => $data['reason'],
-            'terminate_reason' => $data['reason'],
-            'resignation_date' => $data['resignation_date'],
-            'last_working_date' => $data['last_working_date'],
-            'status' => EmployeeTermination::STATUS_PENDING,
-        ]);
+        app(OffboardingService::class)->request($employee, $employee->id, EmployeeTermination::EXIT_RESIGNATION, $data);
 
-        $admins = User::allAdmins($employee->company_id);
-        \Illuminate\Support\Facades\Notification::send($admins, new EmployeeResignationSubmitted($resignation));
-
-        return back()->with('success', 'Resignation submitted for clearance.');
+        return back()->with('success', 'Resignation submitted for approval.');
     }
 
     public function showTerminatePending($id)
@@ -2285,12 +2258,13 @@ class EmployeeController extends AccountBaseController
             ->findOrFail($id);
 
         $this->termination = EmployeeTermination::where('user_id', $id)
+            ->where('status', EmployeeTermination::STATUS_PENDING)
             ->latest('id')
             ->first();
 
         $this->assignedAssets = AssetAssignment::with('asset')
             ->where('employee_id', $id)
-            ->where('status', 'Assigned')
+            ->where('status', AssetAssignment::STATUS_ASSIGNED)
             ->get();
 
         $this->pendingAdvances = AdvanceSalary::where('employee_id', $id)
@@ -2299,7 +2273,7 @@ class EmployeeController extends AccountBaseController
             ->get();
 
         $this->assetDeductions = EmployeeAssessLoss::with(['companyAsset','employee','assetLoss'])->where('employee_id', $id)
-            ->where('status', 'Pending')
+            ->where('status', EmployeeAssessLoss::STATUS_PENDING)
             ->whereColumn('deducted_amount', '<', 'loss_amount')
             ->get();
 
@@ -2322,7 +2296,7 @@ class EmployeeController extends AccountBaseController
         $permission = user()->permission('manage_termination_employees');
 
         return $permission == 'all'
-            || ($permission == 'branch' && user()->branch_id == 6)
+            || ($permission == 'branch' && HrAccess::canAccessEmployeeBranch(user(), $user, 'termination'))
             || ($permission == 'branch' && !is_null(user()->branch_id) && $user->branch_id == user()->branch_id);
     }
 
@@ -2333,6 +2307,7 @@ class EmployeeController extends AccountBaseController
         abort_403(!$this->canManageTermination($user));
 
         $termination = EmployeeTermination::where('user_id', $id)
+            ->where('status', EmployeeTermination::STATUS_PENDING)
             ->latest('id')
             ->first();
 
@@ -2349,38 +2324,56 @@ class EmployeeController extends AccountBaseController
             return Reply::error('Both IT and Finance clearance must be issued before completing termination.');
         }
 
+        $settlement = HrSettlementForm::query()
+            ->where('employee_termination_id', $termination->id)
+            ->where('status', HrSettlementForm::STATUS_FINAL)
+            ->first();
+
+        if (!$settlement) {
+            return Reply::error('A finalized finance settlement is required before completing termination.');
+        }
+
+        if ($termination->offboarding_case_id) {
+            $case = $termination->offboardingCase()->withCount(['tasks as open_required_tasks' => function ($query) {
+                $query->where('is_required', true)->whereNotIn('status', ['completed', 'waived']);
+            }])->first();
+            if (!$case || $case->open_required_tasks > 0 || !$case->access_revoked_at) {
+                return Reply::error('All required offboarding tasks and linked-system access revocation must be completed first.');
+            }
+        }
+
         if (!$user->employeeDetail) {
             return Reply::error('Employee detail record not found.');
         }
 
-        $user->employeeDetail->notice_period_start_date = Carbon::parse($request->notice_period_start_date)->format('Y-m-d');
-        $user->employeeDetail->notice_period_end_date = Carbon::parse($request->notice_period_end_date)->format('Y-m-d');
-        $user->employeeDetail->last_date = now();
-        $user->employeeDetail->save();
+        DB::transaction(function () use ($request, $user, $termination) {
+            $user->employeeDetail->notice_period_start_date = Carbon::parse($request->notice_period_start_date)->format('Y-m-d');
+            $user->employeeDetail->notice_period_end_date = Carbon::parse($request->notice_period_end_date)->format('Y-m-d');
+            $user->employeeDetail->last_date = now();
+            $user->employeeDetail->save();
 
-        $user->status = 'deactive';
-        $user->save();
+            $user->status = 'deactive';
+            $user->save();
 
-        $termination->status = EmployeeTermination::STATUS_COMPLETED;
-        $termination->completed_by = user()->id;
-        $termination->completed_at = now();
-        $termination->save();
+            $termination->status = EmployeeTermination::STATUS_COMPLETED;
+            $termination->completed_by = user()->id;
+            $termination->completed_at = now();
+            $termination->save();
 
-        // Revoke DMS/DOBS login and push the final notice-period dates to any linked accounts.
-        app(EmployeeSystemSyncService::class)->syncEmployeeProfileToLinkedSystems($user->fresh());
-
-        $recipients = collect([$user])
-            ->merge(User::usersWithPermission('manage_it_clearance', $user->company_id))
-            ->merge(User::usersWithPermission('manage_finance_clearance', $user->company_id))
-            ->unique('email');
-
-        foreach ($recipients as $recipient) {
-            try {
-                Mail::to($recipient->email)->send(new TerminationCompletedMail($termination));
-            } catch (\Exception $e) {
-                Log::error('Failed to send termination completed email: ' . $e->getMessage());
+            if ($termination->offboarding_case_id && $termination->offboardingCase) {
+                app(OffboardingService::class)->complete($termination->offboardingCase, user()->id);
             }
-        }
+
+            $syncJob = HrSystemSyncJob::create([
+                'employee_id' => $user->id,
+                'offboarding_case_id' => $termination->offboarding_case_id,
+                'operation' => 'termination_completed',
+                'systems' => ['dms', 'dobs'],
+            ]);
+
+            ProcessHrSystemSyncJob::dispatch($syncJob->id)->afterCommit();
+            SendTerminationCompletedNotifications::dispatch($termination->id)->afterCommit();
+        });
 
         return Reply::success(__('messages.updateSuccess'));
     }
@@ -2414,6 +2407,10 @@ class EmployeeController extends AccountBaseController
             $termination->reverted_at = now();
             $termination->revert_reason = $request->revert_reason;
             $termination->save();
+
+            if ($termination->offboarding_case_id && $termination->offboardingCase) {
+                app(OffboardingService::class)->revert($termination->offboardingCase, user()->id, $request->revert_reason);
+            }
 
             if ($wasCompleted) {
                 $user->status = 'active';

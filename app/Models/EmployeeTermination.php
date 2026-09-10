@@ -23,6 +23,7 @@ class EmployeeTermination extends Model
     const EXIT_RESIGNATION = 'resignation';
 
     protected $fillable = [
+        'offboarding_case_id',
         'user_id',
         'exit_type',
         'company_id',
@@ -61,6 +62,11 @@ class EmployeeTermination extends Model
     public function employee(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id')->withoutGlobalScope(ActiveScope::class)->withOut('clientDetails');
+    }
+
+    public function offboardingCase(): BelongsTo
+    {
+        return $this->belongsTo(HrOffboardingCase::class, 'offboarding_case_id');
     }
 
     public function initiatedBy(): BelongsTo

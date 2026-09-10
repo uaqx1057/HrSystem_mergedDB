@@ -7,8 +7,8 @@
                 <div class="row p-20">
 
                     <div class="col-md-6">
-                        <x-forms.text fieldId="asset_catalog" :fieldLabel="__('app.catalog')" fieldName="catalog"
-                                      fieldRequired="true" :fieldPlaceholder="__('placeholders.catalog')">
+                        <x-forms.text fieldId="asset_name" :fieldLabel="__('app.name')" fieldName="name"
+                                      fieldRequired="true" :fieldPlaceholder="__('placeholders.name')">
                         </x-forms.text>
                     </div>
                     <div class="col-md-6">
@@ -17,18 +17,18 @@
                         </x-forms.text>
                     </div>
                     <div class="col-md-6">
-                        <x-forms.text fieldId="asset_name" :fieldLabel="__('app.name')" fieldName="name"
-                                      fieldRequired="true" :fieldPlaceholder="__('placeholders.name')">
+                        <x-forms.text fieldId="asset_catalog" :fieldLabel="__('app.catalog')" fieldName="catalog"
+                                      :fieldPlaceholder="__('placeholders.catalog')">
                         </x-forms.text>
                     </div>
                     <div class="col-md-6">
                         <x-forms.text fieldId="asset_type" :fieldLabel="__('app.type')" fieldName="type"
-                                      fieldRequired="true" :fieldPlaceholder="__('placeholders.type')">
+                                      :fieldPlaceholder="__('placeholders.type')">
                         </x-forms.text>
                     </div>
                     <div class="col-md-6">
                         <x-forms.text fieldId="asset_brand" :fieldLabel="__('app.brand')" fieldName="brand"
-                                      fieldRequired="true" :fieldPlaceholder="__('placeholders.brand')">
+                                      :fieldPlaceholder="__('placeholders.brand')">
                         </x-forms.text>
                     </div>
                     <div class="col-md-6">
@@ -61,8 +61,8 @@
                             </x-forms.input-group>
                         @else
                             <input type="hidden" value="{{ user()->branch_id }}" name="branch_id">
-                            <x-forms.text fieldId="basic_salary" :fieldLabel="__('app.branchName')" fieldName="basic_salary"
-                                fieldRequired="true" :fieldPlaceholder="__('placeholders.basic_salary')" :fieldValue="user()->branch?->name" :fieldReadOnly="true">
+                            <x-forms.text fieldId="asset_branch_name" :fieldLabel="__('app.branchName')" fieldName="asset_branch_name"
+                                :fieldValue="user()->branch?->name" :fieldReadOnly="true">
                             </x-forms.text>
                         @endif
                     </div>
@@ -96,7 +96,7 @@
 
         function generateSerialFields() {
             let qty = parseInt($('#asset_qty').val()) || 0;
-            const maxQty = 200; // sane upper limit, adjust as needed
+            const maxQty = {{ $maxQty ?? 500 }};
 
             if (qty > maxQty) {
                 qty = maxQty;

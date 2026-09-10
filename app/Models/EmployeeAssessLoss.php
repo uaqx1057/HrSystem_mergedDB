@@ -9,6 +9,12 @@ class EmployeeAssessLoss extends Model
 {
     use HasFactory;
 
+    // Normalised to lowercase by 2026_09_09_220000_normalize_hr_status_casing.
+    // 'settled' now covers a real payroll deduction, an approved recovery
+    // allocation, or a waiver - anything that closes the obligation.
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_SETTLED = 'settled';
+
     protected $fillable = [
         'company_asset_id',
         'employee_id',

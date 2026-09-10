@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Scopes\ActiveScope;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -28,10 +29,13 @@ class TerminationClearanceController extends AccountBaseController
     {
         $employee = User::withoutGlobalScope(ActiveScope::class)->findOrFail($id);
 
-        $termination = EmployeeTermination::where('user_id', $id)->latest('id')->first();
+        $termination = EmployeeTermination::where('user_id', $id)
+            ->where('status', EmployeeTermination::STATUS_PENDING)
+            ->latest('id')
+            ->first();
 
         if (!$termination) {
-            abort(404);
+            abort(404, 'No open offboarding exists for this employee.');
         }
 
         return [$employee, $termination];
@@ -63,7 +67,7 @@ class TerminationClearanceController extends AccountBaseController
         $this->termination = $termination;
         $this->assignedAssets = AssetAssignment::with('asset')
             ->where('employee_id', $employee->id)
-            ->where('status', 'Assigned')
+            ->where('status', AssetAssignment::STATUS_ASSIGNED)
             ->get();
 
         if (request()->ajax()) {
@@ -83,7 +87,7 @@ class TerminationClearanceController extends AccountBaseController
 
         $pendingAssets = AssetAssignment::with('asset')
             ->where('employee_id', $employee->id)
-            ->where('status', 'Assigned')
+            ->where('status', AssetAssignment::STATUS_ASSIGNED)
             ->get();
 
         if ($pendingAssets->isEmpty()) {
@@ -120,18 +124,31 @@ class TerminationClearanceController extends AccountBaseController
 
         $this->checkPermission('manage_it_clearance', $employee);
 
-        $pendingAssets = AssetAssignment::where('employee_id', $employee->id)
-            ->where('status', 'Assigned')
-            ->exists();
+        $issued = DB::transaction(function () use ($employee, $termination) {
+            $termination = EmployeeTermination::query()->whereKey($termination->id)->lockForUpdate()->firstOrFail();
+            $pendingAssets = AssetAssignment::where('employee_id', $employee->id)
+                ->where('status', AssetAssignment::STATUS_ASSIGNED)
+                ->lockForUpdate()
+                ->exists();
 
-        if ($pendingAssets) {
+            if ($pendingAssets) {
+                return false;
+            }
+
+            $termination->update([
+                'it_clearance_status' => EmployeeTermination::CLEARANCE_ISSUED,
+                'it_clearance_issued_by' => user()->id,
+                'it_clearance_issued_at' => now(),
+            ]);
+
+            return true;
+        });
+
+        if (!$issued) {
             return Reply::error('Asset return is pending.');
         }
 
-        $termination->it_clearance_status = EmployeeTermination::CLEARANCE_ISSUED;
-        $termination->it_clearance_issued_by = user()->id;
-        $termination->it_clearance_issued_at = now();
-        $termination->save();
+        $termination->refresh();
 
         $recipients = collect(User::usersWithPermission('manage_termination_employees', $employee->company_id))
             ->whereNotNull('email')
@@ -183,7 +200,7 @@ class TerminationClearanceController extends AccountBaseController
             ->get();
 
         $this->assetDeductions = EmployeeAssessLoss::with(['companyAsset','employee','assetLoss'])->where('employee_id', $id)
-            ->where('status', 'Pending')
+            ->where('status', EmployeeAssessLoss::STATUS_PENDING)
             ->whereColumn('deducted_amount', '<', 'loss_amount')
             ->get();
 
@@ -208,7 +225,7 @@ class TerminationClearanceController extends AccountBaseController
             ->get();
 
         $pendingAssetDeductions = EmployeeAssessLoss::with(['companyAsset','employee','assetLoss'])->where('employee_id', $employee->id)
-            ->where('status', 'Pending')
+            ->where('status', EmployeeAssessLoss::STATUS_PENDING)
             ->whereColumn('deducted_amount', '<', 'loss_amount')
             ->get();
 
@@ -254,18 +271,20 @@ class TerminationClearanceController extends AccountBaseController
             ->exists();
 
         $pendingAssetDeductions = EmployeeAssessLoss::with(['companyAsset','employee','assetLoss'])->where('employee_id', $employee->id)
-            ->where('status', 'Pending')
+            ->where('status', EmployeeAssessLoss::STATUS_PENDING)
             ->whereColumn('deducted_amount', '<', 'loss_amount')
             ->exists();
 
-        if ($pendingDues && $pendingAssetDeductions) {
+        if ($pendingDues || $pendingAssetDeductions) {
             return Reply::error('Financial clearance is pending.');
         }
 
-        $termination->finance_clearance_status = EmployeeTermination::CLEARANCE_ISSUED;
-        $termination->finance_clearance_issued_by = user()->id;
-        $termination->finance_clearance_issued_at = now();
-        $termination->save();
+        DB::transaction(function () use ($termination) {
+            $termination->finance_clearance_status = EmployeeTermination::CLEARANCE_ISSUED;
+            $termination->finance_clearance_issued_by = user()->id;
+            $termination->finance_clearance_issued_at = now();
+            $termination->save();
+        });
 
         $recipients = collect(User::usersWithPermission('manage_termination_employees', $employee->company_id))
             ->whereNotNull('email')

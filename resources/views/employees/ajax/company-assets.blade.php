@@ -54,7 +54,7 @@
                                         'both',
                                         'branch',
                                     ]) &&
-                                        $assignment->status === 'Pending' &&
+                                        $assignment->status === \App\Models\AssetAssignment::STATUS_PENDING &&
                                         !$assignment->signed_document)
                                     <a href="{{ route('company-assets.upload-signature', [$assignment->id, 'employee_id' => $companyAssetEmployeeId]) }}"
                                         class="btn btn-sm btn-secondary mr-2">

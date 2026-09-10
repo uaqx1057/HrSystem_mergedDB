@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\Company;
-use App\Models\PayrollDriverSetup;
 use App\Models\PayrollEmployeeSetup;
 use App\Models\SalarySlip;
 use Illuminate\Console\Command;
@@ -12,7 +11,7 @@ class GenerateMonthlyPayrollSlips extends Command
 {
     protected $signature = 'payroll:generate-monthly-slips';
 
-    protected $description = 'Generate monthly salary slips for configured employees and drivers';
+    protected $description = 'Generate monthly salary slips for configured employees (HR). Driver payroll is DMS-only.';
 
     public function handle(): void
     {
@@ -20,7 +19,6 @@ class GenerateMonthlyPayrollSlips extends Command
 
         foreach ($companies as $company) {
             $this->generateForEmployees((int) $company->id);
-            $this->generateForDrivers((int) $company->id);
         }
     }
 
@@ -49,30 +47,6 @@ class GenerateMonthlyPayrollSlips extends Command
         }
     }
 
-    private function generateForDrivers(int $companyId): void
-    {
-        $setups = PayrollDriverSetup::withoutGlobalScopes()
-            ->where('company_id', $companyId)
-            ->where('status', 'active')
-            ->get();
-
-        foreach ($setups as $setup) {
-            $this->createSlipIfMissing(
-                companyId: $companyId,
-                payeeType: 'driver',
-                payeeId: (int) $setup->driver_id,
-                basicSalary: (float) $setup->basic_salary,
-                allowance1: (float) $setup->accommodation_allowance,
-                allowance2: (float) $setup->car_allowance,
-                openingBalance: (float) $setup->opening_balance,
-                components: [
-                    'basic_salary' => (float) $setup->basic_salary,
-                    'accommodation_allowance' => (float) $setup->accommodation_allowance,
-                    'car_allowance' => (float) $setup->car_allowance,
-                ]
-            );
-        }
-    }
 
     private function createSlipIfMissing(
         int $companyId,

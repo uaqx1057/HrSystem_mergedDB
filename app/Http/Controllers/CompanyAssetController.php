@@ -6,6 +6,7 @@ use App\Http\Requests\CompanyAsset\StoreAssignRequest;
 use App\Mail\AssetLossDeductionMail;
 use App\Models\AssetAssignment;
 use App\Models\AssetAssignmentHistory;
+use App\Models\AssetReturnForm;
 use App\Models\Branch;
 use App\Models\CompanyAsset;
 use App\Helper\Reply;
@@ -14,7 +15,8 @@ use App\Models\CompanyAssetSerial;
 use App\Models\Department;
 use App\Models\EmployeeAssessLoss;
 use App\Models\User;
-use Barryvdh\DomPDF\Facade\Pdf; // This is the Facade
+use App\Services\AssetReturnService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use App\DataTables\CompanyAssetDataTable;
 use App\Http\Requests\CompanyAsset\StoreRequest;
@@ -23,37 +25,28 @@ use App\Mail\AssetAssignedMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class CompanyAssetController extends AccountBaseController
 {
+    /** How many serial rows a single asset may hold. */
+    private const MAX_QTY = 500;
+
     public function __construct()
     {
         parent::__construct();
         $this->pageTitle = __('app.menu.companyAssets');
-        // $this->middleware(function ($request, $next) {
-        //     abort_403(!in_array('employees', $this->user->modules));
-
-        //     $assignRole = user()->roles->pluck('name')->toArray();
-        //     abort_403(!in_array('admin', $assignRole));
-        //     return $next($request);
-        // });
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(CompanyAssetDataTable $dataTable)
     {
         $viewPermission = user()->permission('view_company_assets');
-        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both', 'branch']));
         $this->assignRole = user()->roles->pluck('name')->toArray();
 
         return $dataTable->render('company-assets.index', $this->data);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $this->addPermission = user()->permission('add_company_assets');
@@ -61,6 +54,7 @@ class CompanyAssetController extends AccountBaseController
 
         $this->departments = Department::orderBy('name')->get();
         $this->branches = Branch::latest()->get();
+        $this->maxQty = self::MAX_QTY;
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.create', $this->data)->render();
@@ -71,58 +65,60 @@ class CompanyAssetController extends AccountBaseController
         return view('company-assets.create', $this->data);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreRequest $request)
     {
         $viewPermission = user()->permission('add_company_assets');
         abort_403(!in_array($viewPermission, ['all', 'branch']));
 
-        $asset = new CompanyAsset();
-        $asset->name = $request->name;
-        $asset->catalog = $request->catalog ?? '';
-        $asset->sku_no = $request->sku_no ?? '';
-        $asset->type = $request->type ?? '';
-        $asset->brand = $request->brand ?? '';
-        $asset->department_id = $request->department_id;
-        $asset->branch_id = $request->branch_id;
-        $asset->qty = $request->qty;
-        $asset->available_qty = $request->qty;
-        $asset->status = 'Available';
-        $asset->added_by = user()->id;
-        $asset->save();
+        $asset = DB::transaction(function () use ($request) {
+            $asset = new CompanyAsset();
+            $asset->name = $request->name;
+            $asset->catalog = $request->catalog ?? '';
+            $asset->sku_no = $request->sku_no ?? '';
+            $asset->type = $request->type ?? '';
+            $asset->brand = $request->brand ?? '';
+            $asset->department_id = $request->department_id;
+            $asset->branch_id = $request->branch_id;
+            $asset->qty = 0;
+            $asset->available_qty = 0;
+            $asset->status = CompanyAsset::STATUS_AVAILABLE;
+            $asset->added_by = user()->id;
+            $asset->save();
 
-        foreach ($request->serial_no as $serialNo) {
-            $asset->serials()->create([
-                'serial_no' => trim($serialNo),
-                'status'    => 'available',
-            ]);
-        }
+            foreach ($request->serial_no as $serialNo) {
+                $asset->serials()->create([
+                    'serial_no' => trim($serialNo),
+                    'status'    => CompanyAssetSerial::STATUS_AVAILABLE,
+                ]);
+            }
 
-        $redirectUrl = urldecode($request->redirect_url);
+            $asset->syncAvailability();
 
-        if ($redirectUrl == '') {
-            $redirectUrl = route('company-assets.index');
-        }
+            return $asset;
+        });
+
+        $redirectUrl = urldecode((string) $request->redirect_url) ?: route('company-assets.index');
 
         return Reply::successWithData(__('messages.recordSaved'), ['redirectUrl' => $redirectUrl]);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
         $viewPermission = user()->permission('view_company_assets');
-        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both', 'branch']));
 
-        $this->asset = CompanyAsset::findOrFail($id);
-        $this->serials = $this->asset->serials()->orderBy('id')->get();
+        $this->asset = CompanyAsset::with(['department', 'branch'])->findOrFail($id);
 
         if (!$this->canManageRecord($this->asset, $viewPermission)) {
             abort(403);
         }
+
+        $this->serials = $this->asset->serials()
+            ->with(['assignment.employee'])
+            ->orderBy('id')
+            ->get();
+
+        $this->manualSerialStatuses = CompanyAssetSerial::MANUAL_STATUSES;
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.show', $this->data)->render();
@@ -133,9 +129,6 @@ class CompanyAssetController extends AccountBaseController
         return view('company-assets.create', $this->data);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         $viewPermission = user()->permission('edit_company_assets');
@@ -150,6 +143,7 @@ class CompanyAssetController extends AccountBaseController
         $this->departments = Department::orderBy('name')->get();
         $this->branches = Branch::latest()->get();
         $this->serials = $this->asset->serials()->orderBy('id')->get();
+        $this->maxQty = self::MAX_QTY;
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.edit', $this->data)->render();
@@ -160,144 +154,138 @@ class CompanyAssetController extends AccountBaseController
         return view('company-assets.create', $this->data);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateRequest $request, $id)
     {
         $viewPermission = user()->permission('edit_company_assets');
         abort_403(!in_array($viewPermission, ['all', 'added', 'branch']));
 
         $asset = CompanyAsset::findOrFail($id);
-        $asset->name = $request->name;
-        $asset->catalog = $request->catalog ?? '';
-        $asset->sku_no = $request->sku_no ?? '';
-        $asset->type = $request->type ?? '';
-        $asset->brand = $request->brand ?? '';
-        $asset->department_id = $request->department_id;
-        $asset->branch_id = $request->branch_id;
-        $asset->qty = $request->qty;
-        $asset->save();
 
-        $submittedIds = [];
-
-        foreach ($request->serial_no as $i => $serialNo) {
-            $serialId = $request->serial_id[$i] ?? null;
-
-            if ($serialId) {
-                // existing serial — update (readonly on frontend for assigned ones, but re-save is harmless)
-                $serial = CompanyAssetSerial::find($serialId);
-                if ($serial && $serial->company_asset_id == $asset->id) {
-                    $serial->serial_no = trim($serialNo);
-                    $serial->save();
-                    $submittedIds[] = $serial->id;
-                }
-            } else {
-                // new serial
-                $newSerial = $asset->serials()->create([
-                    'serial_no' => trim($serialNo),
-                    'status'    => 'available',
-                ]);
-                $submittedIds[] = $newSerial->id;
-            }
-        }
-
-        // remove serials that were dropped (only safe ones — never delete assigned)
-        $asset->serials()
-            ->whereNotIn('id', $submittedIds)
-            ->where('status', 'available')
-            ->delete();
-
-        // recompute available_qty from actual remaining 'available' serials
-        $asset->available_qty = $asset->serials()->where('status', 'available')->count();
-        $asset->save();
-
-        $redirectUrl = route('company-assets.index');
-        return Reply::successWithData(__('messages.updateSuccess'), ['redirectUrl' => $redirectUrl]);
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id)
-    {
-        $viewPermission = user()->permission('delete_company_assets');
-        abort_403(!in_array($viewPermission, ['all']));
-
-        $this->asset = CompanyAsset::findOrFail($id);
-
-        if (!$this->canManageRecord($this->asset, $viewPermission)) {
+        if (!$this->canManageRecord($asset, $viewPermission)) {
             abort(403);
         }
-        CompanyAsset::destroy($id);
-        AssetAssignment::where('company_asset_id',$id)->delete();
-        AssetAssignmentHistory::where('company_asset_id',$id)->delete();
 
-        $redirectUrl = route('company-assets.index');
-        return Reply::successWithData(__('messages.deleteSuccess'), ['redirectUrl' => $redirectUrl]);
-    }
+        // A serial that is reserved, out or flagged (lost/damaged/retired) can never be dropped.
+        $protectedCount = $asset->serials()
+            ->whereNotIn('status', [CompanyAssetSerial::STATUS_AVAILABLE])
+            ->count();
 
-    /**
-     * Apply quick actions (bulk delete).
-     */
-    public function applyQuickAction(Request $request)
-    {
-        $viewPermission = user()->permission('delete_company_assets');
-        abort_403(!in_array($viewPermission, ['all']));
-
-        if ($request->action_type === 'delete') {
-            $this->deleteRecords($request);
-            return Reply::success(__('messages.deleteSuccess'));
+        if ((int) $request->qty < $protectedCount) {
+            return Reply::error(__('messages.qtyBelowInUse', ['count' => $protectedCount]));
         }
 
-        return Reply::error(__('messages.selectAction'));
-    }
+        DB::transaction(function () use ($request, $asset) {
+            $asset->fill($request->only([
+                'name', 'catalog', 'sku_no', 'type', 'brand', 'department_id', 'branch_id',
+            ]));
+            $asset->save();
 
-    /**
-     * Delete multiple records.
-     */
-    protected function deleteRecords($request)
-    {
-        $deletePermission = user()->permission('delete_company_assets');
-        // abort_403($deletePermission != 'all');
+            $submittedIds = [];
 
-        $rowIds = explode(',', $request->row_ids);
+            foreach ($request->serial_no as $i => $serialNo) {
+                $serialId = $request->serial_id[$i] ?? null;
 
-        if (($key = array_search('on', $rowIds)) !== false) {
-            unset($rowIds[$key]);
-        }
-
-        $assets = CompanyAsset::whereIn('id', $rowIds)->get();
-        // dd($assets);
-            foreach ($assets as $asset) {
-                // dd($deletePermission);
-                if ($this->canManageRecord($asset, $deletePermission)) {
-                    $asset->delete();
+                if ($serialId) {
+                    $serial = $asset->serials()->find($serialId);
+                    if ($serial) {
+                        $serial->serial_no = trim($serialNo);
+                        $serial->save();
+                        $submittedIds[] = $serial->id;
+                    }
+                } else {
+                    $newSerial = $asset->serials()->create([
+                        'serial_no' => trim($serialNo),
+                        'status'    => CompanyAssetSerial::STATUS_AVAILABLE,
+                    ]);
+                    $submittedIds[] = $newSerial->id;
                 }
             }
-        // CompanyAsset::whereIn('id', $rowIds)->delete();
+
+            // Soft-delete dropped serials — only the truly free ones, and the row is recoverable.
+            $asset->serials()
+                ->whereNotIn('id', $submittedIds)
+                ->where('status', CompanyAssetSerial::STATUS_AVAILABLE)
+                ->get()
+                ->each->delete();
+
+            $asset->syncAvailability();
+        });
+
+        return Reply::successWithData(__('messages.updateSuccess'), ['redirectUrl' => route('company-assets.index')]);
+    }
+
+    public function destroy($id)
+    {
+        $deletePermission = user()->permission('delete_company_assets');
+        abort_403(!in_array($deletePermission, ['all']));
+
+        $asset = CompanyAsset::findOrFail($id);
+
+        if (!$this->canManageRecord($asset, $deletePermission)) {
+            abort(403);
+        }
+
+        if ($asset->hasActiveAssignments()) {
+            return Reply::error(__('messages.assetHasActiveAssignments'));
+        }
+
+        DB::transaction(function () use ($asset) {
+            // Soft-delete the asset and its serials. History is kept for the audit trail.
+            $asset->serials()->get()->each->delete();
+            $asset->delete();
+        });
+
+        return Reply::successWithData(__('messages.deleteSuccess'), ['redirectUrl' => route('company-assets.index')]);
+    }
+
+    public function applyQuickAction(Request $request)
+    {
+        $deletePermission = user()->permission('delete_company_assets');
+        abort_403(!in_array($deletePermission, ['all']));
+
+        if ($request->action_type !== 'delete') {
+            return Reply::error(__('messages.selectAction'));
+        }
+
+        $rowIds = array_filter(explode(',', (string) $request->row_ids), fn ($v) => is_numeric($v));
+        $skipped = 0;
+
+        CompanyAsset::whereIn('id', $rowIds)->get()->each(function (CompanyAsset $asset) use ($deletePermission, &$skipped) {
+            if (!$this->canManageRecord($asset, $deletePermission) || $asset->hasActiveAssignments()) {
+                $skipped++;
+                return;
+            }
+            DB::transaction(function () use ($asset) {
+                $asset->serials()->get()->each->delete();
+                $asset->delete();
+            });
+        });
+
+        if ($skipped) {
+            return Reply::success(__('messages.deleteSuccessWithSkipped', ['count' => $skipped]));
+        }
+
+        return Reply::success(__('messages.deleteSuccess'));
     }
 
     public function assignAsset($id)
     {
         $this->addPermission = user()->permission('assign_company_asset_to_employee');
-        abort_403(!in_array($this->addPermission, ['all', 'added','branch']));
+        abort_403(!in_array($this->addPermission, ['all', 'added', 'branch']));
 
-       if(in_array($this->addPermission, ['all','branch']) ){
-            if($this->addPermission == 'branch' && hr_has_all_branch_access('company_assets')){
-                $employeePermission = 'all';
-            } else{
-                $employeePermission = $this->addPermission;
-            }
-        } else{
+        if (in_array($this->addPermission, ['all', 'branch'])) {
+            $employeePermission = ($this->addPermission === 'branch' && hr_has_all_branch_access('company_assets'))
+                ? 'all'
+                : $this->addPermission;
+        } else {
             $employeePermission = null;
         }
+
         $this->employees = User::allEmployees(null, true, $employeePermission);
         $this->company_asset_id = $id;
         $this->employeeId = request('employee_id');
         $this->asset = CompanyAsset::findOrFail($id);
-        $notAvailableSerials = AssetAssignment::where('company_asset_id', $id)->pluck('serial_no')->toArray();
-        $this->serials = $this->asset->serials()->whereNotIn('serial_no',$notAvailableSerials)->orderBy('id')->get();
+        $this->serials = $this->asset->serials()->available()->orderBy('id')->get();
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.assign', $this->data)->render();
@@ -310,41 +298,38 @@ class CompanyAssetController extends AccountBaseController
 
     public function storeAssignAsset(StoreAssignRequest $request)
     {
+        $assignPermission = user()->permission('assign_company_asset_to_employee');
+        abort_403(!in_array($assignPermission, ['all', 'added', 'branch']));
+
         $asset = CompanyAsset::findOrFail($request->company_asset_id);
+        $serial = $this->resolveSerial($asset, $request);
 
-        $qtyAssigned = (int) $request->qty;
-
-        if ($qtyAssigned > $asset->available_qty) {
-            return Reply::error(__('messages.qtyExceedsAvailable'));
+        if (!$serial || !$serial->isAvailable()) {
+            return Reply::error(__('messages.serialNotAvailable'));
         }
 
-        DB::beginTransaction();
-
-        try {
+        DB::transaction(function () use ($request, $asset, $serial) {
             $assign = new AssetAssignment();
             $assign->employee_id = $request->employee;
-            $assign->company_asset_id = $request->company_asset_id;
-            $assign->status = 'Pending';
+            $assign->company_asset_id = $asset->id;
+            $assign->company_asset_serial_id = $serial->id;
+            $assign->serial_no = $serial->serial_no;
+            $assign->status = AssetAssignment::STATUS_PENDING;
             $assign->branch_id = $asset->branch_id;
-            $assign->qty = $qtyAssigned;
-            $assign->serial_no = $request->serial_no;
+            $assign->qty = 1;
             $assign->added_by = user()->id;
             $assign->save();
 
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return Reply::error($e->getMessage());
-        }
+            $serial->update(['status' => CompanyAssetSerial::STATUS_PENDING]);
+            $asset->syncAvailability();
+        });
 
-        $redirectUrl = urldecode($request->redirect_url);
+        $redirectUrl = urldecode((string) $request->redirect_url);
 
-        if ($redirectUrl == '') {
-            if ($request->filled('employee_id')) {
-                $redirectUrl = route('employees.show', [$request->employee_id, 'tab' => 'company-assets']);
-            } else {
-                $redirectUrl = route('company-assets.show', $asset->id);
-            }
+        if ($redirectUrl === '') {
+            $redirectUrl = $request->filled('employee_id')
+                ? route('employees.show', [$request->employee_id, 'tab' => 'company-assets'])
+                : route('company-assets.show', $asset->id);
         }
 
         return Reply::successWithData(__('messages.recordSaved'), ['redirectUrl' => $redirectUrl]);
@@ -352,10 +337,10 @@ class CompanyAssetController extends AccountBaseController
 
     public function editAssignAsset($id)
     {
-        $assignment = AssetAssignment::find($id);
+        $assignment = AssetAssignment::with('serial')->findOrFail($id);
         $asset = $assignment->asset;
 
-        if ($assignment->status === 'Assigned') {
+        if ($assignment->isAssigned()) {
             abort_403(true);
         }
 
@@ -364,8 +349,14 @@ class CompanyAssetController extends AccountBaseController
         $this->employeeId = request('employee_id', $assignment->employee_id);
         $this->employees = User::allEmployees();
 
-        $notAvailableSerials = AssetAssignment::where('company_asset_id', $asset->id)->where('serial_no','<>', $assignment->serial_no)->pluck('serial_no')->toArray();
-        $this->serials = $this->asset->serials()->whereNotIn('serial_no',$notAvailableSerials)->orderBy('id')->get();
+        // available serials + the one this pending assignment currently holds
+        $this->serials = $asset->serials()
+            ->where(function ($q) use ($assignment) {
+                $q->where('status', CompanyAssetSerial::STATUS_AVAILABLE)
+                    ->orWhere('id', $assignment->company_asset_serial_id);
+            })
+            ->orderBy('id')
+            ->get();
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.edit-assign', $this->data)->render();
@@ -378,49 +369,54 @@ class CompanyAssetController extends AccountBaseController
 
     public function updateAssignAsset(StoreAssignRequest $request, $id)
     {
-        $assignment = AssetAssignment::findOrFail($request->id);
+        $assignment = AssetAssignment::with('serial')->findOrFail($request->id);
         $asset = $assignment->asset;
 
-        $newQty = (int) $request->qty;
-        $delta = $newQty - $assignment->qty;
-
-        if ($delta > $asset->available_qty) {
-            return Reply::error(__('messages.qtyExceedsAvailable'));
+        if ($assignment->isAssigned()) {
+            abort_403(true);
         }
 
-        DB::beginTransaction();
+        $newSerial = $this->resolveSerial($asset, $request);
 
-        try {
+        if (!$newSerial) {
+            return Reply::error(__('messages.serialNotAvailable'));
+        }
+
+        $serialChanged = (int) $newSerial->id !== (int) $assignment->company_asset_serial_id;
+
+        if ($serialChanged && !$newSerial->isAvailable()) {
+            return Reply::error(__('messages.serialNotAvailable'));
+        }
+
+        DB::transaction(function () use ($request, $assignment, $asset, $newSerial, $serialChanged) {
+            if ($serialChanged) {
+                $assignment->serial?->update(['status' => CompanyAssetSerial::STATUS_AVAILABLE]);
+                $newSerial->update(['status' => CompanyAssetSerial::STATUS_PENDING]);
+            }
 
             $assignment->employee_id = $request->employee;
-            $assignment->qty = $newQty;
-            $assignment->serial_no = $request->serial_no;
+            $assignment->company_asset_serial_id = $newSerial->id;
+            $assignment->serial_no = $newSerial->serial_no;
+            $assignment->qty = 1;
             $assignment->save();
 
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return Reply::error($e->getMessage());
-        }
+            $asset->syncAvailability();
+        });
 
-        $redirectUrl = route('company-assets.show', $id);
-
-        if ($request->filled('employee_id')) {
-            $redirectUrl = route('employees.show', [$request->employee_id, 'tab' => 'company-assets']);
-        }
+        $redirectUrl = $request->filled('employee_id')
+            ? route('employees.show', [$request->employee_id, 'tab' => 'company-assets'])
+            : route('company-assets.show', $asset->id);
 
         return Reply::successWithData(__('messages.recordSaved'), ['redirectUrl' => $redirectUrl]);
     }
 
     public function returnAsset($id)
     {
-
-        $this->assignment = AssetAssignment::find($id);
-        $asset = CompanyAsset::findOrFail($this->assignment->company_asset_id);
-        $this->asset = $asset;
+        $this->assignment = AssetAssignment::with(['serial', 'asset'])->findOrFail($id);
+        $this->authorizeAssignmentManagement($this->assignment);
+        $this->asset = CompanyAsset::findOrFail($this->assignment->company_asset_id);
         $this->employeeId = request('employee_id', $this->assignment->employee_id);
         $this->employees = User::allEmployees();
-
         $this->serials = $this->asset->serials()->orderBy('id')->get();
 
         if (request()->ajax()) {
@@ -435,110 +431,60 @@ class CompanyAssetController extends AccountBaseController
     public function storeReturnAsset(Request $request, $id)
     {
         $request->validate([
-            'qty' => 'required|integer|min:1',
-            'return_document' => 'required',
-            'loss_amount' => 'required_if:assesses_loss_damage,checked|nullable',
+            'return_document' => 'required|file',
+            'loss_amount'     => 'nullable|numeric|min:0|required_with:assesses_loss_damage',
         ]);
 
-        $assignment = AssetAssignment::find($request->id);
-        $asset = CompanyAsset::find($assignment->company_asset_id);
-        $qtyReturned = (int) $request->qty;
+        abort_404($request->filled('id') && (int) $request->id !== (int) $id);
 
-        if ($qtyReturned > $assignment->qty) {
-            return redirect()->back()->with('error', __('messages.qtyExceedsAvailable'));
-        }
+        $assignment = AssetAssignment::with(['serial', 'employee', 'asset'])->findOrFail($id);
+        $this->authorizeAssignmentManagement($assignment);
+        $asset = $assignment->asset;
 
-        if ($request->hasFile('return_document')) {
-            $path = \App\Helper\Files::uploadLocalOrS3($request->return_document, 'asset');
+        $path = \App\Helper\Files::uploadLocalOrS3($request->return_document, 'asset');
 
-            $remaining = $assignment->qty - $qtyReturned;
+        $form = app(AssetReturnService::class)->certifyReturn($assignment, user()->id, [
+            'return_document' => $path,
+            'accessories_checklist' => $request->input('accessories_checklist'),
+            'technical_inspection' => $request->input('technical_inspection'),
+            'data_clearance_notes' => $request->input('data_clearance_notes'),
+        ]);
 
-            $history = AssetAssignmentHistory::create([
-                'company_asset_id' => $asset->id,
-                'employee_id' => $assignment->employee_id,
-                'serial_no' => $assignment->serial_no,
-                'action_type' => 'Returned',
-                'qty' => $qtyReturned,
-                'signed_document' => $path,
-                'added_by' => user()->id,
-                'action_at' => now(),
-            ]);
-
-            $assetSerial = CompanyAssetSerial::where('company_asset_id', $assignment->company_asset_id)
-                ->where('serial_no', $assignment->serial_no)
-                ->where('status', 'assigned')
-                ->first();
-
-            if ($assetSerial) {
-                $assetSerial->update(['status' => 'available']);
-            }
-
-            $asset->available_qty += $qtyReturned;
-            $asset->status = $asset->available_qty == 0 ? 'Assigned' : 'Available';
-            $asset->save();
-
-            $remaining = max($remaining, 0);
-
-            if ($remaining < 1) {
-                $assignment->delete();
-            } else {
-                $assignment->update(['qty' => $remaining]);
-            }
-        }
-
-        if ($request->has('assesses_loss_damage')) {
+        if ($request->has('assesses_loss_damage') && $request->filled('loss_amount')) {
             $assessLoss = EmployeeAssessLoss::create([
-                'company_asset_id' => $asset->id,
-                'employee_id' => $assignment->employee_id,
-                'asset_assignment_history_id' => $history->id,
-                'loss_amount' => $request->loss_amount,
+                'company_asset_id'             => $asset->id,
+                'employee_id'                  => $assignment->employee_id,
+                'asset_assignment_history_id'  => $form->asset_assignment_history_id,
+                'loss_amount'                  => $request->loss_amount,
+                'status'                       => EmployeeAssessLoss::STATUS_PENDING,
             ]);
 
-            $financeUsers = User::usersWithPermission('manage_finance_clearance', $assignment->employee->company_id);
+            $companyId = optional($assignment->employee)->company_id;
+            $financeUsers = $companyId ? User::usersWithPermission('manage_finance_clearance', $companyId) : collect();
 
             foreach ($financeUsers as $financeUser) {
                 if (!empty($financeUser->email)) {
                     try {
-                        Mail::to($financeUser->email)
-                            ->send(new AssetLossDeductionMail($assessLoss, $asset, $assignment));
+                        Mail::to($financeUser->email)->send(new AssetLossDeductionMail($assessLoss, $asset, $assignment));
                     } catch (\Exception $e) {
-                        Log::error("Failed to send asset loss deduction email: " . $e->getMessage());
+                        Log::error('Failed to send asset loss deduction email: ' . $e->getMessage());
                     }
                 }
             }
         }
 
-        $redirectUrl = route('company-assets.show', $id);
-        if ($request->filled('employee_id')) {
-            $redirectUrl = route('employees.show', [$request->employee_id, 'tab' => 'company-assets']);
-        }
+        $redirectUrl = $request->filled('employee_id')
+            ? route('employees.show', [$request->employee_id, 'tab' => 'company-assets'])
+            : route('company-assets.show', $id);
 
         return redirect($redirectUrl)->with('success', __('messages.recordSaved'));
     }
 
-    public function generatePdf($id)
-    {
-        $assignment = AssetAssignment::find($id);
-        $asset = CompanyAsset::with(['assignments.employee', 'history.employee'])->findOrFail($assignment->company_asset_id);
-
-        $pdf = PDF::loadView('company-assets.pdf', compact('asset', 'assignment'));
-        return $pdf->download('asset_assignment.pdf');
-    }
-
-    public function returnPdf($id)
-    {
-        $assignment = AssetAssignment::find($id);
-        $asset = CompanyAsset::with(['assignments.employee', 'history.employee'])->findOrFail($assignment->company_asset_id);
-
-        $pdf = PDF::loadView('company-assets.return-pdf', compact('asset', 'assignment'));
-        return $pdf->download('asset_assignment-return.pdf');
-    }
-
     public function uploadSignature($id)
     {
-        $this->assignment = AssetAssignment::find($id);
-        $asset = CompanyAsset::findOrFail($this->assignment->company_asset_id);
-        $this->asset = $asset;
+        $this->assignment = AssetAssignment::with(['serial', 'asset'])->findOrFail($id);
+        $this->authorizeAssignmentManagement($this->assignment);
+        $this->asset = CompanyAsset::findOrFail($this->assignment->company_asset_id);
         $this->employeeId = request('employee_id', $this->assignment->employee_id);
 
         if (request()->ajax()) {
@@ -552,105 +498,190 @@ class CompanyAssetController extends AccountBaseController
 
     public function storeSignature(Request $request, $id)
     {
-        // dd($request->all());
-        $request->validate([
-            'signature' => 'required',
-        ]);
+        $request->validate(['signature' => 'required|file']);
 
-        // Load assignment with its relationships
-        $assignment = AssetAssignment::with(['employee', 'asset'])->find($request->id);
+        abort_404($request->filled('id') && (int) $request->id !== (int) $id);
 
-        // Only allow approval of a Pending assignment.
-        if ($assignment->status !== 'Pending') {
+        $assignment = AssetAssignment::with(['employee', 'asset', 'serial'])->findOrFail($id);
+        $this->authorizeAssignmentManagement($assignment);
+
+        if (!$assignment->isPending()) {
             return redirect()->route('company-assets.show', $id)
                 ->with('error', __('messages.assignmentAlreadyProcessed'));
         }
 
-        if ($request->hasFile('signature')) {
+        $serial = $assignment->serial ?? $assignment->asset->serials()
+            ->where('serial_no', $assignment->serial_no)
+            ->first();
 
-            // Approving the request reduces the available quantity.
-            $asset = $assignment->asset;
+        if (!$serial || !in_array($serial->status, [CompanyAssetSerial::STATUS_PENDING, CompanyAssetSerial::STATUS_AVAILABLE])) {
+            return redirect()->route('company-assets.show', $id)
+                ->with('error', __('messages.serialNotAvailable'));
+        }
 
-            // Guard: ensure enough quantity is still available. Because pending
-            // assignments don't reduce available_qty, another pending may have
-            // been approved first, so re-check BEFORE committing the deduction.
-            if ($assignment->qty > $asset->available_qty) {
-                return redirect()->route('company-assets.show', $id)
-                    ->with('error', __('messages.qtyExceedsAvailable'));
-            }
+        $path = \App\Helper\Files::uploadLocalOrS3($request->signature, 'asset');
 
-            $path = \App\Helper\Files::uploadLocalOrS3($request->signature, 'asset');
-
+        DB::transaction(function () use ($assignment, $serial, $path) {
             $assignment->signed_document = $path;
-            $assignment->status = 'Assigned';
+            $assignment->status = AssetAssignment::STATUS_ASSIGNED;
+            $assignment->company_asset_serial_id = $serial->id;
             $assignment->save();
 
-            $asset->available_qty -= $assignment->qty;
-            $asset->status = $asset->available_qty == 0 ? 'Assigned' : 'Available';
-            $asset->save();
+            $serial->update(['status' => CompanyAssetSerial::STATUS_ASSIGNED]);
 
             AssetAssignmentHistory::create([
-                'company_asset_id' => $assignment->company_asset_id,
-                'employee_id' => $assignment->employee_id,
-                'action_type' => 'Assigned',
-                'qty' => $assignment->qty,
-                'serial_no' => $assignment->serial_no,
-                'signed_document' => $path,
-                'added_by' => user()->id,
-                'action_at' => now(),
+                'company_asset_id'        => $assignment->company_asset_id,
+                'company_asset_serial_id' => $serial->id,
+                'employee_id'             => $assignment->employee_id,
+                'action_type'             => AssetAssignmentHistory::ACTION_ASSIGNED,
+                'qty'                     => 1,
+                'serial_no'               => $serial->serial_no,
+                'signed_document'         => $path,
+                'asset_assignment_id'     => $assignment->id,
+                'added_by'                => user()->id,
+                'action_at'               => now(),
             ]);
 
-            $assetSerial = CompanyAssetSerial::where('company_asset_id', $assignment->company_asset_id)->where('serial_no', $assignment->serial_no)->where('status', 'available')->first();
-            if($assetSerial){
-                $assetSerial->update([
-                    'status' => 'assigned'
-                ]);
-            }
+            $assignment->asset->syncAvailability();
+        });
 
-            // Send the email to the employee
-            try {
-                Mail::to($assignment->employee->email)->send(new AssetAssignedMail($assignment));
-            } catch (\Exception $e) {
-                // Log the error so the user doesn't see a crash if email fails
-                Log::error("Failed to send asset assignment email: " . $e->getMessage());
-            }
+        try {
+            Mail::to($assignment->employee->email)->send(new AssetAssignedMail($assignment));
+        } catch (\Exception $e) {
+            Log::error('Failed to send asset assignment email: ' . $e->getMessage());
         }
 
-        $redirectUrl = route('company-assets.show', $id);
-        if ($request->filled('employee_id')) {
-            $redirectUrl = route('employees.show', [$request->employee_id, 'tab' => 'company-assets']);
-        }
+        $redirectUrl = $request->filled('employee_id')
+            ? route('employees.show', [$request->employee_id, 'tab' => 'company-assets'])
+            : route('company-assets.show', $id);
 
         return redirect($redirectUrl)->with('success', __('messages.recordSaved'));
     }
 
+    /** Admin flags a single unit lost / damaged / retired, or brings it back to available. */
+    /** Write off a unit currently out with an employee: lost, damaged beyond repair, or retired. */
+    public function writeOffAssignment(Request $request, $id)
+    {
+        abort_404($request->filled('id') && (int) $request->id !== (int) $id);
+
+        $assignment = AssetAssignment::with(['serial', 'asset', 'employee'])->findOrFail($id);
+        $this->authorizeAssignmentManagement($assignment);
+
+        $data = $request->validate([
+            'outcome' => 'required|in:' . implode(',', [AssetReturnForm::OUTCOME_LOST, AssetReturnForm::OUTCOME_DAMAGED, AssetReturnForm::OUTCOME_RETIRED]),
+            'disposition_notes' => 'required|string|max:2000',
+            'recommended_recovery_amount' => 'nullable|numeric|min:0',
+            'recovery_reason' => 'nullable|string|max:1000|required_with:recommended_recovery_amount',
+        ]);
+
+        $serial = $assignment->serial ?? $assignment->asset->serials()->where('serial_no', $assignment->serial_no)->first();
+
+        if (!$serial) {
+            return Reply::error(__('messages.serialNotAvailable'));
+        }
+
+        app(AssetReturnService::class)->writeOff($serial, user()->id, $data['outcome'], $data);
+
+        $redirectUrl = $request->filled('employee_id')
+            ? route('employees.show', [$request->employee_id, 'tab' => 'company-assets'])
+            : route('company-assets.show', $assignment->company_asset_id);
+
+        return Reply::successWithData(__('messages.recordSaved'), ['redirectUrl' => $redirectUrl]);
+    }
+
+    public function updateSerialStatus(Request $request, $serialId)
+    {
+        $editPermission = user()->permission('edit_company_assets');
+        abort_403(!in_array($editPermission, ['all', 'added', 'branch']));
+
+        $data = $request->validate([
+            'status' => 'required|in:' . implode(',', CompanyAssetSerial::MANUAL_STATUSES),
+        ]);
+
+        $serial = CompanyAssetSerial::with('asset')->findOrFail($serialId);
+
+        if (!$this->canManageRecord($serial->asset, $editPermission)) {
+            abort(403);
+        }
+
+        // Never touch a unit that is reserved or out with someone.
+        if (in_array($serial->status, [CompanyAssetSerial::STATUS_PENDING, CompanyAssetSerial::STATUS_ASSIGNED])) {
+            return Reply::error(__('messages.serialInUseCannotFlag'));
+        }
+
+        DB::transaction(function () use ($serial, $data) {
+            $serial->update(['status' => $data['status']]);
+            $serial->asset->syncAvailability();
+        });
+
+        return Reply::successWithData(__('messages.updateSuccess'), ['redirectUrl' => route('company-assets.show', $serial->company_asset_id)]);
+    }
+
+    public function rtPdf($id)
+    {
+        $form = AssetReturnForm::with('asset')->findOrFail($id);
+        $permission = user()->permission('assign_company_asset_to_employee');
+        abort_403(!in_array($permission, ['all', 'added', 'branch']) || !$this->canManageRecord($form->asset, $permission));
+        $form = app(AssetReturnService::class)->generatePdf($form);
+        return Storage::download($form->pdf_path, $form->reference . '.pdf', ['Content-Type' => 'application/pdf']);
+    }
+    public function generatePdf($id)
+    {
+        $assignment = AssetAssignment::with([
+            'employee.employeeDetail.designation',
+            'employee.employeeDetail.department',
+            'employee.branch',
+            'serial',
+        ])->findOrFail($id);
+        $this->authorizeAssignmentManagement($assignment);
+
+        $asset = CompanyAsset::with(['department', 'branch'])->findOrFail($assignment->company_asset_id);
+        $company = company();
+
+        $pdf = PDF::loadView('company-assets.pdf', compact('asset', 'assignment', 'company'))->setPaper('letter');
+
+        return $pdf->download('asset-handover-' . ($assignment->serialLabel() ?: $asset->id) . '.pdf');
+    }
+
+    public function returnPdf($id)
+    {
+        $assignment = AssetAssignment::with([
+            'employee.employeeDetail.designation',
+            'employee.employeeDetail.department',
+            'employee.branch',
+            'serial',
+        ])->findOrFail($id);
+        $this->authorizeAssignmentManagement($assignment);
+
+        $asset = CompanyAsset::with(['department', 'branch'])->findOrFail($assignment->company_asset_id);
+        $company = company();
+
+        $pdf = PDF::loadView('company-assets.return-pdf', compact('asset', 'assignment', 'company'))->setPaper('letter');
+
+        return $pdf->download('asset-return-' . ($assignment->serialLabel() ?: $asset->id) . '.pdf');
+    }
+
     public function viewAssign($id)
     {
+        $viewPermission = user()->permission('view_assign_company_assets_to_employee');
+        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both', 'branch']));
+
         $employeeId = request('employee_id');
 
         $this->asset = CompanyAsset::with([
-            'assignments' => function ($query) use ($employeeId) {
-                if ($employeeId) {
-                    $query->where('employee_id', $employeeId);
-                }
-                $query->orderByDesc('id');
-            },
+            'assignments' => fn ($q) => $q->when($employeeId, fn ($qq) => $qq->where('employee_id', $employeeId))->orderByDesc('id'),
             'assignments.employee',
-            'history' => function ($query) use ($employeeId) {
-                if ($employeeId) {
-                    $query->where('employee_id', $employeeId);
-                }
-                $query->orderByDesc('action_at');
-            },
+            'assignments.serial',
+            'history' => fn ($q) => $q->when($employeeId, fn ($qq) => $qq->where('employee_id', $employeeId))->orderByDesc('action_at'),
             'history.employee',
         ])->findOrFail($id);
 
-        $this->assignment = $this->asset->assignments->first();
+        $this->assignments = $this->asset->assignments;
         $this->history = $this->asset->history;
 
         if (request()->ajax()) {
             $html = view('company-assets.ajax.show-assign', $this->data)->render();
-            return Reply::dataOnly(['status' => 'success', 'html' => $html, 'title' => 'View Assing Asset']);
+            return Reply::dataOnly(['status' => 'success', 'html' => $html, 'title' => 'Assignment History']);
         }
 
         $this->view = 'company-assets.ajax.show-assign';
@@ -659,23 +690,44 @@ class CompanyAssetController extends AccountBaseController
 
     public function destroyAssignAsset($id)
     {
-        $viewPermission = user()->permission('edit_assign_company_assets_to_employee');
-        abort_403(!in_array($viewPermission, ['all', 'added', 'owned', 'both','branch']));
+        $editPermission = user()->permission('edit_assign_company_assets_to_employee');
+        abort_403(!in_array($editPermission, ['all', 'added', 'owned', 'both', 'branch']));
 
-        $assignment = AssetAssignment::findOrFail($id);
+        $assignment = AssetAssignment::with('serial')->findOrFail($id);
         $asset = CompanyAsset::findOrFail($assignment->company_asset_id);
 
-        // Only a Pending (not yet approved) assignment can be deleted without
-        // affecting the available quantity. Approved assignments must be returned.
-        if ($assignment->status === 'Pending') {
-            $assignment->delete();
-        } else {
+        if (!$assignment->isPending()) {
             return redirect()->route('company-assets.show', $asset->id)
                 ->with('error', __('messages.assignmentCannotDelete'));
         }
 
+        DB::transaction(function () use ($assignment, $asset) {
+            if ($assignment->serial && $assignment->serial->status === CompanyAssetSerial::STATUS_PENDING) {
+                $assignment->serial->update(['status' => CompanyAssetSerial::STATUS_AVAILABLE]);
+            }
+            $assignment->delete();
+            $asset->syncAvailability();
+        });
+
         return redirect()->route('company-assets.show', $asset->id)
             ->with('success', __('messages.deleteSuccess'));
+    }
+
+    /**
+     * Resolve the target serial from either the new company_asset_serial_id
+     * field or the legacy serial_no string, scoped to this asset.
+     */
+    private function resolveSerial(CompanyAsset $asset, Request $request): ?CompanyAssetSerial
+    {
+        if ($request->filled('company_asset_serial_id')) {
+            return $asset->serials()->find($request->company_asset_serial_id);
+        }
+
+        if ($request->filled('serial_no')) {
+            return $asset->serials()->where('serial_no', trim($request->serial_no))->first();
+        }
+
+        return null;
     }
 
     protected function canManageRecord(CompanyAsset $asset, $permission): bool
@@ -688,10 +740,15 @@ class CompanyAssetController extends AccountBaseController
             return true;
         }
 
-        if ($permission === 'owned' && user()->id == $asset->assignments->employee_id) {
+        $ownsAssignment = $asset->relationLoaded('assignments')
+            ? $asset->assignments->contains('employee_id', user()->id)
+            : $asset->assignments()->where('employee_id', user()->id)->exists();
+
+        if ($permission === 'owned' && $ownsAssignment) {
             return true;
         }
-        if ($permission == 'both' && (user()->id == $asset->added_by || user()->id == $asset->assignments->employee_id)){
+
+        if ($permission === 'both' && ($asset->added_by == user()->id || $ownsAssignment)) {
             return true;
         }
 
@@ -700,6 +757,12 @@ class CompanyAssetController extends AccountBaseController
         }
 
         return false;
+    }
 
+    protected function authorizeAssignmentManagement(AssetAssignment $assignment): void
+    {
+        $permission = user()->permission('assign_company_asset_to_employee');
+        abort_403(!in_array($permission, ['all', 'added', 'branch']));
+        abort_403(!$this->canManageRecord($assignment->asset, $permission));
     }
 }

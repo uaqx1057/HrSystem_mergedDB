@@ -1,54 +1,61 @@
+@php
+    $backUrl = !empty($employeeId)
+        ? route('employees.show', [$employeeId, 'tab' => 'company-assets'])
+        : route('company-assets.show', $asset->id);
+@endphp
+
 <div class="row">
     <div class="col-sm-12">
         <form action="{{ route('company-assets.store-signature', $asset->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="id" value="{{ $assignment->id }}">
             <input type="hidden" name="employee_id" value="{{ $employeeId ?? $assignment->employee_id ?? '' }}">
-            <div class="add-client bg-white rounded">
-                <h4 class="mb-0 p-20 f-21 form-heading-background font-weight-normal text-capitalize border-bottom-grey">
-                    Upload Signature</h4>
-                <div class="row p-20">
-                    <div class="col-lg-12 text-right">
-                        <a href="{{ !empty($employeeId) ? route('employees.show', [$employeeId, 'tab' => 'company-assets']) : route('company-assets.show', $asset->id) }}" class="btn btn-sm btn-primary">Back</a>
-                    </div>
 
-                    <div class="col-lg-12">
-                        <a href="{{ route('company-assets.generate-pdf', $assignment->id) }}" target="_blank"
-                            rel="noopener noreferrer">
-                            Download Signature Form
-                        </a>
-                    </div>
-
-                    {{-- <div class="col-md-12">
-                        <label class="f-14 f-w-500">Signature</label>
-                        <input type="file" class="form-control" name="signature" id="signature" accept=".png,.jpg,.jpeg,.pdf">
-                        <!-- This block shows the error message -->
-                        @error('signature')
-                            <div class="invalid-feedback d-block mt-1" style="color: red">
-                                {{ $message }}
-                            </div>
-                        @enderror
-                    </div> --}}
-
-                    <div class="col-lg-12">
-                        <x-forms.file :fieldLabel="__('app.signature')" fieldName="signature" fieldId="signature" allowedFileExtensions="pdf png jpg jpeg svg" />
-                        @error('signature')
-                            <div class="invalid-feedback d-block mt-1" style="color: red">
-                                {{ $message }}
-                            </div>
-                        @enderror
-                    </div>
-
+            <div class="card bg-white border-0 b-shadow-4">
+                <div class="card-header form-heading-background border-bottom-grey d-flex justify-content-between align-items-center p-20">
+                    <h4 class="mb-0 f-18 font-weight-normal text-capitalize">@lang('app.signature')</h4>
+                    <a href="{{ $backUrl }}" class="btn btn-sm btn-secondary">
+                        <i class="fa fa-arrow-left mr-1"></i> @lang('app.back')
+                    </a>
                 </div>
 
-                <div class="pl-3 pb-2">
-                    <input type="submit" class="btn btn-primary rounded" value="Save">
-                    <x-forms.button-cancel :link="!empty($employeeId) ? route('employees.show', [$employeeId, 'tab' => 'company-assets']) : route('company-assets.show', $asset->id)" class="border-0">@lang('app.cancel')
-                    </x-forms.button-cancel>
+                <div class="card-body">
+                    {{-- Context summary --}}
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <x-cards.data-row :label="__('app.employee')" :value="$assignment->employee->name ?? '--'" />
+                        </div>
+                        <div class="col-md-4">
+                            <x-cards.data-row :label="__('app.name')" :value="$asset->name ?: '--'" />
+                        </div>
+                        <div class="col-md-4">
+                            <x-cards.data-row :label="__('app.serialNo')" :value="$assignment->serial_no ?: '--'" />
+                        </div>
+                    </div>
+
+                    <p class="f-13 text-dark-grey mb-3">
+                        Upload the asset handover form signed by the employee (PDF or image). Saving it approves the
+                        assignment and issues the asset.
+                    </p>
+
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <x-forms.file :fieldLabel="__('app.signature')" fieldName="signature" fieldId="signature"
+                                          allowedFileExtensions="pdf png jpg jpeg svg" />
+                            @error('signature')
+                                <div class="invalid-feedback d-block mt-1" style="color: red">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
                 </div>
 
+                <div class="card-footer bg-white border-top-grey">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-check mr-1"></i> @lang('app.save')
+                    </button>
+                    <x-forms.button-cancel :link="$backUrl" class="border-0">@lang('app.cancel')</x-forms.button-cancel>
+                </div>
             </div>
         </form>
-
     </div>
 </div>

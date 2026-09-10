@@ -30,15 +30,15 @@
                     <input type="hidden" name="qty" value="{{ $assignment ? $assignment->qty : 1 }}">
 
                     <div class="col-md-6">
-                        <x-forms.label class="" fieldId="serial_no"
+                        <x-forms.label class="" fieldId="company_asset_serial_id"
                             :fieldLabel="__('app.serialNo')" fieldRequired="true">
                         </x-forms.label>
                         <x-forms.input-group>
-                            <select class="form-control select-picker" name="serial_no"
-                                id="serial_no" data-live-search="true">
+                            <select class="form-control select-picker" name="company_asset_serial_id"
+                                id="company_asset_serial_id" data-live-search="true">
                                 <option value="">--</option>
                                 @foreach ($serials as $serial)
-                                    <option value="{{ $serial->serial_no }}" {{ ($assignment->serial_no == $serial->serial_no) ? 'selected' : '' }}>{{ $serial->serial_no }}</option>
+                                    <option value="{{ $serial->id }}" {{ ($assignment->company_asset_serial_id == $serial->id) ? 'selected' : '' }}>{{ $serial->serial_no }}</option>
                                 @endforeach
                             </select>
                         </x-forms.input-group>

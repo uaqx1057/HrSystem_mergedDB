@@ -266,7 +266,7 @@ $addDesignationPermission = user()->permission('add_designation');
                 data: data,
                 success: function(response) {
                     if (response.status == 'success') {
-                        window.location.href = '{{ route('drivers.index') }}';
+                        window.location.reload();
                     }
 
                 }

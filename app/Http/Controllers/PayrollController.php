@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\AdvanceSalary;
 use App\Models\Currency;
-use App\Models\Driver;
 use App\Models\EmployeeAllowance;
 use App\Models\EmployeeAssessLoss;
 use App\Models\EmployeeBankAccount;
@@ -12,7 +11,6 @@ use App\Models\EmployeeDetails;
 use App\Models\HrPayrollPreflightRun;
 use App\Models\EmployeeSalaryGroup;
 use App\Models\Order;
-use App\Models\PayrollDriverSetup;
 use App\Models\PayrollEmployeeSetup;
 use App\Models\PayrollCycle;
 use App\Models\PayrollSetting;
@@ -107,8 +105,6 @@ class PayrollController extends AccountBaseController
         $this->salarySlips = $this->salarySlips->paginate(15, ['*'], 'salary_slips_page')
             ->withQueryString();
 
-        $this->salarySlips->getCollection()->load('driver:id,name,email,mobile');
-
         $this->salaryGroups = SalaryGroup::withCount(['employees', 'components'])
             ->latest('id')
             ->paginate(15, ['*'], 'salary_groups_page')
@@ -138,11 +134,6 @@ class PayrollController extends AccountBaseController
         $this->employeeSetups = $this->employeeSetups->paginate(15, ['*'], 'employee_setups_page')
             ->withQueryString();
 
-        $this->driverSetups = PayrollDriverSetup::with(['driver:id,name,driver_id,iqaama_number'])
-            ->latest('id')
-            ->paginate(15, ['*'], 'driver_setups_page')
-            ->withQueryString();
-
         $this->payrollSetting = PayrollSetting::firstOrCreate(
             ['company_id' => company()->id],
             [
@@ -165,21 +156,6 @@ class PayrollController extends AccountBaseController
             $employeePermission = null;
         }
         $this->employees = User::allEmployees(null, true, $employeePermission);
-        $this->drivers = Driver::withoutGlobalScopes()
-            ->newQuery()
-            ->select('id', 'name', 'driver_id', 'iqaama_number', 'email', 'mobile', 'onboarding_stage', 'offboard_request', 'offboarding_stage')
-            ->orderBy('name')
-            ->get()
-            ->map(function (Driver $driver) {
-                $driver->payroll_display_name = $driver->name
-                    ?: ($driver->driver_id
-                        ?: ($driver->iqaama_number
-                            ? 'Driver ' . $driver->iqaama_number
-                            : 'Driver #' . $driver->id));
-                $driver->payroll_status_label = $this->resolveDriverPayrollStatusLabel($driver);
-
-                return $driver;
-            });
         $this->currencies = Currency::all(['id', 'currency_name', 'currency_symbol']);
         $this->allGroups = SalaryGroup::orderBy('group_name')->get(['id', 'group_name']);
         $this->allComponents = SalaryComponent::orderBy('component_name')->get(['id', 'component_name']);
@@ -203,7 +179,7 @@ class PayrollController extends AccountBaseController
 
         $this->viewPermission = user()->permission('view_payroll');
 
-        $query = SalarySlip::with(['user:id,name', 'driver:id,name', 'salaryGroup:id,group_name', 'paymentMethod:id,payment_method', 'cycle:id,cycle'])
+        $query = SalarySlip::with(['user:id,name', 'salaryGroup:id,group_name', 'paymentMethod:id,payment_method', 'cycle:id,cycle'])
             ->orderByDesc('id');
 
         if ($this->viewPermission == 'added') {
@@ -308,7 +284,6 @@ class PayrollController extends AccountBaseController
 
         $salarySlip->load([
             'user:id,name,email,mobile',
-            'driver:id,name,email,mobile',
             'salaryGroup:id,group_name',
             'paymentMethod:id,payment_method',
             'cycle:id,cycle',
@@ -326,7 +301,6 @@ class PayrollController extends AccountBaseController
 
         $salarySlip->load([
             'user:id,name,email,mobile',
-            'driver:id,name,email,mobile',
             'salaryGroup:id,group_name',
             'paymentMethod:id,payment_method',
             'cycle:id,cycle',
@@ -351,9 +325,8 @@ class PayrollController extends AccountBaseController
         abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'branch']));
 
         $validated = $request->validate([
-            'payee_type' => 'required|in:employee,driver',
+            'payee_type' => 'nullable|in:employee',
             'employee_id' => 'nullable|exists:users,id',
-            'driver_id' => 'nullable|exists:drivers,id',
             'user_id' => 'nullable',
             'salary_group_id' => 'nullable|exists:salary_groups,id',
             'basic_salary' => 'required|numeric|min:0',
@@ -376,8 +349,8 @@ class PayrollController extends AccountBaseController
             'loss_deductions' => 'nullable|array', // NEW
         ]);
 
-        $payeeType = $request->payee_type;
-        $payeeId = $payeeType === 'driver' ? $request->driver_id : $request->employee_id;
+        $payeeType = 'employee';
+        $payeeId = $request->employee_id;
 
         abort_403(empty($payeeId));
 
@@ -386,7 +359,7 @@ class PayrollController extends AccountBaseController
         // }
 
         $validated['user_id'] = $payeeId;
-        unset($validated['employee_id'], $validated['driver_id'], $validated['payee_type']);
+        unset($validated['employee_id'], $validated['payee_type']);
 
         $validated['company_id'] = company()->id;
         $validated['added_by'] = user()->id;
@@ -468,7 +441,7 @@ class PayrollController extends AccountBaseController
                     }
 
                     $loss = EmployeeAssessLoss::where('employee_id', $payeeId)
-                        ->where('status', 'Pending')
+                        ->where('status', EmployeeAssessLoss::STATUS_PENDING)
                         ->lockForUpdate()
                         ->find($lossId);
 
@@ -487,7 +460,7 @@ class PayrollController extends AccountBaseController
 
                     $loss->deducted_amount += $amount;
                     if ($loss->deducted_amount >= $loss->loss_amount) {
-                        $loss->status = 'Deducted';
+                        $loss->status = EmployeeAssessLoss::STATUS_SETTLED;
                     }
                     $loss->save();
                 }
@@ -505,9 +478,8 @@ class PayrollController extends AccountBaseController
 
 
         $validated = $request->validate([
-            'payee_type' => 'nullable|in:employee,driver',
+            'payee_type' => 'nullable|in:employee',
             'employee_id' => 'nullable|exists:users,id',
-            'driver_id' => 'nullable|exists:drivers,id',
             'user_id' => 'nullable',
             'salary_group_id' => 'nullable|exists:salary_groups,id',
             'basic_salary' => 'required|numeric|min:0',
@@ -529,16 +501,16 @@ class PayrollController extends AccountBaseController
             'paid_amount' => 'nullable|numeric|min:0',
         ]);
 
-        $payeeType = $request->payee_type ?: $salarySlip->payee_type;
+        $payeeType = $request->payee_type ?: ($salarySlip->payee_type ?: 'employee');
         $payeeId = $salarySlip->user_id;
 
-        if ($request->filled('employee_id') || $request->filled('driver_id')) {
-            $payeeId = $payeeType === 'driver' ? $request->driver_id : $request->employee_id;
+        if ($request->filled('employee_id')) {
+            $payeeId = $request->employee_id;
             abort_403(empty($payeeId));
         }
 
         $validated['user_id'] = $payeeId;
-        unset($validated['employee_id'], $validated['driver_id'], $validated['payee_type']);
+        unset($validated['employee_id'], $validated['payee_type']);
 
         $validated['last_updated_by'] = user()->id;
         $salaryJson = is_string($salarySlip->salary_json) ? json_decode($salarySlip->salary_json, true) : (array) $salarySlip->salary_json;
@@ -933,91 +905,8 @@ class PayrollController extends AccountBaseController
         return redirect()->route('payroll.index', ['tab' => 'salary-setups'])->with('success', __('messages.deleteSuccess'));
     }
 
-    public function storeDriverSetup(Request $request): RedirectResponse
-    {
-        // $isImpersonatingCompany = session()->has('impersonate');
-        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('add_payroll'), ['all', 'added']));
-
-        $validated = $request->validate([
-            'driver_id' => 'required|exists:drivers,id',
-            'basic_salary' => 'required|numeric|min:0',
-            'accommodation_allowance' => 'nullable|numeric|min:0',
-            'car_allowance' => 'nullable|numeric|min:0',
-            'opening_balance' => 'nullable|numeric|min:0',
-            'status' => 'required|in:active,inactive',
-        ]);
-
-        PayrollDriverSetup::updateOrCreate(
-            [
-                'company_id' => company()->id,
-                'driver_id' => $validated['driver_id'],
-            ],
-            [
-                'basic_salary' => $validated['basic_salary'],
-                'accommodation_allowance' => $validated['accommodation_allowance'] ?? 0,
-                'car_allowance' => $validated['car_allowance'] ?? 0,
-                'opening_balance' => $validated['opening_balance'] ?? 0,
-                'status' => $validated['status'],
-            ]
-        );
-
-        return redirect()->route('payroll.index', ['tab' => 'salary-setups'])->with('success', __('messages.recordSaved'));
-    }
-
-    public function updateDriverSetup(Request $request, PayrollDriverSetup $payrollDriverSetup): RedirectResponse
-    {
-        // $isImpersonatingCompany = session()->has('impersonate');
-        // abort_403(!$isImpersonatingCompany && !in_array(user()->permission('edit_payroll'), ['all', 'added']));
-
-        $validated = $request->validate([
-            'basic_salary' => 'required|numeric|min:0',
-            'accommodation_allowance' => 'nullable|numeric|min:0',
-            'car_allowance' => 'nullable|numeric|min:0',
-            'opening_balance' => 'nullable|numeric|min:0',
-            'status' => 'required|in:active,inactive',
-        ]);
-
-        $payrollDriverSetup->update([
-            'basic_salary' => $validated['basic_salary'],
-            'accommodation_allowance' => $validated['accommodation_allowance'] ?? 0,
-            'car_allowance' => $validated['car_allowance'] ?? 0,
-            'opening_balance' => $validated['opening_balance'] ?? 0,
-            'status' => $validated['status'],
-        ]);
-
-        return redirect()->route('payroll.index', ['tab' => 'salary-setups'])->with('success', __('messages.updateSuccess'));
-    }
-
-    public function destroyDriverSetup(PayrollDriverSetup $payrollDriverSetup): RedirectResponse
-    {
-        // $isImpersonatingCompany = session()->has('impersonate');
-        // abort_403(!$isImpersonatingCompany && (user()->permission('delete_payroll') === 'none' || user()->permission('delete_payroll') == 5));
-
-        $payrollDriverSetup->delete();
-
-        return redirect()->route('payroll.index', ['tab' => 'salary-setups'])->with('success', __('messages.deleteSuccess'));
-    }
-
-    private function resolveDriverPayrollStatusLabel(Driver $driver): string
-    {
-        $offboardingStage = strtolower((string) ($driver->offboarding_stage ?? ''));
-
-        if ($offboardingStage === 'completed') {
-            return 'Offboarding Completed';
-        }
-
-        $hasOffboarding = ((int) ($driver->offboard_request ?? 0) === 1) || !empty($offboardingStage);
-
-        if ($hasOffboarding) {
-            return 'Pending Offboarding';
-        }
-
-        if (strtolower((string) ($driver->onboarding_stage ?? '')) === 'completed') {
-            return 'Onboarding Completed';
-        }
-
-        return 'Pending Onboarding';
-    }
+    // Driver payroll lives entirely in DMS (dms.payroll / DriverPayrollController).
+    // The HR payroll module is employees only.
 
     private function resolveSalaryPeriod(int $year, string $month): array
     {
@@ -1108,7 +997,7 @@ class PayrollController extends AccountBaseController
     public function pendingAssessLosses(User $employee)
     {
         $losses = EmployeeAssessLoss::where('employee_id', $employee->id)
-            ->where('status', 'Pending')
+            ->where('status', EmployeeAssessLoss::STATUS_PENDING)
             ->whereColumn('deducted_amount', '<', 'loss_amount')
             ->orderBy('created_at')
             ->get(['id', 'created_at', 'loss_amount', 'deducted_amount', 'company_asset_id']);

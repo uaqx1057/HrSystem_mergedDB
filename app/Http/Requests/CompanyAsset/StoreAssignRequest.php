@@ -6,28 +6,20 @@ use App\Http\Requests\CoreRequest;
 
 class StoreAssignRequest extends CoreRequest
 {
-
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize()
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
     public function rules()
     {
         return [
-            'employee' => 'required',
-            'qty' => 'required|integer|min:1',
-            'serial_no' => 'required',
+            // create-assign sends company_asset_id; edit-assign sends id (the assignment)
+            'company_asset_id'        => 'sometimes|required|exists:company_assets,id',
+            'id'                      => 'sometimes|required|exists:asset_assignments,id',
+            'employee'                => 'required|exists:users,id',
+            'company_asset_serial_id' => 'required_without:serial_no|nullable|integer',
+            'serial_no'               => 'required_without:company_asset_serial_id|nullable|string',
         ];
     }
 }

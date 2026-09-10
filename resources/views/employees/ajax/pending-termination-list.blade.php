@@ -257,7 +257,8 @@
         var id = $(this).data('user-id');
         Swal.fire({
             title: "@lang('messages.sweetAlertTitle')",
-                text: "Submit an offboard request",
+                html: '<div class="form-group text-left"><label for="terminate_reason">Reason</label><textarea id="terminate_reason" class="form-control"></textarea></div>' +
+                    '<div class="form-group text-left"><label for="last_working_date">Last working date</label><input id="last_working_date" type="date" class="form-control" required></div>',
             icon: 'warning',
             showCancelButton: true,
             focusConfirm: false,
@@ -271,7 +272,15 @@
                 popup: 'swal2-noanimation',
                 backdrop: 'swal2-noanimation'
             },
-            buttonsStyling: false
+            buttonsStyling: false,
+            preConfirm: function() {
+                var lastWorkingDate = document.getElementById('last_working_date').value;
+                if (!lastWorkingDate) {
+                    Swal.showValidationMessage('Last working date is required.');
+                    return false;
+                }
+                return { reason: document.getElementById('terminate_reason').value, lastWorkingDate: lastWorkingDate };
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 var url = "{{ route('employees.terminate-pending', ':id') }}";
@@ -285,7 +294,9 @@
                     blockUI: true,
                     data: {
                         '_token': token,
-                        '_method': 'POST'
+                        '_method': 'POST',
+                        'terminate_reason': result.value.reason,
+                        'last_working_date': result.value.lastWorkingDate
                     },
                     success: function(response) {
                         if (response.status == "success") {

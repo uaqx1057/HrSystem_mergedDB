@@ -1311,7 +1311,7 @@ return array(
     'availableQty' => 'Available Qty',
     'assignment' => 'Assignment Asset',
     'returnCompanyAsset' => 'Return Company Asset',
-    'assignmentHistory'> 'Assignment History',
+    'assignmentHistory' => 'Assignment History',
     'revertTermination' => 'Revert Termination',
     'revertReasonOptional' => 'Reason (optional)',
     'ok' => 'Ok',

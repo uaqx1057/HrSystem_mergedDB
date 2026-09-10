@@ -141,28 +141,13 @@
                         <form method="POST" action="{{ route('payroll.salary-slips.store') }}">
                             @csrf
                             <div class="row">
-                                <div class="col-md-3 mb-2">
-                                    <label>Payee Type</label>
-                                    <select name="payee_type" id="payee_type" class="form-control" required>
-                                        <option value="employee">Employee</option>
-                                        <option value="driver">Driver</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3 mb-2" id="employee_select_wrap">
+                                <input type="hidden" name="payee_type" value="employee">
+                                <div class="col-md-4 mb-2" id="employee_select_wrap">
                                     <label>Employee</label>
                                     <select name="employee_id" id="employee_id" class="form-control">
                                         <option value="">--</option>
                                         @foreach ($employees as $employee)
                                             <option value="{{ $employee->id }}">{{ $employee->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-3 mb-2 d-none" id="driver_select_wrap">
-                                    <label>Driver</label>
-                                    <select name="driver_id" id="driver_id" class="form-control">
-                                        <option value="">--</option>
-                                        @foreach ($drivers as $driver)
-                                            <option value="{{ $driver->id }}">{{ $driver->payroll_display_name }} ({{ $driver->payroll_status_label }})</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -433,7 +418,7 @@
                                                 <td>{{ $deduction->loss_amount }}</td>
                                                 <td>{{ $deduction->deducted_amount }}</td>
                                                 <td>{{ $deduction->loss_amount - $deduction->deducted_amount }}</td>
-                                                <td class="{{ $deduction->status == 'Deducted' ? 'text-success' : 'text-warning' }}"><strong>{{ ucfirst($deduction->status) }}</strong></td>
+                                                <td class="{{ $deduction->status == \App\Models\EmployeeAssessLoss::STATUS_SETTLED ? 'text-success' : 'text-warning' }}"><strong>{{ ucfirst($deduction->status) }}</strong></td>
                                             </tr>
                                         @empty
                                             <tr>
@@ -562,112 +547,6 @@
                     </div>
                 </div>
 
-                {{-- <div class="col-md-6 mb-3">
-                    <div class="card">
-                        <div class="card-header btn-primary">Driver Salary Setup (One-Time)</div>
-                        <div class="card-body">
-                            @if (in_array($addPayrollPermission, ['all', 'added']))
-                                <form method="POST" action="{{ route('payroll.salary-setups.drivers.store') }}" class="mb-3">
-                                    @csrf
-                                    <div class="form-row">
-                                        <div class="col-md-6 mb-2">
-                                            <label>Driver</label>
-                                            <select name="driver_id" class="form-control" required>
-                                                <option value="">--</option>
-                                                @foreach ($drivers as $driver)
-                                                    <option value="{{ $driver->id }}">{{ $driver->payroll_display_name }} ({{ $driver->payroll_status_label }})</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label>Status</label>
-                                            <select name="status" class="form-control" required>
-                                                <option value="active">Active</option>
-                                                <option value="inactive">Inactive</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-4 mb-2">
-                                            <label>Basic</label>
-                                            <input type="number" step="0.01" min="0" name="basic_salary" class="form-control" required>
-                                        </div>
-                                        <div class="col-md-4 mb-2">
-                                            <label>Accommodation</label>
-                                            <input type="number" step="0.01" min="0" name="accommodation_allowance" class="form-control" value="0">
-                                        </div>
-                                        <div class="col-md-4 mb-2">
-                                            <label>Car</label>
-                                            <input type="number" step="0.01" min="0" name="car_allowance" class="form-control" value="0">
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label>Opening Balance</label>
-                                            <input type="number" step="0.01" min="0" name="opening_balance" class="form-control" value="0">
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Save Setup</button>
-                                </form>
-                            @endif
-
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Driver</th>
-                                            <th>Basic</th>
-                                            <th>Accommodation</th>
-                                            <th>Car</th>
-                                            <th>Open Bal</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($driverSetups as $setup)
-                                            <tr>
-                                                <td>{{ optional($setup->driver)->name ?: ('Driver #' . $setup->driver_id) }}</td>
-                                                <td>{{ $setup->basic_salary }}</td>
-                                                <td>{{ $setup->accommodation_allowance }}</td>
-                                                <td>{{ $setup->car_allowance }}</td>
-                                                <td>{{ $setup->opening_balance }}</td>
-                                                <td>{{ ucfirst($setup->status) }}</td>
-                                                <td>
-                                                    @if (in_array($editPayrollPermission, ['all', 'added']))
-                                                        <form method="POST" action="{{ route('payroll.salary-setups.drivers.update', $setup->id) }}" class="mb-1">
-                                                            @csrf
-                                                            @method('PUT')
-                                                            <div class="d-flex flex-wrap">
-                                                                <input type="number" step="0.01" min="0" name="basic_salary" value="{{ $setup->basic_salary }}" class="form-control form-control-sm mr-1 mb-1" style="width: 90px" required>
-                                                                <input type="number" step="0.01" min="0" name="accommodation_allowance" value="{{ $setup->accommodation_allowance }}" class="form-control form-control-sm mr-1 mb-1" style="width: 90px">
-                                                                <input type="number" step="0.01" min="0" name="car_allowance" value="{{ $setup->car_allowance }}" class="form-control form-control-sm mr-1 mb-1" style="width: 90px">
-                                                                <input type="number" step="0.01" min="0" name="opening_balance" value="{{ $setup->opening_balance }}" class="form-control form-control-sm mr-1 mb-1" style="width: 90px">
-                                                                <select name="status" class="form-control form-control-sm mr-1 mb-1" style="width: 100px">
-                                                                    <option value="active" {{ $setup->status === 'active' ? 'selected' : '' }}>Active</option>
-                                                                    <option value="inactive" {{ $setup->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                                                </select>
-                                                                <button type="submit" class="btn btn-sm btn-secondary mb-1">Update</button>
-                                                            </div>
-                                                        </form>
-                                                    @endif
-                                                    @if ($deletePayrollPermission != 'none' && $deletePayrollPermission != 5)
-                                                        <form method="POST" action="{{ route('payroll.salary-setups.drivers.destroy', $setup->id) }}" onsubmit="return confirm('Delete this setup?');">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                                        </form>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="7" class="text-center">No driver setups found.</td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                                {{ $driverSetups->links() }}
-                            </div>
-                        </div>
-                    </div>
-                </div> --}}
             </div>
         @endif
 
@@ -1179,53 +1058,22 @@
     </script>
     <script>
         (function () {
-            const payeeType = document.getElementById('payee_type');
-            const employeeWrap = document.getElementById('employee_select_wrap');
-            const driverWrap = document.getElementById('driver_select_wrap');
             const employeeId = document.getElementById('employee_id');
-            const driverId = document.getElementById('driver_id');
             const payeeUserId = document.getElementById('payee_user_id');
             const salaryMonth = document.getElementById('salary_month');
             const salaryYear = document.getElementById('salary_year');
             const salaryFrom = document.getElementById('salary_from');
             const salaryTo = document.getElementById('salary_to');
 
-            if (!payeeType || !employeeWrap || !driverWrap || !payeeUserId) {
+            if (!employeeId || !payeeUserId) {
                 return;
             }
 
             const syncPayee = function () {
-                if (payeeType.value === 'driver') {
-                    employeeWrap.classList.add('d-none');
-                    driverWrap.classList.remove('d-none');
-                    if (employeeId) {
-                        employeeId.disabled = true;
-                    }
-                    if (driverId) {
-                        driverId.disabled = false;
-                    }
-                    payeeUserId.value = driverId ? driverId.value : '';
-                }
-                else {
-                    driverWrap.classList.add('d-none');
-                    employeeWrap.classList.remove('d-none');
-                    if (driverId) {
-                        driverId.disabled = true;
-                    }
-                    if (employeeId) {
-                        employeeId.disabled = false;
-                    }
-                    payeeUserId.value = employeeId ? employeeId.value : '';
-                }
+                payeeUserId.value = employeeId.value || '';
             };
 
-            payeeType.addEventListener('change', syncPayee);
-            if (employeeId) {
-                employeeId.addEventListener('change', syncPayee);
-            }
-            if (driverId) {
-                driverId.addEventListener('change', syncPayee);
-            }
+            employeeId.addEventListener('change', syncPayee);
 
             const syncSalaryPeriod = function () {
                 if (!salaryMonth || !salaryYear || !salaryFrom || !salaryTo) {

@@ -25,7 +25,11 @@
                     <div class="text-right d-flex justify-content-end">
 
                         <a href="{{ route('employees.index') . '?tab=pending-offboard' }}"
-                            class="btn btn-sm btn-primary">Back</a>
+                            class="btn btn-sm btn-primary">Back</a>                        @if ($termination && in_array(user()->permission('manage_finance_clearance'), ['all', 'branch']))
+                            <a href="{{ route('hr-settlement.edit', $termination->id) }}" class="btn btn-sm btn-success ml-2">
+                                <i class="fa fa-money mr-2"></i> Finance Settlement
+                            </a>
+                        @endif
                         @if (($canManageTermination ?? false) && $termination && $termination->isFullyCleared())
                             <a href="javascript:;" data-id="{{ $employee->id }}"
                                 class="btn btn-sm btn-primary complete-termination-btn ml-2">
@@ -248,7 +252,7 @@
                                         <td>{{ $deduction->loss_amount }}</td>
                                         <td>{{ $deduction->deducted_amount }}</td>
                                         <td>{{ $deduction->loss_amount - $deduction->deducted_amount }}</td>
-                                        <td class="{{ $deduction->status == 'Deducted' ? 'text-success' : 'text-warning' }}">
+                                        <td class="{{ $deduction->status == \App\Models\EmployeeAssessLoss::STATUS_SETTLED ? 'text-success' : 'text-warning' }}">
                                             <strong>{{ ucfirst($deduction->status) }}</strong></td>
                                     </tr>
                                 @empty
@@ -274,11 +278,11 @@
             html:
                 '<div class="form-group text-left">' +
                     '<label for="notice_period_start_date">{{ $termination->exit_type === \App\Models\EmployeeTermination::EXIT_RESIGNATION ? 'Approval Start Date' : 'Notice Period Start' }}</label>' +
-                    '<input id="notice_period_start_date" type="date" class="form-control" />' +
+                    '<input id="notice_period_start_date" type="date" class="form-control" value="{{ $termination->resignation_date?->format('Y-m-d') ?? '' }}" />' +
                 '</div>' +
                 '<div class="form-group text-left">' +
                     '<label for="notice_period_end_date">{{ $termination->exit_type === \App\Models\EmployeeTermination::EXIT_RESIGNATION ? 'Last Working Date' : 'Notice Period End' }}</label>' +
-                    '<input id="notice_period_end_date" type="date" class="form-control" />' +
+                    '<input id="notice_period_end_date" type="date" class="form-control" value="{{ $termination->last_working_date?->format('Y-m-d') ?? '' }}" />' +
                 '</div>',
             icon: 'warning',
             showCancelButton: true,

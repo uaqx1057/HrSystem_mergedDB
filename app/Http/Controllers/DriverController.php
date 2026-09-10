@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\DataTables\BusinessesDriverDataTable;
-use App\DataTables\DriversDataTable;
 use App\DataTables\InsuranceDataTable;
 use App\Helper\Reply;
 use App\Http\Requests\Admin\Driver\StoreRequest;
@@ -33,16 +32,6 @@ class DriverController extends AccountBaseController
 
     public function getDriverType(Request $request){
         return DriverType::find($request->id);
-    }
-
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(DriversDataTable $dataTable)
-    {
-        $viewPermission = user()->permission('view_drivers');
-        abort_403(!in_array($viewPermission, ['all','branch']));
-        return $dataTable->render('drivers.index', $this->data);
     }
 
     /**
@@ -103,7 +92,7 @@ class DriverController extends AccountBaseController
             return Reply::successWithData(__('messages.recordSaved'), ['html' => $html, 'add_more' => true]);
         }
 
-        return Reply::successWithData(__('messages.recordSaved'), ['redirectUrl' => route('drivers.index')]);
+        return Reply::successWithData(__('messages.recordSaved'), ['redirectUrl' => route('driver-types.index')]);
     }
 
     public function ajaxLoadDriver(Request $request)
