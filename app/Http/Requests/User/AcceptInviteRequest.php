@@ -53,6 +53,14 @@ class AcceptInviteRequest extends FormRequest
 
         $rules['email'] = 'required|email:rfc|check_superadmin|unique:users,email,null,id,company_id,' . $invite->company->id;
 
+        // The invited-employee form is expat-only (iqama based).
+        if (request()->filled('iqama_no')) {
+            $rules['iqama_no'] = \App\Support\SaudiIdRules::iqama();
+        }
+        if (request()->filled('national_id')) {
+            $rules['national_id'] = \App\Support\SaudiIdRules::nationalId();
+        }
+
         return $rules;
     }
 
@@ -60,7 +68,7 @@ class AcceptInviteRequest extends FormRequest
     {
         return [
             'email.check_superadmin' => __('superadmin.emailAlreadyExist'),
-        ];
+        ] + \App\Support\SaudiIdRules::messages();
     }
 
 }

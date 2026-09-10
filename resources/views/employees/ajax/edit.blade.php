@@ -538,7 +538,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                         @lang('modules.employees.personalContactDetails')</h4>
                     <div class="row p-20">
 
-                        <div class="col-md-4 col-lg-3">
+                        <div class="col-md-4 col-lg-3 js-nationality">
                             <x-forms.select fieldId="country" fieldLabel="Nationality" fieldName="country" search="true">
                                 <option value="">--</option>
                                 @foreach ($countries as $item)
@@ -549,6 +549,7 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                         value="{{ $item->id }}">{{ $item->nicename }}</option>
                                 @endforeach
                             </x-forms.select>
+                            <input type="hidden" id="sa-country-id" value="{{ optional($countries->firstWhere('iso', 'SA'))->id }}">
                         </div>
                         <div class="col-md-4 col-lg-3">
                             <x-forms.label class="" fieldId="mobile" :fieldLabel="__('app.mobile')"></x-forms.label>
@@ -1088,8 +1089,19 @@ $(document).ready(function () {
         }
 
         if (step === 2) {
-
-
+            if ($('#employee_type').val() === 'saudi') {
+                var nid = $.trim($('#national_id').val());
+                if (!/^1\d{9}$/.test(nid)) {
+                    highlightError('#national_id', 'National ID must be exactly 10 digits and start with 1.', false);
+                    ok = false;
+                }
+            } else {
+                var iqama = $.trim($('#iqama_no').val());
+                if (!/^2\d{9}$/.test(iqama)) {
+                    highlightError('#iqama_no', 'Iqama number must be exactly 10 digits and start with 2.', false);
+                    ok = false;
+                }
+            }
         }
 
         if (step === 3) {
@@ -1355,6 +1367,13 @@ $(document).ready(function () {
         // Passport is required for expats, optional for Saudis.
         $('#passport_no').prop('required', !isSaudi);
         $('label[for="passport_no"] sup').toggle(!isSaudi);
+
+        // A Saudi national's nationality is fixed as Saudi Arabia.
+        $('.js-nationality').toggleClass('d-none', isSaudi);
+        var saId = $('#sa-country-id').val();
+        if (isSaudi && saId) {
+            $('#country').val(saId).selectpicker('refresh');
+        }
     }
 
     $('#employee_type').on('change', toggleEmployeeTypeFields);

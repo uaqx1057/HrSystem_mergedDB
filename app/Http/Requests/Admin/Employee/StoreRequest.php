@@ -65,12 +65,12 @@ class StoreRequest extends CoreRequest
         }
 
         if (request()->employee_type === 'saudi') {
-            $rules['national_id'] = 'required|string|max:50';
+            $rules['national_id'] = \App\Support\SaudiIdRules::nationalId();
             $rules['national_id_expiry_date'] = 'required|date_format:"' . $setting->date_format . '"';
         }
 
         if (request()->employee_type === 'expat') {
-            $rules['iqama_no'] = 'required|string|max:50';
+            $rules['iqama_no'] = \App\Support\SaudiIdRules::iqama();
             $rules['iqama_profession'] = 'required|string|max:100';
             $rules['iqama_expiry_date'] = 'required|date_format:"' . $setting->date_format . '"';
             $rules['iqama_image'] = 'required|image';
@@ -95,7 +95,7 @@ class StoreRequest extends CoreRequest
     {
         return [
             'email.check_superadmin' => __('superadmin.emailAlreadyExist'),
-        ];
+        ] + \App\Support\SaudiIdRules::messages();
     }
 
 }

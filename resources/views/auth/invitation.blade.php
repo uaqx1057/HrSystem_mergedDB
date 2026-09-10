@@ -318,7 +318,8 @@
 
                 <div class="inv-field">
                     <label class="text-left" >@lang('modules.employees.Iqama No') <sup>*</sup></label>
-                    <input type="text" name="iqama_no" id="iqama_no"
+                    <input type="text" name="iqama_no" id="iqama_no" inputmode="numeric" maxlength="10"
+                           pattern="2[0-9]{9}" title="10 digits, starting with 2"
                            placeholder="@lang('placeholders.iqama')">
                 </div>
 
@@ -554,6 +555,9 @@
                     var iqamaNo = $.trim($('#iqama_no').val());
                     if (iqamaNo === '') {
                         highlightError('#iqama_no', 'Iqama No is required.');
+                        ok = false;
+                    } else if (!/^2\d{9}$/.test(iqamaNo)) {
+                        highlightError('#iqama_no', 'Iqama number must be exactly 10 digits and start with 2.');
                         ok = false;
                     }
 

@@ -412,7 +412,7 @@
                                         :fieldPlaceholder="__('placeholders.passport_expiry_date')" />
                                 </div>
 
-                                <div class="col-lg-3 col-md-6 ">
+                                <div class="col-lg-3 col-md-6 expat-only-field">
                                     <x-forms.select fieldId="sponsor_kafala" :fieldLabel="__('modules.employees.Sponsor / kafala')" fieldName="sponsor_kafala" search="true">
                                         <option value="">--</option>
                                         @foreach ($companies as $company)
@@ -974,8 +974,19 @@
             }
 
             if (step === 2) {
-
-
+                if ($('#employee_type').val() === 'saudi') {
+                    var nid = $.trim($('#national_id').val());
+                    if (!/^1\d{9}$/.test(nid)) {
+                        highlightError('#national_id', 'National ID must be exactly 10 digits and start with 1.', false);
+                        ok = false;
+                    }
+                } else {
+                    var iqama = $.trim($('#iqama_no').val());
+                    if (!/^2\d{9}$/.test(iqama)) {
+                        highlightError('#iqama_no', 'Iqama number must be exactly 10 digits and start with 2.', false);
+                        ok = false;
+                    }
+                }
             }
 
             if (step === 3) {

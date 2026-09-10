@@ -78,11 +78,11 @@ class CareerController extends Controller
             'image' => 'nullable|file|max:5120|mimes:png,jpg,jpeg,svg,bmp',
 
             'employee_type' => 'required|in:saudi,expat',
-            'iqama_no' => $employeeType === 'expat' ? ['required', 'regex:/^2[0-9]{9}$/'] : 'nullable|string|max:50',
+            'iqama_no' => $employeeType === 'expat' ? \App\Support\SaudiIdRules::iqama() : \App\Support\SaudiIdRules::iqama(false),
             'iqama_profession' => $employeeType === 'expat' ? 'required|string|max:100' : 'nullable|string|max:100',
             'iqama_expiry_date' => $employeeType === 'expat' ? 'required|date' : 'nullable|date',
             'iqama_image' => 'nullable|file|max:5120|mimes:png,jpg,jpeg,svg,bmp',
-            'national_id' => $employeeType === 'saudi' ? ['required', 'regex:/^1[0-9]{9}$/'] : 'nullable|string|max:50',
+            'national_id' => $employeeType === 'saudi' ? \App\Support\SaudiIdRules::nationalId() : \App\Support\SaudiIdRules::nationalId(false),
             'national_id_expiry_date' => $employeeType === 'saudi' ? 'required|date' : 'nullable|date',
             'national_id_image' => 'nullable|file|max:5120|mimes:png,jpg,jpeg,svg,bmp',
             'passport_no' => 'nullable|string|max:50',
@@ -106,7 +106,7 @@ class CareerController extends Controller
             $rules['g-recaptcha-response'] = 'required';
         }
 
-        $request->validate($rules);
+        $request->validate($rules, \App\Support\SaudiIdRules::messages());
 
         // A Saudi national's nationality is fixed and there is no kafala transfer.
         $countryId = $request->country_id;

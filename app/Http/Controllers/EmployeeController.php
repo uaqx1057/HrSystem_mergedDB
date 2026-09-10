@@ -848,7 +848,7 @@ class EmployeeController extends AccountBaseController
         abort_unless(in_array($step, [1, 2, 3, 4, 5], true), 422);
 
         $employee = EmployeeDetails::firstOrNew(['user_id' => $user->id]);
-        $request->validate($this->employeeStepRules($step, $employee));
+        $request->validate($this->employeeStepRules($step, $employee), \App\Support\SaudiIdRules::messages());
 
         $nextVersion = null;
         DB::transaction(function () use ($request, $step, $user, $employee, &$nextVersion) {
@@ -936,7 +936,7 @@ class EmployeeController extends AccountBaseController
 
         return match ($step) {
             1 => ['employee_id' => 'required|max:50|unique:employee_details,employee_id,' . $employee->id . ',id,company_id,' . company()->id, 'name' => 'required|max:50', 'department' => 'required', 'designation' => 'required', 'branch_id' => 'nullable|exists:branches,id', 'image' => 'nullable|image'],
-            2 => array_merge(['employee_type' => 'required|in:saudi,expat', 'national_id_expiry_date' => $date, 'iqama_expiry_date' => $date, 'passport_expiry_date' => $date, 'sponsorship_transfer_date' => $date], request()->input('employee_type') === 'saudi' ? ['national_id' => 'required|string|max:50', 'national_id_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"'] : ['iqama_no' => 'required|string|max:50', 'iqama_profession' => 'required|string|max:100', 'iqama_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"']),
+            2 => array_merge(['employee_type' => 'required|in:saudi,expat', 'national_id_expiry_date' => $date, 'iqama_expiry_date' => $date, 'passport_expiry_date' => $date, 'sponsorship_transfer_date' => $date], request()->input('employee_type') === 'saudi' ? ['national_id' => \App\Support\SaudiIdRules::nationalId(), 'national_id_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"'] : ['iqama_no' => \App\Support\SaudiIdRules::iqama(), 'iqama_profession' => 'required|string|max:100', 'iqama_expiry_date' => 'required|date_format:"' . $this->company->date_format . '"']),
             3 => ['date_of_birth' => $date, 'joining_date' => $date, 'basic_salary' => 'nullable|numeric'],
             4 => ['probation_end_date' => $date, 'notice_period_start_date' => $date, 'notice_period_end_date' => $date, 'internship_end_date' => $date, 'contract_end_date' => $date, 'dependants.*.name' => 'required_with:dependants.*.relation', 'dependants.*.relation' => 'required_with:dependants.*.name', 'dependants.*.date_of_birth' => $date],
             5 => [
@@ -1727,8 +1727,11 @@ class EmployeeController extends AccountBaseController
         if ($request->has('no_of_kafala_transfers')) {
             $employee->no_of_kafala_transfers = $request->filled('no_of_kafala_transfers') ? (int) $request->no_of_kafala_transfers : null;
         }
+        // Sponsor / kafala and its transfer count only apply to expats.
         if ($request->input('employee_type') === 'saudi') {
             $employee->no_of_kafala_transfers = null;
+            $employee->sponsor_kafala = null;
+            $employee->sponsorship_transfer_date = null;
         }
         $employee->department_id = $request->department;
         $employee->designation_id = $request->designation;
