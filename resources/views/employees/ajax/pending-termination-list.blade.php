@@ -253,65 +253,7 @@
         }
     });
 
-    $('body').on('click', '.terminate-table-row', function() {
-        var id = $(this).data('user-id');
-        Swal.fire({
-            title: "@lang('messages.sweetAlertTitle')",
-                html: '<div class="form-group text-left"><label for="terminate_reason">Reason</label><textarea id="terminate_reason" class="form-control"></textarea></div>' +
-                    '<div class="form-group text-left"><label for="notice_type">Effect</label>' +
-                    '<select id="notice_type" class="form-control" onchange="document.getElementById(\'notice_months_wrap\').style.display = this.value===\'notice\' ? \'block\' : \'none\';">' +
-                    '<option value="immediate">Immediate effect</option><option value="notice" selected>With notice period</option></select></div>' +
-                    '<div class="form-group text-left" id="notice_months_wrap"><label for="notice_months">Notice period</label>' +
-                    '<select id="notice_months" class="form-control"><option value="1">1 month</option><option value="2">2 months</option><option value="3">3 months</option></select></div>',
-            icon: 'warning',
-            showCancelButton: true,
-            focusConfirm: false,
-                confirmButtonText: "Confirm termination",
-            cancelButtonText: "@lang('app.cancel')",
-            customClass: {
-                confirmButton: 'btn btn-primary mr-3',
-                cancelButton: 'btn btn-secondary'
-            },
-            showClass: {
-                popup: 'swal2-noanimation',
-                backdrop: 'swal2-noanimation'
-            },
-            buttonsStyling: false,
-            preConfirm: function() {
-                var nt = document.getElementById('notice_type').value;
-                return {
-                    reason: document.getElementById('terminate_reason').value,
-                    noticeType: nt,
-                    noticeMonths: nt === 'notice' ? document.getElementById('notice_months').value : ''
-                };
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                var url = "{{ route('employees.terminate-pending', ':id') }}";
-                url = url.replace(':id', id);
-
-                var token = "{{ csrf_token() }}";
-
-                $.easyAjax({
-                    type: 'POST',
-                    url: url,
-                    blockUI: true,
-                    data: {
-                        '_token': token,
-                        '_method': 'POST',
-                        'terminate_reason': result.value.reason,
-                        'notice_type': result.value.noticeType,
-                        'notice_months': result.value.noticeMonths
-                    },
-                    success: function(response) {
-                        if (response.status == "success") {
-                            showTable();
-                        }
-                    }
-                });
-            }
-        });
-    });
+    @include('employees.ajax.partials.terminate-dialog')
 
     $('body').on('click', '.delete-table-row', function() {
         var id = $(this).data('user-id');
