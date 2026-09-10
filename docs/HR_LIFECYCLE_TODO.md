@@ -249,3 +249,25 @@ module is now employees-only.
   Driver / Driver Types / Businesses CRUD.
 - Verified: `salary-setups.drivers` routes gone, `/account/payroll` 302, caches rebuilt
   as `usman_ilab_sa`, 0 root-owned cache files, log clean.
+
+## Post-deploy hardening — 2026-09-10
+
+- **Git committed** — `c1446972` "feat: HR employee lifecycle …" (134 files). Local
+  `main` only, 1 ahead of `origin/main` — **not pushed**.
+- **Scheduler: OK** — `/etc/cron.d/laravel-schedulers` runs `php8.4 artisan schedule:run`
+  every minute; `payroll:generate-monthly-slips` fires 00:10 (now employees-only).
+- **Queue workers: OK** — `supervisor` runs `hr-queue-worker_00/01` (`/etc/supervisor/
+  conf.d/hr-queue.conf`), auto-respawn on crash / `--max-time`.
+- **Settlement-defaults bug fixed & deployed** — `HrSettlementSetting::forCompany()`
+  returned an unsaved instance whose fraction fields were `null` → `(float) null` → EOSB
+  computed as **0 for everyone** when no policy row existed. Added `HrSettlementSetting::
+  DEFAULTS` (statutory) and hydrate the fallback with it. `deploy-backups/20260910_152430_
+  settlement-defaults-fix/`. Seeded company 27's row: `policy_version =
+  provisional-statutory-2026-09-10-UNREVIEWED` + a "not reviewed by HR/legal" note.
+- **Permission grid — NEEDS YOUR REVIEW.** `edit_employees` / `manage_finance_clearance` /
+  `manage_it_clearance` / `manage_termination_employees` are granted to roles `admin`,
+  `hr-manager`, `branch-hr-manager` — **NOT** to the roles named "Finance Manager",
+  "HR Manager", "HR Superadmin", "Accountant". If real HR/Finance staff sit on those
+  roles they won't see the new screens; grant the permissions in the Role Permissions grid.
+- Unrelated pre-existing prod error in the log: `BioTime sync failed: Database hosts
+  array is empty` — attendance-device integration, not part of this work.
