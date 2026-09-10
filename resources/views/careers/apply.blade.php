@@ -11,6 +11,8 @@
         href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap"
         rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     @if (global_setting()->google_recaptcha_status == 'active' && global_setting()->google_recaptcha_v2_status == 'active')
         <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     @endif
@@ -773,6 +775,60 @@
                 display: none;
             }
         }
+
+        /* Date-of-birth calendar (flatpickr) — match the dark emerald theme */
+        .flatpickr-calendar {
+            background: #041c12;
+            border: 1px solid rgba(5, 150, 105, 0.3);
+            box-shadow: 0 12px 44px rgba(0, 0, 0, 0.55);
+        }
+
+        .flatpickr-calendar.arrowTop::before,
+        .flatpickr-calendar.arrowBottom::before,
+        .flatpickr-calendar.arrowTop::after,
+        .flatpickr-calendar.arrowBottom::after {
+            border-top-color: #041c12;
+            border-bottom-color: #041c12;
+        }
+
+        .flatpickr-months,
+        .flatpickr-weekdays,
+        span.flatpickr-weekday {
+            background: #041c12;
+            color: #6ee7b7;
+            fill: #6ee7b7;
+        }
+
+        .flatpickr-current-month input.cur-year,
+        .flatpickr-monthDropdown-months,
+        .flatpickr-current-month .flatpickr-monthDropdown-months {
+            color: #ecfdf5;
+            background: #041c12;
+        }
+
+        .flatpickr-day {
+            color: #d1fae5;
+        }
+
+        .flatpickr-day:hover,
+        .flatpickr-day.today {
+            background: rgba(5, 150, 105, 0.25);
+            border-color: transparent;
+        }
+
+        .flatpickr-day.selected {
+            background: #059669;
+            border-color: #059669;
+        }
+
+        .flatpickr-day.flatpickr-disabled {
+            color: rgba(209, 250, 229, 0.25);
+        }
+
+        .flatpickr-prev-month svg,
+        .flatpickr-next-month svg {
+            fill: #6ee7b7;
+        }
     </style>
 </head>
 
@@ -891,7 +947,7 @@
                                 <label for="date_of_birth">Date of Birth <span class="required">*</span></label>
                                 <input type="text" id="date_of_birth" name="date_of_birth"
                                     value="{{ old('date_of_birth') }}"
-                                    placeholder="DD/MM/YYYY" inputmode="numeric" pattern="[0-9]{2}/[0-9]{2}/[0-9]{4}"
+                                    placeholder="DD/MM/YYYY" inputmode="numeric" autocomplete="off"
                                     maxlength="10" required>
                                 <div class="field-error">Enter your date of birth as DD/MM/YYYY.</div>
                             </div>
@@ -1411,6 +1467,18 @@
                     }
                 });
             });
+
+            // ── DATE OF BIRTH — calendar picker, DD/MM/YYYY ──────
+            if (window.flatpickr) {
+                var minAge = new Date();
+                minAge.setFullYear(minAge.getFullYear() - 15);
+                flatpickr('#date_of_birth', {
+                    dateFormat: 'd/m/Y',
+                    allowInput: true,
+                    disableMobile: true,
+                    maxDate: minAge
+                });
+            }
 
             // ── SUBMIT GUARD (avoid double-submit) ────────────────
             document.getElementById('apply-form').addEventListener('submit', function() {
