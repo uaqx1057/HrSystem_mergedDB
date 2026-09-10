@@ -239,17 +239,12 @@
 
                 <div class="inv-field">
                     <label class="text-left" >@lang('app.mobile')</label>
-                    <div style="display:flex; gap:8px;">
-                        <select name="country_phonecode" id="country_phonecode"
-                                style="width:110px; flex-shrink:0; height:46px; border:1px solid #dee2e6; border-radius:6px; padding:0 8px; font-size:14px;">
-                            @foreach ($countries as $item)
-                                <option value="{{ $item->phonecode }}"
-                                        @selected(old('country_phonecode') ? old('country_phonecode') == $item->phonecode : strtoupper($item->iso) === 'SA')>+{{ $item->phonecode }}</option>
-                            @endforeach
-                        </select>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <span style="flex-shrink:0; height:46px; line-height:46px; padding:0 12px; border:1px solid #dee2e6; border-radius:6px; font-size:14px; background:#f8f9fa;">+966</span>
+                        <input type="hidden" name="country_phonecode" value="966">
                         <input type="tel" name="mobile" id="mobile"
                                placeholder="@lang('placeholders.mobile')"
-                               value="{{ old('mobile', '+966 ') }}"
+                               value="{{ preg_replace('/^\s*\+?\s*(00)?966[\s-]*/', '', old('mobile', '')) }}"
                                style="flex:1;">
                     </div>
                 </div>
@@ -634,24 +629,12 @@
                 goToStep(prev);
             });
 
-            // ── PHONE CODE AUTO-SELECT ────────────────────────────
-            $('#country').change(function () {
-                var phonecode = $(this).find(':selected').data('phonecode');
-                $('#country_phonecode').val(phonecode);
-            });
-
-            // Mobile is submitted as the national number only (country code is a
-            // separate field). Strip a leading +966 / 00966 / 966 / + so the "+966 "
-            // default shown in the field is not saved twice.
+            // Mobile is submitted as national digits only; the "+966" prefix is fixed
+            // and sent via the hidden country_phonecode field. Strip a pasted +966 / 966.
             function normalizeMobileField() {
                 var $m = $('#mobile');
                 if (!$m.length) { return; }
-                var v = String($m.val() || '').replace(/[()\s\-]/g, '').replace(/^\+/, '');
-                var code = String($('#country_phonecode').val() || '').replace(/\D/g, '');
-                if (code && v.indexOf('00' + code) === 0) { v = v.slice(2 + code.length); }
-                else if (code && v.indexOf(code) === 0 && v.length > code.length) { v = v.slice(code.length); }
-                else if (v.indexOf('966') === 0 && v.length > 3) { v = v.slice(3); }
-                $m.val(v);
+                $m.val(String($m.val() || '').replace(/^\s*\+?\s*(00)?966[\s-]*/, ''));
             }
             $(document).on('blur change', '#mobile', normalizeMobileField);
             $(document).on('mousedown', '.inv-next-btn, .inv-submit-btn, button[type="submit"]', normalizeMobileField);
@@ -669,9 +652,8 @@
                 $('#rev-gender').text($('#gender').val()           || '—');
                 $('#rev-dob').text($('#date_of_birth').val()       || '—');
 
-                var phonecode = $('#country_phonecode').val();
-                var mobile    = $('#mobile').val();
-                $('#rev-mobile').text((phonecode && mobile) ? ('+' + phonecode + ' ' + mobile) : (mobile || '—'));
+                var mobile = $('#mobile').val();
+                $('#rev-mobile').text(mobile ? ('+966 ' + mobile) : '—');
 
                 @if (!is_null($invite->email_restriction))
                     $('#rev-email').text($('#user-email').val()    || '—');

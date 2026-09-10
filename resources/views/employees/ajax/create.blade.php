@@ -509,17 +509,13 @@
                         <div class="col-lg-3 col-md-6">
                             <x-forms.label class="" fieldId="mobile" :fieldLabel="__('app.mobile')"></x-forms.label>
                             <x-forms.input-group style="margin-top:-4px">
-                                <x-forms.select fieldId="country_phonecode" fieldName="country_phonecode" search="true">
-                                    @foreach ($countries as $item)
-                                        <option data-tokens="{{ $item->name }}"
-                                            data-content="{{ $item->flagSpanCountryCode() }}"
-                                            @selected(($candidate?->country_phonecode ?? null) ? ((string) $candidate->country_phonecode === (string) $item->phonecode) : (strtoupper($item->iso) === 'SA'))
-                                            value="{{ $item->phonecode }}">{{ $item->phonecode }}
-                                        </option>
-                                    @endforeach
-                                </x-forms.select>
+                                <x-slot name="prepend">
+                                    <span class="input-group-text height-35 f-14">+966</span>
+                                </x-slot>
+                                <input type="hidden" name="country_phonecode" value="966">
                                 <input type="tel" class="form-control height-35 f-14" placeholder="@lang('placeholders.mobile')"
-                                    name="mobile" id="mobile" value="{{ $candidate?->mobile ?: '+966 ' }}">
+                                    name="mobile" id="mobile"
+                                    value="{{ preg_replace('/^\s*\+?\s*(00)?966[\s-]*/', '', (string) ($candidate?->mobile ?? '')) }}">
                             </x-forms.input-group>
                         </div>
                         <div class="col-lg-3 col-md-6">
@@ -1485,26 +1481,14 @@
         });
 
         $('#country').change(function() {
-            var phonecode = $(this).find(':selected').data('phonecode');
-            $('#country_phonecode').val(phonecode);
             $('.select-picker').selectpicker('refresh');
         });
 
-        // The mobile column stores the national number only (the country code lives in
-        // #country_phonecode). Strip a leading +966 / 00966 / 966 / + so the "+966 " default
-        // shown in the field never gets saved twice.
-        function normalizeMobileField() {
-            var $m = $('#mobile');
-            if (!$m.length) { return; }
-            var v = String($m.val() || '').replace(/[()\s\-]/g, '').replace(/^\+/, '');
-            var code = String($('#country_phonecode').val() || '').replace(/\D/g, '');
-            if (code && v.indexOf('00' + code) === 0) { v = v.slice(2 + code.length); }
-            else if (code && v.indexOf(code) === 0 && v.length > code.length) { v = v.slice(code.length); }
-            else if (v.indexOf('966') === 0 && v.length > 3) { v = v.slice(3); }
-            $m.val(v);
-        }
-        $(document).on('blur change', '#mobile', normalizeMobileField);
-        $('#save-employee-data-form').on('mousedown', 'button, a.btn', normalizeMobileField);
+        // Mobile is entered as national digits only; the "+966" prefix is fixed and
+        // submitted via the hidden country_phonecode field. Strip a pasted +966 / 966.
+        $(document).on('blur change', '#mobile', function () {
+            $(this).val(String($(this).val() || '').replace(/^\s*\+?\s*(00)?966[\s-]*/, ''));
+        });
 
         function toggleVehicleDiv() {
             if ($('input[name="vehicle_allocation"]:checked').val() === 'yes') {
