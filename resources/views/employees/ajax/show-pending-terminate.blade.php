@@ -149,11 +149,16 @@
                         </div>
                         <div class="col-md-4 col-4 text-right">
                             @if ($termination && $termination->it_clearance_status == 'issued')
-                                <span class="badge badge-success p-2">Clearance Issued</span>
+                                <span class="badge badge-success p-2">Issued &mdash; {{ \App\Support\Clearance::IT_DECISIONS[$termination->it_clearance_decision] ?? ucfirst((string) $termination->it_clearance_decision) }}</span>
                                 <a href="{{ route('employees.it-clearance.letter', $employee->id) }}" class="btn btn-sm btn-primary ml-2">View Letter</a>
                             @else
                                 <span class="badge badge-warning p-2">Pending</span>
+                                @php $itHint = \App\Support\Clearance::itHint($employee->id); @endphp
+                                @if (!$itHint['ready'])
+                                    <div class="f-12 text-muted mt-1">{{ implode(' ', $itHint['blockers']) }}</div>
+                                @endif
                             @endif
+                            <a href="{{ route('employees.it-clearance', $employee->id) }}" class="btn btn-sm btn-outline-primary ml-2 mt-1">Open IT Clearance</a>
                         </div>
                     </div>
                 </div>
@@ -196,11 +201,16 @@
                         </div>
                         <div class="col-md-4 col-4 text-right">
                             @if ($termination && $termination->finance_clearance_status == 'issued')
-                                <span class="badge badge-success p-2">Clearance Issued</span>
+                                <span class="badge badge-success p-2">Issued &mdash; {{ \App\Support\Clearance::FINANCE_DECISIONS[$termination->finance_clearance_decision] ?? ucfirst((string) $termination->finance_clearance_decision) }}</span>
                                 <a href="{{ route('employees.finance-clearance.letter', $employee->id) }}" class="btn btn-sm btn-primary ml-2">View Letter</a>
                             @else
                                 <span class="badge badge-warning p-2">Pending</span>
+                                @php $finHint = \App\Support\Clearance::financeHint($termination); @endphp
+                                @if (!$finHint['ready'])
+                                    <div class="f-12 text-muted mt-1">{{ implode(' ', $finHint['blockers']) }}</div>
+                                @endif
                             @endif
+                            <a href="{{ route('employees.finance-clearance', $employee->id) }}" class="btn btn-sm btn-outline-primary ml-2 mt-1">Open Finance Clearance</a>
                         </div>
                     </div>
                 </div>

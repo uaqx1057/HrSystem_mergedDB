@@ -290,6 +290,7 @@ Route::group(['middleware' => ['auth', 'multi-company-select', 'email_verified']
     Route::get('employees/onboard/show/{id}', [EmployeeController::class, 'showOnboard'])->name('employees.show-onboard');
 
     Route::get('employees/it-clearance/{id}', [\App\Http\Controllers\TerminationClearanceController::class, 'itView'])->name('employees.it-clearance');
+    Route::post('employees/it-clearance/{id}/return-asset/{assignment}', [\App\Http\Controllers\TerminationClearanceController::class, 'itReturnAsset'])->name('employees.it-clearance.return-asset');
     Route::post('employees/it-clearance/{id}/reminder', [\App\Http\Controllers\TerminationClearanceController::class, 'itSendReminder'])->name('employees.it-clearance.reminder');
     Route::post('employees/it-clearance/{id}/issue', [\App\Http\Controllers\TerminationClearanceController::class, 'itIssueClearance'])->name('employees.it-clearance.issue');
     Route::get('employees/it-clearance/{id}/letter', [\App\Http\Controllers\TerminationClearanceController::class, 'itClearanceLetterPdf'])->name('employees.it-clearance.letter');

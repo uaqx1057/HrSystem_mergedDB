@@ -29,7 +29,7 @@ class TerminationClearanceSafetyTest extends TestCase
         $controller = file_get_contents(app_path('Http/Controllers/TerminationClearanceController.php'));
         $method = substr($controller, strpos($controller, 'public function itIssueClearance'));
 
-        $this->assertStringContainsString('DB::transaction(function () use ($employee, $termination)', $method);
+        $this->assertStringContainsString('DB::transaction(function () use ($employee, $termination', $method);
         $this->assertStringContainsString('AssetAssignment::STATUS_ASSIGNED', $method);
         $this->assertStringContainsString('->lockForUpdate()', $method);
     }
