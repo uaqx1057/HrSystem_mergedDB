@@ -32,6 +32,60 @@
                     <x-cards.data-row :label="__('app.address')" :value="$employeeDetail->address ?? '--'" />
                     <x-cards.data-row :label="__('app.language')" :value="$employee->locale ?? '--'" />
 
+                    @php
+                        $onboardingFlags = [
+                            'verify_employee_profile' => 'Profile & documents verified',
+                            'setup_bank_and_payroll' => 'Bank & payroll set up',
+                            'assign_insurance' => 'Medical insurance assigned',
+                            'assign_required_assets' => 'Required assets handed over',
+                            'manager_confirmation' => 'Line manager confirmed',
+                        ];
+                        $completedFlags = collect($onboardingFlags)->keys()
+                            ->filter(fn ($flag) => (bool) ($employeeDetail->{$flag} ?? false))
+                            ->count();
+                        $taskCount = ($onboardingTasks ?? collect())->count();
+                        $completedTasks = ($onboardingTasks ?? collect())
+                            ->filter(fn ($task) => in_array($task->status, ['completed', 'waived']))
+                            ->count();
+                    @endphp
+
+                    <div class="border-top mt-4 pt-3">
+                        <h4 class="f-16 font-weight-bold mb-2">Onboarding progress</h4>
+                        <div class="d-flex justify-content-between f-13 mb-1">
+                            <span>Checklist</span>
+                            <span>{{ $completedFlags }} / {{ count($onboardingFlags) }} complete</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 6px;">
+                            <div class="progress-bar bg-success" role="progressbar"
+                                style="width: {{ count($onboardingFlags) ? round($completedFlags / count($onboardingFlags) * 100) : 0 }}%"></div>
+                        </div>
+
+                        @foreach ($onboardingFlags as $flag => $label)
+                            <div class="f-13 py-1">
+                                <i class="fa fa-{{ ($employeeDetail->{$flag} ?? false) ? 'check text-success' : 'clock-o text-muted' }} mr-1"></i>
+                                {{ $label }}
+                            </div>
+                        @endforeach
+
+                        @if ($onboardingCase)
+                            <div class="f-13 mt-3 mb-1">
+                                Workflow case <strong>{{ $onboardingCase->reference ?? ('#' . $onboardingCase->id) }}</strong>
+                                <span class="text-muted">({{ $onboardingCase->status }})</span>
+                                @if ($taskCount)
+                                    <span class="text-muted">&middot; {{ $completedTasks }} / {{ $taskCount }} tasks complete</span>
+                                @endif
+                            </div>
+                            @foreach ($onboardingTasks as $task)
+                                <div class="f-12 py-1 border-bottom">
+                                    <i class="fa fa-{{ in_array($task->status, ['completed', 'waived']) ? 'check text-success' : 'clock-o text-muted' }} mr-1"></i>
+                                    {{ $task->title }} <span class="text-muted">&mdash; {{ $task->status }}</span>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="f-12 text-muted mt-3">No linked workflow case has been created for this employee.</div>
+                        @endif
+                    </div>
+
                     @if ($employeeDetail->getCustomFieldGroupsWithFields())
                         <x-forms.custom-field-show :fields="$employeeDetail->getCustomFieldGroupsWithFields()->fields" :model="$employeeDetail"></x-forms.custom-field-show>
                     @endif

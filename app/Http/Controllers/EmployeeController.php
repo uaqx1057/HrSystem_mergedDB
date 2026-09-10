@@ -48,6 +48,7 @@ use App\Models\Designation;
 use App\Models\EmployeeDetails;
 use App\Models\HrCandidate;
 use App\Models\HrEmployeeEditState;
+use App\Models\HrLifecycleEvent;
 use App\Models\HrOnboardingCase;
 use App\Models\HrSettlementForm;
 use App\Models\HrSystemSyncJob;
@@ -2537,13 +2538,21 @@ class EmployeeController extends AccountBaseController
         }
 
         $this->pageTitle = __('app.menu.onboard');
+        $this->employeeLifecycle = EmployeeLifecycle::summary($this->employee);
+        $this->onboardingCase = HrOnboardingCase::where('employee_id', $this->employee->id)
+            ->latest('id')
+            ->first();
+        $this->onboardingTasks = $this->onboardingCase
+            ? DB::table('hr_onboarding_tasks')
+                ->where('case_id', $this->onboardingCase->id)
+                ->orderBy('id')
+                ->get()
+            : collect();
 
         if (request()->ajax()) {
             $html = view('employees.ajax.show-onboard', $this->data)->render();
             return Reply::dataOnly(['status' => 'success', 'html' => $html, 'title' => $this->pageTitle]);
         }
-
-        $this->employeeLifecycle = EmployeeLifecycle::summary($this->employee);
 
         $this->view = 'employees.ajax.show-onboard';
         return view('employees.create', $this->data);
