@@ -1080,7 +1080,7 @@
                             </div>
                             <div class="field">
                                 <label for="mobile">Mobile <span class="required">*</span></label>
-                                <input type="tel" id="mobile" name="mobile" value="{{ old('mobile') }}"
+                                <input type="tel" id="mobile" name="mobile" value="{{ old('mobile', '+966 ') }}"
                                     placeholder="+966 5X XXX XXXX" required>
                                 <div class="field-error">Mobile is required.</div>
                             </div>

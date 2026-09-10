@@ -243,11 +243,13 @@
                         <select name="country_phonecode" id="country_phonecode"
                                 style="width:110px; flex-shrink:0; height:46px; border:1px solid #dee2e6; border-radius:6px; padding:0 8px; font-size:14px;">
                             @foreach ($countries as $item)
-                                <option value="{{ $item->phonecode }}">+{{ $item->phonecode }}</option>
+                                <option value="{{ $item->phonecode }}"
+                                        @selected(old('country_phonecode') ? old('country_phonecode') == $item->phonecode : strtoupper($item->iso) === 'SA')>+{{ $item->phonecode }}</option>
                             @endforeach
                         </select>
                         <input type="tel" name="mobile" id="mobile"
                                placeholder="@lang('placeholders.mobile')"
+                               value="{{ old('mobile', '+966 ') }}"
                                style="flex:1;">
                     </div>
                 </div>
@@ -638,6 +640,22 @@
                 $('#country_phonecode').val(phonecode);
             });
 
+            // Mobile is submitted as the national number only (country code is a
+            // separate field). Strip a leading +966 / 00966 / 966 / + so the "+966 "
+            // default shown in the field is not saved twice.
+            function normalizeMobileField() {
+                var $m = $('#mobile');
+                if (!$m.length) { return; }
+                var v = String($m.val() || '').replace(/[()\s\-]/g, '').replace(/^\+/, '');
+                var code = String($('#country_phonecode').val() || '').replace(/\D/g, '');
+                if (code && v.indexOf('00' + code) === 0) { v = v.slice(2 + code.length); }
+                else if (code && v.indexOf(code) === 0 && v.length > code.length) { v = v.slice(code.length); }
+                else if (v.indexOf('966') === 0 && v.length > 3) { v = v.slice(3); }
+                $m.val(v);
+            }
+            $(document).on('blur change', '#mobile', normalizeMobileField);
+            $(document).on('mousedown', '.inv-next-btn, .inv-submit-btn, button[type="submit"]', normalizeMobileField);
+
             // ── EMAIL DOMAIN CONCAT ───────────────────────────────
             $('#email_address').on('input change', function () {
                 var fullEmail = $.trim($(this).val()) + '@' + $('#email_domain').val();
@@ -646,6 +664,7 @@
 
             // ── REVIEW POPULATE ───────────────────────────────────
             function populateReview() {
+                normalizeMobileField();
                 $('#rev-name').text($('#user-name').val()          || '—');
                 $('#rev-gender').text($('#gender').val()           || '—');
                 $('#rev-dob').text($('#date_of_birth').val()       || '—');

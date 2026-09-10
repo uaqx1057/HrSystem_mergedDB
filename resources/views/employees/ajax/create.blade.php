@@ -519,7 +519,7 @@
                                     @endforeach
                                 </x-forms.select>
                                 <input type="tel" class="form-control height-35 f-14" placeholder="@lang('placeholders.mobile')"
-                                    name="mobile" id="mobile" value="{{ $candidate?->mobile ?? '' }}">
+                                    name="mobile" id="mobile" value="{{ $candidate?->mobile ?: '+966 ' }}">
                             </x-forms.input-group>
                         </div>
                         <div class="col-lg-3 col-md-6">
@@ -1489,6 +1489,22 @@
             $('#country_phonecode').val(phonecode);
             $('.select-picker').selectpicker('refresh');
         });
+
+        // The mobile column stores the national number only (the country code lives in
+        // #country_phonecode). Strip a leading +966 / 00966 / 966 / + so the "+966 " default
+        // shown in the field never gets saved twice.
+        function normalizeMobileField() {
+            var $m = $('#mobile');
+            if (!$m.length) { return; }
+            var v = String($m.val() || '').replace(/[()\s\-]/g, '').replace(/^\+/, '');
+            var code = String($('#country_phonecode').val() || '').replace(/\D/g, '');
+            if (code && v.indexOf('00' + code) === 0) { v = v.slice(2 + code.length); }
+            else if (code && v.indexOf(code) === 0 && v.length > code.length) { v = v.slice(code.length); }
+            else if (v.indexOf('966') === 0 && v.length > 3) { v = v.slice(3); }
+            $m.val(v);
+        }
+        $(document).on('blur change', '#mobile', normalizeMobileField);
+        $('#save-employee-data-form').on('mousedown', 'button, a.btn', normalizeMobileField);
 
         function toggleVehicleDiv() {
             if ($('input[name="vehicle_allocation"]:checked').val() === 'yes') {

@@ -39,7 +39,7 @@
 
                     <div class="col-md-6">
                         <x-forms.text fieldId="mobile" fieldLabel="Mobile" fieldName="mobile" fieldRequired="false"
-                            fieldPlaceholder="Mobile">
+                            :fieldValue="old('mobile', '+966 ')" fieldPlaceholder="+966 5X XXX XXXX">
                         </x-forms.text>
                     </div>
 
