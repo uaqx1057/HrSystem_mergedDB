@@ -193,15 +193,6 @@
             ══════════════════════════════ --}}
             <div class="inv-step active" id="inv-step-1">
 
-                <div class="inv-field">
-                    <label class="text-left" >@lang('modules.client.salutation')</label>
-                    <select name="salutation" id="salutation">
-                        <option value="">-- Select --</option>
-                        @foreach ($salutations as $salutation)
-                            <option value="{{ $salutation->value }}">{{ $salutation->label() }}</option>
-                        @endforeach
-                    </select>
-                </div>
 
                 <div class="inv-field">
                     <label class="text-left" >@lang('modules.employees.fullName') <sup>*</sup></label>

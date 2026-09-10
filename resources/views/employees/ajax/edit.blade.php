@@ -285,15 +285,6 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                     </x-forms.text>
                                 </div>
                                 <div class="col-md-4">
-                                    <x-forms.select fieldId="salutation" fieldName="salutation"
-                                        :fieldLabel="__('modules.client.salutation')">
-                                        <option value="">--</option>
-                                        @foreach ($salutations as $salutation)
-                                            <option value="{{ $salutation->value }}" @selected($employee->salutation == $salutation)>{{ $salutation->label() }}</option>
-                                        @endforeach
-                                    </x-forms.select>
-                                </div>
-                                <div class="col-md-4">
                                     <x-forms.text fieldId="name" :fieldLabel="__('modules.employees.employeeName')"
                                         fieldName="name" :fieldValue="$employee->name" fieldRequired="true"
                                         :fieldPlaceholder="__('placeholders.name')">

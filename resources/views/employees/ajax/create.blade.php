@@ -275,14 +275,6 @@
                                     </x-forms.text>
                                 </div>
                                 <div class="col-lg-4 col-md-6">
-                                    <x-forms.select fieldId="salutation" fieldName="salutation" :fieldLabel="__('modules.client.salutation')">
-                                        <option value="">--</option>
-                                        @foreach ($salutations as $salutation)
-                                            <option value="{{ $salutation->value }}">{{ $salutation->label() }}</option>
-                                        @endforeach
-                                    </x-forms.select>
-                                </div>
-                                <div class="col-lg-4 col-md-6">
                                     <x-forms.text fieldId="name" :fieldLabel="__('modules.employees.employeeName')" fieldName="name" fieldRequired="true" :fieldValue="$candidate?->name ?? ''"
                                         :fieldPlaceholder="__('placeholders.name')">
                                     </x-forms.text>

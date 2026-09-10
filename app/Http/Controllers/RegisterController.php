@@ -73,7 +73,6 @@ class RegisterController extends Controller
             $user->name         = $request->name;
             $user->company_id   = $invite->company_id;
             $user->email        = $request->email;
-            $user->salutation   = $request->salutation;
             $user->gender       = $request->gender ?? 'Male';
             $user->mobile       = $request->mobile;
             $user->country_id   = $request->country;

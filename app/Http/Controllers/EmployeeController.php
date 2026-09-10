@@ -327,7 +327,6 @@ class EmployeeController extends AccountBaseController
             $user->email = $request->email;
             $user->mobile = $request->mobile;
             $user->country_id = $this->resolveNationality($request);
-            $user->salutation = $request->salutation;
             $user->country_phonecode = $request->country_phonecode;
             $user->gender = $request->gender;
             $user->locale = 'en';
@@ -699,7 +698,6 @@ class EmployeeController extends AccountBaseController
 
         $user->mobile = $request->mobile;
         $user->country_id = $this->resolveNationality($request);
-        $user->salutation = $request->salutation;
         $user->country_phonecode = $request->country_phonecode;
         $user->gender = $request->gender;
         $user->locale = 'en';
@@ -857,7 +855,7 @@ class EmployeeController extends AccountBaseController
                 ->firstOrCreate(['company_id' => $user->company_id, 'employee_id' => $user->id], ['version' => 0]);
             abort_if((int) $request->input('edit_version', 0) !== (int) $editState->version, 409, 'This employee was updated by another user. Refresh before saving again.');
             if ($step === 1) {
-                $user->fill($request->only(['name', 'salutation', 'branch_id']));
+                $user->fill($request->only(['name', 'branch_id']));
                 if ($request->hasFile('image')) {
                     Files::deleteFile($user->image, 'avatar');
                     $user->image = Files::uploadLocalOrS3($request->image, 'avatar', 300);
