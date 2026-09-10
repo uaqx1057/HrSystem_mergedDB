@@ -32,7 +32,9 @@ class BaseDataTable extends DataTable
             ->responsive()
             ->serverSide()
             ->stateSave(false)
-            ->pageLength(companyOrGlobalSetting()->datatable_row_limit ?? 10)
+            // global_setting() is cache-backed (not session-cached like company()),
+            // so an admin changing the row limit takes effect without a re-login.
+            ->pageLength((int) (global_setting()->datatable_row_limit ?: 25))
             ->processing()
             ->dom($this->domHtml)
             ->language($intl);
