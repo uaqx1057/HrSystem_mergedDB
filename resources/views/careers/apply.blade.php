@@ -1147,6 +1147,25 @@
                                     placeholder="Expected basic salary" required>
                                 <div class="field-error">Expected Salary is required.</div>
                             </div>
+                            <div class="field">
+                                <label for="marital_status">Marital Status <span class="required">*</span></label>
+                                <select id="marital_status" name="marital_status" required>
+                                    <option value="">--</option>
+                                    @foreach ($maritalStatuses as $status)
+                                        <option value="{{ $status->value }}" @selected(old('marital_status') === $status->value)>
+                                            {{ $status->label() }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="field-error">Marital Status is required.</div>
+                            </div>
+                            <div class="field">
+                                <label for="kafala_transfers">Kafala transfers so far
+                                    <span style="color: var(--text-muted); font-weight: 400;">(expat applicants)</span></label>
+                                <input type="number" min="0" max="20" step="1" id="kafala_transfers"
+                                    name="kafala_transfers" value="{{ old('kafala_transfers') }}"
+                                    placeholder="0 if this is your first job in KSA">
+                                <div class="field-error">Enter a number (0 or more).</div>
+                            </div>
                             <div class="field field-full">
                                 <label for="address">Address <span class="required">*</span></label>
                                 <textarea id="address" name="address" rows="4" placeholder="Your current address" required>{{ old('address') }}</textarea>
@@ -1178,18 +1197,6 @@
                                     value="{{ old('linkedin_username') }}" placeholder="linkedin.com/in/yourname">
                                 <div class="field-error">LinkedIn ID is invalid.</div>
                             </div>
-                            <div class="field">
-                                <label for="marital_status">Marital Status <span class="required">*</span></label>
-                                <select id="marital_status" name="marital_status" required>
-                                    <option value="">--</option>
-                                    @foreach ($maritalStatuses as $status)
-                                        <option value="{{ $status->value }}" @selected(old('marital_status') === $status->value)>
-                                            {{ $status->label() }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="field-error">Marital Status is required.</div>
-                            </div>
-
                             {{-- NEW: Note field --}}
                             <div class="field field-full">
                                 <label for="notes">Other Detail (Optional)</label>
@@ -1401,7 +1408,7 @@
                 }
 
                 if (step === 3) {
-                    ['country_id', 'gender', 'basic_salary', 'address'].forEach(function(id) {
+                    ['country_id', 'gender', 'basic_salary', 'address', 'marital_status'].forEach(function(id) {
                         if (isEmptyVal(id)) {
                             setError(id, true);
                             ok = false;

@@ -99,6 +99,7 @@ class CareerController extends Controller
 
             'linkedin_username' => 'nullable|string|max:255',
             'marital_status' => 'nullable|string|max:30',
+            'kafala_transfers' => 'nullable|integer|min:0|max:20',
         ];
 
         if (global_setting()->google_recaptcha_status == 'active') {
@@ -144,6 +145,7 @@ class CareerController extends Controller
             'passport_expiry_date' => $request->passport_expiry_date,
             'basic_salary' => $request->basic_salary,
             'marital_status' => $request->marital_status,
+            'kafala_transfers' => $request->filled('kafala_transfers') ? (int) $request->kafala_transfers : null,
             'linkedin_username' => $request->linkedin_username,
             'source' => 'public_application',
             'notes' => $request->notes,

@@ -868,7 +868,7 @@ class EmployeeController extends AccountBaseController
             }
 
             if ($step === 2) {
-                foreach (['employee_type', 'iqama_no', 'iqama_profession', 'national_id', 'probation_time', 'passport_no', 'sponsor_kafala'] as $field) {
+                foreach (['employee_type', 'iqama_no', 'iqama_profession', 'national_id', 'probation_time', 'passport_no', 'sponsor_kafala', 'no_of_kafala_transfers'] as $field) {
                     if ($request->has($field)) $employee->{$field} = $request->input($field);
                 }
                 $this->saveEmployeeStepDates($request, $employee, ['national_id_expiry_date', 'iqama_expiry_date', 'passport_expiry_date', 'sponsorship_transfer_date']);
@@ -1724,6 +1724,9 @@ class EmployeeController extends AccountBaseController
         $employee->sponsorship_transfer_date = $request->sponsorship_transfer_date
             ? \Carbon\Carbon::createFromFormat($this->company->date_format, $request->sponsorship_transfer_date)->format('Y-m-d')
             : null;
+        if ($request->has('no_of_kafala_transfers')) {
+            $employee->no_of_kafala_transfers = $request->filled('no_of_kafala_transfers') ? (int) $request->no_of_kafala_transfers : null;
+        }
         $employee->department_id = $request->department;
         $employee->designation_id = $request->designation;
         $employee->reporting_to = $request->reporting_to;

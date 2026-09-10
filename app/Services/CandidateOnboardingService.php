@@ -210,6 +210,7 @@ class CandidateOnboardingService
         $employee->date_of_birth = $candidate->date_of_birth;
         $employee->address = $candidate->address;
         $employee->marital_status = $candidate->marital_status;
+        $employee->no_of_kafala_transfers = $candidate->kafala_transfers;
         if (empty($employee->joining_date)) {
             $employee->joining_date = now();
         }

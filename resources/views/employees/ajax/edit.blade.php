@@ -451,6 +451,11 @@ $isMarried = $storedMaritalStatus === \App\Enums\MaritalStatus::Married->value;
                                         )" />
                                 </div>
 
+                                <div class="col-lg-3 col-md-6 expat-only-field">
+                                    <x-forms.text fieldId="no_of_kafala_transfers" fieldLabel="Kafala transfers so far" fieldName="no_of_kafala_transfers"
+                                        fieldPlaceholder="e.g. 2" :fieldValue="$employee->employeeDetail->no_of_kafala_transfers" />
+                                </div>
+
                                 {{-- NEW: Probation Time --}}
                                 <div class="col-lg-3 col-md-6">
                                     <x-forms.text fieldId="probation_time" :fieldLabel="__('modules.employees.probation_time')" fieldName="probation_time" :fieldPlaceholder="__('placeholders.probation_time')"
