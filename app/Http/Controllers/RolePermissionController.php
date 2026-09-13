@@ -198,7 +198,25 @@ class RolePermissionController extends AccountBaseController
 
     public function deleteRole(Request $request)
     {
-        Role::whereId($request->roleId)->delete();
+        abort_403(user()->permission('manage_role_permission_setting') != 'all');
+
+        // CompanyScope (applied automatically via the Role model's HasCompany
+        // trait) already confines this query to the current company's own
+        // roles, so it can't reach another company's rows or the unscoped
+        // rows other applications on this shared database own. Still refuse
+        // to delete a role that real users are still assigned to, matching
+        // the superadmin panel's equivalent guard.
+        $role = Role::withCount('users')->find($request->roleId);
+
+        if (!$role) {
+            return Reply::error(__('messages.noRoleFound'));
+        }
+
+        if ($role->users_count > 0) {
+            return Reply::error('This role still has users assigned to it and cannot be deleted.');
+        }
+
+        $role->delete();
 
         return Reply::dataOnly(['status' => 'success']);
     }

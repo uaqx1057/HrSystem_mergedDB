@@ -200,7 +200,32 @@ class SuperadminRolePermissionController extends AccountBaseController
 
     public function deleteRole(Request $request)
     {
-        Role::whereId($request->roleId)->withoutGlobalScope(CompanyScope::class)->delete();
+        abort_403(user()->permission('manage_superadmin_permission_settings') != 'all');
+
+        // Scoped to exactly what this screen's own role list (index()/create())
+        // shows -- global role templates only (company_id NULL, display_name
+        // set). whereId() alone + withoutGlobalScope(CompanyScope::class) used
+        // to reach ANY row in the shared roles table by raw id, including
+        // company-owned roles and roles belonging to other applications on
+        // this database (e.g. DMS) that have no display_name at all. That gap
+        // let a bulk cleanup here wipe 13 unrelated DMS roles on 2026-09-10.
+        $role = Role::withoutGlobalScope(CompanyScope::class)
+            ->withCount(['users' => function ($q) {
+                $q->withoutGlobalScopes([CompanyScope::class]);
+            }])
+            ->whereNull('company_id')
+            ->whereNotNull('display_name')
+            ->find($request->roleId);
+
+        if (!$role) {
+            return Reply::error(__('messages.noRoleFound'));
+        }
+
+        if ($role->users_count > 0) {
+            return Reply::error('This role still has users assigned to it and cannot be deleted.');
+        }
+
+        $role->delete();
 
         return Reply::dataOnly(['status' => 'success']);
     }
